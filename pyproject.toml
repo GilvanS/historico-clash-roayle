@@ -1,0 +1,11 @@
+[project]
+name = "clash-royale-pages"
+version = "0.1.0"
+description = "Clash Royale Analytics for GitHub Pages"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31.0",
+]
+
+[tool.uv]
+dev-dependencies = []

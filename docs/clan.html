@@ -1,0 +1,3611 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clan Analytics - Tropa Do Bruxo</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @font-face {
+            font-family: 'Clash-Regular';
+            src: url('assets/fonts/Clash_Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'Supercell-Magic';
+            src: url('assets/fonts/Supercell-Magic Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        body {
+            font-family: 'Clash-Regular', 'Supercell-Magic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .section h2 {
+            color: #2d3748;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #4299e1;
+            padding-bottom: 10px;
+        }
+        
+        /* Include all the existing clan ranking and deck analytics styles from the main CSS */
+        .clan-rankings { display: flex; flex-direction: column; gap: 12px; }
+        .ranking-item { display: flex; align-items: center; background: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: transform 0.2s ease; }
+        .ranking-item:hover { transform: translateY(-2px); }
+        .current-player-ranking { background: rgba(66, 153, 225, 0.15); border-left: 4px solid #4299e1; font-weight: bold; }
+        .ranking-position { font-size: 1.5em; font-weight: bold; color: #4299e1; min-width: 50px; text-align: center; }
+        .ranking-info { flex: 1; margin-left: 20px; }
+        .ranking-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .ranking-stats { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .stat-group { display: flex; align-items: center; gap: 8px; }
+        .trophy-up { color: #38a169; font-weight: bold; font-size: 0.9em; }
+        .trophy-down { color: #e53e3e; font-weight: bold; font-size: 0.9em; }
+        .trophy-neutral { color: #718096; font-size: 0.9em; }
+        .donation-up { color: #3182ce; font-weight: bold; font-size: 0.9em; }
+        .donation-down { color: #e53e3e; font-weight: bold; font-size: 0.9em; }
+        .donation-neutral { color: #718096; font-size: 0.9em; }
+        .last-seen-info { color: #718096; font-size: 0.9em; }
+        
+        /* Deck analytics styles */
+        .analytics-section { margin-bottom: 30px; }
+        .analytics-section h3 { color: #2d3748; margin-bottom: 15px; font-size: 1.2em; }
+        .popular-deck-item { background: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .deck-popularity { display: flex; align-items: center; margin-bottom: 10px; }
+        .deck-rank { font-size: 1.5em; font-weight: bold; color: #4299e1; min-width: 40px; }
+        .deck-info { margin-left: 15px; }
+        .usage-count { font-weight: bold; color: #2d3748; }
+        .users-list { color: #718096; font-size: 0.9em; display: block; }
+        .favorite-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
+        .favorite-card-item { background: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .favorite-card-image { width: 50px; height: 60px; object-fit: contain; margin-bottom: 8px; }
+        .favorite-card-info .card-name { display: block; font-weight: 500; color: #2d3748; font-size: 0.9em; }
+        .favorite-card-info .usage-count { color: #4299e1; font-size: 0.8em; }
+        .experimenters-list { display: flex; flex-direction: column; gap: 8px; }
+        .experimenter-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.9); border-radius: 8px; padding: 10px 15px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); }
+        .experimenter-item .member-name { font-weight: 500; color: #2d3748; }
+        .experimenter-item .change-count { color: #4299e1; font-size: 0.9em; font-weight: bold; }
+        
+        /* Deck cards styles */
+        .deck-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; }
+        .card-container { text-align: center; background: rgba(255, 255, 255, 0.9); border-radius: 8px; padding: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        .card-image { width: 60px; height: 72px; object-fit: contain; border-radius: 5px; }
+        .card-name { font-size: 0.8em; margin-top: 5px; color: #4a5568; font-weight: 500; }
+        
+        /* Table styles */
+        table { width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.9); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #4299e1; color: white; font-weight: 600; }
+        .current-player { background-color: rgba(66, 153, 225, 0.2); font-weight: bold; }
+        .role-leader { color: #d69e2e; font-weight: bold; }
+        .role-co-leader { color: #3182ce; font-weight: bold; }
+        .role-elder { color: #38a169; font-weight: bold; }
+        .role-member { color: #718096; }
+        
+        /* Mobile styles */
+        .clan-member-cards { display: none; }
+        .clan-member-card { background: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border-left: 4px solid #e2e8f0; }
+        .current-player-card { border-left-color: #4299e1; background: rgba(66, 153, 225, 0.1); }
+        .member-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .member-name { font-size: 1.1em; color: #2d3748; }
+        .member-role { padding: 3px 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.8); font-size: 0.9em; font-weight: bold; }
+        .member-card-content { display: flex; justify-content: space-between; align-items: center; }
+        .member-stats { display: flex; flex-direction: column; gap: 5px; }
+        .trophy-count, .donation-stats { padding: 3px 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.8); font-size: 0.9em; }
+        .member-activity { text-align: right; }
+        .last-seen { color: #718096; font-size: 0.9em; padding: 3px 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.8); }
+        
+        .footer { text-align: center; color: rgba(255, 255, 255, 0.8); margin-top: 30px; font-size: 0.9em; }
+        
+        @media (max-width: 768px) {
+            .deck-cards { grid-template-columns: repeat(2, 1fr); }
+            .desktop-table { display: none; }
+            .clan-member-cards { display: block; }
+            .container { padding: 10px; }
+            .section { padding: 20px; }
+            .ranking-stats { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .ranking-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+        }
+        
+        @media (min-width: 769px) {
+            .desktop-table { display: block; }
+            .clan-member-cards { display: none; }
+        }
+        
+        
+        /* Clan Page Specific Styles */
+        .page-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            transition: background 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .clan-header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+        }
+        
+        .clan-header h1 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .clan-info {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        /* Sortable table styles */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.2s ease;
+        }
+        
+        .sortable:hover {
+            background-color: #3182ce !important;
+        }
+        
+        .sort-indicator {
+            font-size: 0.8em;
+            margin-left: 5px;
+            opacity: 0.6;
+        }
+        
+        .sortable.sort-asc .sort-indicator:after {
+            content: " ↑";
+            color: #38a169;
+            font-weight: bold;
+        }
+        
+        .sortable.sort-desc .sort-indicator:after {
+            content: " ↓";
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <a href="index.html" class="back-link">← Back to Main Dashboard</a>
+        </div>
+        
+        <div class="clan-header">
+            <h1>🏰 Tropa Do Bruxo</h1>
+            <div class="clan-info">
+                <p>Detailed clan statistics and member analytics</p>
+                <p><strong>Your Position:</strong> Member since June 05, 2025</p>
+            </div>
+        </div>
+
+        <!-- Clan Deck Analytics section - REMOVED for streamlined interface
+        <div class="section">
+            <h2>🃏 Clan Deck Analytics</h2>
+            <p style="color: #666; margin-bottom: 15px; font-style: italic;">
+                Popular decks, favorite cards, and deck experimentation patterns within your clan.
+            </p>
+            <div class="analytics-section"><h3>⭐ Most Popular Favorite Cards</h3><div class="favorite-cards-grid">
+                    <div class="favorite-card-item">
+                        <img src="cards/normal_cards/MegaKnight.png" alt="Mega Knight" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Mega Knight</span>
+<<<<<<< HEAD
+                            <span class="usage-count">24 members</span>
+=======
+                            <span class="usage-count">25 members</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                
+                    <div class="favorite-card-item">
+                        <img src="cards/normal_cards/Witch.png" alt="Witch" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Witch</span>
+<<<<<<< HEAD
+                            <span class="usage-count">9 members</span>
+=======
+                            <span class="usage-count">10 members</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                
+                    <div class="favorite-card-item">
+                        <img src="cards/normal_cards/Musk.png" alt="Musketeer" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Musketeer</span>
+                            <span class="usage-count">6 members</span>
+                        </div>
+                    </div>
+                
+                    <div class="favorite-card-item">
+                        <img src="cards/normal_cards/Hog.png" alt="Hog Rider" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Hog Rider</span>
+                            <span class="usage-count">6 members</span>
+                        </div>
+                    </div>
+                
+                    <div class="favorite-card-item">
+<<<<<<< HEAD
+                        <img src="cards/normal_cards/Valk.png" alt="Valkyrie" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Valkyrie</span>
+                            <span class="usage-count">5 members</span>
+                        </div>
+                    </div>
+                
+                    <div class="favorite-card-item">
+=======
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        <img src="cards/normal_cards/Knight.png" alt="Knight" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Knight</span>
+                            <span class="usage-count">4 members</span>
+                        </div>
+                    </div>
+                
+                    <div class="favorite-card-item">
+<<<<<<< HEAD
+=======
+                        <img src="cards/normal_cards/Valk.png" alt="Valkyrie" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Valkyrie</span>
+                            <span class="usage-count">3 members</span>
+                        </div>
+                    </div>
+                
+                    <div class="favorite-card-item">
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        <img src="cards/normal_cards/SkeletonKing.png" alt="Skeleton King" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Skeleton King</span>
+                            <span class="usage-count">3 members</span>
+                        </div>
+                    </div>
+                
+                    <div class="favorite-card-item">
+                        <img src="cards/normal_cards/RoyalRecruits.png" alt="Royal Recruits" class="favorite-card-image">
+                        <div class="favorite-card-info">
+                            <span class="card-name">Royal Recruits</span>
+                            <span class="usage-count">2 members</span>
+                        </div>
+                    </div>
+                </div></div>
+        </div>
+        -->
+
+        <!-- Clan Rankings & Progression section - REMOVED for cleaner interface
+        <div class="section">
+            <h2>🏆 Clan Rankings & Progression</h2>
+            <p style="color: #666; margin-bottom: 15px; font-style: italic;">
+                Current clan trophy rankings with recent changes. Green = trophy gains, red = trophy losses.
+            </p>
+            <div class="clan-rankings">
+                <div class="ranking-item ">
+                    <div class="ranking-position">#1</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">King Duncan</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 117 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#1</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Xperience</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 43 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#1</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">ken</span>
+                            <span class="role-co-leader member-role">Co-Leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,442</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 273↑ 236↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 4 hours ago
+=======
+                                🕒 3 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item current-player-ranking">
+                    <div class="ranking-position">#1</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Λ Яᄃ λ Ð Є</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,560</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 636↑ 360↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 7 minutes ago
+=======
+                                🕒 19 minutes ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#2</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Captain Doom</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,377</span>
+                                <span class="trophy-up">+60</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 194↑ 200↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 4 hours ago
+=======
+                                🕒 1 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#2</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Turguinho</span>
+                            <span class="role-co-leader member-role">Co-Leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,534</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 58↑ 200↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 2 hours ago
+=======
+                                🕒 3 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#3</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Colitisman</span>
+                            <span class="role-co-leader member-role">Co-Leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,239</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 412↑ 280↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 5 hours ago
+=======
+                                🕒 2 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#3</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">DEUS DAS TREVAS</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,509</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 46↑ 160↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 3 hours ago
+=======
+                                🕒 4 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#4</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+<<<<<<< HEAD
+                            <span class="member-name">~Fear The Mutt~</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,218</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#4</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Lucas Dantas</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,505</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 10↑ 200↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 19 minutes ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#5</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+=======
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            <span class="member-name">Ocean Eyes</span>
+                            <span class="role-leader member-role">leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,216</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 1↑ 160↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 20 hours ago
+=======
+                                🕒 21 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#4</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Lucas Dantas</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,505</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 10↑ 200↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 46 minutes ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#5</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">ItzBex</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,194</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 188↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 5 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#5</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">naregs</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,500</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 80↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 25 minutes ago
+=======
+                                🕒 53 minutes ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#6</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">~Fear The Mutt~</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,129</span>
+                                <span class="trophy-down">-89</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 4 hours ago
+=======
+                                🕒 1 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#6</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">KURAMA</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,449</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+<<<<<<< HEAD
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 11 minutes ago
+=======
+                                <span class="donation-count">📦 16↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 25 minutes ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#7</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">charlatan</span>
+                            <span class="role-co-leader member-role">Co-Leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,118</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 204↑ 270↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 7 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#7</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">EL_GRANDE BRUXO</span>
+                            <span class="role-leader member-role">leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,445</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 106↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 23 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#7</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">EL_GRANDE BRUXO</span>
+                            <span class="role-leader member-role">leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,445</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 106↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 23 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#8</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Sakupapu</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,860</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 86 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#8</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Ferndog</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,064</span>
+                                <span class="trophy-down">-29</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 39↑ 154↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 53 minutes ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#8</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">“Luan”</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,423</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 28↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 11 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#8</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">“Luan”</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,423</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 28↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 10 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#9</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Dallin</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 10↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 42 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#9</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Salt</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,035</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 59↑ 80↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 6 hours ago
+=======
+                                🕒 2 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#9</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">deco</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,343</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 162↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 17 minutes ago
+=======
+                                🕒 44 minutes ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#10</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">SweetgravyGz</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,560</span>
+                                <span class="trophy-up">+57</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 75↑ 60↓</span>
+                                <span class="donation-up">+10</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 74 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#10</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">boontmeister</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 81↑ 110↓</span>
+                                <span class="donation-up">+10</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 2 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#10</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">gb</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,326</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 334↑ 200↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 4 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#10</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">gb</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,326</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 334↑ 200↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 37 minutes ago
+=======
+                                🕒 1 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#11</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Spartac</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 257↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 5 hours ago
+=======
+                                🕒 6 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#11</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">VINICIOS AA</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,313</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 179↑ 120↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 5 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#12</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">3I3-267-4600</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,529</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 42 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#12</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">imbetter</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,685</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 7 hours ago
+=======
+                                🕒 3 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#12</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Jessé OFC</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,309</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 256↑ 120↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 5 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#13</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Scar</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,650</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 8↑ 160↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 113 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#13</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">mysticalmage101</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,583</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 60↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 3 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#13</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">bruxo-x-</span>
+                            <span class="role-co-leader member-role">Co-Leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,301</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 127↑ 160↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 10 hours ago
+=======
+                                🕒 11 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#14</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">mrbreeeez</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,391</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 119↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 13 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#14</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">TerraThigas</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,299</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 247↑ 320↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 4 hours ago
+=======
+                                🕒 5 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#15</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">DrippyTrippy</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,712</span>
+                                <span class="trophy-up">+30</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 86 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#15</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Sandwichking</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 18↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 7 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#15</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">bravo ph</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,291</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 109↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 44 minutes ago
+=======
+                                🕒 1 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#16</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Muy Pronto</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,894</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 12 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#16</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">mr. Princ3</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,273</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 3 hours ago
+=======
+                                🕒 4 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#17</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Thwargnog</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,654</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 1↑ 230↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 13 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#17</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">roqtty</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,269</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 49↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 4 hours ago
+=======
+                                🕒 5 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#18</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Noah</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,649</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 147↑ 220↓</span>
+                                <span class="donation-up">+8</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 48 minutes ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#18</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">⛩Vini'hYT⛩</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,253</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 247↑ 320↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 6 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#18</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">⛩Vini'hYT⛩</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,253</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 247↑ 320↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 2 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#19</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">KEN</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,597</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 30↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 4 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#19</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">ɴᴀʏʀ ꜱᴇʀᴇɢᴏʀ</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,237</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 132↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#20</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">savagecabbage</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,207</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 18 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#20</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">BybyZx</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,234</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 34↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 20 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#21</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">kylew</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,086</span>
+                                <span class="trophy-down">-88</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 38↑ 80↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 57 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#21</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Kenzie Lou</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,153</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 135 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#21</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">drope</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,220</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 272↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 3 hours ago
+=======
+                                🕒 4 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#22</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Graith Almighty</span>
+                            <span class="role-co-leader member-role">Co-Leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 8,035</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 2 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#22</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">damiplay</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,160</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 2 hours ago
+=======
+                                🕒 3 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#23</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">GiddyPickle</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 7,920</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 62↑ 360↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 54 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#23</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">BrittSkywalker</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 7,616</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 2 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#23</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">lucAs 12334555u</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,155</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 8 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#23</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">lucAs 12334555u</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,155</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 3 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#24</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">troll bogey</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 7,554</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 149 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#24</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">david</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,152</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 292↑ 120↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 23 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#25</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Bye Marv</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 7,359</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 23 hours ago
+=======
+                                🕒 3 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#25</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Wale</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,146</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 4 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#26</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">LT 40</span>
+                            <span class="role-co-leader member-role">Co-Leader</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 7,317</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 359 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#26</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">LUKAS</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,143</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+<<<<<<< HEAD
+                                <span class="donation-count">📦 342↑ 240↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 9 minutes ago
+=======
+                                <span class="donation-count">📦 342↑ 248↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 36 minutes ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#27</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Lev</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 7,232</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 36↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#27</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Andre.33</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,121</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 7↑ 280↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 3 hours ago
+=======
+                                🕒 4 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#28</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">whisperingeye69</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 6,394</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 13 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#28</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">chemanash</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 6,523</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 65↑ 24↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 17 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#28</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">ManjiroNess</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,120</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 280↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#29</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Ethan_Yorky</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 6,346</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 24 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#29</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">eric</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,114</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 3 hours ago
+=======
+                                🕒 4 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#30</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">MCham</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 6,145</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 336 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#30</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">@le6iix</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,110</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 66↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#31</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Whitey</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 5,967</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 18 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#31</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Luca.canhotinho</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,105</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 2 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#32</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">ryan3020</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 5,702</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 22 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#32</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Victor Hugo</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,097</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 26↑ 80↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 38 minutes ago
+=======
+                                🕒 1 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#33</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">ips</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,090</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 331↑ 260↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 2 hours ago
+=======
+                                🕒 3 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#34</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">peress</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,062</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 77↑ 120↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 20 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#35</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">tureis</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,060</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 10↑ 160↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 6 hours ago
+=======
+                                🕒 7 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#36</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Luiz roberto</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,056</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 466↑ 280↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 4 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#37</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Bernardo</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,034</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+<<<<<<< HEAD
+                                <span class="donation-count">📦 128↑ 56↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 28 minutes ago
+=======
+                                <span class="donation-count">📦 128↑ 64↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 55 minutes ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#38</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">BLACK_GOLD</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,032</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 7 hours ago
+=======
+                                🕒 8 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#39</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Richard</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,030</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 2 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#40</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">leozin 7</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,030</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#41</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">KAYOBRGES</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,030</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 5 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#42</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Gustavo Santo</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,026</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 80↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#43</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">mitio da bala</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 44↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 3 hours ago
+=======
+                                🕒 4 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#44</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">vinip04</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 0↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#45</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">PAULØ DAVI¿</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 10,000</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 18↑ 40↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 2 days ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#46</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">XANDEX</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,743</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 107↑ 80↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 1 hours ago
+=======
+                                🕒 2 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#47</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">O Bruxo Cyel</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,741</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 210↑ 200↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 4 hours ago
+=======
+                                🕒 5 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#48</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Radash =/</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,725</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 35↑ 120↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+<<<<<<< HEAD
+                                🕒 21 hours ago
+=======
+                                🕒 22 hours ago
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#49</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">dragon nv</span>
+                            <span class="role-elder member-role">elder</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 9,292</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 144↑ 120↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 10 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="ranking-item ">
+                    <div class="ranking-position">#50</div>
+                    <div class="ranking-info">
+                        <div class="ranking-header">
+                            <span class="member-name">Pietro</span>
+                            <span class="role-member member-role">member</span>
+                        </div>
+                        <div class="ranking-stats">
+                            <div class="stat-group">
+                                <span class="trophy-count">🏆 7,873</span>
+                                <span class="trophy-neutral">0</span>
+                            </div>
+                            <div class="stat-group">
+                                <span class="donation-count">📦 20↑ 0↓</span>
+                                <span class="donation-neutral">0</span>
+                            </div>
+                            <div class="last-seen-info">
+                                🕒 1 hours ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        -->
+
+        <div class="section">
+            <h2>🏰 Clan Member Activity</h2>
+            <p style="color: #666; margin-bottom: 15px; font-style: italic;">
+                Click on any member name to view their detailed deck change history.
+            </p>
+            <div class="desktop-table">
+                <table id="clan-members-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-column="name">Name <span class="sort-indicator">↕</span></th>
+                            <th class="sortable" data-column="role">Role <span class="sort-indicator">↕</span></th>
+                            <th class="sortable" data-column="trophies">Trophies <span class="sort-indicator">↕</span></th>
+                            <th class="sortable" data-column="donations">Donations <span class="sort-indicator">↕</span></th>
+                            <th class="sortable" data-column="deck-changes">Deck Changes <span class="sort-indicator">↕</span></th>
+                            <th class="sortable" data-column="last-seen">Last Seen <span class="sort-indicator">↕</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                <tr class="">
+                    <td><a href="member_el_grande_bruxo.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">EL_GRANDE BRUXO</a></td>
+                    <td><span class="role-leader">leader</span></td>
+                    <td>10,445</td>
+                    <td>106↑ 40↓</td>
+                    <td>1</td>
+                    <td>23 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_ocean_eyes.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Ocean Eyes</a></td>
+                    <td><span class="role-leader">leader</span></td>
+                    <td>10,216</td>
+                    <td>1↑ 160↓</td>
+                    <td>3</td>
+<<<<<<< HEAD
+                    <td>20 hours ago</td>
+=======
+                    <td>21 hours ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_turguinho.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Turguinho</a></td>
+                    <td><span class="role-co-leader">Co-Leader</span></td>
+                    <td>10,534</td>
+                    <td>58↑ 200↓</td>
+                    <td>1</td>
+<<<<<<< HEAD
+                    <td>2 hours ago</td>
+=======
+                    <td>3 hours ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_ken.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">ken</a></td>
+                    <td><span class="role-co-leader">Co-Leader</span></td>
+                    <td>10,442</td>
+                    <td>273↑ 236↓</td>
+                    <td>1</td>
+<<<<<<< HEAD
+                    <td>4 hours ago</td>
+=======
+                    <td>3 hours ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_bruxo-x-.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">bruxo-x-</a></td>
+                    <td><span class="role-co-leader">Co-Leader</span></td>
+                    <td>10,301</td>
+                    <td>127↑ 160↓</td>
+                    <td>1</td>
+<<<<<<< HEAD
+                    <td>10 hours ago</td>
+=======
+                    <td>11 hours ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_colitisman.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Colitisman</a></td>
+                    <td><span class="role-co-leader">Co-Leader</span></td>
+                    <td>10,239</td>
+                    <td>412↑ 280↓</td>
+                    <td>1</td>
+<<<<<<< HEAD
+                    <td>5 hours ago</td>
+=======
+                    <td>2 hours ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_charlatan.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">charlatan</a></td>
+                    <td><span class="role-co-leader">Co-Leader</span></td>
+                    <td>10,118</td>
+                    <td>204↑ 270↓</td>
+                    <td>6</td>
+                    <td>7 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_graith_almighty.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Graith Almighty</a></td>
+                    <td><span class="role-co-leader">Co-Leader</span></td>
+                    <td>8,035</td>
+                    <td>0↑ 0↓</td>
+                    <td>1</td>
+                    <td>2 days ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_lt_40.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">LT 40</a></td>
+                    <td><span class="role-co-leader">Co-Leader</span></td>
+                    <td>7,317</td>
+                    <td>0↑ 0↓</td>
+                    <td>1</td>
+                    <td>359 days ago</td>
+                </tr>
+            
+                <tr class="current-player">
+                    <td><a href="member_λ_яᄃ_λ_ð_є.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Λ Яᄃ λ Ð Є</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,560</td>
+                    <td>636↑ 360↓</td>
+                    <td>1</td>
+<<<<<<< HEAD
+                    <td>7 minutes ago</td>
+=======
+                    <td>19 minutes ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_kurama.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">KURAMA</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,449</td>
+<<<<<<< HEAD
+                    <td>0↑ 0↓</td>
+                    <td>1</td>
+                    <td>11 minutes ago</td>
+=======
+                    <td>16↑ 0↓</td>
+                    <td>1</td>
+                    <td>25 minutes ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_luan.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">“Luan”</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,423</td>
+                    <td>28↑ 40↓</td>
+                    <td>1</td>
+<<<<<<< HEAD
+                    <td>10 hours ago</td>
+=======
+                    <td>11 hours ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_jessé_ofc.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Jessé OFC</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,309</td>
+                    <td>256↑ 120↓</td>
+                    <td>1</td>
+                    <td>5 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_vinihyt.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">⛩Vini'hYT⛩</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,253</td>
+                    <td>247↑ 320↓</td>
+                    <td>1</td>
+                    <td>2 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_bybyzx.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">BybyZx</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,234</td>
+                    <td>34↑ 40↓</td>
+                    <td>1</td>
+                    <td>20 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_drope.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">drope</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,220</td>
+                    <td>0↑ 272↓</td>
+                    <td>1</td>
+<<<<<<< HEAD
+                    <td>3 hours ago</td>
+=======
+                    <td>4 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_david.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">david</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,152</td>
+                    <td>292↑ 120↓</td>
+                    <td>1</td>
+                    <td>23 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_lukas.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">LUKAS</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,143</td>
+                    <td>342↑ 248↓</td>
+                    <td>1</td>
+                    <td>36 minutes ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_fear_the_mutt.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">~Fear The Mutt~</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,129</td>
+                    <td>0↑ 0↓</td>
+                    <td>3</td>
+<<<<<<< HEAD
+                    <td>1 days ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_david.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">david</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,152</td>
+                    <td>292↑ 120↓</td>
+                    <td>1</td>
+                    <td>23 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_lukas.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">LUKAS</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,143</td>
+                    <td>342↑ 240↓</td>
+                    <td>1</td>
+                    <td>9 minutes ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_victor_hugo.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Victor Hugo</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,097</td>
+                    <td>26↑ 80↓</td>
+                    <td>1</td>
+                    <td>38 minutes ago</td>
+=======
+                    <td>1 hours ago</td>
+                </tr>
+            
+                <tr class="">
+                    <td><a href="member_victor_hugo.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Victor Hugo</a></td>
+                    <td><span class="role-elder">elder</span></td>
+                    <td>10,097</td>
+                    <td>26↑ 80↓</td>
+                    <td>1</td>
+                    <td>1 hours ago</td>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                </tr>
+            </tbody>
+                </table>
+            </div>
+            <div class="clan-member-cards">
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_el_grande_bruxo.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">EL_GRANDE BRUXO</a></strong>
+                        <span class="role-leader member-role">leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,445</span>
+                            <span class="donation-stats">📦 106↑ 40↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 23 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_ocean_eyes.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Ocean Eyes</a></strong>
+                        <span class="role-leader member-role">leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,216</span>
+                            <span class="donation-stats">📦 1↑ 160↓</span>
+                            <span class="deck-changes">🔄 3 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 20 hours ago</span>
+=======
+                            <span class="last-seen">🕒 21 hours ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_turguinho.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Turguinho</a></strong>
+                        <span class="role-co-leader member-role">Co-Leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,534</span>
+                            <span class="donation-stats">📦 58↑ 200↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 2 hours ago</span>
+=======
+                            <span class="last-seen">🕒 3 hours ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_ken.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">ken</a></strong>
+                        <span class="role-co-leader member-role">Co-Leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,442</span>
+                            <span class="donation-stats">📦 273↑ 236↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 4 hours ago</span>
+=======
+                            <span class="last-seen">🕒 3 hours ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_bruxo-x-.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">bruxo-x-</a></strong>
+                        <span class="role-co-leader member-role">Co-Leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,301</span>
+                            <span class="donation-stats">📦 127↑ 160↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 10 hours ago</span>
+=======
+                            <span class="last-seen">🕒 11 hours ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_colitisman.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Colitisman</a></strong>
+                        <span class="role-co-leader member-role">Co-Leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,239</span>
+                            <span class="donation-stats">📦 412↑ 280↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 5 hours ago</span>
+=======
+                            <span class="last-seen">🕒 2 hours ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_charlatan.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">charlatan</a></strong>
+                        <span class="role-co-leader member-role">Co-Leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,118</span>
+                            <span class="donation-stats">📦 204↑ 270↓</span>
+                            <span class="deck-changes">🔄 6 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 7 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_graith_almighty.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Graith Almighty</a></strong>
+                        <span class="role-co-leader member-role">Co-Leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 8,035</span>
+                            <span class="donation-stats">📦 0↑ 0↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 2 days ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_lt_40.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">LT 40</a></strong>
+                        <span class="role-co-leader member-role">Co-Leader</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 7,317</span>
+                            <span class="donation-stats">📦 0↑ 0↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 359 days ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card current-player-card">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_λ_яᄃ_λ_ð_є.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Λ Яᄃ λ Ð Є</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,560</span>
+                            <span class="donation-stats">📦 636↑ 360↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 7 minutes ago</span>
+=======
+                            <span class="last-seen">🕒 19 minutes ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_kurama.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">KURAMA</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,449</span>
+<<<<<<< HEAD
+                            <span class="donation-stats">📦 0↑ 0↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 11 minutes ago</span>
+=======
+                            <span class="donation-stats">📦 16↑ 0↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 25 minutes ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_luan.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">“Luan”</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,423</span>
+                            <span class="donation-stats">📦 28↑ 40↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 10 hours ago</span>
+=======
+                            <span class="last-seen">🕒 11 hours ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_jessé_ofc.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Jessé OFC</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,309</span>
+                            <span class="donation-stats">📦 256↑ 120↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 5 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_vinihyt.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">⛩Vini'hYT⛩</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,253</span>
+                            <span class="donation-stats">📦 247↑ 320↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 2 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_bybyzx.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">BybyZx</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,234</span>
+                            <span class="donation-stats">📦 34↑ 40↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 20 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_drope.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">drope</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,220</span>
+                            <span class="donation-stats">📦 0↑ 272↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 3 hours ago</span>
+=======
+                            <span class="last-seen">🕒 4 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_david.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">david</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,152</span>
+                            <span class="donation-stats">📦 292↑ 120↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 23 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_lukas.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">LUKAS</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,143</span>
+                            <span class="donation-stats">📦 342↑ 248↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 36 minutes ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_fear_the_mutt.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">~Fear The Mutt~</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,129</span>
+                            <span class="donation-stats">📦 0↑ 0↓</span>
+                            <span class="deck-changes">🔄 3 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+<<<<<<< HEAD
+                            <span class="last-seen">🕒 1 days ago</span>
+=======
+                            <span class="last-seen">🕒 1 hours ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+<<<<<<< HEAD
+                        <strong class="member-name"><a href="member_david.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">david</a></strong>
+=======
+                        <strong class="member-name"><a href="member_victor_hugo.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Victor Hugo</a></strong>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+<<<<<<< HEAD
+                            <span class="trophy-count">🏆 10,152</span>
+                            <span class="donation-stats">📦 292↑ 120↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 23 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_lukas.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">LUKAS</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,143</span>
+                            <span class="donation-stats">📦 342↑ 240↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 9 minutes ago</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="clan-member-card ">
+                    <div class="member-card-header">
+                        <strong class="member-name"><a href="member_victor_hugo.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Victor Hugo</a></strong>
+                        <span class="role-elder member-role">elder</span>
+                    </div>
+                    <div class="member-card-content">
+                        <div class="member-stats">
+                            <span class="trophy-count">🏆 10,097</span>
+                            <span class="donation-stats">📦 26↑ 80↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 38 minutes ago</span>
+=======
+                            <span class="trophy-count">🏆 10,097</span>
+                            <span class="donation-stats">📦 26↑ 80↓</span>
+                            <span class="deck-changes">🔄 1 deck changes</span>
+                        </div>
+                        <div class="member-activity">
+                            <span class="last-seen">🕒 1 hours ago</span>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+<<<<<<< HEAD
+            <p>Clan report generated on 2025-12-12 01:34:17</p>
+=======
+            <p>Clan report generated on 2025-12-12 02:01:48</p>
+>>>>>>> 11e9ce09f38499793a4e73d82f39cbc89ceef0b3
+            <p>Data last updated: just now</p>
+            <p><a href="index.html" class="back-link">← Back to Main Dashboard</a></p>
+        </div>
+    </div>
+    
+    <script>
+    // Table sorting functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        var table = document.getElementById('clan-members-table');
+        var headers = table.querySelectorAll('th.sortable');
+        var currentSort = { column: '', direction: '' };
+        
+        headers.forEach(function(header) {
+            header.addEventListener('click', function() {
+                var column = this.getAttribute('data-column');
+                var direction = currentSort.column === column && currentSort.direction === 'asc' ? 'desc' : 'asc';
+                
+                // Remove existing sort classes
+                headers.forEach(function(h) { h.classList.remove('sort-asc', 'sort-desc'); });
+                
+                // Add sort class to current header
+                this.classList.add('sort-' + direction);
+                
+                // Sort the table
+                sortTable(column, direction);
+                
+                currentSort = { column: column, direction: direction };
+            });
+        });
+        
+        function sortTable(column, direction) {
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            rows.sort(function(a, b) {
+                var aVal, bVal;
+                
+                switch(column) {
+                    case 'name':
+                        aVal = a.cells[0].textContent.trim().toLowerCase();
+                        bVal = b.cells[0].textContent.trim().toLowerCase();
+                        break;
+                    case 'role':
+                        // Custom role order: leader > co-leader > elder > member
+                        var roleOrder = {'leader': 1, 'co-leader': 2, 'elder': 3, 'member': 4};
+                        aVal = roleOrder[a.cells[1].textContent.trim().toLowerCase()] || 5;
+                        bVal = roleOrder[b.cells[1].textContent.trim().toLowerCase()] || 5;
+                        break;
+                    case 'trophies':
+                        aVal = parseInt(a.cells[2].textContent.replace(/,/g, '')) || 0;
+                        bVal = parseInt(b.cells[2].textContent.replace(/,/g, '')) || 0;
+                        break;
+                    case 'donations':
+                        // Extract total donations (sent + received)
+                        var aDonations = a.cells[3].textContent.match(/(\d+)↑\s*(\d+)↓/);
+                        var bDonations = b.cells[3].textContent.match(/(\d+)↑\s*(\d+)↓/);
+                        aVal = aDonations ? parseInt(aDonations[1]) + parseInt(aDonations[2]) : 0;
+                        bVal = bDonations ? parseInt(bDonations[1]) + parseInt(bDonations[2]) : 0;
+                        break;
+                    case 'deck-changes':
+                        aVal = parseInt(a.cells[4].textContent) || 0;
+                        bVal = parseInt(b.cells[4].textContent) || 0;
+                        break;
+                    case 'last-seen':
+                        // Parse relative time strings for sorting
+                        aVal = parseTimeAgo(a.cells[5].textContent.trim());
+                        bVal = parseTimeAgo(b.cells[5].textContent.trim());
+                        break;
+                    default:
+                        aVal = a.cells[0].textContent.trim();
+                        bVal = b.cells[0].textContent.trim();
+                }
+                
+                if (direction === 'asc') {
+                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                } else {
+                    return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+                }
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(function(row) { tbody.appendChild(row); });
+        }
+        
+        function parseTimeAgo(timeStr) {
+            // Convert time ago strings to minutes for sorting
+            if (timeStr === 'never') return 999999;
+            if (timeStr.includes('hours ago')) {
+                return parseInt(timeStr) * 60;
+            } else if (timeStr.includes('days ago')) {
+                return parseInt(timeStr) * 24 * 60;
+            } else if (timeStr.includes('minutes ago')) {
+                return parseInt(timeStr);
+            } else if (timeStr.includes('hour ago')) {
+                return 60;
+            } else if (timeStr.includes('day ago')) {
+                return 24 * 60;
+            } else if (timeStr.includes('minute ago')) {
+                return 1;
+            }
+            return 0; // "just now" or unrecognized format
+        }
+    });
+    </script>
+</body>
+</html>
+        

@@ -1,0 +1,95 @@
+name: Update Opponents Report
+
+on:
+  # Executa a cada 30 minutos
+  schedule:
+    - cron: '*/30 * * * *'
+  
+  # Permite execucao manual
+  workflow_dispatch:
+  
+  # Executa no push para main (para testes)
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write  # Necessario para fazer commit dos arquivos gerados
+
+jobs:
+  update-opponents:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Busca historico completo
+        ref: main
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests
+    
+    - name: Update opponents data and generate CSV
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python opponents_report.py --salvar-banco --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
+    
+    - name: Generate CSV by periods (day, week, month, year)
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python opponents_report.py --periodos --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
+    
+    - name: Update README with deck statistics from CSV
+      run: |
+        python src/update_readme_from_csv.py --csv-dir src --readme README.md
+    
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Fetch and rebase to ensure local is up-to-date before adding files
+        git pull --rebase origin main || git pull origin main --no-edit || true
+        
+        git add src/oponentes.db src/oponentes_*.csv README.md
+        if ! git diff --staged --quiet; then
+          git commit -m "Update opponents report and README stats (dia/semana/mes/ano) - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          # Attempt push, if it fails, try pull and push again
+          git push origin HEAD || (git pull --rebase origin main && git push origin HEAD)
+        else
+          echo "Nenhuma mudanca para commitar"
+        fi
+    
+    - name: Show summary
+      run: |
+        echo "## Relatorio de Oponentes Atualizado" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Arquivos atualizados:" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/oponentes.db\` - Banco de dados com batalhas acumuladas" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "CSVs por periodo:" >> $GITHUB_STEP_SUMMARY
+        if [ -f "src/oponentes_dia_*.csv" ]; then
+          echo "- \`src/oponentes_dia_*.csv\` - CSV do dia atual" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ -f "src/oponentes_semana_*.csv" ]; then
+          echo "- \`src/oponentes_semana_*.csv\` - CSV da semana atual" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ -f "src/oponentes_mes_*.csv" ]; then
+          echo "- \`src/oponentes_mes_*.csv\` - CSV do mes atual" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ -f "src/oponentes_ano_*.csv" ]; then
+          echo "- \`src/oponentes_ano_*.csv\` - CSV do ano atual" >> $GITHUB_STEP_SUMMARY
+        fi
+

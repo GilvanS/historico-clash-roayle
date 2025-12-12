@@ -1,0 +1,127 @@
+name: Update Clash Royale Analytics
+
+on:
+  # Run every hour
+  schedule:
+    - cron: '0 * * * *'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+  
+  # Run on push to main or clan-tracking branch (for testing)
+  push:
+    branches: [ main, clan-tracking ]
+
+permissions:
+  contents: write  # Need write to commit database changes
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: uv sync
+    
+    - name: Pull latest changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git pull origin main --no-rebase || true
+    
+    - name: Update battle data
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        uv run python analyzer.py
+    
+    - name: Generate HTML reports
+      run: |
+        cd src
+        uv run python html_generator.py
+        uv run python clan_generator.py
+        uv run python member_generator.py
+    
+    - name: Update README with deck statistics
+      env:
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        uv run python update_readme_from_analytics.py --player-tag "$CR_PLAYER_TAG" --db clash_royale.db --readme ../README.md
+        
+    - name: Commit and push changes
+      run: |
+        git add src/clash_royale.db docs/index.html docs/clan.html docs/member_*.html README.md
+        if ! git diff --staged --quiet; then
+          git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          # Try to push, if it fails, pull and resolve conflicts
+          if ! git push origin HEAD; then
+            # Fetch latest changes
+            git fetch origin main
+            # Try to merge, if conflicts occur, keep our version of README (it's auto-generated)
+            if ! git merge origin/main --no-edit; then
+              # Resolve conflicts by keeping our version of README
+              git checkout --ours README.md 2>/dev/null || true
+              git add README.md
+              git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
+            fi
+            git push origin HEAD
+          fi
+        fi
+        
+    - name: Copy assets to docs
+      run: |
+        # Copy cards directory to docs for relative paths
+        cp -r cards docs/
+        
+        # Copy any additional assets
+        if [ -d "assets" ]; then
+          cp -r assets/* docs/
+        fi
+    
+    - name: Upload artifacts for Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: 'docs'
+        
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: update-data
+    # Continue mesmo se o deploy falhar (caso GitHub Pages nao esteja habilitado)
+    continue-on-error: true
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - name: Check deployment status
+        if: failure()
+        run: |
+          echo "⚠️ GitHub Pages deployment failed. This is normal if GitHub Pages is not enabled."
+          echo "To enable GitHub Pages:"
+          echo "1. Go to https://github.com/${{ github.repository }}/settings/pages"
+          echo "2. Under 'Source', select 'GitHub Actions'"
+          echo "3. Save the settings"
