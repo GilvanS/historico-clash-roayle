@@ -2329,7 +2329,7 @@ class GitHubPagesHTMLGenerator:
                     <small>Melhor: {stats['best_trophies']:,}</small>
                 </div>
                 <div class="stat-card">
-                    <h3>Taxa de Vitória</h3>
+                    <h3>Taxa de Vitória{(' - ' + stats['name']) if stats.get('name') else ''}</h3>
                     <div class="value">{win_rate:.1f}%</div>
                     <small>{stats['wins']}V / {stats['losses']}D</small>
                 </div>
