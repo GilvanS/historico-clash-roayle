@@ -93,18 +93,19 @@ class ScreenshotHTMLGenerator:
         return card_mapping.get(card_name, card_name.replace(' ', '').replace('.', '').replace('-', ''))
     
     def get_card_image_path(self, card_name: str) -> str:
-        """Get the path to card image"""
+        """Get the path to card image (using relative paths from src/ directory)"""
         filename = self.get_card_filename(card_name)
         
         # Try hero cards first, then normal, then evolution
+        # Use relative paths from src/ directory
         cards_base = "../cards" if os.path.exists("../cards") else "cards"
         
         if os.path.exists(f"{cards_base}/hero_cards/{filename}.png"):
-            return f"cards/hero_cards/{filename}.png"
+            return f"../cards/hero_cards/{filename}.png"
         elif os.path.exists(f"{cards_base}/normal_cards/{filename}.png"):
-            return f"cards/normal_cards/{filename}.png"
+            return f"../cards/normal_cards/{filename}.png"
         elif os.path.exists(f"{cards_base}/evolution_cards/{filename}.png"):
-            return f"cards/evolution_cards/{filename}.png"
+            return f"../cards/evolution_cards/{filename}.png"
         else:
             return f"https://via.placeholder.com/100x120/7B68EE/FFFFFF?text={card_name.replace(' ', '+')}"
     
@@ -384,15 +385,22 @@ class ScreenshotHTMLGenerator:
         }}
         
         .card-item {{
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }}
         
         .card-img {{
             width: 100%;
-            max-width: 120px;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            max-width: 100px;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 5px;
+            display: block;
         }}
         
         @media (max-width: 768px) {{

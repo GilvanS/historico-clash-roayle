@@ -156,15 +156,22 @@
         }
         
         .card-item {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
         
         .card-img {
             width: 100%;
-            max-width: 120px;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            max-width: 100px;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 5px;
+            display: block;
         }
         
         @media (max-width: 768px) {
@@ -237,7 +244,7 @@
                     </div>
                 </div>
                 <div class="deck-cards">
-                    <div class="card-item"><img src="cards/normal_cards/ArcherQueen.png" alt="Archer Queen" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/Arrows.png" alt="Arrows" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/Bomber.png" alt="Bomber" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/GoblinCurse.png" alt="Goblin Curse" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/GobGiant.png" alt="Goblin Giant" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/PEKKA.png" alt="P.E.K.K.A" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/Rage.png" alt="Rage" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/SkeletonKing.png" alt="Skeleton King" class="card-img"></div>
+                    <div class="card-item"><img src="../cards/normal_cards/ArcherQueen.png" alt="Archer Queen" class="card-img"></div><div class="card-item"><img src="../cards/normal_cards/Arrows.png" alt="Arrows" class="card-img"></div><div class="card-item"><img src="../cards/normal_cards/Bomber.png" alt="Bomber" class="card-img"></div><div class="card-item"><img src="../cards/normal_cards/GoblinCurse.png" alt="Goblin Curse" class="card-img"></div><div class="card-item"><img src="../cards/normal_cards/GobGiant.png" alt="Goblin Giant" class="card-img"></div><div class="card-item"><img src="../cards/normal_cards/PEKKA.png" alt="P.E.K.K.A" class="card-img"></div><div class="card-item"><img src="../cards/normal_cards/Rage.png" alt="Rage" class="card-img"></div><div class="card-item"><img src="../cards/normal_cards/SkeletonKing.png" alt="Skeleton King" class="card-img"></div>
                 </div>
             </div>
         </div>
