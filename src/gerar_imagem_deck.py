@@ -114,7 +114,7 @@ def gerar_svg_deck(deck_data: Dict, output_file: str = "deck_performance.svg"):
   
   <!-- Stats -->
   <text x="400" y="80" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">
-    {deck_data['win_rate']:.1f}% Taxa de Vitória
+    {deck_data['win_rate']:.1f}% Taxa de Vitória 
   </text>
   
   <text x="200" y="120" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle">
