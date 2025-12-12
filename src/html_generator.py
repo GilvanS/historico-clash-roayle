@@ -1188,10 +1188,15 @@ class GitHubPagesHTMLGenerator:
             trophy_color = "green" if battle['trophy_change'] >= 0 else "red"
             
             # Table and card HTML generation
+            # Format result text with player name for victories
+            result_display = 'Vitória' if result_text == 'VICTORY' else 'Derrota' if result_text == 'DEFEAT' else 'Empate'
+            if result_text == 'VICTORY' and stats.get('name'):
+                result_display = f"Vitória - {stats['name']}"
+            
             battles_table_html += f"""
                 <tr class="battle-{result_class}">
                     <td>{self.format_time_ago(battle['battle_time'])}</td>
-                    <td><span class="result-{result_class}">{'Vitória' if result_text == 'VICTORY' else 'Derrota' if result_text == 'DEFEAT' else 'Empate'}</span></td>
+                    <td><span class="result-{result_class}">{result_display}</span></td>
                     <td>{battle['opponent_name']}</td>
                     <td>{battle['crowns']}</td>
                     <td style="color: {trophy_color}">{battle['trophy_change']:+d}</td>
@@ -1202,7 +1207,7 @@ class GitHubPagesHTMLGenerator:
             battles_cards_html += f"""
                 <div class="battle-card battle-{result_class}">
                     <div class="battle-card-header">
-                        <span class="result-{result_class} battle-result">{'Vitória' if result_text == 'VICTORY' else 'Derrota' if result_text == 'DEFEAT' else 'Empate'}</span>
+                        <span class="result-{result_class} battle-result">{result_display}</span>
                         <span class="battle-time">{self.format_time_ago(battle['battle_time'])}</span>
                     </div>
                     <div class="battle-card-content">
