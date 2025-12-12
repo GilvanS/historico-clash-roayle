@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clash Royale Battle Analytics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header-icon {
+            font-size: 1.2em;
+        }
+        
+        .player-info {
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .player-info h2 {
+            color: #2d3748;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        
+        .player-info p {
+            color: #4a5568;
+            font-size: 1.1em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card h3 {
+            color: #4a5568;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .stat-card .value {
+            color: #4299e1;
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card small {
+            color: #718096;
+            font-size: 0.85em;
+        }
+        
+        .top-decks-section {
+            margin-top: 40px;
+        }
+        
+        .top-decks-section h2 {
+            color: #2d3748;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .trophy-icon {
+            color: #d69e2e;
+            font-size: 1.2em;
+        }
+        
+        .deck-card {
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .deck-header {
+            margin-bottom: 15px;
+        }
+        
+        .deck-header h3 {
+            color: #2d3748;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        
+        .deck-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .deck-stat {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+        
+        .deck-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .card-item {
+            text-align: center;
+        }
+        
+        .card-img {
+            width: 100%;
+            max-width: 120px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .deck-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="header-icon">⚔️</span>
+                Clash Royale Battle Analytics
+            </h1>
+        </div>
+        
+        <div class="player-info">
+            <h2>Λ Яᄃ λ Ð Є (#2QR292P)</h2>
+            <p><strong>Clan:</strong> Tropa Do Bruxo | <strong>Level:</strong> 76</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Current Trophies</h3>
+                <div class="value">10,560</div>
+                <small>Best: 10,560</small>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Win Rate</h3>
+                <div class="value">48.5%</div>
+                <small>545W / 579L</small>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Total Battles</h3>
+                <div class="value">1124</div>
+                <small>0 draws</small>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Trophy Change</h3>
+                <div class="value" style="color: green">+1732</div>
+                <small>Total from battles</small>
+            </div>
+        </div>
+        
+        
+        <div class="top-decks-section">
+            <h2>
+                <span class="trophy-icon">🏆</span>
+                Top Performing Decks
+            </h2>
+            
+            <div class="deck-card">
+                <div class="deck-header">
+                    <h3>#1 - 100.0% Win Rate</h3>
+                    <div class="deck-stats">
+                        <span class="deck-stat">🏆 1 battles</span>
+                        <span class="deck-stat">✅ 1 wins</span>
+                        <span class="deck-stat">❌ 0 losses</span>
+                        <span class="deck-stat" style="color: green">📈 +0 trophies</span>
+                        <span class="deck-stat">👑 3.0 avg crowns</span>
+                    </div>
+                </div>
+                <div class="deck-cards">
+                    <div class="card-item"><img src="cards/normal_cards/ArcherQueen.png" alt="Archer Queen" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/Arrows.png" alt="Arrows" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/Bomber.png" alt="Bomber" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/GoblinCurse.png" alt="Goblin Curse" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/GobGiant.png" alt="Goblin Giant" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/PEKKA.png" alt="P.E.K.K.A" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/Rage.png" alt="Rage" class="card-img"></div><div class="card-item"><img src="cards/normal_cards/SkeletonKing.png" alt="Skeleton King" class="card-img"></div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
