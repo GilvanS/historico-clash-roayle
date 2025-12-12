@@ -154,15 +154,23 @@ class ScreenshotHTMLGenerator:
             'total_trophy_change': battle_stats[4] or 0
         }
     
-    def get_top_deck(self) -> Optional[Dict]:
-        """Get top performing deck"""
+    def get_top_deck(self, player_tag: str = None) -> Optional[Dict]:
+        """Get most used deck (most battles) or deck with most wins"""
         if not os.path.exists(self.db_path):
             return None
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        cursor.execute("""
+        # Get player tag if not provided
+        if not player_tag:
+            cursor.execute("SELECT player_tag FROM players ORDER BY last_updated DESC LIMIT 1")
+            player_row = cursor.fetchone()
+            if player_row:
+                player_tag = player_row[0]
+        
+        # Build query with optional player_tag filter
+        query = """
             SELECT 
                 deck_cards,
                 COUNT(*) as total_battles,
@@ -172,13 +180,23 @@ class ScreenshotHTMLGenerator:
                 AVG(crowns) as avg_crowns
             FROM battles
             WHERE deck_cards IS NOT NULL AND deck_cards != ''
+        """
+        
+        params = []
+        if player_tag:
+            query += " AND player_tag = ?"
+            params.append(player_tag)
+        
+        query += """
             GROUP BY deck_cards
             HAVING total_battles >= 1
             ORDER BY 
-                (CAST(wins AS FLOAT) / CAST(total_battles AS FLOAT)) DESC,
-                total_battles DESC
+                total_battles DESC,
+                wins DESC
             LIMIT 1
-        """)
+        """
+        
+        cursor.execute(query, params)
         
         row = cursor.fetchone()
         conn.close()
@@ -216,7 +234,8 @@ class ScreenshotHTMLGenerator:
     def generate_html(self) -> str:
         """Generate complete HTML document"""
         stats = self.get_player_stats()
-        top_deck = self.get_top_deck()
+        player_tag = stats.get('player_tag') if stats else None
+        top_deck = self.get_top_deck(player_tag=player_tag)
         
         if not stats:
             return "<html><body><h1>Erro: Nenhum dado encontrado no banco de dados</h1></body></html>"
