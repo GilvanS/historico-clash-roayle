@@ -17,6 +17,8 @@ class GitHubPagesHTMLGenerator:
         # Card name mapping for file names (GitHub Pages uses relative paths)
         self.card_name_mapping = {
             'Three Musketeers': '3M',
+            'Hero Musketeer': 'Musk',  # Hero version of Musketeer
+            'Musketeer': 'Musk',  # Keep regular Musketeer mapping
             'Archer Queen': 'ArcherQueen',
             'Baby Dragon': 'BabyD',
             'Barbarian Barrel': 'BarbBarrel',
@@ -106,14 +108,18 @@ class GitHubPagesHTMLGenerator:
         """Get the relative path to card image for GitHub Pages"""
         filename = self.get_card_filename(card_name)
         
-        # Try normal cards first
+        # Try hero cards first (newest), then evolution, then normal
+        hero_path = f"cards/hero_cards/{filename}.png"
         normal_path = f"cards/normal_cards/{filename}.png"
         evolution_path = f"cards/evolution_cards/{filename}.png"
         
         # Check if files exist (look in parent directory when running from src/)
         cards_base = "../cards" if os.path.exists("../cards") else "cards"
         
-        if os.path.exists(f"{cards_base}/normal_cards/{filename}.png"):
+        # Check for hero cards first (Hero Musketeer, etc.)
+        if os.path.exists(f"{cards_base}/hero_cards/{filename}.png"):
+            return hero_path
+        elif os.path.exists(f"{cards_base}/normal_cards/{filename}.png"):
             return normal_path
         elif os.path.exists(f"{cards_base}/evolution_cards/{filename}.png"):
             return evolution_path
