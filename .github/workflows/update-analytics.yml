@@ -71,22 +71,16 @@ jobs:
         
     - name: Commit and push changes
       run: |
+        # Always pull latest changes before committing to avoid conflicts
+        git pull --rebase origin main || git pull origin main --no-edit || true
+        
         git add src/clash_royale.db docs/index.html docs/clan.html docs/member_*.html README.md
         if ! git diff --staged --quiet; then
           git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-          # Try to push, if it fails, pull and resolve conflicts
-          if ! git push origin HEAD; then
-            # Fetch latest changes
-            git fetch origin main
-            # Try to merge, if conflicts occur, keep our version of README (it's auto-generated)
-            if ! git merge origin/main --no-edit; then
-              # Resolve conflicts by keeping our version of README
-              git checkout --ours README.md 2>/dev/null || true
-              git add README.md
-              git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
-            fi
-            git push origin HEAD
-          fi
+          # Push with retry logic
+          git push origin HEAD || (git pull --rebase origin main && git push origin HEAD)
+        else
+          echo "Nenhuma mudanca para commitar"
         fi
         
     - name: Copy assets to docs
