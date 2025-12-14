@@ -144,22 +144,35 @@
         }
         
         .deck-cards-compact {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
             gap: 8px;
             margin-top: 15px;
             justify-content: flex-start;
         }
         
+        @media (max-width: 768px) {
+            .deck-cards-compact {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
         .deck-cards-compact .card-container {
-            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 5px;
-            min-width: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
         
         .deck-cards-compact .card-image {
-            width: 50px;
-            height: 60px;
+            width: 100%;
+            max-width: 100px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 5px;
         }
         
         .card-container {
@@ -2187,7 +2200,7 @@
                                 <span class="stat">🏟️ Legendary Arena</span>
                             </div>
                         </div>
-                        <div class="deck-cards-compact"><div class="card-container"><img src="cards/normal_cards/Pump.png" alt="Elixir Collector" class="card-image" title="Elixir Collector" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/FireSpirit.png" alt="Fire Spirit" class="card-image" title="Fire Spirit" loading="lazy"></div><div class="card-container"><img src="https://via.placeholder.com/100x120/7B68EE/FFFFFF?text=Goblins" alt="Goblins" class="card-image" title="Goblins" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/IceSpirit.png" alt="Ice Spirit" class="card-image" title="Ice Spirit" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Knight.png" alt="Knight" class="card-image" title="Knight" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/LittlePrince.png" alt="Little Prince" class="card-image" title="Little Prince" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Log.png" alt="The Log" class="card-image" title="The Log" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/XBow.png" alt="X-Bow" class="card-image" title="X-Bow" loading="lazy"></div></div>
+                        <div class="deck-cards-compact"><div class="card-container"><img src="cards/normal_cards/Pump.png" alt="Elixir Collector" class="card-image" title="Elixir Collector" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/FireSpirit.png" alt="Fire Spirit" class="card-image" title="Fire Spirit" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Gobs.png" alt="Goblins" class="card-image" title="Goblins" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/IceSpirit.png" alt="Ice Spirit" class="card-image" title="Ice Spirit" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Knight.png" alt="Knight" class="card-image" title="Knight" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/LittlePrince.png" alt="Little Prince" class="card-image" title="Little Prince" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Log.png" alt="The Log" class="card-image" title="The Log" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/XBow.png" alt="X-Bow" class="card-image" title="X-Bow" loading="lazy"></div></div>
                     </div>
                 </div>
             
@@ -3645,7 +3658,7 @@
                                 <span class="stat">🏟️ Legendary Arena</span>
                             </div>
                         </div>
-                        <div class="deck-cards-compact"><div class="card-container"><img src="cards/normal_cards/Barbs.png" alt="Barbarians" class="card-image" title="Barbarians" loading="lazy"></div><div class="card-container"><img src="https://via.placeholder.com/100x120/7B68EE/FFFFFF?text=Goblins" alt="Goblins" class="card-image" title="Goblins" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Miner.png" alt="Miner" class="card-image" title="Miner" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Horde.png" alt="Minion Horde" class="card-image" title="Minion Horde" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Monk.png" alt="Monk" class="card-image" title="Monk" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Log.png" alt="The Log" class="card-image" title="The Log" loading="lazy"></div><div class="card-container"><img src="https://via.placeholder.com/100x120/7B68EE/FFFFFF?text=Vines" alt="Vines" class="card-image" title="Vines" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/WallBreakers.png" alt="Wall Breakers" class="card-image" title="Wall Breakers" loading="lazy"></div></div>
+                        <div class="deck-cards-compact"><div class="card-container"><img src="cards/normal_cards/Barbs.png" alt="Barbarians" class="card-image" title="Barbarians" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Gobs.png" alt="Goblins" class="card-image" title="Goblins" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Miner.png" alt="Miner" class="card-image" title="Miner" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Horde.png" alt="Minion Horde" class="card-image" title="Minion Horde" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Monk.png" alt="Monk" class="card-image" title="Monk" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Log.png" alt="The Log" class="card-image" title="The Log" loading="lazy"></div><div class="card-container"><img src="https://via.placeholder.com/100x120/7B68EE/FFFFFF?text=Vines" alt="Vines" class="card-image" title="Vines" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/WallBreakers.png" alt="Wall Breakers" class="card-image" title="Wall Breakers" loading="lazy"></div></div>
                     </div>
                 </div>
             
@@ -5056,8 +5069,8 @@
         </div>
 
         <div class="footer">
-            <p>Member profile generated on 2025-12-14 19:18:53</p>
-            <p>Last seen: 2 days ago</p>
+            <p>Member profile generated on 2025-12-14 19:43:29</p>
+            <p>Last seen: 3 days ago</p>
             <p><a href="clan.html" class="back-link">← Back to Clan Analytics</a></p>
         </div>
     </div>
