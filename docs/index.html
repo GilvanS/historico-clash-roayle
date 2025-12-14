@@ -145,22 +145,35 @@
         }
         
         .deck-cards-compact {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
             gap: 8px;
             margin-top: 15px;
             justify-content: flex-start;
         }
         
+        @media (max-width: 768px) {
+            .deck-cards-compact {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
         .deck-cards-compact .card-container {
-            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 5px;
-            min-width: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
         
         .deck-cards-compact .card-image {
-            width: 50px;
-            height: 60px;
+            width: 100%;
+            max-width: 100px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 5px;
         }
         
         .card-container {
@@ -1044,17 +1057,17 @@
                 </div>
                 <div class="stat-card">
                     <h3>Taxa de Vitória -  Λ Яᄃ λ Ð Є</h3>
-                    <div class="value">48.7%</div>
-                    <small>570V / 601D</small>
+                    <div class="value">48.8%</div>
+                    <small>572V / 601D</small>
                 </div>
                 <div class="stat-card">
                     <h3>Total de Batalhas</h3>
-                    <div class="value">1171</div>
+                    <div class="value">1173</div>
                     <small>0 empates</small>
                 </div>
                 <div class="stat-card">
                     <h3>Mudança de Trofeus</h3>
-                    <div class="value" style="color: green">+1911</div>
+                    <div class="value" style="color: green">+1971</div>
                     <small>Total das batalhas</small>
                 </div>
             </div>
@@ -1487,16 +1500,16 @@
                     </div>
                 </div>
             
-                <div class="histogram-bar" title="2025-12-14: 7W/8L/0D">
+                <div class="histogram-bar" title="2025-12-14: 9W/8L/0D">
                     <div class="bar-date">14</div>
                     <div class="bar-stack">
             
-                    <div class="bar-segment bar-losses" style="height: 68.57142857142858px;">
+                    <div class="bar-segment bar-losses" style="height: 68.57142857142857px;">
                         <span class="segment-value">8</span>
                     </div>
                 
-                    <div class="bar-segment bar-wins" style="height: 60.00000000000001px;">
-                        <span class="segment-value">7</span>
+                    <div class="bar-segment bar-wins" style="height: 77.14285714285715px;">
+                        <span class="segment-value">9</span>
                     </div>
                 
                     </div>
@@ -1607,16 +1620,16 @@
                     </div>
                 </div>
             
-                <div class="histogram-bar" title="2025-12-14: 7W/8L/0D">
+                <div class="histogram-bar" title="2025-12-14: 9W/8L/0D">
                     <div class="bar-date">14</div>
                     <div class="bar-stack">
             
-                    <div class="bar-segment bar-losses" style="height: 68.57142857142858px;">
+                    <div class="bar-segment bar-losses" style="height: 68.57142857142857px;">
                         <span class="segment-value">8</span>
                     </div>
                 
-                    <div class="bar-segment bar-wins" style="height: 60.00000000000001px;">
-                        <span class="segment-value">7</span>
+                    <div class="bar-segment bar-wins" style="height: 77.14285714285715px;">
+                        <span class="segment-value">9</span>
                     </div>
                 
                     </div>
@@ -1632,13 +1645,13 @@
             
                 <div class="deck-item">
                     <div class="deck-header">
-                        <h3>#1 - 75.0% Taxa de Vitória</h3>
+                        <h3>#1 - 83.33% Taxa de Vitória</h3>
                         <div class="deck-stats">
-                            <span class="stat">🏆 4 batalhas</span>
-                            <span class="stat">✅ 3 vitórias</span>
+                            <span class="stat">🏆 6 batalhas</span>
+                            <span class="stat">✅ 5 vitórias</span>
                             <span class="stat">❌ 1 derrotas</span>
-                            <span class="stat" style="color: green">📈 +90 trofeus</span>
-                            <span class="stat">👑 1.8 coroas médias</span>
+                            <span class="stat" style="color: green">📈 +150 trofeus</span>
+                            <span class="stat">👑 2.2 coroas médias</span>
                         </div>
                     </div>
                     <div class="deck-cards-compact"><div class="card-container"><img src="cards/normal_cards/BarbBarrel.png" alt="Barbarian Barrel" class="card-image" title="Barbarian Barrel" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/DartGob.png" alt="Dart Goblin" class="card-image" title="Dart Goblin" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/eBarbs.png" alt="Elite Barbarians" class="card-image" title="Elite Barbarians" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/GobGang.png" alt="Goblin Gang" class="card-image" title="Goblin Gang" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Lightning.png" alt="Lightning" class="card-image" title="Lightning" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Musk.png" alt="Musketeer" class="card-image" title="Musketeer" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/RoyalRecruits.png" alt="Royal Recruits" class="card-image" title="Royal Recruits" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/SkellyBarrel.png" alt="Skeleton Barrel" class="card-image" title="Skeleton Barrel" loading="lazy"></div></div>
@@ -1683,7 +1696,7 @@
                             <span class="stat">👑 1.0 coroas médias</span>
                         </div>
                     </div>
-                    <div class="deck-cards-compact"><div class="card-container"><img src="cards/normal_cards/Arrows.png" alt="Arrows" class="card-image" title="Arrows" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/BarbBarrel.png" alt="Barbarian Barrel" class="card-image" title="Barbarian Barrel" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Bats.png" alt="Bats" class="card-image" title="Bats" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/GobGang.png" alt="Goblin Gang" class="card-image" title="Goblin Gang" loading="lazy"></div><div class="card-container"><img src="https://via.placeholder.com/100x120/7B68EE/FFFFFF?text=Goblins" alt="Goblins" class="card-image" title="Goblins" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Musk.png" alt="Musketeer" class="card-image" title="Musketeer" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/RoyalRecruits.png" alt="Royal Recruits" class="card-image" title="Royal Recruits" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/SkellyBarrel.png" alt="Skeleton Barrel" class="card-image" title="Skeleton Barrel" loading="lazy"></div></div>
+                    <div class="deck-cards-compact"><div class="card-container"><img src="cards/normal_cards/Arrows.png" alt="Arrows" class="card-image" title="Arrows" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/BarbBarrel.png" alt="Barbarian Barrel" class="card-image" title="Barbarian Barrel" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Bats.png" alt="Bats" class="card-image" title="Bats" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/GobGang.png" alt="Goblin Gang" class="card-image" title="Goblin Gang" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Gobs.png" alt="Goblins" class="card-image" title="Goblins" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/Musk.png" alt="Musketeer" class="card-image" title="Musketeer" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/RoyalRecruits.png" alt="Royal Recruits" class="card-image" title="Royal Recruits" loading="lazy"></div><div class="card-container"><img src="cards/normal_cards/SkellyBarrel.png" alt="Skeleton Barrel" class="card-image" title="Skeleton Barrel" loading="lazy"></div></div>
                 </div>
             
                 <div class="deck-item">
@@ -1779,7 +1792,25 @@
                     <thead><tr><th>Horário</th><th>Resultado</th><th>Oponente</th><th>Coroas</th><th>Trofeus Δ</th><th>Arena</th></tr></thead>
                     <tbody>
                 <tr class="battle-victory">
-                    <td>6 minutes ago</td>
+                    <td>18 minutes ago</td>
+                    <td><span class="result-victory">Vitória - Λ Яᄃ λ Ð Є</span></td>
+                    <td>hhhh</td>
+                    <td>3</td>
+                    <td style="color: green">+30</td>
+                    <td>Legendary Arena</td>
+                </tr>
+            
+                <tr class="battle-victory">
+                    <td>23 minutes ago</td>
+                    <td><span class="result-victory">Vitória - Λ Яᄃ λ Ð Є</span></td>
+                    <td>El Masturbinho</td>
+                    <td>3</td>
+                    <td style="color: green">+30</td>
+                    <td>Legendary Arena</td>
+                </tr>
+            
+                <tr class="battle-victory">
+                    <td>31 minutes ago</td>
                     <td><span class="result-victory">Vitória - Λ Яᄃ λ Ð Є</span></td>
                     <td>ÑF</td>
                     <td>3</td>
@@ -1788,7 +1819,7 @@
                 </tr>
             
                 <tr class="battle-victory">
-                    <td>9 minutes ago</td>
+                    <td>33 minutes ago</td>
                     <td><span class="result-victory">Vitória - Λ Яᄃ λ Ð Є</span></td>
                     <td>Juanjo27</td>
                     <td>2</td>
@@ -1797,7 +1828,7 @@
                 </tr>
             
                 <tr class="battle-defeat">
-                    <td>14 minutes ago</td>
+                    <td>39 minutes ago</td>
                     <td><span class="result-defeat">Derrota</span></td>
                     <td>الملك</td>
                     <td>0</td>
@@ -1806,7 +1837,7 @@
                 </tr>
             
                 <tr class="battle-victory">
-                    <td>18 minutes ago</td>
+                    <td>42 minutes ago</td>
                     <td><span class="result-victory">Vitória - Λ Яᄃ λ Ð Є</span></td>
                     <td>olke</td>
                     <td>2</td>
@@ -1815,7 +1846,7 @@
                 </tr>
             
                 <tr class="battle-defeat">
-                    <td>24 minutes ago</td>
+                    <td>48 minutes ago</td>
                     <td><span class="result-defeat">Derrota</span></td>
                     <td>Kuryam</td>
                     <td>0</td>
@@ -1824,7 +1855,7 @@
                 </tr>
             
                 <tr class="battle-defeat">
-                    <td>38 minutes ago</td>
+                    <td>1 hours ago</td>
                     <td><span class="result-defeat">Derrota</span></td>
                     <td>sirchrisnay</td>
                     <td>0</td>
@@ -1833,7 +1864,7 @@
                 </tr>
             
                 <tr class="battle-defeat">
-                    <td>41 minutes ago</td>
+                    <td>1 hours ago</td>
                     <td><span class="result-defeat">Derrota</span></td>
                     <td>animal45654</td>
                     <td>1</td>
@@ -1842,29 +1873,11 @@
                 </tr>
             
                 <tr class="battle-victory">
-                    <td>46 minutes ago</td>
+                    <td>1 hours ago</td>
                     <td><span class="result-victory">Vitória - Λ Яᄃ λ Ð Є</span></td>
                     <td>santi</td>
                     <td>1</td>
                     <td style="color: green">+30</td>
-                    <td>Legendary Arena</td>
-                </tr>
-            
-                <tr class="battle-victory">
-                    <td>52 minutes ago</td>
-                    <td><span class="result-victory">Vitória - Λ Яᄃ λ Ð Є</span></td>
-                    <td>Regin bjj</td>
-                    <td>3</td>
-                    <td style="color: green">+30</td>
-                    <td>Legendary Arena</td>
-                </tr>
-            
-                <tr class="battle-defeat">
-                    <td>54 minutes ago</td>
-                    <td><span class="result-defeat">Derrota</span></td>
-                    <td>DrippyRey</td>
-                    <td>0</td>
-                    <td style="color: green">+0</td>
                     <td>Legendary Arena</td>
                 </tr>
             </tbody>
@@ -1874,7 +1887,41 @@
                 <div class="battle-card battle-victory">
                     <div class="battle-card-header">
                         <span class="result-victory battle-result">Vitória - Λ Яᄃ λ Ð Є</span>
-                        <span class="battle-time">6 minutes ago</span>
+                        <span class="battle-time">18 minutes ago</span>
+                    </div>
+                    <div class="battle-card-content">
+                        <div class="battle-info">
+                            <strong>vs hhhh</strong>
+                            <span>Legendary Arena</span>
+                        </div>
+                        <div class="battle-stats">
+                            <span class="crown-count">👑 3</span>
+                            <span class="trophy-change" style="color: green">🏆 +30</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="battle-card battle-victory">
+                    <div class="battle-card-header">
+                        <span class="result-victory battle-result">Vitória - Λ Яᄃ λ Ð Є</span>
+                        <span class="battle-time">23 minutes ago</span>
+                    </div>
+                    <div class="battle-card-content">
+                        <div class="battle-info">
+                            <strong>vs El Masturbinho</strong>
+                            <span>Legendary Arena</span>
+                        </div>
+                        <div class="battle-stats">
+                            <span class="crown-count">👑 3</span>
+                            <span class="trophy-change" style="color: green">🏆 +30</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="battle-card battle-victory">
+                    <div class="battle-card-header">
+                        <span class="result-victory battle-result">Vitória - Λ Яᄃ λ Ð Є</span>
+                        <span class="battle-time">31 minutes ago</span>
                     </div>
                     <div class="battle-card-content">
                         <div class="battle-info">
@@ -1891,7 +1938,7 @@
                 <div class="battle-card battle-victory">
                     <div class="battle-card-header">
                         <span class="result-victory battle-result">Vitória - Λ Яᄃ λ Ð Є</span>
-                        <span class="battle-time">9 minutes ago</span>
+                        <span class="battle-time">33 minutes ago</span>
                     </div>
                     <div class="battle-card-content">
                         <div class="battle-info">
@@ -1908,7 +1955,7 @@
                 <div class="battle-card battle-defeat">
                     <div class="battle-card-header">
                         <span class="result-defeat battle-result">Derrota</span>
-                        <span class="battle-time">14 minutes ago</span>
+                        <span class="battle-time">39 minutes ago</span>
                     </div>
                     <div class="battle-card-content">
                         <div class="battle-info">
@@ -1925,7 +1972,7 @@
                 <div class="battle-card battle-victory">
                     <div class="battle-card-header">
                         <span class="result-victory battle-result">Vitória - Λ Яᄃ λ Ð Є</span>
-                        <span class="battle-time">18 minutes ago</span>
+                        <span class="battle-time">42 minutes ago</span>
                     </div>
                     <div class="battle-card-content">
                         <div class="battle-info">
@@ -1942,7 +1989,7 @@
                 <div class="battle-card battle-defeat">
                     <div class="battle-card-header">
                         <span class="result-defeat battle-result">Derrota</span>
-                        <span class="battle-time">24 minutes ago</span>
+                        <span class="battle-time">48 minutes ago</span>
                     </div>
                     <div class="battle-card-content">
                         <div class="battle-info">
@@ -1959,7 +2006,7 @@
                 <div class="battle-card battle-defeat">
                     <div class="battle-card-header">
                         <span class="result-defeat battle-result">Derrota</span>
-                        <span class="battle-time">38 minutes ago</span>
+                        <span class="battle-time">1 hours ago</span>
                     </div>
                     <div class="battle-card-content">
                         <div class="battle-info">
@@ -1976,7 +2023,7 @@
                 <div class="battle-card battle-defeat">
                     <div class="battle-card-header">
                         <span class="result-defeat battle-result">Derrota</span>
-                        <span class="battle-time">41 minutes ago</span>
+                        <span class="battle-time">1 hours ago</span>
                     </div>
                     <div class="battle-card-content">
                         <div class="battle-info">
@@ -1993,7 +2040,7 @@
                 <div class="battle-card battle-victory">
                     <div class="battle-card-header">
                         <span class="result-victory battle-result">Vitória - Λ Яᄃ λ Ð Є</span>
-                        <span class="battle-time">46 minutes ago</span>
+                        <span class="battle-time">1 hours ago</span>
                     </div>
                     <div class="battle-card-content">
                         <div class="battle-info">
@@ -2003,40 +2050,6 @@
                         <div class="battle-stats">
                             <span class="crown-count">👑 1</span>
                             <span class="trophy-change" style="color: green">🏆 +30</span>
-                        </div>
-                    </div>
-                </div>
-            
-                <div class="battle-card battle-victory">
-                    <div class="battle-card-header">
-                        <span class="result-victory battle-result">Vitória - Λ Яᄃ λ Ð Є</span>
-                        <span class="battle-time">52 minutes ago</span>
-                    </div>
-                    <div class="battle-card-content">
-                        <div class="battle-info">
-                            <strong>vs Regin bjj</strong>
-                            <span>Legendary Arena</span>
-                        </div>
-                        <div class="battle-stats">
-                            <span class="crown-count">👑 3</span>
-                            <span class="trophy-change" style="color: green">🏆 +30</span>
-                        </div>
-                    </div>
-                </div>
-            
-                <div class="battle-card battle-defeat">
-                    <div class="battle-card-header">
-                        <span class="result-defeat battle-result">Derrota</span>
-                        <span class="battle-time">54 minutes ago</span>
-                    </div>
-                    <div class="battle-card-content">
-                        <div class="battle-info">
-                            <strong>vs DrippyRey</strong>
-                            <span>Legendary Arena</span>
-                        </div>
-                        <div class="battle-stats">
-                            <span class="crown-count">👑 0</span>
-                            <span class="trophy-change" style="color: green">🏆 +0</span>
                         </div>
                     </div>
                 </div>
@@ -2168,7 +2181,7 @@
                     <td><a href="member_kurama.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">KURAMA</a></td>
                     <td><span class="role-elder">elder</span></td>
                     <td>10,626</td>
-                    <td>68↑ 20↓</td>
+                    <td>68↑ 30↓</td>
                     <td>1</td>
                     <td>1 hours ago</td>
                 </tr>
@@ -2177,7 +2190,7 @@
                     <td><a href="member_λ_яᄃ_λ_ð_є.html" style="color: #4299e1; text-decoration: none; font-weight: bold;">Λ Яᄃ λ Ð Є</a></td>
                     <td><span class="role-elder">elder</span></td>
                     <td>10,589</td>
-                    <td>1090↑ 600↓</td>
+                    <td>1100↑ 600↓</td>
                     <td>1</td>
                     <td>2 minutes ago</td>
                 </tr>
@@ -2188,7 +2201,7 @@
                     <td>10,337</td>
                     <td>67↑ 80↓</td>
                     <td>1</td>
-                    <td>6 hours ago</td>
+                    <td>7 hours ago</td>
                 </tr>
             
                 <tr class="">
@@ -2197,7 +2210,7 @@
                     <td>10,310</td>
                     <td>256↑ 120↓</td>
                     <td>1</td>
-                    <td>3 hours ago</td>
+                    <td>4 hours ago</td>
                 </tr>
             
                 <tr class="">
@@ -2260,7 +2273,7 @@
                     <td>10,097</td>
                     <td>49↑ 120↓</td>
                     <td>3</td>
-                    <td>1 hours ago</td>
+                    <td>2 hours ago</td>
                 </tr>
             </tbody>
                 </table>
@@ -2427,7 +2440,7 @@
                     <div class="member-card-content">
                         <div class="member-stats">
                             <span class="trophy-count">🏆 10,626</span>
-                            <span class="donation-stats">📦 68↑ 20↓</span>
+                            <span class="donation-stats">📦 68↑ 30↓</span>
                             <span class="deck-changes">🔄 1 deck changes</span>
                         </div>
                         <div class="member-activity">
@@ -2444,7 +2457,7 @@
                     <div class="member-card-content">
                         <div class="member-stats">
                             <span class="trophy-count">🏆 10,589</span>
-                            <span class="donation-stats">📦 1090↑ 600↓</span>
+                            <span class="donation-stats">📦 1100↑ 600↓</span>
                             <span class="deck-changes">🔄 1 deck changes</span>
                         </div>
                         <div class="member-activity">
@@ -2465,7 +2478,7 @@
                             <span class="deck-changes">🔄 1 deck changes</span>
                         </div>
                         <div class="member-activity">
-                            <span class="last-seen">🕒 6 hours ago</span>
+                            <span class="last-seen">🕒 7 hours ago</span>
                         </div>
                     </div>
                 </div>
@@ -2482,7 +2495,7 @@
                             <span class="deck-changes">🔄 1 deck changes</span>
                         </div>
                         <div class="member-activity">
-                            <span class="last-seen">🕒 3 hours ago</span>
+                            <span class="last-seen">🕒 4 hours ago</span>
                         </div>
                     </div>
                 </div>
@@ -2601,7 +2614,7 @@
                             <span class="deck-changes">🔄 3 deck changes</span>
                         </div>
                         <div class="member-activity">
-                            <span class="last-seen">🕒 1 hours ago</span>
+                            <span class="last-seen">🕒 2 hours ago</span>
                         </div>
                     </div>
                 </div>
@@ -2610,7 +2623,7 @@
         
 
         <div class="footer">
-            <p>Report generated on 2025-12-14 19:18:52</p>
+            <p>Report generated on 2025-12-14 19:43:29</p>
             <p>Data last updated: just now</p>
             <p>Automatically updated via GitHub Actions</p>
         </div>
