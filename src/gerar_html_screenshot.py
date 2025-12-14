@@ -496,7 +496,7 @@ class ScreenshotHTMLGenerator:
             
             <div class="deck-card">
                 <div class="deck-header">
-                    <h3>#1 - {top_deck['win_rate']:.1f}% Win Rate</h3>
+                    <h3>#1 - {top_deck['win_rate']:.1f}% Taxa de Vitória{(' - ' + stats['name'] + ' (' + stats['player_tag'] + ')') if stats.get('name') and stats.get('player_tag') else ''}</h3>
                     <div class="deck-stats">
                         <span class="deck-stat">🏆 {top_deck['total_battles']} battles</span>
                         <span class="deck-stat">✅ {top_deck['wins']} wins</span>

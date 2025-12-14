@@ -1206,6 +1206,10 @@ class GitHubPagesHTMLGenerator:
         
         # Generate deck performance HTML
         deck_performance_html = ""
+        player_name_tag = ""
+        if stats and stats.get('name') and stats.get('player_tag'):
+            player_name_tag = f" - {stats['name']} ({stats['player_tag']})"
+        
         for i, deck in enumerate(decks, 1):
             trophy_color = "green" if deck['total_trophy_change'] >= 0 else "red"
             deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
@@ -1213,7 +1217,7 @@ class GitHubPagesHTMLGenerator:
             deck_performance_html += f"""
                 <div class="deck-item">
                     <div class="deck-header">
-                        <h3>#{i} - {deck['win_rate']}% Taxa de Vitória</h3>
+                        <h3>#{i} - {deck['win_rate']}% Taxa de Vitória{player_name_tag}</h3>
                         <div class="deck-stats">
                             <span class="stat">🏆 {deck['total_battles']} batalhas</span>
                             <span class="stat">✅ {deck['wins']} vitórias</span>
