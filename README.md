@@ -6,9 +6,1659 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 13/12/2025 23:39:21
+**Última atualização:** 14/12/2025 19:37:23
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 17
+- **Vitórias:** 9 (52.9%)
+- **Derrotas:** 8
+- **Mudança Total de Troféus:** +210
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 83.3%
+- **Batalhas:** 6 (5V - 1D)
+- **Troféus:** +150
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+3. ⚖️ **DERROTA** vs Life_Rom@ - 1-3 coroas (+0 troféus) - 14/12/2025 18:12
+4. ⚖️ **DERROTA** vs movester - 0-1 coroas (+0 troféus) - 14/12/2025 18:16
+5. ⚖️ **DERROTA** vs Mael - 1-3 coroas (+0 troféus) - 14/12/2025 18:20
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (83.3% win rate) está acima de 50%
+- ✅ **Win rate geral** (52.9%) está acima de 50%
+- ✅ **Troféus totais** positivos (+210)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 81
+- **Vitórias:** 46 (56.8%)
+- **Derrotas:** 35
+- **Mudança Total de Troféus:** +689
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 19:12:21
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 75.0%
+- **Batalhas:** 4 (3V - 1D)
+- **Troféus:** +90
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (75.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (56.8%) está acima de 50%
+- ✅ **Troféus totais** positivos (+689)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 15
+- **Vitórias:** 7 (46.7%)
+- **Derrotas:** 8
+- **Mudança Total de Troféus:** +150
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 75.0%
+- **Batalhas:** 4 (3V - 1D)
+- **Troféus:** +90
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+3. ⚖️ **DERROTA** vs Life_Rom@ - 1-3 coroas (+0 troféus) - 14/12/2025 18:12
+4. ⚖️ **DERROTA** vs movester - 0-1 coroas (+0 troféus) - 14/12/2025 18:16
+5. ⚖️ **DERROTA** vs Mael - 1-3 coroas (+0 troféus) - 14/12/2025 18:20
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (75.0% win rate) está acima de 50%
+- ⚠️ **Win rate geral** (46.7%) está abaixo de 50%
+- ✅ **Troféus totais** positivos (+150)
+
+### ❌ O que não está funcionando
+
+- ❌ **Win rate geral** abaixo de 50% - considere revisar estratégias
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 10
+- **Vitórias:** 4 (40.0%)
+- **Derrotas:** 6
+- **Mudança Total de Troféus:** +60
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 40.0%
+- **Batalhas:** 10 (4V - 6D)
+- **Troféus:** +60
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+3. ⚖️ **DERROTA** vs Life_Rom@ - 1-3 coroas (+0 troféus) - 14/12/2025 18:12
+4. ⚖️ **DERROTA** vs movester - 0-1 coroas (+0 troféus) - 14/12/2025 18:16
+5. ⚖️ **DERROTA** vs Mael - 1-3 coroas (+0 troféus) - 14/12/2025 18:20
+
+### ✅ O que está funcionando
+
+- ⚠️ **Deck com melhor performance** (40.0% win rate) está abaixo de 50%
+- ⚠️ **Win rate geral** (40.0%) está abaixo de 50%
+- ✅ **Troféus totais** positivos (+60)
+
+### ❌ O que não está funcionando
+
+- ❌ **Deck com melhor performance** precisa de ajustes (win rate: 40.0%)
+- ❌ **Win rate geral** abaixo de 50% - considere revisar estratégias
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 74
+- **Vitórias:** 43 (58.1%)
+- **Derrotas:** 31
+- **Mudança Total de Troféus:** +599
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 18:32:12
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (58.1%) está acima de 50%
+- ✅ **Troféus totais** positivos (+599)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 7
+- **Vitórias:** 3 (42.9%)
+- **Derrotas:** 4
+- **Mudança Total de Troféus:** +30
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 42.9%
+- **Batalhas:** 7 (3V - 4D)
+- **Troféus:** +30
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+3. ⚖️ **DERROTA** vs Life_Rom@ - 1-3 coroas (+0 troféus) - 14/12/2025 18:12
+4. ⚖️ **DERROTA** vs movester - 0-1 coroas (+0 troféus) - 14/12/2025 18:16
+5. ⚖️ **DERROTA** vs Mael - 1-3 coroas (+0 troféus) - 14/12/2025 18:20
+
+### ✅ O que está funcionando
+
+- ⚠️ **Deck com melhor performance** (42.9% win rate) está abaixo de 50%
+- ⚠️ **Win rate geral** (42.9%) está abaixo de 50%
+- ✅ **Troféus totais** positivos (+30)
+
+### ❌ O que não está funcionando
+
+- ❌ **Deck com melhor performance** precisa de ajustes (win rate: 42.9%)
+- ❌ **Win rate geral** abaixo de 50% - considere revisar estratégias
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 2
+- **Vitórias:** 2 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 2 (2V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 68
+- **Vitórias:** 41 (60.3%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 14:42:09
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (60.3%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 2
+- **Vitórias:** 2 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 2 (2V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 2
+- **Vitórias:** 2 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 2 (2V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 68
+- **Vitórias:** 41 (60.3%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 14:42:09
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (60.3%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 2
+- **Vitórias:** 2 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 2 (2V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 2
+- **Vitórias:** 2 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 2 (2V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 68
+- **Vitórias:** 41 (60.3%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 14:42:09
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (60.3%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 2
+- **Vitórias:** 2 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 2 (2V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 67
+- **Vitórias:** 40 (59.7%)
+- **Derrotas:** 27
+- **Mudança Total de Troféus:** +539
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 01:05:41
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Bats, Goblin Gang, Goblins, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 66.7%
+- **Batalhas:** 9 (6V - 3D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (59.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+539)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 1 (100.0%)
+- **Derrotas:** 0
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 100.0%
+- **Batalhas:** 1 (1V - 0D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (100.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 15
 - **Vitórias:** 8 (53.3%)
