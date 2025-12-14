@@ -46,6 +46,7 @@ class ScreenshotHTMLGenerator:
             'Goblin Drill': 'GoblinDrill',
             'Goblin Machine': 'GoblinMachine',
             'Spear Goblins': 'Gobs',
+            'Goblins': 'Gobs',
             'Golden Knight': 'GoldenKnight',
             'Giant Skeleton': 'GiantSkelly',
             'Heal Spirit': 'HealSpirit',
@@ -398,9 +399,15 @@ class ScreenshotHTMLGenerator:
         
         .deck-cards {{
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
             margin-top: 20px;
+        }}
+        
+        @media (max-width: 768px) {{
+            .deck-cards {{
+                grid-template-columns: repeat(4, 1fr);
+            }}
         }}
         
         .card-item {{
@@ -455,9 +462,9 @@ class ScreenshotHTMLGenerator:
             </div>
             
             <div class="stat-card">
-                <h3>Win Rate</h3>
+                <h3>Taxa de Vitória{(' - ' + stats['name']) if stats.get('name') else ''}</h3>
                 <div class="value">{win_rate:.1f}%</div>
-                <small>{stats['wins']}W / {stats['losses']}L</small>
+                <small>{stats['wins']}V / {stats['losses']}D</small>
             </div>
             
             <div class="stat-card">

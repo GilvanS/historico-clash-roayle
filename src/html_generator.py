@@ -82,6 +82,7 @@ class GitHubPagesHTMLGenerator:
             'Skeleton Barrel': 'SkellyBarrel',
             'Giant Snowball': 'Snowball',
             'Spear Goblins': 'SpearGobs',
+            'Goblins': 'Gobs',
             'Spirit Empress': 'SpiritEmpress',
             'Suspicious Bush': 'SuspiciousBush',
             'Valkyrie': 'Valk',
@@ -177,23 +178,59 @@ class GitHubPagesHTMLGenerator:
             'first_battle': battle_stats[6]
         }
     
-    def get_deck_performance(self, limit: int = 10) -> List[Dict]:
-        """Get deck performance data"""
+    def get_deck_performance(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
+        """Get deck performance data, with user's deck appearing first if player_tag is provided"""
         if not os.path.exists(self.db_path):
             return []
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
+        # Get all decks
         cursor.execute("""
             SELECT * FROM deck_performance 
             WHERE total_battles >= 3
             ORDER BY win_rate DESC, total_battles DESC
             LIMIT ?
-        """, (limit,))
+        """, (limit * 2,))  # Get more to filter user's deck
         
         columns = [description[0] for description in cursor.description]
-        results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        all_decks = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        
+        # If player_tag is provided, find user's deck and move it to first position
+        if player_tag:
+            # Get user's most recent deck
+            cursor.execute("""
+                SELECT deck_cards
+                FROM battles
+                WHERE player_tag = ? AND deck_cards IS NOT NULL AND deck_cards != ''
+                ORDER BY battle_time DESC
+                LIMIT 1
+            """, (player_tag,))
+            
+            user_deck_row = cursor.fetchone()
+            if user_deck_row:
+                user_deck_cards = user_deck_row[0]
+                
+                # Find user's deck in the list
+                user_deck = None
+                other_decks = []
+                
+                for deck in all_decks:
+                    if deck['deck_cards'] == user_deck_cards:
+                        user_deck = deck
+                    else:
+                        other_decks.append(deck)
+                
+                # Put user's deck first, then others
+                if user_deck:
+                    results = [user_deck] + other_decks[:limit - 1]
+                else:
+                    results = all_decks[:limit]
+            else:
+                results = all_decks[:limit]
+        else:
+            results = all_decks[:limit]
         
         conn.close()
         return results
@@ -719,7 +756,11 @@ class GitHubPagesHTMLGenerator:
         if not deck_cards:
             return ""
         
-        cards = deck_cards.split(' | ')
+        # Handle both ' | ' and '|' separators
+        if ' | ' in deck_cards:
+            cards = deck_cards.split(' | ')
+        else:
+            cards = [c.strip() for c in deck_cards.split('|')]
         cards_html = ""
         
         for card in cards:
@@ -1149,7 +1190,8 @@ class GitHubPagesHTMLGenerator:
     def generate_html_report(self) -> str:
         """Generate complete HTML report for GitHub Pages"""
         stats = self.get_player_stats()
-        decks = self.get_deck_performance(10)
+        player_tag = stats.get('player_tag') if stats else None
+        decks = self.get_deck_performance(10, player_tag=player_tag)
         battles = self.get_recent_battles(15)  # Recent Battles section
         daily_stats = self.get_daily_battle_stats(30)
         clan_rankings = self.get_clan_rankings_data()
@@ -1417,22 +1459,35 @@ class GitHubPagesHTMLGenerator:
         }
         
         .deck-cards-compact {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
             gap: 8px;
             margin-top: 15px;
             justify-content: flex-start;
         }
         
+        @media (max-width: 768px) {
+            .deck-cards-compact {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
         .deck-cards-compact .card-container {
-            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 5px;
-            min-width: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
         
         .deck-cards-compact .card-image {
-            width: 50px;
-            height: 60px;
+            width: 100%;
+            max-width: 100px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 5px;
         }
         
         .card-container {
