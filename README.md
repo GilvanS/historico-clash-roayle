@@ -6,9 +6,145 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 14/12/2025 20:03:47
+**Última atualização:** 14/12/2025 20:25:53
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 88
+- **Vitórias:** 51 (58.0%)
+- **Derrotas:** 37
+- **Mudança Total de Troféus:** +839
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VICTORY
+- **Data da Última Batalha:** 14/12/2025 20:19:55
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 72.7%
+- **Batalhas:** 11 (8V - 3D)
+- **Troféus:** +240
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (72.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (58.0%) está acima de 50%
+- ✅ **Troféus totais** positivos (+839)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 22
+- **Vitórias:** 12 (54.5%)
+- **Derrotas:** 10
+- **Mudança Total de Troféus:** +300
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 72.7%
+- **Batalhas:** 11 (8V - 3D)
+- **Troféus:** +240
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+3. ⚖️ **DERROTA** vs Life_Rom@ - 1-3 coroas (+0 troféus) - 14/12/2025 18:12
+4. ⚖️ **DERROTA** vs movester - 0-1 coroas (+0 troféus) - 14/12/2025 18:16
+5. ⚖️ **DERROTA** vs Mael - 1-3 coroas (+0 troféus) - 14/12/2025 18:20
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (72.7% win rate) está acima de 50%
+- ✅ **Win rate geral** (54.5%) está acima de 50%
+- ✅ **Troféus totais** positivos (+300)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 87
+- **Vitórias:** 50 (57.5%)
+- **Derrotas:** 37
+- **Mudança Total de Troféus:** +809
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** DEFEAT
+- **Data da Última Batalha:** 14/12/2025 20:14:29
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 70.0%
+- **Batalhas:** 10 (7V - 3D)
+- **Troféus:** +210
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (70.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (57.5%) está acima de 50%
+- ✅ **Troféus totais** positivos (+809)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 20
+- **Vitórias:** 11 (55.0%)
+- **Derrotas:** 9
+- **Mudança Total de Troféus:** +270
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Bats, Dart Goblin, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 14/12/2025 01:05
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Elite Barbarians, Goblin Gang, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 77.8%
+- **Batalhas:** 9 (7V - 2D)
+- **Troféus:** +210
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs minado - 1-0 coroas (+0 troféus) - 14/12/2025 01:05
+2. ⚖️ **VITORIA** vs fjehrhrgu - 1-0 coroas (+0 troféus) - 14/12/2025 14:42
+3. ⚖️ **DERROTA** vs Life_Rom@ - 1-3 coroas (+0 troféus) - 14/12/2025 18:12
+4. ⚖️ **DERROTA** vs movester - 0-1 coroas (+0 troféus) - 14/12/2025 18:16
+5. ⚖️ **DERROTA** vs Mael - 1-3 coroas (+0 troféus) - 14/12/2025 18:20
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (77.8% win rate) está acima de 50%
+- ✅ **Win rate geral** (55.0%) está acima de 50%
+- ✅ **Troféus totais** positivos (+270)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 85
 - **Vitórias:** 49 (57.6%)
