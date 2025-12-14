@@ -1206,13 +1206,33 @@ class GitHubPagesHTMLGenerator:
         
         # Generate deck performance HTML
         deck_performance_html = ""
-        player_name_tag = ""
-        if stats and stats.get('name') and stats.get('player_tag'):
-            player_name_tag = f" - {stats['name']} ({stats['player_tag']})"
+        
+        # Get user's most recent deck to identify which deck belongs to the user
+        user_deck_cards = None
+        if player_tag:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT deck_cards
+                FROM battles
+                WHERE player_tag = ? AND deck_cards IS NOT NULL AND deck_cards != ''
+                ORDER BY battle_time DESC
+                LIMIT 1
+            """, (player_tag,))
+            user_deck_row = cursor.fetchone()
+            if user_deck_row:
+                user_deck_cards = user_deck_row[0]
+            conn.close()
         
         for i, deck in enumerate(decks, 1):
             trophy_color = "green" if deck['total_trophy_change'] >= 0 else "red"
             deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
+            
+            # Add player name and tag only to user's deck (first deck if it matches)
+            player_name_tag = ""
+            if i == 1 and user_deck_cards and deck['deck_cards'] == user_deck_cards:
+                if stats and stats.get('name') and stats.get('player_tag'):
+                    player_name_tag = f" - {stats['name']} ({stats['player_tag']})"
             
             deck_performance_html += f"""
                 <div class="deck-item">
