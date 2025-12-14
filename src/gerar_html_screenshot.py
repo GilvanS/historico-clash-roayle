@@ -333,6 +333,13 @@ class ScreenshotHTMLGenerator:
             font-size: 0.9em;
             margin-bottom: 10px;
             font-weight: 600;
+            white-space: normal;
+            word-break: keep-all;
+            line-height: 1.4;
+        }}
+        
+        .stat-card h3 br {{
+            display: block;
         }}
         
         .stat-card .value {{
@@ -462,7 +469,7 @@ class ScreenshotHTMLGenerator:
             </div>
             
             <div class="stat-card">
-                <h3>Taxa de Vitória{(' - ' + stats['name']) if stats.get('name') else ''}</h3>
+                <h3>Taxa de Vitória{(' -<br>' + stats['name']) if stats.get('name') else ''}</h3>
                 <div class="value">{win_rate:.1f}%</div>
                 <small>{stats['wins']}V / {stats['losses']}D</small>
             </div>

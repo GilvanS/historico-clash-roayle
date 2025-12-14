@@ -1396,6 +1396,13 @@ class GitHubPagesHTMLGenerator:
         .stat-card h3 {
             color: #2d3748;
             margin-bottom: 10px;
+            white-space: normal;
+            word-break: keep-all;
+            line-height: 1.4;
+        }
+        
+        .stat-card h3 br {
+            display: block;
         }
         
         .stat-card .value {
@@ -2390,7 +2397,7 @@ class GitHubPagesHTMLGenerator:
                     <small>Melhor: {stats['best_trophies']:,}</small>
                 </div>
                 <div class="stat-card">
-                    <h3>Taxa de Vitória{(' -  ' + stats['name']) if stats.get('name') else ''}</h3>
+                    <h3>Taxa de Vitória{(' -<br>' + stats['name']) if stats.get('name') else ''}</h3>
                     <div class="value">{win_rate:.1f}%</div>
                     <small>{stats['wins']}V / {stats['losses']}D</small>
                 </div>
