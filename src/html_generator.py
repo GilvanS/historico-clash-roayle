@@ -186,16 +186,49 @@ class GitHubPagesHTMLGenerator:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Get all decks
+        # Get all decks with player information to identify ownership
         cursor.execute("""
-            SELECT * FROM deck_performance 
-            WHERE total_battles >= 3
+            SELECT 
+                deck_cards,
+                COUNT(*) as total_battles,
+                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                ROUND(AVG(crowns), 2) as avg_crowns,
+                GROUP_CONCAT(DISTINCT player_tag) as player_tags,
+                GROUP_CONCAT(DISTINCT 
+                    CASE 
+                        WHEN player_tag = ? THEN 'user'
+                        WHEN opponent_tag = ? THEN 'opponent'
+                        ELSE 'other'
+                    END
+                ) as deck_owners
+            FROM battles 
+            WHERE deck_cards IS NOT NULL AND deck_cards != ''
+            GROUP BY deck_cards
+            HAVING total_battles >= 3
             ORDER BY win_rate DESC, total_battles DESC
             LIMIT ?
-        """, (limit * 2,))  # Get more to filter user's deck
+        """, (player_tag or '', player_tag or '', limit * 2))
         
-        columns = [description[0] for description in cursor.description]
-        all_decks = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        all_decks = []
+        for row in cursor.fetchall():
+            all_decks.append({
+                'deck_cards': row[0],
+                'total_battles': row[1],
+                'wins': row[2],
+                'losses': row[3],
+                'win_rate': row[4],
+                'total_trophy_change': row[5],
+                'avg_trophy_change': row[6],
+                'avg_crowns': row[7],
+                'player_tags': row[8],
+                'deck_owners': row[9],
+                'is_user_deck': 'user' in (row[9] or ''),
+                'is_opponent_deck': 'opponent' in (row[9] or '')
+            })
         
         # If player_tag is provided, find user's deck and move it to first position
         if player_tag:
@@ -1228,16 +1261,64 @@ class GitHubPagesHTMLGenerator:
             trophy_color = "green" if deck['total_trophy_change'] >= 0 else "red"
             deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
             
-            # Add player name and tag only to user's deck (first deck if it matches)
-            player_name_tag = ""
-            if i == 1 and user_deck_cards and deck['deck_cards'] == user_deck_cards:
+            # Identify deck owner
+            deck_owner_info = ""
+            is_user_deck = (i == 1 and user_deck_cards and deck['deck_cards'] == user_deck_cards)
+            
+            if is_user_deck:
+                # User's deck
                 if stats and stats.get('name') and stats.get('player_tag'):
-                    player_name_tag = f" - {stats['name']} ({stats['player_tag']})"
+                    deck_owner_info = f" - {stats['name']} ({stats['player_tag']})"
+            else:
+                # Check if deck belongs to opponent or clan member
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.cursor()
+                
+                # Check if this deck was used by opponent
+                cursor.execute("""
+                    SELECT DISTINCT opponent_name, opponent_tag, opponent_clan_name
+                    FROM battles
+                    WHERE opponent_deck_cards = ? AND opponent_deck_cards IS NOT NULL
+                    LIMIT 1
+                """, (deck['deck_cards'],))
+                
+                opponent_row = cursor.fetchone()
+                
+                # Check if this deck belongs to a clan member
+                if not opponent_row:
+                    cursor.execute("""
+                        SELECT DISTINCT cmd.name, cmd.player_tag, cmd.clan_name
+                        FROM clan_member_decks cmd
+                        WHERE cmd.deck_cards = ? AND cmd.deck_cards IS NOT NULL
+                        LIMIT 1
+                    """, (deck['deck_cards'],))
+                    clan_member_row = cursor.fetchone()
+                    
+                    if clan_member_row:
+                        deck_owner_info = f" - {clan_member_row[0]} ({clan_member_row[1]}) [Clã]"
+                    else:
+                        # Check if it's from another player_tag in battles
+                        cursor.execute("""
+                            SELECT DISTINCT p.name, b.player_tag
+                            FROM battles b
+                            LEFT JOIN players p ON b.player_tag = p.player_tag
+                            WHERE b.deck_cards = ? AND b.deck_cards IS NOT NULL
+                                AND b.player_tag != ?
+                            LIMIT 1
+                        """, (deck['deck_cards'], player_tag or ''))
+                        other_player_row = cursor.fetchone()
+                        
+                        if other_player_row:
+                            deck_owner_info = f" - {other_player_row[0] or 'Jogador Desconhecido'} ({other_player_row[1]})"
+                else:
+                    deck_owner_info = f" - {opponent_row[0] or 'Oponente'} ({opponent_row[1]}) [Oponente]"
+                
+                conn.close()
             
             deck_performance_html += f"""
                 <div class="deck-item">
                     <div class="deck-header">
-                        <h3>#{i} - {deck['win_rate']}% Taxa de Vitória{player_name_tag}</h3>
+                        <h3>#{i} - {deck['win_rate']}% Taxa de Vitória{deck_owner_info}</h3>
                         <div class="deck-stats">
                             <span class="stat">🏆 {deck['total_battles']} batalhas</span>
                             <span class="stat">✅ {deck['wins']} vitórias</span>
