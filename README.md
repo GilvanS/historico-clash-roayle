@@ -6,9 +6,49 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 19/12/2025 01:54:25
+**Última atualização:** 19/12/2025 03:24:26
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 8
+- **Vitórias:** 4 (50.0%)
+- **Derrotas:** 4
+- **Mudança Total de Troféus:** -59
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Goblin Gang, Lightning, Lumberjack, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** DERROTA
+- **Data da Última Batalha:** 19/12/2025 01:15
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Goblin Gang, Lightning, Lumberjack, Musketeer, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 40.0%
+- **Batalhas:** 5 (2V - 3D)
+- **Troféus:** -59
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **DERROTA** vs ofmycollection - 0-1 coroas (-29 troféus) - 19/12/2025 01:15
+2. ⚖️ **DERROTA** vs Benny RK - 1-3 coroas (-31 troféus) - 19/12/2025 01:18
+3. ⚖️ **DERROTA** vs Felipe Lara - 0-1 coroas (-31 troféus) - 19/12/2025 01:23
+4. ⚖️ **VITORIA** vs HESAM - 1-0 coroas (+32 troféus) - 19/12/2025 01:27
+5. ⚖️ **DERROTA** vs eithan22 - 1-2 coroas (+0 troféus) - 19/12/2025 01:51
+
+### ✅ O que está funcionando
+
+- ⚠️ **Deck com melhor performance** (40.0% win rate) está abaixo de 50%
+- ✅ **Win rate geral** (50.0%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (-59)
+
+### ❌ O que não está funcionando
+
+- ❌ **Deck com melhor performance** precisa de ajustes (win rate: 40.0%)
+- ❌ **Perda de troféus** acumulada (-59) - precisa melhorar performance
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 184
 - **Vitórias:** 110 (59.8%)
