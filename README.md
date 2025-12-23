@@ -6,9 +6,47 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 23/12/2025 15:27:01
+**Última atualização:** 23/12/2025 15:44:35
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 7
+- **Vitórias:** 5 (71.4%)
+- **Derrotas:** 2
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Goblin Gang, Ice Spirit, Lightning, Musketeer, Royal Recruits, Skeleton Barrel
+- **Último Resultado:** VITORIA
+- **Data da Última Batalha:** 23/12/2025 02:40
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Bomber, Dart Goblin, Lightning, Musketeer, Royal Hogs, Royal Recruits, Skeleton Barrel
+- **Win Rate:** 60.0%
+- **Batalhas:** 5 (3V - 2D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **VITORIA** vs SilentJay - 3-1 coroas (+0 troféus) - 23/12/2025 02:40
+2. ⚖️ **DERROTA** vs EmolioReal - 1-2 coroas (+0 troféus) - 23/12/2025 02:44
+3. ⚖️ **VITORIA** vs Ws Jeff - 2-0 coroas (+0 troféus) - 23/12/2025 02:48
+4. ⚖️ **DERROTA** vs D"i"_3-+g*o - 0-1 coroas (+0 troféus) - 23/12/2025 03:26
+5. ⚖️ **VITORIA** vs ArturoPendragon - 1-0 coroas (+0 troféus) - 23/12/2025 03:30
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (60.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (71.4%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 309
 - **Vitórias:** 177 (57.3%)
