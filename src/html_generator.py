@@ -327,24 +327,24 @@ class GitHubPagesHTMLGenerator:
         return results
     
     def get_deck_performance_same_level(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
-        """Get deck performance data from clan members with same level as user"""
+        """Get deck performance data from clan members with same trophies level (>=10K) as user"""
         if not os.path.exists(self.db_path) or not player_tag:
             return []
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Get user's level
+        # Get user's trophies
         cursor.execute("""
-            SELECT level FROM players WHERE player_tag = ?
+            SELECT trophies FROM players WHERE player_tag = ?
         """, (player_tag,))
-        user_level_row = cursor.fetchone()
+        user_trophies_row = cursor.fetchone()
         
-        if not user_level_row or not user_level_row[0]:
+        if not user_trophies_row or not user_trophies_row[0] or user_trophies_row[0] < 10000:
             conn.close()
             return []
         
-        user_level = user_level_row[0]
+        user_trophies = user_trophies_row[0]
         
         # Get user's clan tag
         cursor.execute("""
@@ -358,19 +358,22 @@ class GitHubPagesHTMLGenerator:
         
         clan_tag = user_clan_row[0]
         
-        # Get active clan members with same level
+        # Get active clan members with trophies >= 10000 (mesmo nível de pontuação)
         cursor.execute("""
             SELECT player_tag FROM clan_members 
-            WHERE clan_tag = ? AND level = ?
-        """, (clan_tag, user_level))
+            WHERE clan_tag = ? AND trophies >= 10000
+        """, (clan_tag,))
         
         same_level_member_tags = {row[0] for row in cursor.fetchall()}
+        
+        # Add user's tag to the set
+        same_level_member_tags.add(player_tag)
         
         if not same_level_member_tags:
             conn.close()
             return []
         
-        # Get decks from same level members
+        # Get decks from same level members (including user)
         placeholders = ','.join(['?'] * len(same_level_member_tags))
         query = f"""
             SELECT 
@@ -410,17 +413,42 @@ class GitHubPagesHTMLGenerator:
         conn.close()
         return results
     
-    def get_deck_performance_defeated_by(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
-        """Get deck performance data from opponents who defeated the user"""
+    def get_deck_performance_defeated_by(self, limit: int = 20, player_tag: str = None) -> List[Dict]:
+        """Get deck performance data from opponents who defeated the user (this week, up to 20 unique tags)"""
         if not os.path.exists(self.db_path) or not player_tag:
             return []
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Get decks from opponents who defeated the user
-        # Note: For opponent decks, we count how many times they defeated the user
-        query = """
+        # Calculate start of current week (Monday)
+        from datetime import timedelta
+        now = datetime.utcnow()
+        days_since_monday = now.weekday()  # 0 = Monday, 6 = Sunday
+        week_start = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start_str = week_start.strftime('%Y%m%dT%H%M%S.000Z')
+        
+        # First, get unique opponent tags from this week (limit 20 tags)
+        cursor.execute("""
+            SELECT DISTINCT opponent_tag
+            FROM battles 
+            WHERE opponent_tag IS NOT NULL AND opponent_tag != ''
+                AND player_tag = ?
+                AND result = 'defeat'
+                AND battle_time >= ?
+            ORDER BY battle_time DESC
+            LIMIT ?
+        """, (player_tag, week_start_str, limit))
+        
+        opponent_tags = [row[0] for row in cursor.fetchall()]
+        
+        if not opponent_tags:
+            conn.close()
+            return []
+        
+        # Get decks from those opponents who defeated the user this week
+        placeholders = ','.join(['?'] * len(opponent_tags))
+        query = f"""
             SELECT 
                 opponent_deck_cards as deck_cards,
                 COUNT(*) as total_battles,
@@ -434,13 +462,15 @@ class GitHubPagesHTMLGenerator:
             WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
                 AND player_tag = ?
                 AND result = 'defeat'
+                AND battle_time >= ?
+                AND opponent_tag IN ({placeholders})
             GROUP BY opponent_deck_cards
-            HAVING total_battles >= 2
+            HAVING total_battles >= 1
             ORDER BY total_battles DESC
-            LIMIT ?
         """
         
-        cursor.execute(query, (player_tag, limit))
+        params = [player_tag, week_start_str] + opponent_tags
+        cursor.execute(query, params)
         
         results = []
         for row in cursor.fetchall():
@@ -1601,7 +1631,7 @@ class GitHubPagesHTMLGenerator:
         
         # Get decks for tabs
         decks_same_level = self.get_deck_performance_same_level(10, player_tag=player_tag)
-        decks_defeated_by = self.get_deck_performance_defeated_by(10, player_tag=player_tag)
+        decks_defeated_by = self.get_deck_performance_defeated_by(20, player_tag=player_tag)
         
         # Generate deck performance HTML with tabs
         deck_performance_html = self.generate_deck_performance_with_tabs(
