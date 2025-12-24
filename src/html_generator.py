@@ -379,77 +379,101 @@ class GitHubPagesHTMLGenerator:
         # 2. Clan members' decks when they appear as opponents (opponent_tag IN clan members AND opponent_deck_cards)
         placeholders = ','.join(['?'] * len(same_level_member_tags))
         
-        # Remove user from same_level_member_tags for opponent query (we already get user's decks from first query)
+        # Remove user from same_level_member_tags for opponent query
         opponent_tags = same_level_member_tags - {player_tag}
         
+        # Build list of all decks from user and clan members
+        all_decks_dict = {}
+        
+        # First, get user's own decks
+        cursor.execute("""
+            SELECT 
+                deck_cards,
+                COUNT(*) as total_battles,
+                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                ROUND(AVG(crowns), 2) as avg_crowns
+            FROM battles 
+            WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                AND player_tag = ?
+            GROUP BY deck_cards
+            HAVING total_battles >= 1
+        """, (player_tag,))
+        
+        for row in cursor.fetchall():
+            deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = row
+            win_rate = (wins / total * 100) if total > 0 else 0
+            all_decks_dict[deck_cards] = {
+                'deck_cards': deck_cards,
+                'total_battles': total,
+                'wins': wins,
+                'losses': losses,
+                'win_rate': win_rate,
+                'total_trophy_change': trophy_change,
+                'avg_trophy_change': avg_trophy_change,
+                'avg_crowns': avg_crowns
+            }
+        
+        # Then, get clan members' decks when they appear as opponents
         if opponent_tags:
             opponent_placeholders = ','.join(['?'] * len(opponent_tags))
-            query = f"""
+            cursor.execute(f"""
                 SELECT 
-                    deck_cards,
+                    opponent_deck_cards as deck_cards,
                     COUNT(*) as total_battles,
                     SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
                     SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
-                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                    ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                    ROUND(AVG(crowns), 2) as avg_crowns
-                FROM (
-                    -- User's own decks
-                    SELECT deck_cards, result, trophy_change, crowns
-                    FROM battles 
-                    WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                        AND player_tag = ?
-                    UNION ALL
-                    -- Clan members' decks when they appear as opponents
-                    SELECT opponent_deck_cards as deck_cards, result, trophy_change, crowns
-                    FROM battles 
-                    WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
-                        AND player_tag = ?
-                        AND opponent_tag IN ({opponent_placeholders})
-                )
-                GROUP BY deck_cards
-                HAVING total_battles >= 3
-                ORDER BY win_rate DESC, total_battles DESC
-                LIMIT ?
-            """
-            params = [player_tag, player_tag] + list(opponent_tags) + [limit]
-        else:
-            # Only user's decks (no other clan members with same level)
-            query = """
-                SELECT 
-                    deck_cards,
-                    COUNT(*) as total_battles,
-                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
                     SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
                     ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
                     ROUND(AVG(crowns), 2) as avg_crowns
                 FROM battles 
-                WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
                     AND player_tag = ?
-                GROUP BY deck_cards
-                HAVING total_battles >= 3
-                ORDER BY win_rate DESC, total_battles DESC
-                LIMIT ?
-            """
-            params = [player_tag, limit]
+                    AND opponent_tag IN ({opponent_placeholders})
+                GROUP BY opponent_deck_cards
+                HAVING total_battles >= 1
+            """, [player_tag] + list(opponent_tags))
+            
+            for row in cursor.fetchall():
+                deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = row
+                win_rate = (wins / total * 100) if total > 0 else 0
+                
+                if deck_cards in all_decks_dict:
+                    # Merge with existing deck
+                    existing = all_decks_dict[deck_cards]
+                    combined_total = existing['total_battles'] + total
+                    combined_wins = existing['wins'] + wins
+                    combined_losses = existing['losses'] + losses
+                    combined_win_rate = (combined_wins / combined_total * 100) if combined_total > 0 else 0
+                    all_decks_dict[deck_cards] = {
+                        'deck_cards': deck_cards,
+                        'total_battles': combined_total,
+                        'wins': combined_wins,
+                        'losses': combined_losses,
+                        'win_rate': combined_win_rate,
+                        'total_trophy_change': existing['total_trophy_change'] + trophy_change,
+                        'avg_trophy_change': (existing['avg_trophy_change'] + avg_trophy_change) / 2,
+                        'avg_crowns': (existing['avg_crowns'] + avg_crowns) / 2
+                    }
+                else:
+                    all_decks_dict[deck_cards] = {
+                        'deck_cards': deck_cards,
+                        'total_battles': total,
+                        'wins': wins,
+                        'losses': losses,
+                        'win_rate': win_rate,
+                        'total_trophy_change': trophy_change,
+                        'avg_trophy_change': avg_trophy_change,
+                        'avg_crowns': avg_crowns
+                    }
         
-        cursor.execute(query, params)
-        
-        results = []
-        for row in cursor.fetchall():
-            results.append({
-                'deck_cards': row[0],
-                'total_battles': row[1],
-                'wins': row[2],
-                'losses': row[3],
-                'win_rate': row[4],
-                'total_trophy_change': row[5],
-                'avg_trophy_change': row[6],
-                'avg_crowns': row[7]
-            })
+        # Convert to list and sort
+        results = list(all_decks_dict.values())
+        results = [d for d in results if d['total_battles'] >= 3]  # Filter by minimum battles
+        results.sort(key=lambda x: (x['win_rate'], x['total_battles']), reverse=True)
+        results = results[:limit]
         
         conn.close()
         return results
@@ -528,6 +552,120 @@ class GitHubPagesHTMLGenerator:
         
         conn.close()
         return results
+    
+    def get_repeated_opponents_stats(self, player_tag: str = None) -> List[Dict]:
+        """Get statistics for opponents faced multiple times with performance by period"""
+        if not os.path.exists(self.db_path) or not player_tag:
+            return []
+            
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Get user's current trophies
+        cursor.execute("SELECT trophies FROM players WHERE player_tag = ?", (player_tag,))
+        user_trophies_row = cursor.fetchone()
+        user_trophies = user_trophies_row[0] if user_trophies_row else 0
+        
+        # Get opponents faced more than once
+        cursor.execute("""
+            SELECT 
+                opponent_tag,
+                opponent_name,
+                MAX(opponent_trophies) as latest_opponent_trophies,
+                COUNT(*) as total_battles
+            FROM battles 
+            WHERE opponent_tag IS NOT NULL AND opponent_tag != ''
+                AND player_tag = ?
+            GROUP BY opponent_tag, opponent_name
+            HAVING COUNT(*) > 1
+            ORDER BY total_battles DESC, opponent_name
+        """, (player_tag,))
+        
+        opponents_data = []
+        for row in cursor.fetchall():
+            opponent_tag, opponent_name, latest_opponent_trophies, total_battles = row
+            latest_opponent_trophies = latest_opponent_trophies or 0
+            
+            # Calculate trophy difference
+            trophy_diff = user_trophies - latest_opponent_trophies
+            
+            # Get statistics for each period
+            stats = self.get_opponent_period_stats(player_tag, opponent_tag, conn)
+            
+            opponents_data.append({
+                'opponent_tag': opponent_tag,
+                'opponent_name': opponent_name or 'Desconhecido',
+                'latest_opponent_trophies': latest_opponent_trophies,
+                'user_trophies': user_trophies,
+                'trophy_diff': trophy_diff,
+                'total_battles': total_battles,
+                'stats': stats
+            })
+        
+        conn.close()
+        return opponents_data
+    
+    def get_opponent_period_stats(self, player_tag: str, opponent_tag: str, conn) -> Dict:
+        """Get battle statistics for a specific opponent by period (day, week, month, year)"""
+        cursor = conn.cursor()
+        from datetime import timedelta
+        
+        now = datetime.utcnow()
+        
+        # Calculate period start dates
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        days_since_monday = now.weekday()
+        week_start = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        periods = {
+            'day': today_start.strftime('%Y%m%dT%H%M%S.000Z'),
+            'week': week_start.strftime('%Y%m%dT%H%M%S.000Z'),
+            'month': month_start.strftime('%Y%m%dT%H%M%S.000Z'),
+            'year': year_start.strftime('%Y%m%dT%H%M%S.000Z')
+        }
+        
+        stats = {}
+        
+        for period_name, period_start in periods.items():
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                    SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+                    SUM(COALESCE(trophy_change, 0)) as trophy_change
+                FROM battles
+                WHERE player_tag = ?
+                    AND opponent_tag = ?
+                    AND battle_time >= ?
+            """, (player_tag, opponent_tag, period_start))
+            
+            row = cursor.fetchone()
+            if row:
+                total, wins, losses, draws, trophy_change = row
+                win_rate = (wins / total * 100) if total > 0 else 0
+                
+                stats[period_name] = {
+                    'total': total or 0,
+                    'wins': wins or 0,
+                    'losses': losses or 0,
+                    'draws': draws or 0,
+                    'win_rate': round(win_rate, 1),
+                    'trophy_change': trophy_change or 0
+                }
+            else:
+                stats[period_name] = {
+                    'total': 0,
+                    'wins': 0,
+                    'losses': 0,
+                    'draws': 0,
+                    'win_rate': 0.0,
+                    'trophy_change': 0
+                }
+        
+        return stats
     
     def get_card_level_analytics(self) -> Dict:
         """Get card level analytics from enhanced battle data"""
@@ -1508,15 +1646,84 @@ class GitHubPagesHTMLGenerator:
         
         return html
     
+    def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
+        """Generate HTML for repeated opponents list"""
+        if not opponents:
+            return "<p>Nenhum oponente encontrado que você enfrentou mais de uma vez.</p>"
+        
+        html = ""
+        for opponent in opponents:
+            stats = opponent['stats']
+            trophy_diff_color = "green" if opponent['trophy_diff'] >= 0 else "red"
+            trophy_diff_sign = "+" if opponent['trophy_diff'] >= 0 else ""
+            
+            html += f"""
+                <div class="opponent-item" style="background: rgba(247, 250, 252, 0.8); border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                    <div style="margin-bottom: 15px;">
+                        <h3 style="color: #2d3748; margin-bottom: 8px;">{opponent['opponent_name']} ({opponent['opponent_tag']})</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 10px;">
+                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">🏆 {opponent['total_battles']} vezes enfrentado</span>
+                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em; color: {trophy_diff_color}">📊 Diferença: {trophy_diff_sign}{opponent['trophy_diff']} trofeus</span>
+                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">Você: {opponent['user_trophies']} | Oponente: {opponent['latest_opponent_trophies']}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px;">
+                            <h4 style="color: #4299e1; margin-bottom: 8px; font-size: 1em;">📅 Hoje</h4>
+                            <div style="font-size: 0.9em;">
+                                <div>Batalhas: {stats['day']['total']}</div>
+                                <div>✅ {stats['day']['wins']} | ❌ {stats['day']['losses']} | 🤝 {stats['day']['draws']}</div>
+                                <div style="color: {'green' if stats['day']['win_rate'] >= 50 else 'red'}; font-weight: bold;">Taxa: {stats['day']['win_rate']}%</div>
+                                <div style="color: {'green' if stats['day']['trophy_change'] >= 0 else 'red'};">Trofeus: {stats['day']['trophy_change']:+d}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px;">
+                            <h4 style="color: #4299e1; margin-bottom: 8px; font-size: 1em;">📆 Semana</h4>
+                            <div style="font-size: 0.9em;">
+                                <div>Batalhas: {stats['week']['total']}</div>
+                                <div>✅ {stats['week']['wins']} | ❌ {stats['week']['losses']} | 🤝 {stats['week']['draws']}</div>
+                                <div style="color: {'green' if stats['week']['win_rate'] >= 50 else 'red'}; font-weight: bold;">Taxa: {stats['week']['win_rate']}%</div>
+                                <div style="color: {'green' if stats['week']['trophy_change'] >= 0 else 'red'};">Trofeus: {stats['week']['trophy_change']:+d}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px;">
+                            <h4 style="color: #4299e1; margin-bottom: 8px; font-size: 1em;">📅 Mês</h4>
+                            <div style="font-size: 0.9em;">
+                                <div>Batalhas: {stats['month']['total']}</div>
+                                <div>✅ {stats['month']['wins']} | ❌ {stats['month']['losses']} | 🤝 {stats['month']['draws']}</div>
+                                <div style="color: {'green' if stats['month']['win_rate'] >= 50 else 'red'}; font-weight: bold;">Taxa: {stats['month']['win_rate']}%</div>
+                                <div style="color: {'green' if stats['month']['trophy_change'] >= 0 else 'red'};">Trofeus: {stats['month']['trophy_change']:+d}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px;">
+                            <h4 style="color: #4299e1; margin-bottom: 8px; font-size: 1em;">📆 Ano</h4>
+                            <div style="font-size: 0.9em;">
+                                <div>Batalhas: {stats['year']['total']}</div>
+                                <div>✅ {stats['year']['wins']} | ❌ {stats['year']['losses']} | 🤝 {stats['year']['draws']}</div>
+                                <div style="color: {'green' if stats['year']['win_rate'] >= 50 else 'red'}; font-weight: bold;">Taxa: {stats['year']['win_rate']}%</div>
+                                <div style="color: {'green' if stats['year']['trophy_change'] >= 0 else 'red'};">Trofeus: {stats['year']['trophy_change']:+d}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            """
+        
+        return html
+    
     def generate_deck_performance_with_tabs(self, decks: List[Dict], decks_same_level: List[Dict], 
-                                            decks_defeated_by: List[Dict], stats: Dict, 
-                                            player_tag: str = None) -> str:
+                                            decks_defeated_by: List[Dict], repeated_opponents: List[Dict],
+                                            stats: Dict, player_tag: str = None) -> str:
         """Generate HTML for deck performance section with tabs"""
         
         # Generate HTML for each tab
         all_decks_html = self.generate_deck_list_html(decks, stats, player_tag, is_opponent_decks=False)
         same_level_html = self.generate_deck_list_html(decks_same_level, stats, player_tag, is_opponent_decks=False)
         defeated_by_html = self.generate_deck_list_html(decks_defeated_by, stats, player_tag, is_opponent_decks=True)
+        repeated_opponents_html = self.generate_repeated_opponents_html(repeated_opponents)
         
         return f"""
         <div class="deck-tabs-container">
@@ -1524,6 +1731,7 @@ class GitHubPagesHTMLGenerator:
                 <button class="tab-button active" onclick="switchDeckTab(event, 'all')">Todos os Decks</button>
                 <button class="tab-button" onclick="switchDeckTab(event, 'same-level')">Clã - Mesmo Nível</button>
                 <button class="tab-button" onclick="switchDeckTab(event, 'defeated-by')">Oponentes que me Derrotaram</button>
+                <button class="tab-button" onclick="switchDeckTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
             </div>
             
             <div id="tab-all" class="tab-content active">
@@ -1536,6 +1744,10 @@ class GitHubPagesHTMLGenerator:
             
             <div id="tab-defeated-by" class="tab-content">
                 {defeated_by_html if defeated_by_html else '<p>Nenhum deck encontrado de oponentes que te derrotaram.</p>'}
+            </div>
+            
+            <div id="tab-repeated-opponents" class="tab-content">
+                {repeated_opponents_html if repeated_opponents_html else '<p>Nenhum oponente encontrado que você enfrentou mais de uma vez.</p>'}
             </div>
         </div>
         
@@ -1673,10 +1885,11 @@ class GitHubPagesHTMLGenerator:
         # Get decks for tabs
         decks_same_level = self.get_deck_performance_same_level(10, player_tag=player_tag)
         decks_defeated_by = self.get_deck_performance_defeated_by(20, player_tag=player_tag)
+        repeated_opponents = self.get_repeated_opponents_stats(player_tag=player_tag)
         
         # Generate deck performance HTML with tabs
         deck_performance_html = self.generate_deck_performance_with_tabs(
-            decks, decks_same_level, decks_defeated_by, stats, player_tag
+            decks, decks_same_level, decks_defeated_by, repeated_opponents, stats, player_tag
         )
         
         # Generate battle HTML
