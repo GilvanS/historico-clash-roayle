@@ -239,13 +239,30 @@ class ClashRoyaleAnalyzer:
         conn.close()
     
     def save_clan_members(self, clan_data: Dict):
-        """Save clan member information to database"""
+        """Save clan member information to database and remove members who left"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
         clan_tag = clan_data['tag']
         clan_name = clan_data['name']
         
+        # Get current active member tags from API
+        current_member_tags = {member['tag'] for member in clan_data.get('memberList', [])}
+        
+        # Remove members who are no longer in the clan
+        if current_member_tags:
+            placeholders = ','.join(['?'] * len(current_member_tags))
+            cursor.execute(f"""
+                DELETE FROM clan_members 
+                WHERE clan_tag = ? AND player_tag NOT IN ({placeholders})
+            """, [clan_tag] + list(current_member_tags))
+        else:
+            # If no members in API response, remove all members from this clan
+            cursor.execute("""
+                DELETE FROM clan_members WHERE clan_tag = ?
+            """, (clan_tag,))
+        
+        # Insert or update current members
         for member in clan_data.get('memberList', []):
             cursor.execute("""
                 INSERT OR REPLACE INTO clan_members 
