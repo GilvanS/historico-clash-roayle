@@ -1319,39 +1319,48 @@ class GitHubPagesHTMLGenerator:
             trophy_color = "green" if deck['total_trophy_change'] >= 0 else "red"
             deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
             
-            # Identify deck owner (only user or active clan members)
+            # Identify deck owner for ALL decks
             deck_owner_info = ""
-            is_user_deck = (i == 1 and user_deck_cards and deck['deck_cards'] == user_deck_cards)
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
             
-            if is_user_deck:
-                # User's deck
-                if stats and stats.get('name') and stats.get('player_tag'):
-                    deck_owner_info = f" - {stats['name']} ({stats['player_tag']})"
-            else:
-                # Check if deck belongs to an active clan member
-                conn = sqlite3.connect(self.db_path)
-                cursor = conn.cursor()
+            # Get the player_tag who used this deck most frequently
+            cursor.execute("""
+                SELECT b.player_tag, 
+                       COUNT(*) as usage_count,
+                       p.name as player_name,
+                       cm.name as clan_member_name
+                FROM battles b
+                LEFT JOIN players p ON b.player_tag = p.player_tag
+                LEFT JOIN clan_members cm ON b.player_tag = cm.player_tag
+                WHERE b.deck_cards = ? AND b.deck_cards IS NOT NULL
+                GROUP BY b.player_tag
+                ORDER BY usage_count DESC
+                LIMIT 1
+            """, (deck['deck_cards'],))
+            
+            owner_row = cursor.fetchone()
+            
+            if owner_row:
+                owner_tag = owner_row[0]
+                owner_name = owner_row[3] or owner_row[2] or 'Jogador Desconhecido'
                 
-                # Get player info who used this deck (must be from active clan member)
-                cursor.execute("""
-                    SELECT DISTINCT p.name, b.player_tag, cm.name as clan_member_name
-                    FROM battles b
-                    LEFT JOIN players p ON b.player_tag = p.player_tag
-                    LEFT JOIN clan_members cm ON b.player_tag = cm.player_tag
-                    WHERE b.deck_cards = ? AND b.deck_cards IS NOT NULL
-                        AND b.player_tag != ?
-                        AND cm.player_tag IS NOT NULL
-                    LIMIT 1
-                """, (deck['deck_cards'], player_tag or ''))
-                
-                clan_member_row = cursor.fetchone()
-                
-                if clan_member_row:
-                    # Deck belongs to an active clan member
-                    member_name = clan_member_row[2] or clan_member_row[0] or 'Membro do Clã'
-                    deck_owner_info = f" - {member_name} ({clan_member_row[1]}) [Clã]"
-                
-                conn.close()
+                # Check if it's the user's deck
+                if owner_tag == player_tag and stats:
+                    deck_owner_info = f" - {stats.get('name', owner_name)} ({owner_tag})"
+                else:
+                    # Check if it's a clan member
+                    cursor.execute("""
+                        SELECT name FROM clan_members WHERE player_tag = ?
+                    """, (owner_tag,))
+                    clan_member_check = cursor.fetchone()
+                    
+                    if clan_member_check:
+                        deck_owner_info = f" - {clan_member_check[0]} ({owner_tag}) [Clã]"
+                    else:
+                        deck_owner_info = f" - {owner_name} ({owner_tag})"
+            
+            conn.close()
             
             deck_performance_html += f"""
                 <div class="deck-item">

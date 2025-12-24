@@ -45,6 +45,8 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
+        # Reset to clean state and pull latest
+        git reset --hard origin/main || true
         git pull origin main --no-rebase || true
     
     - name: Update battle data
@@ -71,14 +73,48 @@ jobs:
         
     - name: Commit and push changes
       run: |
-        # Always pull latest changes before committing to avoid conflicts
-        git pull --rebase origin main || git pull origin main --no-edit || true
+        # Fetch latest changes
+        git fetch origin main
         
+        # Pull latest changes first to avoid conflicts
+        git pull origin main --no-rebase --no-edit || {
+          echo "Pull failed, trying merge strategy..."
+          git pull origin main --no-edit || {
+            echo "Merge failed, using theirs strategy for README.md conflicts..."
+            git checkout --theirs README.md || true
+            git add README.md || true
+            git pull origin main --no-edit || true
+          }
+        }
+        
+        # Add files to staging
         git add src/clash_royale.db docs/index.html docs/clan.html docs/member_*.html README.md
+        
+        # Check if there are changes to commit
         if ! git diff --staged --quiet; then
-          git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-          # Push with retry logic
-          git push origin HEAD || (git pull --rebase origin main && git push origin HEAD)
+          # Commit changes
+          git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
+          
+          # Push changes with retry logic
+          for i in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Push successful"
+              break
+            else
+              echo "Push failed, attempt $i/3. Fetching and retrying..."
+              git fetch origin main
+              # Use merge strategy instead of rebase to avoid conflicts
+              git pull origin main --no-rebase --no-edit || {
+                echo "Merge conflict detected, using theirs strategy..."
+                git checkout --theirs README.md || true
+                git add README.md || true
+                git commit -m "Resolve merge conflict in README.md - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
+              }
+              git add src/clash_royale.db docs/index.html docs/clan.html docs/member_*.html README.md
+              git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
+              sleep 2
+            fi
+          done
         else
           echo "Nenhuma mudanca para commitar"
         fi
