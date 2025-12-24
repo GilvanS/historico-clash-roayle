@@ -374,26 +374,67 @@ class GitHubPagesHTMLGenerator:
             return []
         
         # Get decks from same level members (including user)
+        # Search in battles table where:
+        # 1. User's own decks (player_tag = user's tag)
+        # 2. Clan members' decks when they appear as opponents (opponent_tag IN clan members AND opponent_deck_cards)
         placeholders = ','.join(['?'] * len(same_level_member_tags))
-        query = f"""
-            SELECT 
-                deck_cards,
-                COUNT(*) as total_battles,
-                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
-                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                ROUND(AVG(crowns), 2) as avg_crowns
-            FROM battles 
-            WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                AND player_tag IN ({placeholders})
-            GROUP BY deck_cards
-            HAVING total_battles >= 3
-            ORDER BY win_rate DESC, total_battles DESC
-            LIMIT ?
-        """
-        params = list(same_level_member_tags) + [limit]
+        
+        # Remove user from same_level_member_tags for opponent query (we already get user's decks from first query)
+        opponent_tags = same_level_member_tags - {player_tag}
+        
+        if opponent_tags:
+            opponent_placeholders = ','.join(['?'] * len(opponent_tags))
+            query = f"""
+                SELECT 
+                    deck_cards,
+                    COUNT(*) as total_battles,
+                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                    ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                    ROUND(AVG(crowns), 2) as avg_crowns
+                FROM (
+                    -- User's own decks
+                    SELECT deck_cards, result, trophy_change, crowns
+                    FROM battles 
+                    WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                        AND player_tag = ?
+                    UNION ALL
+                    -- Clan members' decks when they appear as opponents
+                    SELECT opponent_deck_cards as deck_cards, result, trophy_change, crowns
+                    FROM battles 
+                    WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
+                        AND player_tag = ?
+                        AND opponent_tag IN ({opponent_placeholders})
+                )
+                GROUP BY deck_cards
+                HAVING total_battles >= 3
+                ORDER BY win_rate DESC, total_battles DESC
+                LIMIT ?
+            """
+            params = [player_tag, player_tag] + list(opponent_tags) + [limit]
+        else:
+            # Only user's decks (no other clan members with same level)
+            query = """
+                SELECT 
+                    deck_cards,
+                    COUNT(*) as total_battles,
+                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                    ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                    ROUND(AVG(crowns), 2) as avg_crowns
+                FROM battles 
+                WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                    AND player_tag = ?
+                GROUP BY deck_cards
+                HAVING total_battles >= 3
+                ORDER BY win_rate DESC, total_battles DESC
+                LIMIT ?
+            """
+            params = [player_tag, limit]
         
         cursor.execute(query, params)
         
