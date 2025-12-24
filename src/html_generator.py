@@ -179,39 +179,101 @@ class GitHubPagesHTMLGenerator:
         }
     
     def get_deck_performance(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
-        """Get deck performance data, with user's deck appearing first if player_tag is provided"""
+        """Get deck performance data, showing only user's deck and active clan members' decks"""
         if not os.path.exists(self.db_path):
             return []
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Get all decks with player information to identify ownership
-        cursor.execute("""
-            SELECT 
-                deck_cards,
-                COUNT(*) as total_battles,
-                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
-                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                ROUND(AVG(crowns), 2) as avg_crowns,
-                GROUP_CONCAT(DISTINCT player_tag) as player_tags,
-                GROUP_CONCAT(DISTINCT 
-                    CASE 
-                        WHEN player_tag = ? THEN 'user'
-                        WHEN opponent_tag = ? THEN 'opponent'
-                        ELSE 'other'
-                    END
-                ) as deck_owners
-            FROM battles 
-            WHERE deck_cards IS NOT NULL AND deck_cards != ''
-            GROUP BY deck_cards
-            HAVING total_battles >= 3
-            ORDER BY win_rate DESC, total_battles DESC
-            LIMIT ?
-        """, (player_tag or '', player_tag or '', limit * 2))
+        # Get list of active clan members (still in clan)
+        active_clan_member_tags = set()
+        if player_tag:
+            # Get user's clan tag
+            cursor.execute("""
+                SELECT clan_tag FROM players WHERE player_tag = ?
+            """, (player_tag,))
+            user_clan_row = cursor.fetchone()
+            
+            if user_clan_row and user_clan_row[0]:
+                clan_tag = user_clan_row[0]
+                # Get all active clan members
+                cursor.execute("""
+                    SELECT player_tag FROM clan_members WHERE clan_tag = ?
+                """, (clan_tag,))
+                for row in cursor.fetchall():
+                    active_clan_member_tags.add(row[0])
+        
+        # Add user's tag to the set
+        if player_tag:
+            active_clan_member_tags.add(player_tag)
+        
+        # Build query to get decks only from user and active clan members
+        if active_clan_member_tags:
+            placeholders = ','.join(['?'] * len(active_clan_member_tags))
+            query = f"""
+                SELECT 
+                    deck_cards,
+                    COUNT(*) as total_battles,
+                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                    ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                    ROUND(AVG(crowns), 2) as avg_crowns
+                FROM battles 
+                WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                    AND player_tag IN ({placeholders})
+                GROUP BY deck_cards
+                HAVING total_battles >= 3
+                ORDER BY win_rate DESC, total_battles DESC
+                LIMIT ?
+            """
+            params = list(active_clan_member_tags) + [limit * 2]
+        else:
+            # If no clan members, only show user's decks
+            if player_tag:
+                query = """
+                    SELECT 
+                        deck_cards,
+                        COUNT(*) as total_battles,
+                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                        ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                        ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                        ROUND(AVG(crowns), 2) as avg_crowns
+                    FROM battles 
+                    WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                        AND player_tag = ?
+                    GROUP BY deck_cards
+                    HAVING total_battles >= 3
+                    ORDER BY win_rate DESC, total_battles DESC
+                    LIMIT ?
+                """
+                params = [player_tag, limit * 2]
+            else:
+                # No player_tag, get all decks (fallback)
+                query = """
+                    SELECT 
+                        deck_cards,
+                        COUNT(*) as total_battles,
+                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                        ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                        ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                        ROUND(AVG(crowns), 2) as avg_crowns
+                    FROM battles 
+                    WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                    GROUP BY deck_cards
+                    HAVING total_battles >= 3
+                    ORDER BY win_rate DESC, total_battles DESC
+                    LIMIT ?
+                """
+                params = [limit * 2]
+        
+        cursor.execute(query, params)
         
         all_decks = []
         for row in cursor.fetchall():
@@ -223,11 +285,7 @@ class GitHubPagesHTMLGenerator:
                 'win_rate': row[4],
                 'total_trophy_change': row[5],
                 'avg_trophy_change': row[6],
-                'avg_crowns': row[7],
-                'player_tags': row[8],
-                'deck_owners': row[9],
-                'is_user_deck': 'user' in (row[9] or ''),
-                'is_opponent_deck': 'opponent' in (row[9] or '')
+                'avg_crowns': row[7]
             })
         
         # If player_tag is provided, find user's deck and move it to first position
@@ -1261,7 +1319,7 @@ class GitHubPagesHTMLGenerator:
             trophy_color = "green" if deck['total_trophy_change'] >= 0 else "red"
             deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
             
-            # Identify deck owner
+            # Identify deck owner (only user or active clan members)
             deck_owner_info = ""
             is_user_deck = (i == 1 and user_deck_cards and deck['deck_cards'] == user_deck_cards)
             
@@ -1270,48 +1328,28 @@ class GitHubPagesHTMLGenerator:
                 if stats and stats.get('name') and stats.get('player_tag'):
                     deck_owner_info = f" - {stats['name']} ({stats['player_tag']})"
             else:
-                # Check if deck belongs to opponent or clan member
+                # Check if deck belongs to an active clan member
                 conn = sqlite3.connect(self.db_path)
                 cursor = conn.cursor()
                 
-                # Check if this deck was used by opponent
+                # Get player info who used this deck (must be from active clan member)
                 cursor.execute("""
-                    SELECT DISTINCT opponent_name, opponent_tag, opponent_clan_name
-                    FROM battles
-                    WHERE opponent_deck_cards = ? AND opponent_deck_cards IS NOT NULL
+                    SELECT DISTINCT p.name, b.player_tag, cm.name as clan_member_name
+                    FROM battles b
+                    LEFT JOIN players p ON b.player_tag = p.player_tag
+                    LEFT JOIN clan_members cm ON b.player_tag = cm.player_tag
+                    WHERE b.deck_cards = ? AND b.deck_cards IS NOT NULL
+                        AND b.player_tag != ?
+                        AND cm.player_tag IS NOT NULL
                     LIMIT 1
-                """, (deck['deck_cards'],))
+                """, (deck['deck_cards'], player_tag or ''))
                 
-                opponent_row = cursor.fetchone()
+                clan_member_row = cursor.fetchone()
                 
-                # Check if this deck belongs to a clan member
-                if not opponent_row:
-                    cursor.execute("""
-                        SELECT DISTINCT cmd.name, cmd.player_tag, cmd.clan_name
-                        FROM clan_member_decks cmd
-                        WHERE cmd.deck_cards = ? AND cmd.deck_cards IS NOT NULL
-                        LIMIT 1
-                    """, (deck['deck_cards'],))
-                    clan_member_row = cursor.fetchone()
-                    
-                    if clan_member_row:
-                        deck_owner_info = f" - {clan_member_row[0]} ({clan_member_row[1]}) [Clã]"
-                    else:
-                        # Check if it's from another player_tag in battles
-                        cursor.execute("""
-                            SELECT DISTINCT p.name, b.player_tag
-                            FROM battles b
-                            LEFT JOIN players p ON b.player_tag = p.player_tag
-                            WHERE b.deck_cards = ? AND b.deck_cards IS NOT NULL
-                                AND b.player_tag != ?
-                            LIMIT 1
-                        """, (deck['deck_cards'], player_tag or ''))
-                        other_player_row = cursor.fetchone()
-                        
-                        if other_player_row:
-                            deck_owner_info = f" - {other_player_row[0] or 'Jogador Desconhecido'} ({other_player_row[1]})"
-                else:
-                    deck_owner_info = f" - {opponent_row[0] or 'Oponente'} ({opponent_row[1]}) [Oponente]"
+                if clan_member_row:
+                    # Deck belongs to an active clan member
+                    member_name = clan_member_row[2] or clan_member_row[0] or 'Membro do Clã'
+                    deck_owner_info = f" - {member_name} ({clan_member_row[1]}) [Clã]"
                 
                 conn.close()
             
