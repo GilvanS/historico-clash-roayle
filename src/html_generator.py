@@ -373,19 +373,12 @@ class GitHubPagesHTMLGenerator:
             conn.close()
             return []
         
-        # Get decks from same level members (including user)
-        # Search in battles table where:
-        # 1. User's own decks (player_tag = user's tag)
-        # 2. Clan members' decks when they appear as opponents (opponent_tag IN clan members AND opponent_deck_cards)
-        placeholders = ','.join(['?'] * len(same_level_member_tags))
-        
         # Remove user from same_level_member_tags for opponent query
         opponent_tags = same_level_member_tags - {player_tag}
         
-        # Build list of all decks from user and clan members
-        all_decks_dict = {}
+        results = []
         
-        # First, get user's own decks
+        # First, get user's best performing deck
         cursor.execute("""
             SELECT 
                 deck_cards,
@@ -400,100 +393,34 @@ class GitHubPagesHTMLGenerator:
                 AND player_tag = ?
             GROUP BY deck_cards
             HAVING total_battles >= 1
+            ORDER BY 
+                (CAST(SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*)) DESC,
+                COUNT(*) DESC
+            LIMIT 1
         """, (player_tag,))
         
-        for row in cursor.fetchall():
-            deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = row
+        user_deck_row = cursor.fetchone()
+        if user_deck_row:
+            deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = user_deck_row
             win_rate = (wins / total * 100) if total > 0 else 0
-            all_decks_dict[deck_cards] = {
+            results.append({
                 'deck_cards': deck_cards,
                 'total_battles': total,
                 'wins': wins,
                 'losses': losses,
-                'win_rate': win_rate,
+                'win_rate': round(win_rate, 2),
                 'total_trophy_change': trophy_change,
                 'avg_trophy_change': avg_trophy_change,
                 'avg_crowns': avg_crowns
-            }
+            })
         
-        # Then, get clan members' decks when they appear as opponents
+        # Then, for each clan member with >= 10K, get their best performing deck
         if opponent_tags:
-            opponent_placeholders = ','.join(['?'] * len(opponent_tags))
-            cursor.execute(f"""
-                SELECT 
-                    opponent_deck_cards as deck_cards,
-                    COUNT(*) as total_battles,
-                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                    ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                    ROUND(AVG(crowns), 2) as avg_crowns
-                FROM battles 
-                WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
-                    AND player_tag = ?
-                    AND opponent_tag IN ({opponent_placeholders})
-                GROUP BY opponent_deck_cards
-                HAVING total_battles >= 1
-            """, [player_tag] + list(opponent_tags))
-            
-            for row in cursor.fetchall():
-                deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = row
-                win_rate = (wins / total * 100) if total > 0 else 0
-                
-                if deck_cards in all_decks_dict:
-                    # Merge with existing deck
-                    existing = all_decks_dict[deck_cards]
-                    combined_total = existing['total_battles'] + total
-                    combined_wins = existing['wins'] + wins
-                    combined_losses = existing['losses'] + losses
-                    combined_win_rate = (combined_wins / combined_total * 100) if combined_total > 0 else 0
-                    all_decks_dict[deck_cards] = {
-                        'deck_cards': deck_cards,
-                        'total_battles': combined_total,
-                        'wins': combined_wins,
-                        'losses': combined_losses,
-                        'win_rate': combined_win_rate,
-                        'total_trophy_change': existing['total_trophy_change'] + trophy_change,
-                        'avg_trophy_change': (existing['avg_trophy_change'] + avg_trophy_change) / 2,
-                        'avg_crowns': (existing['avg_crowns'] + avg_crowns) / 2
-                    }
-                else:
-                    all_decks_dict[deck_cards] = {
-                        'deck_cards': deck_cards,
-                        'total_battles': total,
-                        'wins': wins,
-                        'losses': losses,
-                        'win_rate': win_rate,
-                        'total_trophy_change': trophy_change,
-                        'avg_trophy_change': avg_trophy_change,
-                        'avg_crowns': avg_crowns
-                    }
-        
-        # Also get clan members' current decks from clan_member_decks table
-        # Check if table exists
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clan_member_decks'")
-        if cursor.fetchone() and opponent_tags:
-            opponent_placeholders = ','.join(['?'] * len(opponent_tags))
-            cursor.execute(f"""
-                SELECT DISTINCT cmd1.deck_cards
-                FROM clan_member_decks cmd1
-                WHERE cmd1.player_tag IN ({opponent_placeholders})
-                    AND cmd1.deck_cards IS NOT NULL AND cmd1.deck_cards != ''
-                    AND cmd1.id = (
-                        SELECT MAX(cmd2.id) 
-                        FROM clan_member_decks cmd2 
-                        WHERE cmd2.player_tag = cmd1.player_tag
-                    )
-            """, list(opponent_tags))
-            
-            for row in cursor.fetchall():
-                deck_cards = row[0]
-                if not deck_cards or deck_cards == '' or deck_cards in all_decks_dict:
-                    continue
-                
-                # Try to get performance stats from battles when this deck appeared as opponent
-                cursor.execute(f"""
+            # Get best deck for each clan member (best win_rate when they appear as opponents)
+            for member_tag in opponent_tags:
+                cursor.execute("""
                     SELECT 
+                        opponent_deck_cards as deck_cards,
                         COUNT(*) as total_battles,
                         SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
                         SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
@@ -501,49 +428,64 @@ class GitHubPagesHTMLGenerator:
                         ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
                         ROUND(AVG(crowns), 2) as avg_crowns
                     FROM battles 
-                    WHERE opponent_deck_cards = ?
+                    WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
                         AND player_tag = ?
-                        AND opponent_tag IN ({opponent_placeholders})
-                """, [deck_cards, player_tag] + list(opponent_tags))
+                        AND opponent_tag = ?
+                    GROUP BY opponent_deck_cards
+                    HAVING total_battles >= 1
+                    ORDER BY 
+                        (CAST(SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*)) DESC,
+                        COUNT(*) DESC
+                    LIMIT 1
+                """, (player_tag, member_tag))
                 
-                perf_row = cursor.fetchone()
-                if perf_row and perf_row[0] and perf_row[0] > 0:
-                    # Has battle data
-                    total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = perf_row
+                member_deck_row = cursor.fetchone()
+                if member_deck_row:
+                    deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = member_deck_row
+                    # Note: wins here are your wins, losses are your losses when facing this deck
+                    # So win_rate is from your perspective
                     win_rate = (wins / total * 100) if total > 0 else 0
-                    all_decks_dict[deck_cards] = {
+                    results.append({
                         'deck_cards': deck_cards,
                         'total_battles': total,
                         'wins': wins,
                         'losses': losses,
-                        'win_rate': win_rate,
-                        'total_trophy_change': trophy_change or 0,
-                        'avg_trophy_change': avg_trophy_change or 0,
-                        'avg_crowns': avg_crowns or 0
-                    }
+                        'win_rate': round(win_rate, 2),
+                        'total_trophy_change': trophy_change,
+                        'avg_trophy_change': avg_trophy_change,
+                        'avg_crowns': avg_crowns
+                    })
                 else:
-                    # No battle data, add with default values (will show as deck from clan member)
-                    all_decks_dict[deck_cards] = {
-                        'deck_cards': deck_cards,
-                        'total_battles': 0,
-                        'wins': 0,
-                        'losses': 0,
-                        'win_rate': 0.0,
-                        'total_trophy_change': 0,
-                        'avg_trophy_change': 0,
-                        'avg_crowns': 0
-                    }
+                    # No battle data, try to get current deck from clan_member_decks
+                    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clan_member_decks'")
+                    if cursor.fetchone():
+                        cursor.execute("""
+                            SELECT deck_cards
+                            FROM clan_member_decks
+                            WHERE player_tag = ?
+                                AND deck_cards IS NOT NULL AND deck_cards != ''
+                                AND id = (SELECT MAX(id) FROM clan_member_decks WHERE player_tag = ?)
+                            LIMIT 1
+                        """, (member_tag, member_tag))
+                        deck_row = cursor.fetchone()
+                        if deck_row:
+                            results.append({
+                                'deck_cards': deck_row[0],
+                                'total_battles': 0,
+                                'wins': 0,
+                                'losses': 0,
+                                'win_rate': 0.0,
+                                'total_trophy_change': 0,
+                                'avg_trophy_change': 0,
+                                'avg_crowns': 0
+                            })
         
-        # Convert to list and sort
-        results = list(all_decks_dict.values())
-        # Sort: prioritize decks with battle data, then by win_rate, then by total_battles
-        # Decks without battle data (total_battles == 0) will still be shown but at the end
+        # Sort results: user's deck first, then by win_rate
         results.sort(key=lambda x: (
             x['total_battles'] == 0,  # Decks without battle data go to end
             -x['win_rate'], 
             -x['total_battles']
         ))
-        # Don't filter by minimum battles anymore - show all decks, even those without battle data
         results = results[:limit]
         
         conn.close()
@@ -663,6 +605,37 @@ class GitHubPagesHTMLGenerator:
             # Get statistics for each period
             stats = self.get_opponent_period_stats(player_tag, opponent_tag, conn)
             
+            # Get best performing deck for this opponent
+            cursor.execute("""
+                SELECT 
+                    opponent_deck_cards as deck_cards,
+                    COUNT(*) as total_battles,
+                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate
+                FROM battles 
+                WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
+                    AND player_tag = ?
+                    AND opponent_tag = ?
+                GROUP BY opponent_deck_cards
+                HAVING total_battles >= 1
+                ORDER BY 
+                    (CAST(SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*)) DESC,
+                    COUNT(*) DESC
+                LIMIT 1
+            """, (player_tag, opponent_tag))
+            
+            best_deck_row = cursor.fetchone()
+            best_deck = None
+            if best_deck_row:
+                best_deck = {
+                    'deck_cards': best_deck_row[0],
+                    'total_battles': best_deck_row[1],
+                    'wins': best_deck_row[2],
+                    'losses': best_deck_row[3],
+                    'win_rate': best_deck_row[4]
+                }
+            
             opponents_data.append({
                 'opponent_tag': opponent_tag,
                 'opponent_name': opponent_name or 'Desconhecido',
@@ -670,7 +643,8 @@ class GitHubPagesHTMLGenerator:
                 'user_trophies': user_trophies,
                 'trophy_diff': trophy_diff,
                 'total_battles': total_battles,
-                'stats': stats
+                'stats': stats,
+                'best_deck': best_deck
             })
         
         conn.close()
@@ -1725,8 +1699,20 @@ class GitHubPagesHTMLGenerator:
         html = ""
         for opponent in opponents:
             stats = opponent['stats']
+            best_deck = opponent.get('best_deck')
             trophy_diff_color = "green" if opponent['trophy_diff'] >= 0 else "red"
             trophy_diff_sign = "+" if opponent['trophy_diff'] >= 0 else ""
+            
+            # Generate deck cards HTML if best_deck exists
+            best_deck_html = ""
+            if best_deck and best_deck.get('deck_cards'):
+                best_deck_html = self.generate_deck_cards_html(best_deck['deck_cards'], show_names=False)
+                best_deck_html = f"""
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <h4 style="color: #4299e1; margin-bottom: 10px; font-size: 1em;">🎴 Melhor Deck ({best_deck['win_rate']:.1f}% Taxa de Vitória - {best_deck['total_battles']} batalhas)</h4>
+                        {best_deck_html}
+                    </div>
+                """
             
             html += f"""
                 <div class="opponent-item" style="background: rgba(247, 250, 252, 0.8); border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
@@ -1780,6 +1766,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
                     </div>
+                    {best_deck_html}
                 </div>
             """
         
