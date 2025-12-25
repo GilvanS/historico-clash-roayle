@@ -179,99 +179,33 @@ class GitHubPagesHTMLGenerator:
         }
     
     def get_deck_performance(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
-        """Get deck performance data, showing only user's deck and active clan members' decks"""
-        if not os.path.exists(self.db_path):
+        """Get deck performance data, showing ONLY user's decks"""
+        if not os.path.exists(self.db_path) or not player_tag:
             return []
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Get list of active clan members (still in clan)
-        active_clan_member_tags = set()
-        if player_tag:
-            # Get user's clan tag
-            cursor.execute("""
-                SELECT clan_tag FROM players WHERE player_tag = ?
-            """, (player_tag,))
-            user_clan_row = cursor.fetchone()
-            
-            if user_clan_row and user_clan_row[0]:
-                clan_tag = user_clan_row[0]
-                # Get all active clan members
-                cursor.execute("""
-                    SELECT player_tag FROM clan_members WHERE clan_tag = ?
-                """, (clan_tag,))
-                for row in cursor.fetchall():
-                    active_clan_member_tags.add(row[0])
-        
-        # Add user's tag to the set
-        if player_tag:
-            active_clan_member_tags.add(player_tag)
-        
-        # Build query to get decks only from user and active clan members
-        if active_clan_member_tags:
-            placeholders = ','.join(['?'] * len(active_clan_member_tags))
-            query = f"""
-                SELECT 
-                    deck_cards,
-                    COUNT(*) as total_battles,
-                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
-                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                    ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                    ROUND(AVG(crowns), 2) as avg_crowns
-                FROM battles 
-                WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                    AND player_tag IN ({placeholders})
-                GROUP BY deck_cards
-                HAVING total_battles >= 3
-                ORDER BY win_rate DESC, total_battles DESC
-                LIMIT ?
-            """
-            params = list(active_clan_member_tags) + [limit * 2]
-        else:
-            # If no clan members, only show user's decks
-            if player_tag:
-                query = """
-                    SELECT 
-                        deck_cards,
-                        COUNT(*) as total_battles,
-                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                        ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
-                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                        ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                        ROUND(AVG(crowns), 2) as avg_crowns
-                    FROM battles 
-                    WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                        AND player_tag = ?
-                    GROUP BY deck_cards
-                    HAVING total_battles >= 3
-                    ORDER BY win_rate DESC, total_battles DESC
-                    LIMIT ?
-                """
-                params = [player_tag, limit * 2]
-            else:
-                # No player_tag, get all decks (fallback)
-                query = """
-                    SELECT 
-                        deck_cards,
-                        COUNT(*) as total_battles,
-                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                        ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
-                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                        ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                        ROUND(AVG(crowns), 2) as avg_crowns
-                    FROM battles 
-                    WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                    GROUP BY deck_cards
-                    HAVING total_battles >= 3
-                    ORDER BY win_rate DESC, total_battles DESC
-                    LIMIT ?
-                """
-                params = [limit * 2]
+        # Get decks ONLY from the user
+        query = """
+            SELECT 
+                deck_cards,
+                COUNT(*) as total_battles,
+                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                ROUND(AVG(crowns), 2) as avg_crowns
+            FROM battles 
+            WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                AND player_tag = ?
+            GROUP BY deck_cards
+            HAVING total_battles >= 3
+            ORDER BY win_rate DESC, total_battles DESC
+            LIMIT ?
+        """
+        params = [player_tag, limit]
         
         cursor.execute(query, params)
         
@@ -616,7 +550,7 @@ class GitHubPagesHTMLGenerator:
         return results
     
     def get_repeated_opponents_stats(self, player_tag: str = None) -> List[Dict]:
-        """Get statistics for opponents faced multiple times with performance by period"""
+        """Get statistics for opponents faced multiple times with performance by period and their game stats"""
         if not os.path.exists(self.db_path) or not player_tag:
             return []
             
@@ -653,6 +587,51 @@ class GitHubPagesHTMLGenerator:
             
             # Get statistics for each period
             stats = self.get_opponent_period_stats(player_tag, opponent_tag, conn)
+            
+            # Get opponent's game stats from their battles (if we have their battles in the database)
+            opponent_game_stats = None
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total_battles,
+                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                    SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                    ROUND(AVG(crowns), 2) as avg_crowns
+                FROM battles 
+                WHERE player_tag = ?
+            """, (opponent_tag,))
+            
+            opponent_stats_row = cursor.fetchone()
+            if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
+                total, wins, losses, draws, trophy_change, avg_crowns = opponent_stats_row
+                win_rate = (wins / total * 100) if total > 0 else 0
+                opponent_game_stats = {
+                    'total_battles': total or 0,
+                    'wins': wins or 0,
+                    'losses': losses or 0,
+                    'draws': draws or 0,
+                    'win_rate': round(win_rate, 2),
+                    'total_trophy_change': trophy_change or 0,
+                    'avg_crowns': avg_crowns or 0
+                }
+            
+            # Get opponent's current info from players table (if available)
+            opponent_info = None
+            cursor.execute("""
+                SELECT name, trophies, best_trophies, level, clan_name
+                FROM players 
+                WHERE player_tag = ?
+            """, (opponent_tag,))
+            opponent_info_row = cursor.fetchone()
+            if opponent_info_row:
+                opponent_info = {
+                    'name': opponent_info_row[0],
+                    'trophies': opponent_info_row[1] or latest_opponent_trophies,
+                    'best_trophies': opponent_info_row[2] or 0,
+                    'level': opponent_info_row[3] or 0,
+                    'clan_name': opponent_info_row[4]
+                }
             
             # Get best performing deck for this opponent
             cursor.execute("""
@@ -693,7 +672,9 @@ class GitHubPagesHTMLGenerator:
                 'trophy_diff': trophy_diff,
                 'total_battles': total_battles,
                 'stats': stats,
-                'best_deck': best_deck
+                'best_deck': best_deck,
+                'opponent_game_stats': opponent_game_stats,
+                'opponent_info': opponent_info
             })
         
         conn.close()
@@ -1844,6 +1825,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
                     </div>
+                    {opponent_info_html}
                     {best_deck_html}
                 </div>
             """
