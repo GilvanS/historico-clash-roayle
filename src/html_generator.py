@@ -7,6 +7,8 @@ Generates Clash Royale analytics with relative paths for GitHub Pages
 import sqlite3
 import os
 import re
+import requests
+import time
 from datetime import datetime, timezone
 try:
     from datetime import UTC
@@ -18,6 +20,14 @@ from typing import List, Dict, Optional
 class GitHubPagesHTMLGenerator:
     def __init__(self, db_path: str = "clash_royale.db"):
         self.db_path = db_path
+        self.base_url = "https://proxy.royaleapi.dev/v1"
+        self.api_token = os.getenv("CR_API_TOKEN")
+        self.headers = None
+        if self.api_token:
+            self.headers = {
+                "Authorization": f"Bearer {self.api_token}",
+                "Content-Type": "application/json"
+            }
         
         # Card name mapping for file names (GitHub Pages uses relative paths)
         self.card_name_mapping = {
@@ -98,6 +108,140 @@ class GitHubPagesHTMLGenerator:
             'Electro Dragon': 'eDragon',
             'Electro Wizard': 'eWiz'
         }
+    
+    def fetch_opponent_data_from_api(self, opponent_tag: str) -> Optional[Dict]:
+        """Fetch opponent data from API and save to database"""
+        if not self.api_token or not opponent_tag:
+            return None
+        
+        clean_tag = opponent_tag.replace('#', '')
+        url = f"{self.base_url}/players/%23{clean_tag}"
+        
+        try:
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            player_data = response.json()
+            
+            # Save to players table
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            clan_info = player_data.get('clan', {})
+            cursor.execute("""
+                INSERT OR REPLACE INTO players 
+                (player_tag, name, trophies, best_trophies, level, clan_tag, clan_name, last_updated)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                player_data['tag'],
+                player_data['name'],
+                player_data.get('trophies', 0),
+                player_data.get('bestTrophies', 0),
+                player_data.get('expLevel', 0),
+                clan_info.get('tag'),
+                clan_info.get('name'),
+                datetime.now(UTC).isoformat()
+            ))
+            
+            conn.commit()
+            conn.close()
+            
+            # Rate limiting
+            time.sleep(0.5)
+            
+            return player_data
+        except requests.RequestException as e:
+            print(f"Error fetching opponent data for {opponent_tag}: {e}")
+            return None
+    
+    def fetch_opponent_battles_from_api(self, opponent_tag: str) -> Optional[List[Dict]]:
+        """Fetch opponent battles from API and save to database"""
+        if not self.api_token or not opponent_tag:
+            return None
+        
+        clean_tag = opponent_tag.replace('#', '')
+        url = f"{self.base_url}/players/%23{clean_tag}/battlelog"
+        
+        try:
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            battles = response.json()
+            
+            # Save battles to database (similar to analyzer.py)
+            if battles:
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.cursor()
+                
+                for battle in battles:
+                    teams = battle.get('team', [])
+                    player_team = None
+                    
+                    # Find the opponent's team (they are the player in their own battles)
+                    for team in teams:
+                        if team.get('tag') == opponent_tag:
+                            player_team = team
+                            break
+                    
+                    if not player_team:
+                        continue
+                    
+                    opponents = battle.get('opponent', [])
+                    opponent_team = opponents[0] if opponents else None
+                    
+                    # Format deck cards
+                    deck_cards = ' | '.join(sorted([card['name'] for card in player_team.get('cards', [])]))
+                    
+                    # Determine result from crowns (same logic as analyzer.py)
+                    player_crowns = player_team.get('crowns', 0)
+                    opponent_crowns = opponent_team.get('crowns', 0) if opponent_team else 0
+                    
+                    if player_crowns > opponent_crowns:
+                        result = 'victory'
+                    elif player_crowns < opponent_crowns:
+                        result = 'defeat'
+                    else:
+                        result = 'draw'
+                    
+                    trophy_change = battle.get('trophyChange', 0)
+                    
+                    try:
+                        cursor.execute("""
+                            INSERT OR IGNORE INTO battles 
+                            (player_tag, battle_time, battle_type, game_mode, is_ladder_tournament,
+                             arena_id, arena_name, result, crowns, deck_cards, 
+                             opponent_tag, opponent_name, opponent_trophies, opponent_deck_cards,
+                             trophy_change)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (
+                            opponent_tag,
+                            battle['battleTime'],
+                            battle.get('type'),
+                            battle.get('gameMode', {}).get('name'),
+                            battle.get('isLadderTournament', False),
+                            battle.get('arena', {}).get('id'),
+                            battle.get('arena', {}).get('name'),
+                            result,
+                            player_crowns,
+                            deck_cards,
+                            opponent_team.get('tag') if opponent_team else None,
+                            opponent_team.get('name') if opponent_team else None,
+                            opponent_team.get('startingTrophies') if opponent_team else None,
+                            ' | '.join(sorted([card['name'] for card in opponent_team.get('cards', [])])) if opponent_team else None,
+                            trophy_change
+                        ))
+                    except sqlite3.Error as e:
+                        print(f"Error inserting battle: {e}")
+                        continue
+                
+                conn.commit()
+                conn.close()
+            
+            # Rate limiting
+            time.sleep(1)
+            
+            return battles
+        except requests.RequestException as e:
+            print(f"Error fetching opponent battles for {opponent_tag}: {e}")
+            return None
     
     def get_card_filename(self, card_name: str) -> str:
         """Convert card name to filename"""
@@ -555,6 +699,8 @@ class GitHubPagesHTMLGenerator:
                 """, (opponent_tag,))
                 
                 opponent_stats_row = cursor.fetchone()
+                opponent_game_stats = None
+                
                 if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
                     total, wins_opp, losses_opp, draws, trophy_change, avg_crowns_opp = opponent_stats_row
                     win_rate_opp = (wins_opp / total * 100) if total > 0 else 0
@@ -567,6 +713,38 @@ class GitHubPagesHTMLGenerator:
                         'total_trophy_change': trophy_change or 0,
                         'avg_crowns': avg_crowns_opp or 0
                     }
+                else:
+                    # No data in database, fetch from API
+                    print(f"Fetching opponent data from API for {opponent_tag}...")
+                    self.fetch_opponent_data_from_api(opponent_tag)
+                    self.fetch_opponent_battles_from_api(opponent_tag)
+                    
+                    # Try again after fetching
+                    cursor.execute("""
+                        SELECT 
+                            COUNT(*) as total_battles,
+                            SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                            SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                            SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+                            SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                            ROUND(AVG(crowns), 2) as avg_crowns
+                        FROM battles 
+                        WHERE player_tag = ?
+                    """, (opponent_tag,))
+                    
+                    opponent_stats_row = cursor.fetchone()
+                    if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
+                        total, wins_opp, losses_opp, draws, trophy_change, avg_crowns_opp = opponent_stats_row
+                        win_rate_opp = (wins_opp / total * 100) if total > 0 else 0
+                        opponent_game_stats = {
+                            'total_battles': total or 0,
+                            'wins': wins_opp or 0,
+                            'losses': losses_opp or 0,
+                            'draws': draws or 0,
+                            'win_rate': round(win_rate_opp, 2),
+                            'total_trophy_change': trophy_change or 0,
+                            'avg_crowns': avg_crowns_opp or 0
+                        }
             
             results.append({
                 'deck_cards': deck_cards,
@@ -721,7 +899,7 @@ class GitHubPagesHTMLGenerator:
         cursor = conn.cursor()
         from datetime import timedelta
         
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         # Calculate period start dates
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
