@@ -414,13 +414,51 @@ class GitHubPagesHTMLGenerator:
                 'avg_crowns': avg_crowns
             })
         
-        # Then, for each clan member with >= 10K, get their best performing deck
+        # Then, for each clan member with >= 10K, get their best performing deck and stats
         if opponent_tags:
-            # Get best deck for each clan member (best win_rate when they appear as opponents)
+            # Get member names from clan_members table
+            placeholders_members = ','.join(['?'] * len(opponent_tags))
+            cursor.execute(f"""
+                SELECT player_tag, name FROM clan_members 
+                WHERE player_tag IN ({placeholders_members})
+            """, list(opponent_tags))
+            member_names = {row[0]: row[1] for row in cursor.fetchall()}
+            
+            # Get best deck for each clan member (best win_rate from their own battles)
             for member_tag in opponent_tags:
+                member_name = member_names.get(member_tag, 'Membro do Clã')
+                
+                # Get overall stats for this member from THEIR battles (player_tag = member_tag)
                 cursor.execute("""
                     SELECT 
-                        opponent_deck_cards as deck_cards,
+                        COUNT(*) as total_battles,
+                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                        ROUND(AVG(crowns), 2) as avg_crowns
+                    FROM battles 
+                    WHERE player_tag = ?
+                """, (member_tag,))
+                
+                overall_stats_row = cursor.fetchone()
+                member_total_battles = 0
+                member_wins = 0
+                member_losses = 0
+                member_trophy_change = 0
+                member_avg_crowns = 0
+                
+                if overall_stats_row:
+                    member_total_battles, member_wins, member_losses, member_trophy_change, member_avg_crowns = overall_stats_row
+                    member_total_battles = member_total_battles or 0
+                    member_wins = member_wins or 0
+                    member_losses = member_losses or 0
+                    member_trophy_change = member_trophy_change or 0
+                    member_avg_crowns = member_avg_crowns or 0
+                
+                # Get best deck for this member from THEIR battles
+                cursor.execute("""
+                    SELECT 
+                        deck_cards,
                         COUNT(*) as total_battles,
                         SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
                         SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
@@ -428,22 +466,19 @@ class GitHubPagesHTMLGenerator:
                         ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
                         ROUND(AVG(crowns), 2) as avg_crowns
                     FROM battles 
-                    WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
+                    WHERE deck_cards IS NOT NULL AND deck_cards != ''
                         AND player_tag = ?
-                        AND opponent_tag = ?
-                    GROUP BY opponent_deck_cards
+                    GROUP BY deck_cards
                     HAVING total_battles >= 1
                     ORDER BY 
                         (CAST(SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*)) DESC,
                         COUNT(*) DESC
                     LIMIT 1
-                """, (player_tag, member_tag))
+                """, (member_tag,))
                 
                 member_deck_row = cursor.fetchone()
                 if member_deck_row:
                     deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = member_deck_row
-                    # Note: wins here are your wins, losses are your losses when facing this deck
-                    # So win_rate is from your perspective
                     win_rate = (wins / total * 100) if total > 0 else 0
                     results.append({
                         'deck_cards': deck_cards,
@@ -453,7 +488,14 @@ class GitHubPagesHTMLGenerator:
                         'win_rate': round(win_rate, 2),
                         'total_trophy_change': trophy_change,
                         'avg_trophy_change': avg_trophy_change,
-                        'avg_crowns': avg_crowns
+                        'avg_crowns': avg_crowns,
+                        'member_tag': member_tag,
+                        'member_name': member_name,
+                        'member_total_battles': member_total_battles,
+                        'member_wins': member_wins,
+                        'member_losses': member_losses,
+                        'member_trophy_change': member_trophy_change,
+                        'member_avg_crowns': member_avg_crowns
                     })
                 else:
                     # No battle data, try to get current deck from clan_member_decks
@@ -477,7 +519,14 @@ class GitHubPagesHTMLGenerator:
                                 'win_rate': 0.0,
                                 'total_trophy_change': 0,
                                 'avg_trophy_change': 0,
-                                'avg_crowns': 0
+                                'avg_crowns': 0,
+                                'member_tag': member_tag,
+                                'member_name': member_name,
+                                'member_total_battles': member_total_battles,
+                                'member_wins': member_wins,
+                                'member_losses': member_losses,
+                                'member_trophy_change': member_trophy_change,
+                                'member_avg_crowns': member_avg_crowns
                             })
         
         # Sort results: user's deck first, then by win_rate
@@ -1621,41 +1670,48 @@ class GitHubPagesHTMLGenerator:
                     opponent_tag = opponent_row[1] or ''
                     deck_owner_info = f" - {opponent_name} ({opponent_tag}) [Oponente]"
             else:
-                # Get the player_tag who used this deck most frequently
-                cursor.execute("""
-                    SELECT b.player_tag, 
-                           COUNT(*) as usage_count,
-                           p.name as player_name,
-                           cm.name as clan_member_name
-                    FROM battles b
-                    LEFT JOIN players p ON b.player_tag = p.player_tag
-                    LEFT JOIN clan_members cm ON b.player_tag = cm.player_tag
-                    WHERE b.deck_cards = ? AND b.deck_cards IS NOT NULL
-                    GROUP BY b.player_tag
-                    ORDER BY usage_count DESC
-                    LIMIT 1
-                """, (deck['deck_cards'],))
-                
-                owner_row = cursor.fetchone()
-                
-                if owner_row:
-                    owner_tag = owner_row[0]
-                    owner_name = owner_row[3] or owner_row[2] or 'Jogador Desconhecido'
+                # Check if deck has member info (from same_level query)
+                if 'member_tag' in deck and 'member_name' in deck:
+                    # This is a clan member's deck from same_level query
+                    member_name = deck.get('member_name', 'Membro do Clã')
+                    member_tag = deck.get('member_tag', '')
+                    deck_owner_info = f" - {member_name} ({member_tag}) [Clã]"
+                else:
+                    # Get the player_tag who used this deck most frequently
+                    cursor.execute("""
+                        SELECT b.player_tag, 
+                               COUNT(*) as usage_count,
+                               p.name as player_name,
+                               cm.name as clan_member_name
+                        FROM battles b
+                        LEFT JOIN players p ON b.player_tag = p.player_tag
+                        LEFT JOIN clan_members cm ON b.player_tag = cm.player_tag
+                        WHERE b.deck_cards = ? AND b.deck_cards IS NOT NULL
+                        GROUP BY b.player_tag
+                        ORDER BY usage_count DESC
+                        LIMIT 1
+                    """, (deck['deck_cards'],))
                     
-                    # Check if it's the user's deck
-                    if owner_tag == player_tag and stats:
-                        deck_owner_info = f" - {stats.get('name', owner_name)} ({owner_tag})"
-                    else:
-                        # Check if it's a clan member
-                        cursor.execute("""
-                            SELECT name FROM clan_members WHERE player_tag = ?
-                        """, (owner_tag,))
-                        clan_member_check = cursor.fetchone()
+                    owner_row = cursor.fetchone()
+                    
+                    if owner_row:
+                        owner_tag = owner_row[0]
+                        owner_name = owner_row[3] or owner_row[2] or 'Jogador Desconhecido'
                         
-                        if clan_member_check:
-                            deck_owner_info = f" - {clan_member_check[0]} ({owner_tag}) [Clã]"
+                        # Check if it's the user's deck
+                        if owner_tag == player_tag and stats:
+                            deck_owner_info = f" - {stats.get('name', owner_name)} ({owner_tag})"
                         else:
-                            deck_owner_info = f" - {owner_name} ({owner_tag})"
+                            # Check if it's a clan member
+                            cursor.execute("""
+                                SELECT name FROM clan_members WHERE player_tag = ?
+                            """, (owner_tag,))
+                            clan_member_check = cursor.fetchone()
+                            
+                            if clan_member_check:
+                                deck_owner_info = f" - {clan_member_check[0]} ({owner_tag}) [Clã]"
+                            else:
+                                deck_owner_info = f" - {owner_name} ({owner_tag})"
             
             conn.close()
             
@@ -1669,7 +1725,29 @@ class GitHubPagesHTMLGenerator:
                 """
             else:
                 title = f"#{i} - {deck['win_rate']}% Taxa de Vitória{deck_owner_info}"
-                stats_html = f"""
+                
+                # Check if this is a clan member's deck with member stats
+                if 'member_tag' in deck and deck.get('member_total_battles', 0) > 0:
+                    member_name = deck.get('member_name', 'Membro do Clã')
+                    member_tag = deck.get('member_tag', '')
+                    member_total = deck.get('member_total_battles', 0)
+                    member_wins = deck.get('member_wins', 0)
+                    member_losses = deck.get('member_losses', 0)
+                    member_trophy_change = deck.get('member_trophy_change', 0)
+                    member_avg_crowns = deck.get('member_avg_crowns', 0)
+                    member_trophy_color = "green" if member_trophy_change >= 0 else "red"
+                    
+                    stats_html = f"""
+                        <div class="deck-stats">
+                            <span class="stat">🏆 {member_total} batalhas</span>
+                            <span class="stat">✅ {member_wins} vitórias</span>
+                            <span class="stat">❌ {member_losses} derrotas</span>
+                            <span class="stat" style="color: {member_trophy_color}">📈 {member_trophy_change:+d} trofeus</span>
+                            <span class="stat">👑 {member_avg_crowns:.1f} coroas médias</span>
+                        </div>
+                    """
+                else:
+                    stats_html = f"""
                         <div class="deck-stats">
                             <span class="stat">🏆 {deck['total_battles']} batalhas</span>
                             <span class="stat">✅ {deck['wins']} vitórias</span>
@@ -1677,7 +1755,7 @@ class GitHubPagesHTMLGenerator:
                             <span class="stat" style="color: {trophy_color}">📈 {deck['total_trophy_change']:+d} trofeus</span>
                             <span class="stat">👑 {deck['avg_crowns']:.1f} coroas médias</span>
                         </div>
-                """
+                    """
             
             html += f"""
                 <div class="deck-item">

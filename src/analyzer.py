@@ -429,14 +429,32 @@ class ClashRoyaleAnalyzer:
         
         print(f"Fetching detailed data for {len(members)} clan members...")
         
+        # Get main player tag to identify which member is the main player
+        cursor = sqlite3.connect(self.db_path).cursor()
+        cursor.execute("SELECT player_tag FROM players ORDER BY last_updated DESC LIMIT 1")
+        main_player_row = cursor.fetchone()
+        main_player_tag = main_player_row[0] if main_player_row else None
+        cursor.connection.close()
+        
         for i, member in enumerate(members, 1):
             member_tag = member['tag']
+            member_trophies = member.get('trophies', 0)
             print(f"  {i}/{len(members)}: {member['name']} ({member_tag})")
             
             # Get detailed player info
             player_data = self.get_player_info(member_tag)
             if player_data:
                 self.save_clan_member_deck_if_changed(player_data, clan_tag, clan_name)
+                
+                # For members with >= 10K trophies (and not the main player), fetch their battles
+                if member_trophies >= 10000 and member_tag != main_player_tag:
+                    print(f"    Fetching battles for {member['name']} (>= 10K trophies)...")
+                    battles = self.get_battle_log(member_tag)
+                    if battles:
+                        self.save_battles(member_tag, battles)
+                        print(f"    Saved {len(battles)} battles")
+                    # Extra rate limiting for battle logs
+                    time.sleep(1)
             
             # Rate limiting - be nice to the API
             time.sleep(0.5)
