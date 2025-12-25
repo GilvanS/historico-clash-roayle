@@ -186,7 +186,7 @@ class GitHubPagesHTMLGenerator:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Get decks ONLY from the user
+        # Get decks ONLY from the user (minimum 1 battle to show deck)
         query = """
             SELECT 
                 deck_cards,
@@ -201,7 +201,7 @@ class GitHubPagesHTMLGenerator:
             WHERE deck_cards IS NOT NULL AND deck_cards != ''
                 AND player_tag = ?
             GROUP BY deck_cards
-            HAVING total_battles >= 3
+            HAVING total_battles >= 1
             ORDER BY win_rate DESC, total_battles DESC
             LIMIT ?
         """
@@ -222,43 +222,41 @@ class GitHubPagesHTMLGenerator:
                 'avg_crowns': row[7]
             })
         
-        # If player_tag is provided, find user's deck and move it to first position
-        if player_tag:
-            # Get user's most recent deck
+        # If no decks found, try to get at least the most recent deck
+        if not all_decks:
             cursor.execute("""
-                SELECT deck_cards
-                FROM battles
-                WHERE player_tag = ? AND deck_cards IS NOT NULL AND deck_cards != ''
-                ORDER BY battle_time DESC
+                SELECT 
+                    deck_cards,
+                    COUNT(*) as total_battles,
+                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                    ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                    ROUND(AVG(crowns), 2) as avg_crowns
+                FROM battles 
+                WHERE deck_cards IS NOT NULL AND deck_cards != ''
+                    AND player_tag = ?
+                GROUP BY deck_cards
+                ORDER BY MAX(battle_time) DESC
                 LIMIT 1
             """, (player_tag,))
             
-            user_deck_row = cursor.fetchone()
-            if user_deck_row:
-                user_deck_cards = user_deck_row[0]
-                
-                # Find user's deck in the list
-                user_deck = None
-                other_decks = []
-                
-                for deck in all_decks:
-                    if deck['deck_cards'] == user_deck_cards:
-                        user_deck = deck
-                    else:
-                        other_decks.append(deck)
-                
-                # Put user's deck first, then others
-                if user_deck:
-                    results = [user_deck] + other_decks[:limit - 1]
-                else:
-                    results = all_decks[:limit]
-            else:
-                results = all_decks[:limit]
-        else:
-            results = all_decks[:limit]
+            recent_deck_row = cursor.fetchone()
+            if recent_deck_row:
+                all_decks.append({
+                    'deck_cards': recent_deck_row[0],
+                    'total_battles': recent_deck_row[1],
+                    'wins': recent_deck_row[2],
+                    'losses': recent_deck_row[3],
+                    'win_rate': recent_deck_row[4],
+                    'total_trophy_change': recent_deck_row[5],
+                    'avg_trophy_change': recent_deck_row[6],
+                    'avg_crowns': recent_deck_row[7]
+                })
         
         conn.close()
-        return results
+        return all_decks
     
     def get_deck_performance_same_level(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
         """Get deck performance data from clan members with same trophies level (>=10K) as user"""
