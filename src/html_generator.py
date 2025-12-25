@@ -8,6 +8,11 @@ import sqlite3
 import os
 import re
 from datetime import datetime, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    # Python < 3.11 compatibility
+    UTC = timezone.utc
 from typing import List, Dict, Optional
 
 class GitHubPagesHTMLGenerator:
@@ -457,7 +462,7 @@ class GitHubPagesHTMLGenerator:
         
         # Calculate start of current week (Monday)
         from datetime import timedelta
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         days_since_monday = now.weekday()  # 0 = Monday, 6 = Sunday
         week_start = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
         week_start_str = week_start.strftime('%Y%m%dT%H%M%S.000Z')
@@ -1722,6 +1727,47 @@ class GitHubPagesHTMLGenerator:
             best_deck = opponent.get('best_deck')
             trophy_diff_color = "green" if opponent['trophy_diff'] >= 0 else "red"
             trophy_diff_sign = "+" if opponent['trophy_diff'] >= 0 else ""
+            
+            # Get opponent game stats and info
+            opponent_game_stats = opponent.get('opponent_game_stats')
+            opponent_info = opponent.get('opponent_info')
+            
+            # Build opponent info section
+            opponent_info_html = ""
+            if opponent_info or opponent_game_stats:
+                opponent_info_html = "<div style=\"margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;\">"
+                opponent_info_html += "<h4 style=\"color: #4299e1; margin-bottom: 10px; font-size: 1em;\">📊 Dados do Oponente no Jogo</h4>"
+                
+                if opponent_info:
+                    opponent_info_html += f"""
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">🏆 Trofeus: {opponent_info.get('trophies', opponent['latest_opponent_trophies'])}</span>
+                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">⭐ Melhor: {opponent_info.get('best_trophies', 'N/A')}</span>
+                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">📈 Nivel: {opponent_info.get('level', 'N/A')}</span>
+                            {f"<span style=\"background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;\">👥 Clã: {opponent_info.get('clan_name', 'Sem clã')}</span>" if opponent_info.get('clan_name') else ""}
+                        </div>
+                    """
+                
+                if opponent_game_stats:
+                    trophy_change_color = "green" if opponent_game_stats.get('total_trophy_change', 0) >= 0 else "red"
+                    opponent_info_html += f"""
+                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <h5 style="color: #2d3748; margin-bottom: 8px; font-size: 0.95em;">Estatísticas Gerais</h5>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 0.9em;">
+                                <div>🏆 {opponent_game_stats.get('total_battles', 0)} batalhas</div>
+                                <div>✅ {opponent_game_stats.get('wins', 0)} vitórias</div>
+                                <div>❌ {opponent_game_stats.get('losses', 0)} derrotas</div>
+                                <div>🤝 {opponent_game_stats.get('draws', 0)} empates</div>
+                                <div style="color: {'green' if opponent_game_stats.get('win_rate', 0) >= 50 else 'red'}; font-weight: bold;">Taxa: {opponent_game_stats.get('win_rate', 0):.1f}%</div>
+                                <div style="color: {trophy_change_color}">📈 {opponent_game_stats.get('total_trophy_change', 0):+d} trofeus</div>
+                                <div>👑 {opponent_game_stats.get('avg_crowns', 0):.1f} coroas médias</div>
+                            </div>
+                        </div>
+                    """
+                else:
+                    opponent_info_html += "<p style=\"color: #718096; font-size: 0.9em;\">Dados do oponente não disponíveis. Os dados serão atualizados quando o sistema buscar as batalhas deste oponente.</p>"
+                
+                opponent_info_html += "</div>"
             
             # Generate deck cards HTML if best_deck exists
             best_deck_html = ""
