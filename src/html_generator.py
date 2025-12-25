@@ -513,15 +513,73 @@ class GitHubPagesHTMLGenerator:
         
         results = []
         for row in cursor.fetchall():
+            deck_cards = row[0]
+            total_battles = row[1]
+            wins = row[2]  # Times this deck defeated the user
+            losses = row[3]
+            win_rate = row[4]
+            total_trophy_change = row[5]
+            avg_trophy_change = row[6]
+            avg_crowns = row[7]
+            
+            # Get opponent tag for this deck
+            cursor.execute("""
+                SELECT DISTINCT opponent_tag, opponent_name
+                FROM battles
+                WHERE opponent_deck_cards = ?
+                    AND player_tag = ?
+                    AND result = 'defeat'
+                LIMIT 1
+            """, (deck_cards, player_tag))
+            
+            opponent_row = cursor.fetchone()
+            opponent_tag = None
+            opponent_name = None
+            opponent_game_stats = None
+            
+            if opponent_row:
+                opponent_tag = opponent_row[0]
+                opponent_name = opponent_row[1]
+                
+                # Get opponent's game stats from their battles
+                cursor.execute("""
+                    SELECT 
+                        COUNT(*) as total_battles,
+                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                        SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                        ROUND(AVG(crowns), 2) as avg_crowns
+                    FROM battles 
+                    WHERE player_tag = ?
+                """, (opponent_tag,))
+                
+                opponent_stats_row = cursor.fetchone()
+                if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
+                    total, wins_opp, losses_opp, draws, trophy_change, avg_crowns_opp = opponent_stats_row
+                    win_rate_opp = (wins_opp / total * 100) if total > 0 else 0
+                    opponent_game_stats = {
+                        'total_battles': total or 0,
+                        'wins': wins_opp or 0,
+                        'losses': losses_opp or 0,
+                        'draws': draws or 0,
+                        'win_rate': round(win_rate_opp, 2),
+                        'total_trophy_change': trophy_change or 0,
+                        'avg_crowns': avg_crowns_opp or 0
+                    }
+            
             results.append({
-                'deck_cards': row[0],
-                'total_battles': row[1],
-                'wins': row[2],  # Times this deck defeated the user
-                'losses': row[3],
-                'win_rate': row[4],
-                'total_trophy_change': row[5],
-                'avg_trophy_change': row[6],
-                'avg_crowns': row[7]
+                'deck_cards': deck_cards,
+                'total_battles': total_battles,
+                'wins': wins,
+                'losses': losses,
+                'win_rate': win_rate,
+                'total_trophy_change': total_trophy_change,
+                'avg_trophy_change': avg_trophy_change,
+                'avg_crowns': avg_crowns,
+                'opponent_tag': opponent_tag,
+                'opponent_name': opponent_name,
+                'opponent_game_stats': opponent_game_stats
             })
         
         conn.close()
@@ -1665,11 +1723,27 @@ class GitHubPagesHTMLGenerator:
             # Adjust title and stats display for opponent decks
             if is_opponent_decks:
                 title = f"#{i} - {deck['total_battles']} Derrotas{deck_owner_info}"
-                stats_html = f"""
+                
+                # Get opponent game stats if available
+                opponent_game_stats = deck.get('opponent_game_stats')
+                if opponent_game_stats:
+                    trophy_change_color = "green" if opponent_game_stats.get('total_trophy_change', 0) >= 0 else "red"
+                    stats_html = f"""
+                        <div class="deck-stats">
+                            <span class="stat">🏆 {opponent_game_stats.get('total_battles', 0)} batalhas</span>
+                            <span class="stat">✅ {opponent_game_stats.get('wins', 0)} vitórias</span>
+                            <span class="stat">❌ {opponent_game_stats.get('losses', 0)} derrotas</span>
+                            <span class="stat" style="color: {trophy_change_color}">📈 {opponent_game_stats.get('total_trophy_change', 0):+d} trofeus</span>
+                            <span class="stat">👑 {opponent_game_stats.get('avg_crowns', 0):.1f} coroas médias</span>
+                        </div>
+                    """
+                else:
+                    stats_html = f"""
                         <div class="deck-stats">
                             <span class="stat">🏆 {deck['total_battles']} vezes que me derrotou</span>
+                            <span class="stat" style="color: #718096; font-size: 0.9em;">Dados do oponente não disponíveis</span>
                         </div>
-                """
+                    """
             else:
                 title = f"#{i} - {deck['win_rate']}% Taxa de Vitória{deck_owner_info}"
                 
@@ -1732,42 +1806,36 @@ class GitHubPagesHTMLGenerator:
             opponent_game_stats = opponent.get('opponent_game_stats')
             opponent_info = opponent.get('opponent_info')
             
-            # Build opponent info section
+            # Build opponent info section with game stats - show stats in the format requested
             opponent_info_html = ""
-            if opponent_info or opponent_game_stats:
-                opponent_info_html = "<div style=\"margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;\">"
-                opponent_info_html += "<h4 style=\"color: #4299e1; margin-bottom: 10px; font-size: 1em;\">📊 Dados do Oponente no Jogo</h4>"
-                
-                if opponent_info:
-                    opponent_info_html += f"""
+            if opponent_game_stats:
+                trophy_change_color = "green" if opponent_game_stats.get('total_trophy_change', 0) >= 0 else "red"
+                opponent_info_html = f"""
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <h4 style="color: #4299e1; margin-bottom: 10px; font-size: 1em;">📊 Dados do Oponente no Jogo</h4>
+                        <div class="deck-stats">
+                            <span class="stat">🏆 {opponent_game_stats.get('total_battles', 0)} batalhas</span>
+                            <span class="stat">✅ {opponent_game_stats.get('wins', 0)} vitórias</span>
+                            <span class="stat">❌ {opponent_game_stats.get('losses', 0)} derrotas</span>
+                            <span class="stat" style="color: {trophy_change_color}">📈 {opponent_game_stats.get('total_trophy_change', 0):+d} trofeus</span>
+                            <span class="stat">👑 {opponent_game_stats.get('avg_crowns', 0):.1f} coroas médias</span>
+                        </div>
+                    </div>
+                """
+            elif opponent_info:
+                # If we have basic info but no game stats, show basic info
+                opponent_info_html = f"""
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <h4 style="color: #4299e1; margin-bottom: 10px; font-size: 1em;">📊 Dados do Oponente</h4>
                         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
                             <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">🏆 Trofeus: {opponent_info.get('trophies', opponent['latest_opponent_trophies'])}</span>
                             <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">⭐ Melhor: {opponent_info.get('best_trophies', 'N/A')}</span>
                             <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">📈 Nivel: {opponent_info.get('level', 'N/A')}</span>
                             {f"<span style=\"background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;\">👥 Clã: {opponent_info.get('clan_name', 'Sem clã')}</span>" if opponent_info.get('clan_name') else ""}
                         </div>
-                    """
-                
-                if opponent_game_stats:
-                    trophy_change_color = "green" if opponent_game_stats.get('total_trophy_change', 0) >= 0 else "red"
-                    opponent_info_html += f"""
-                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-                            <h5 style="color: #2d3748; margin-bottom: 8px; font-size: 0.95em;">Estatísticas Gerais</h5>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 0.9em;">
-                                <div>🏆 {opponent_game_stats.get('total_battles', 0)} batalhas</div>
-                                <div>✅ {opponent_game_stats.get('wins', 0)} vitórias</div>
-                                <div>❌ {opponent_game_stats.get('losses', 0)} derrotas</div>
-                                <div>🤝 {opponent_game_stats.get('draws', 0)} empates</div>
-                                <div style="color: {'green' if opponent_game_stats.get('win_rate', 0) >= 50 else 'red'}; font-weight: bold;">Taxa: {opponent_game_stats.get('win_rate', 0):.1f}%</div>
-                                <div style="color: {trophy_change_color}">📈 {opponent_game_stats.get('total_trophy_change', 0):+d} trofeus</div>
-                                <div>👑 {opponent_game_stats.get('avg_crowns', 0):.1f} coroas médias</div>
-                            </div>
-                        </div>
-                    """
-                else:
-                    opponent_info_html += "<p style=\"color: #718096; font-size: 0.9em;\">Dados do oponente não disponíveis. Os dados serão atualizados quando o sistema buscar as batalhas deste oponente.</p>"
-                
-                opponent_info_html += "</div>"
+                        <p style="color: #718096; font-size: 0.9em;">Dados de batalhas do oponente não disponíveis. Os dados serão atualizados quando o sistema buscar as batalhas deste oponente.</p>
+                    </div>
+                """
             
             # Generate deck cards HTML if best_deck exists
             best_deck_html = ""
