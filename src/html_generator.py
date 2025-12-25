@@ -715,36 +715,39 @@ class GitHubPagesHTMLGenerator:
                     }
                 else:
                     # No data in database, fetch from API
-                    print(f"Fetching opponent data from API for {opponent_tag}...")
-                    self.fetch_opponent_data_from_api(opponent_tag)
-                    self.fetch_opponent_battles_from_api(opponent_tag)
-                    
-                    # Try again after fetching
-                    cursor.execute("""
-                        SELECT 
-                            COUNT(*) as total_battles,
-                            SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                            SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                            SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
-                            SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                            ROUND(AVG(crowns), 2) as avg_crowns
-                        FROM battles 
-                        WHERE player_tag = ?
-                    """, (opponent_tag,))
-                    
-                    opponent_stats_row = cursor.fetchone()
-                    if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
-                        total, wins_opp, losses_opp, draws, trophy_change, avg_crowns_opp = opponent_stats_row
-                        win_rate_opp = (wins_opp / total * 100) if total > 0 else 0
-                        opponent_game_stats = {
-                            'total_battles': total or 0,
-                            'wins': wins_opp or 0,
-                            'losses': losses_opp or 0,
-                            'draws': draws or 0,
-                            'win_rate': round(win_rate_opp, 2),
-                            'total_trophy_change': trophy_change or 0,
-                            'avg_crowns': avg_crowns_opp or 0
-                        }
+                    if self.api_token:
+                        print(f"Fetching opponent data from API for {opponent_tag}...")
+                        self.fetch_opponent_data_from_api(opponent_tag)
+                        self.fetch_opponent_battles_from_api(opponent_tag)
+                        
+                        # Try again after fetching
+                        cursor.execute("""
+                            SELECT 
+                                COUNT(*) as total_battles,
+                                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                                SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+                                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                                ROUND(AVG(crowns), 2) as avg_crowns
+                            FROM battles 
+                            WHERE player_tag = ?
+                        """, (opponent_tag,))
+                        
+                        opponent_stats_row = cursor.fetchone()
+                        if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
+                            total, wins_opp, losses_opp, draws, trophy_change, avg_crowns_opp = opponent_stats_row
+                            win_rate_opp = (wins_opp / total * 100) if total > 0 else 0
+                            opponent_game_stats = {
+                                'total_battles': total or 0,
+                                'wins': wins_opp or 0,
+                                'losses': losses_opp or 0,
+                                'draws': draws or 0,
+                                'win_rate': round(win_rate_opp, 2),
+                                'total_trophy_change': trophy_change or 0,
+                                'avg_crowns': avg_crowns_opp or 0
+                            }
+                    else:
+                        print(f"API token not available. Cannot fetch data for {opponent_tag}")
             
             results.append({
                 'deck_cards': deck_cards,
@@ -817,6 +820,8 @@ class GitHubPagesHTMLGenerator:
             """, (opponent_tag,))
             
             opponent_stats_row = cursor.fetchone()
+            opponent_game_stats = None
+            
             if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
                 total, wins, losses, draws, trophy_change, avg_crowns = opponent_stats_row
                 win_rate = (wins / total * 100) if total > 0 else 0
@@ -829,6 +834,41 @@ class GitHubPagesHTMLGenerator:
                     'total_trophy_change': trophy_change or 0,
                     'avg_crowns': avg_crowns or 0
                 }
+            else:
+                # No data in database, fetch from API
+                if self.api_token:
+                    print(f"Fetching opponent data from API for {opponent_tag}...")
+                    self.fetch_opponent_data_from_api(opponent_tag)
+                    self.fetch_opponent_battles_from_api(opponent_tag)
+                    
+                    # Try again after fetching
+                    cursor.execute("""
+                        SELECT 
+                            COUNT(*) as total_battles,
+                            SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                            SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                            SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+                            SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                            ROUND(AVG(crowns), 2) as avg_crowns
+                        FROM battles 
+                        WHERE player_tag = ?
+                    """, (opponent_tag,))
+                    
+                    opponent_stats_row = cursor.fetchone()
+                    if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
+                        total, wins, losses, draws, trophy_change, avg_crowns = opponent_stats_row
+                        win_rate = (wins / total * 100) if total > 0 else 0
+                        opponent_game_stats = {
+                            'total_battles': total or 0,
+                            'wins': wins or 0,
+                            'losses': losses or 0,
+                            'draws': draws or 0,
+                            'win_rate': round(win_rate, 2),
+                            'total_trophy_change': trophy_change or 0,
+                            'avg_crowns': avg_crowns or 0
+                        }
+                else:
+                    print(f"API token not available. Cannot fetch data for {opponent_tag}")
             
             # Get opponent's current info from players table (if available)
             opponent_info = None
