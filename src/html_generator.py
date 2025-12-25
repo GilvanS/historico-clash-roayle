@@ -469,10 +469,81 @@ class GitHubPagesHTMLGenerator:
                         'avg_crowns': avg_crowns
                     }
         
+        # Also get clan members' current decks from clan_member_decks table
+        # Check if table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clan_member_decks'")
+        if cursor.fetchone() and opponent_tags:
+            opponent_placeholders = ','.join(['?'] * len(opponent_tags))
+            cursor.execute(f"""
+                SELECT DISTINCT cmd1.deck_cards
+                FROM clan_member_decks cmd1
+                WHERE cmd1.player_tag IN ({opponent_placeholders})
+                    AND cmd1.deck_cards IS NOT NULL AND cmd1.deck_cards != ''
+                    AND cmd1.id = (
+                        SELECT MAX(cmd2.id) 
+                        FROM clan_member_decks cmd2 
+                        WHERE cmd2.player_tag = cmd1.player_tag
+                    )
+            """, list(opponent_tags))
+            
+            for row in cursor.fetchall():
+                deck_cards = row[0]
+                if not deck_cards or deck_cards == '' or deck_cards in all_decks_dict:
+                    continue
+                
+                # Try to get performance stats from battles when this deck appeared as opponent
+                cursor.execute(f"""
+                    SELECT 
+                        COUNT(*) as total_battles,
+                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
+                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
+                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
+                        ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
+                        ROUND(AVG(crowns), 2) as avg_crowns
+                    FROM battles 
+                    WHERE opponent_deck_cards = ?
+                        AND player_tag = ?
+                        AND opponent_tag IN ({opponent_placeholders})
+                """, [deck_cards, player_tag] + list(opponent_tags))
+                
+                perf_row = cursor.fetchone()
+                if perf_row and perf_row[0] and perf_row[0] > 0:
+                    # Has battle data
+                    total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = perf_row
+                    win_rate = (wins / total * 100) if total > 0 else 0
+                    all_decks_dict[deck_cards] = {
+                        'deck_cards': deck_cards,
+                        'total_battles': total,
+                        'wins': wins,
+                        'losses': losses,
+                        'win_rate': win_rate,
+                        'total_trophy_change': trophy_change or 0,
+                        'avg_trophy_change': avg_trophy_change or 0,
+                        'avg_crowns': avg_crowns or 0
+                    }
+                else:
+                    # No battle data, add with default values (will show as deck from clan member)
+                    all_decks_dict[deck_cards] = {
+                        'deck_cards': deck_cards,
+                        'total_battles': 0,
+                        'wins': 0,
+                        'losses': 0,
+                        'win_rate': 0.0,
+                        'total_trophy_change': 0,
+                        'avg_trophy_change': 0,
+                        'avg_crowns': 0
+                    }
+        
         # Convert to list and sort
         results = list(all_decks_dict.values())
-        results = [d for d in results if d['total_battles'] >= 3]  # Filter by minimum battles
-        results.sort(key=lambda x: (x['win_rate'], x['total_battles']), reverse=True)
+        # Sort: prioritize decks with battle data, then by win_rate, then by total_battles
+        # Decks without battle data (total_battles == 0) will still be shown but at the end
+        results.sort(key=lambda x: (
+            x['total_battles'] == 0,  # Decks without battle data go to end
+            -x['win_rate'], 
+            -x['total_battles']
+        ))
+        # Don't filter by minimum battles anymore - show all decks, even those without battle data
         results = results[:limit]
         
         conn.close()
