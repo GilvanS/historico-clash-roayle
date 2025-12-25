@@ -349,17 +349,22 @@ class GitHubPagesHTMLGenerator:
             })
         
         # Then, for each clan member with >= 10K, get their best performing deck and stats
+        # IMPORTANT: Only get data from members who are CURRENTLY in the clan (from clan_members table)
         if opponent_tags:
-            # Get member names from clan_members table
+            # Get member names from clan_members table (only active members)
             placeholders_members = ','.join(['?'] * len(opponent_tags))
             cursor.execute(f"""
                 SELECT player_tag, name FROM clan_members 
                 WHERE player_tag IN ({placeholders_members})
-            """, list(opponent_tags))
+                AND clan_tag = ?
+            """, list(opponent_tags) + [clan_tag])
             member_names = {row[0]: row[1] for row in cursor.fetchall()}
             
+            # Only process members that are actually in the clan_members table
+            active_member_tags = set(member_names.keys())
+            
             # Get best deck for each clan member (best win_rate from their own battles)
-            for member_tag in opponent_tags:
+            for member_tag in active_member_tags:
                 member_name = member_names.get(member_tag, 'Membro do Clã')
                 
                 # Get overall stats for this member from THEIR battles (player_tag = member_tag)
@@ -819,12 +824,12 @@ class GitHubPagesHTMLGenerator:
         conn.close()
         return analytics
 
-    def get_recent_battles(self, limit: int = 15) -> List[Dict]:
-        """Get recent battle data from database and CSV"""
+    def get_recent_battles(self, limit: int = 15, player_tag: str = None) -> List[Dict]:
+        """Get recent battle data from database and CSV - ONLY user's battles"""
         battles = []
         
         # Primeiro, tenta buscar do banco de dados
-        if os.path.exists(self.db_path):
+        if os.path.exists(self.db_path) and player_tag:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
@@ -832,9 +837,10 @@ class GitHubPagesHTMLGenerator:
                 SELECT battle_time, result, opponent_name, opponent_tag, 
                        crowns, trophy_change, deck_cards, arena_name
                 FROM battles 
+                WHERE player_tag = ?
                 ORDER BY battle_time DESC 
                 LIMIT ?
-            """, (limit,))
+            """, (player_tag, limit))
             
             for row in cursor.fetchall():
                 battles.append({
@@ -960,9 +966,9 @@ class GitHubPagesHTMLGenerator:
         conn.close()
         return members
     
-    def get_daily_battle_stats(self, days_limit: int = 30) -> List[Dict]:
-        """Get daily wins/losses aggregation for histogram, including days with no battles"""
-        if not os.path.exists(self.db_path):
+    def get_daily_battle_stats(self, days_limit: int = 30, player_tag: str = None) -> List[Dict]:
+        """Get daily wins/losses aggregation for histogram, including days with no battles - ONLY user's battles"""
+        if not os.path.exists(self.db_path) or not player_tag:
             return []
             
         conn = sqlite3.connect(self.db_path)
@@ -987,9 +993,10 @@ class GitHubPagesHTMLGenerator:
             LEFT JOIN battles b ON 
                 SUBSTR(b.battle_time, 1, 4) || '-' || SUBSTR(b.battle_time, 5, 2) || '-' || SUBSTR(b.battle_time, 7, 2) = dr.date
                 AND b.battle_time IS NOT NULL
+                AND b.player_tag = ?
             GROUP BY dr.date
             ORDER BY dr.date ASC
-        """, (days_limit - 1,))  # -1 because we include today
+        """, (days_limit - 1, player_tag))  # -1 because we include today
         
         daily_stats = []
         for row in cursor.fetchall():
@@ -1988,8 +1995,8 @@ class GitHubPagesHTMLGenerator:
         stats = self.get_player_stats()
         player_tag = stats.get('player_tag') if stats else None
         decks = self.get_deck_performance(10, player_tag=player_tag)
-        battles = self.get_recent_battles(15)  # Recent Battles section
-        daily_stats = self.get_daily_battle_stats(30)
+        battles = self.get_recent_battles(15, player_tag=player_tag)  # Recent Battles section - ONLY user's battles
+        daily_stats = self.get_daily_battle_stats(30, player_tag=player_tag)  # Daily stats - ONLY user's battles
         clan_rankings = self.get_clan_rankings_data()
         clan_members = self.get_clan_members()
         deck_analytics = self.get_clan_deck_analytics()
@@ -2056,7 +2063,7 @@ class GitHubPagesHTMLGenerator:
             """
         
         # Generate daily histogram for both desktop (30 days) and mobile (7 days)
-        daily_stats_7_days = self.get_daily_battle_stats(7)
+        daily_stats_7_days = self.get_daily_battle_stats(7, player_tag=player_tag)
         daily_histogram_desktop = self.generate_daily_histogram_html(daily_stats, "histogram-desktop", include_legend=True)
         daily_histogram_mobile = self.generate_daily_histogram_html(daily_stats_7_days, "histogram-mobile", include_legend=False)
         daily_histogram_html = daily_histogram_desktop + daily_histogram_mobile
