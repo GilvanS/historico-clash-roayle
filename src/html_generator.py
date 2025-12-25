@@ -144,7 +144,8 @@ class GitHubPagesHTMLGenerator:
             conn.close()
             return None
             
-        # Get battle stats
+        # Get battle stats - ONLY from the player in players table
+        player_tag_from_db = player_row[0]
         cursor.execute("""
             SELECT 
                 COUNT(*) as total_battles,
@@ -155,7 +156,8 @@ class GitHubPagesHTMLGenerator:
                 MAX(battle_time) as last_battle,
                 MIN(battle_time) as first_battle
             FROM battles
-        """)
+            WHERE player_tag = ?
+        """, (player_tag_from_db,))
         battle_stats = cursor.fetchone()
         
         conn.close()
@@ -1631,41 +1633,27 @@ class GitHubPagesHTMLGenerator:
                     member_tag = deck.get('member_tag', '')
                     deck_owner_info = f" - {member_name} ({member_tag}) [Clã]"
                 else:
-                    # Get the player_tag who used this deck most frequently
-                    cursor.execute("""
-                        SELECT b.player_tag, 
-                               COUNT(*) as usage_count,
-                               p.name as player_name,
-                               cm.name as clan_member_name
-                        FROM battles b
-                        LEFT JOIN players p ON b.player_tag = p.player_tag
-                        LEFT JOIN clan_members cm ON b.player_tag = cm.player_tag
-                        WHERE b.deck_cards = ? AND b.deck_cards IS NOT NULL
-                        GROUP BY b.player_tag
-                        ORDER BY usage_count DESC
-                        LIMIT 1
-                    """, (deck['deck_cards'],))
-                    
-                    owner_row = cursor.fetchone()
-                    
-                    if owner_row:
-                        owner_tag = owner_row[0]
-                        owner_name = owner_row[3] or owner_row[2] or 'Jogador Desconhecido'
+                    # For "Todos os Decks" tab, this should ONLY be user's decks
+                    # So we verify it's the user's deck and show their name
+                    if player_tag and stats:
+                        # Verify this deck belongs to the user
+                        cursor.execute("""
+                            SELECT COUNT(*) 
+                            FROM battles 
+                            WHERE deck_cards = ? 
+                                AND player_tag = ?
+                            LIMIT 1
+                        """, (deck['deck_cards'], player_tag))
                         
-                        # Check if it's the user's deck
-                        if owner_tag == player_tag and stats:
-                            deck_owner_info = f" - {stats.get('name', owner_name)} ({owner_tag})"
+                        is_user_deck = cursor.fetchone()[0] > 0
+                        
+                        if is_user_deck:
+                            deck_owner_info = f" - {stats.get('name', 'Você')} ({player_tag})"
                         else:
-                            # Check if it's a clan member
-                            cursor.execute("""
-                                SELECT name FROM clan_members WHERE player_tag = ?
-                            """, (owner_tag,))
-                            clan_member_check = cursor.fetchone()
-                            
-                            if clan_member_check:
-                                deck_owner_info = f" - {clan_member_check[0]} ({owner_tag}) [Clã]"
-                            else:
-                                deck_owner_info = f" - {owner_name} ({owner_tag})"
+                            # This shouldn't happen in "Todos os Decks" tab, but just in case
+                            deck_owner_info = ""
+                    else:
+                        deck_owner_info = ""
             
             conn.close()
             
