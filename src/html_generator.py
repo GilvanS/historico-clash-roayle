@@ -179,14 +179,14 @@ class GitHubPagesHTMLGenerator:
         }
     
     def get_deck_performance(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
-        """Get deck performance data, showing ONLY user's decks"""
+        """Get deck performance data, showing ONLY user's decks - Λ Яᄃ λ Ð Є (#2QR292P)"""
         if not os.path.exists(self.db_path) or not player_tag:
             return []
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Get decks ONLY from the user (minimum 1 battle to show deck)
+        # Get decks ONLY from the user - filter by player_tag
         query = """
             SELECT 
                 deck_cards,
@@ -198,8 +198,9 @@ class GitHubPagesHTMLGenerator:
                 ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
                 ROUND(AVG(crowns), 2) as avg_crowns
             FROM battles 
-            WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                AND player_tag = ?
+            WHERE player_tag = ?
+                AND deck_cards IS NOT NULL 
+                AND deck_cards != ''
             GROUP BY deck_cards
             HAVING total_battles >= 1
             ORDER BY win_rate DESC, total_battles DESC
@@ -221,39 +222,6 @@ class GitHubPagesHTMLGenerator:
                 'avg_trophy_change': row[6],
                 'avg_crowns': row[7]
             })
-        
-        # If no decks found, try to get at least the most recent deck
-        if not all_decks:
-            cursor.execute("""
-                SELECT 
-                    deck_cards,
-                    COUNT(*) as total_battles,
-                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
-                    SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                    ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                    ROUND(AVG(crowns), 2) as avg_crowns
-                FROM battles 
-                WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                    AND player_tag = ?
-                GROUP BY deck_cards
-                ORDER BY MAX(battle_time) DESC
-                LIMIT 1
-            """, (player_tag,))
-            
-            recent_deck_row = cursor.fetchone()
-            if recent_deck_row:
-                all_decks.append({
-                    'deck_cards': recent_deck_row[0],
-                    'total_battles': recent_deck_row[1],
-                    'wins': recent_deck_row[2],
-                    'losses': recent_deck_row[3],
-                    'win_rate': recent_deck_row[4],
-                    'total_trophy_change': recent_deck_row[5],
-                    'avg_trophy_change': recent_deck_row[6],
-                    'avg_crowns': recent_deck_row[7]
-                })
         
         conn.close()
         return all_decks
