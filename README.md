@@ -6,9 +6,47 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 06/01/2026 23:25:59
+**Última atualização:** 06/01/2026 23:41:51
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 20
+- **Vitórias:** 10 (50.0%)
+- **Derrotas:** 10
+- **Mudança Total de Troféus:** +19
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Guards, Hog Rider, Mega Knight, Mini P.E.K.K.A, Musketeer, Tesla, The Log, Witch
+- **Último Resultado:** DERROTA
+- **Data da Última Batalha:** 06/01/2026 00:35
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Goblin Gang, Lightning, Mini P.E.K.K.A, Musketeer, Royal Recruits, Skeleton Barrel, Wall Breakers
+- **Win Rate:** 60.0%
+- **Batalhas:** 10 (6V - 4D)
+- **Troféus:** +60
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **DERROTA** vs Arkeologen - 0-3 coroas (-31 troféus) - 06/01/2026 00:35
+2. ⚖️ **DERROTA** vs 穎的廟口鴨香飯大份要加蛋 - 0-1 coroas (-29 troféus) - 06/01/2026 02:02
+3. ⚖️ **DERROTA** vs pedro - 0-1 coroas (-4 troféus) - 06/01/2026 02:06
+4. ⚖️ **VITORIA** vs SKbeer28 - 3-0 coroas (+30 troféus) - 06/01/2026 02:08
+5. ⚖️ **VITORIA** vs Alex - 3-0 coroas (+30 troféus) - 06/01/2026 02:11
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (60.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (50.0%) está acima de 50%
+- ✅ **Troféus totais** positivos (+19)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 641
 - **Vitórias:** 357 (55.7%)
