@@ -6,9 +6,50 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 11/01/2026 07:41:55
+**Última atualização:** 11/01/2026 08:28:24
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 11
+- **Vitórias:** 4 (36.4%)
+- **Derrotas:** 7
+- **Mudança Total de Troféus:** -56
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Electro Spirit, Goblin Hut, Lightning, Royal Ghost, Royal Hogs, Skeletons, Wizard
+- **Último Resultado:** DERROTA
+- **Data da Última Batalha:** 11/01/2026 02:00
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Electro Spirit, Goblin Hut, Lightning, Royal Ghost, Royal Hogs, Skeletons, Wizard
+- **Win Rate:** 66.7%
+- **Batalhas:** 3 (2V - 1D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **DERROTA** vs UJRdragonknight - 0-3 coroas (+0 troféus) - 11/01/2026 02:00
+2. ⚖️ **VITORIA** vs Shaah - 1-0 coroas (+0 troféus) - 11/01/2026 02:09
+3. ⚖️ **VITORIA** vs NTR AMADEUS - 1-0 coroas (+0 troféus) - 11/01/2026 02:23
+4. ⚖️ **VITORIA** vs The Legend2 - 1-0 coroas (+0 troféus) - 11/01/2026 02:38
+5. ⚖️ **DERROTA** vs lightning - 0-1 coroas (+0 troféus) - 11/01/2026 02:42
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ⚠️ **Win rate geral** (36.4%) está abaixo de 50%
+- ⚠️ **Troféus totais** negativos (-56)
+
+### ❌ O que não está funcionando
+
+- ❌ **Win rate geral** abaixo de 50% - considere revisar estratégias
+- ❌ **Perda de troféus** acumulada (-56) - precisa melhorar performance
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 11
 - **Vitórias:** 4 (36.4%)
