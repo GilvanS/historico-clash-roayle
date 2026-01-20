@@ -6,9 +6,49 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 19/01/2026 23:43:29
+**Última atualização:** 20/01/2026 01:48:53
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 6
+- **Vitórias:** 2 (33.3%)
+- **Derrotas:** 4
+- **Mudança Total de Troféus:** +60
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Barbarian Barrel, Cannon, Furnace, Giant Snowball, Graveyard, Poison, Royal Recruits, Skeletons
+- **Último Resultado:** DERROTA
+- **Data da Última Batalha:** 20/01/2026 00:45
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Cannon, Giant Snowball, Graveyard, Poison, Royal Recruits, Skeletons, Valkyrie
+- **Win Rate:** 66.7%
+- **Batalhas:** 3 (2V - 1D)
+- **Troféus:** +60
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **DERROTA** vs octane - 1-2 coroas (+0 troféus) - 20/01/2026 00:45
+2. ⚖️ **DERROTA** vs Jonny - 0-3 coroas (+0 troféus) - 20/01/2026 00:48
+3. ⚖️ **DERROTA** vs Mr November - 1-2 coroas (+0 troféus) - 20/01/2026 00:57
+4. ⚖️ **DERROTA** vs Moisés L. - 0-1 coroas (+0 troféus) - 20/01/2026 01:13
+5. ⚖️ **VITORIA** vs Nathan - 1-0 coroas (+30 troféus) - 20/01/2026 01:19
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (66.7% win rate) está acima de 50%
+- ⚠️ **Win rate geral** (33.3%) está abaixo de 50%
+- ✅ **Troféus totais** positivos (+60)
+
+### ❌ O que não está funcionando
+
+- ❌ **Win rate geral** abaixo de 50% - considere revisar estratégias
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 18
 - **Vitórias:** 8 (44.4%)
