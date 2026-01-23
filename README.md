@@ -6,9 +6,40 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 23/01/2026 23:22:44
+**Última atualização:** 23/01/2026 23:27:10
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1058
+- **Vitórias:** 536 (50.7%)
+- **Derrotas:** 522
+- **Mudança Total de Troféus:** +5498
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Cannon, Dart Goblin, Firecracker, Goblin Barrel, Lightning, Mega Knight, Mini P.E.K.K.A, Minions
+- **Último Resultado:** DEFEAT
+- **Data da Última Batalha:** 23/01/2026 22:05:01
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Arrows, Barbarian Barrel, Fireball, Flying Machine, Goblin Cage, Royal Hogs, Royal Recruits, Zappies
+- **Win Rate:** 100.0%
+- **Batalhas:** 3 (3V - 0D)
+- **Troféus:** +0
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (50.7%) está acima de 50%
+- ✅ **Troféus totais** positivos (+5498)
+
+### ❌ O que não está funcionando
+
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 23
 - **Vitórias:** 6 (26.1%)
