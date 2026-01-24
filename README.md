@@ -6,9 +6,48 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 24/01/2026 14:44:31
+**Última atualização:** 24/01/2026 15:21:45
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 19
+- **Vitórias:** 9 (47.4%)
+- **Derrotas:** 10
+- **Mudança Total de Troféus:** +180
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Electro Spirit, Fisherman, Hunter, Mighty Miner, Monk, Royal Ghost, Royal Giant, Zappies
+- **Último Resultado:** DERROTA
+- **Data da Última Batalha:** 24/01/2026 01:46
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Barbarian Barrel, Dart Goblin, Goblin Gang, Inferno Dragon, Mini P.E.K.K.A, Royal Recruits, Skeleton Barrel, Wall Breakers
+- **Win Rate:** 57.1%
+- **Batalhas:** 7 (4V - 3D)
+- **Troféus:** +120
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **DERROTA** vs vlad - 0-1 coroas (+0 troféus) - 24/01/2026 01:46
+2. ⚖️ **VITORIA** vs Felix - 2-1 coroas (+0 troféus) - 24/01/2026 01:49
+3. ⚖️ **VITORIA** vs FED GUERREIRO - 1-0 coroas (+0 troféus) - 24/01/2026 01:53
+4. ⚖️ **VITORIA** vs علي الخضراوي - 1-0 coroas (+0 troféus) - 24/01/2026 01:56
+5. ⚖️ **DERROTA** vs 김민찬 - 0-1 coroas (+0 troféus) - 24/01/2026 03:11
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (57.1% win rate) está acima de 50%
+- ⚠️ **Win rate geral** (47.4%) está abaixo de 50%
+- ✅ **Troféus totais** positivos (+180)
+
+### ❌ O que não está funcionando
+
+- ❌ **Win rate geral** abaixo de 50% - considere revisar estratégias
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 18
 - **Vitórias:** 8 (44.4%)
