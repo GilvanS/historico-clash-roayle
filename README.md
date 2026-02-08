@@ -6,9 +6,46 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 08/02/2026 07:57:00
+**Última atualização:** 08/02/2026 08:36:57
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 1
+- **Vitórias:** 0 (0.0%)
+- **Derrotas:** 1
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Electro Spirit, Fisherman, Hunter, Mighty Miner, Monk, Royal Ghost, Royal Giant, Zappies
+- **Último Resultado:** DERROTA
+- **Data da Última Batalha:** 08/02/2026 01:50
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Electro Spirit, Fisherman, Hunter, Mighty Miner, Monk, Royal Ghost, Royal Giant, Zappies
+- **Win Rate:** 0.0%
+- **Batalhas:** 1 (0V - 1D)
+- **Troféus:** +0
+
+### ⚔️ Últimas Batalhas
+
+1. ⚖️ **DERROTA** vs Jordon_hck - 0-3 coroas (+0 troféus) - 08/02/2026 01:50
+
+### ✅ O que está funcionando
+
+- ⚠️ **Deck com melhor performance** (0.0% win rate) está abaixo de 50%
+- ⚠️ **Win rate geral** (0.0%) está abaixo de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+- ❌ **Deck com melhor performance** precisa de ajustes (win rate: 0.0%)
+- ❌ **Win rate geral** abaixo de 50% - considere revisar estratégias
+- ⚠️ **Poucos dados** - precisa de mais batalhas para análise precisa
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 1
 - **Vitórias:** 0 (0.0%)
