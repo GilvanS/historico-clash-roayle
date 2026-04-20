@@ -41,6 +41,7 @@ jobs:
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
       run: |
         cd src
+        python db_rehydration.py --import-csv --db oponentes.db
         python opponents_report.py --salvar-banco --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
     
     - name: Generate CSV by periods (day, week, month, year)
@@ -55,6 +56,11 @@ jobs:
       run: |
         python src/update_readme_from_csv.py --csv-dir src --readme README.md
     
+    - name: Export opponents database to CSV
+      run: |
+        cd src
+        python db_rehydration.py --export --db oponentes.db
+
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
@@ -63,7 +69,7 @@ jobs:
         # Fetch and rebase to ensure local is up-to-date before adding files
         git pull --rebase origin main || git pull origin main --no-edit || true
         
-        git add src/oponentes.db src/oponentes_*.csv README.md
+        git add src/data_csv_oficial/oponentes_batalhas.csv src/oponentes_*.csv README.md
         if ! git diff --staged --quiet; then
           git commit -m "Update opponents report and README stats (dia/semana/mes/ano) - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
           # Attempt push, if it fails, try pull and push again
@@ -77,7 +83,7 @@ jobs:
         echo "## Relatorio de Oponentes Atualizado" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "Arquivos atualizados:" >> $GITHUB_STEP_SUMMARY
-        echo "- \`src/oponentes.db\` - Banco de dados com batalhas acumuladas" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/data_csv_oficial/oponentes_batalhas.csv\` - Base de dados historica (CSV) com oponentes acumulados" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "CSVs por periodo:" >> $GITHUB_STEP_SUMMARY
         if [ -f "src/oponentes_dia_*.csv" ]; then

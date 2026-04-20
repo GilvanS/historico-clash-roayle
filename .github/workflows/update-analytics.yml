@@ -55,6 +55,7 @@ jobs:
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
       run: |
         cd src
+        uv run python db_rehydration.py --import-csv --db clash_royale.db
         uv run python analyzer.py
     
     - name: Generate HTML reports
@@ -70,6 +71,11 @@ jobs:
       run: |
         cd src
         uv run python update_readme_from_analytics.py --player-tag "$CR_PLAYER_TAG" --db clash_royale.db --readme ../README.md
+        
+    - name: Export Database to CSV
+      run: |
+        cd src
+        uv run python db_rehydration.py --export --db clash_royale.db
         
     - name: Commit and push changes
       run: |
@@ -88,7 +94,7 @@ jobs:
         }
         
         # Add files to staging
-        git add src/clash_royale.db docs/index.html docs/clan.html docs/member_*.html README.md
+        git add src/data_csv_oficial/*.csv docs/index.html docs/clan.html docs/member_*.html README.md
         
         # Check if there are changes to commit
         if ! git diff --staged --quiet; then
@@ -110,7 +116,7 @@ jobs:
                 git add README.md || true
                 git commit -m "Resolve merge conflict in README.md - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
               }
-              git add src/clash_royale.db docs/index.html docs/clan.html docs/member_*.html README.md
+              git add src/data_csv_oficial/*.csv docs/index.html docs/clan.html docs/member_*.html README.md
               git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
               sleep 2
             fi
