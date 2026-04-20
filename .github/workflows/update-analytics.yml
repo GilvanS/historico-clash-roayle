@@ -1,9 +1,9 @@
 name: Update Clash Royale Analytics
 
 on:
-  # Run every hour
+  # Run once a day at 5:00 UTC (2:00 BRT)
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 5 * * *'
   
   # Allow manual triggering
   workflow_dispatch:

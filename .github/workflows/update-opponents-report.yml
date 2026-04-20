@@ -1,9 +1,9 @@
 name: Update Opponents Report
 
 on:
-  # Executa a cada 30 minutos
+  # Executa uma vez por dia as 5:15 UTC / 2:15 BRT
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '15 5 * * *'
   
   # Permite execucao manual
   workflow_dispatch:
