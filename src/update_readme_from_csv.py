@@ -9,7 +9,7 @@ import sys
 import glob
 from typing import Dict, List, Optional
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class ReadmeCSVUpdater:
     def __init__(self, csv_dir: str = "src", readme_path: str = "README.md"):
