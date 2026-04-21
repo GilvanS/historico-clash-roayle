@@ -777,8 +777,11 @@ class GitHubPagesHTMLGenerator:
         # Get user's current trophies
         cursor.execute("SELECT trophies FROM players WHERE player_tag = ?", (player_tag,))
         user_trophies_row = cursor.fetchone()
-        user_trophies = user_trophies_row[0] if user_trophies_row else 0
-        
+        try:
+            user_trophies = int(user_trophies_row[0]) if user_trophies_row and user_trophies_row[0] else 0
+        except ValueError:
+            user_trophies = 0
+            
         # Get opponents faced more than once
         cursor.execute("""
             SELECT 
@@ -797,8 +800,11 @@ class GitHubPagesHTMLGenerator:
         opponents_data = []
         for row in cursor.fetchall():
             opponent_tag, opponent_name, latest_opponent_trophies, total_battles = row
-            latest_opponent_trophies = latest_opponent_trophies or 0
-            
+            try:
+                latest_opponent_trophies = int(latest_opponent_trophies) if latest_opponent_trophies else 0
+            except ValueError:
+                latest_opponent_trophies = 0
+                
             # Calculate trophy difference
             trophy_diff = user_trophies - latest_opponent_trophies
             
