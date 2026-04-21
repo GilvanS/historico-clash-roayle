@@ -568,6 +568,13 @@ class OpponentsReporter:
         else:
             print("\nNenhum oponente foi enfrentado mais de uma vez no periodo.")
 
+    FIELDNAMES = [
+        'data', 'nome_oponente', 'tag_oponente', 'nivel_oponente', 
+        'trofes_oponente', 'clan_oponente', 'resultado', 
+        'coroas_jogador', 'coroas_oponente', 'mudanca_trofes',
+        'modo_jogo', 'tipo_batalha', 'arena', 'deck_jogador', 'deck_oponente', 'vezes_enfrentado'
+    ]
+
     def consolidate_all_data(self):
         """
         Consolida arquivos CSV hierarquicamente:
@@ -580,6 +587,7 @@ class OpponentsReporter:
         print("=" * 60)
         
         deleted_count = 0
+        total_consolidated = 0
         
         # 1. Consolidar Diarios para Weekly (se a semana acabou)
         current_week = datetime.now().strftime('%Y%W')
@@ -595,7 +603,8 @@ class OpponentsReporter:
                 if file_week < current_week:
                     target_weekly = f"oponentes_semana_{file_week}.csv"
                     print(f"  - Consolidando diario antigo {f} para semanal {target_weekly}")
-                    self._merge_csv_files(f, target_weekly)
+                    count = self._merge_csv_files(f, target_weekly)
+                    total_consolidated += count
                     os.remove(f)
                     deleted_count += 1
             except Exception as e:
@@ -607,48 +616,127 @@ class OpponentsReporter:
         
         for f in sorted(weekly_files):
             try:
-                # Extrai semana e tenta determinar o mes
-                file_week = f.split('semana_')[1][:6]
-                # Para simplificar, lemos a primeira linha do arquivo
+                # Detecta o delimitador e tenta ler uma linha para extrair o mes
+                delimiter = ';'
+                with open(f, 'r', encoding='utf-8-sig') as test_f:
+                    head = test_f.read(1024)
+                    if ',' in head and ';' not in head:
+                        delimiter = ','
+                
                 with open(f, 'r', encoding='utf-8-sig') as src_file:
-                    reader = csv.DictReader(src_file)
+                    reader = csv.DictReader(src_file, delimiter=delimiter)
                     row = next(reader, None)
+                    
+                    # Se 'row' nao tem 'data', tenta sem header
+                    if row and 'data' not in row:
+                        src_file.seek(0)
+                        reader = csv.DictReader(src_file, delimiter=delimiter, fieldnames=self.FIELDNAMES)
+                        row = next(reader, None)
+                    
                     if not row:
                         os.remove(f)
+                        deleted_count += 1
                         continue
                     
-                    date_parts = row['data'].split('/')
+                    # data: 20/04/2026 21:20
+                    date_val = row.get('data', '')
+                    date_parts = date_val.split('/')
                     if len(date_parts) == 3:
-                        file_month = f"{date_parts[2]}{date_parts[1]}"
+                        file_year = date_parts[2][:4]
+                        file_month = f"{file_year}{date_parts[1]}"
                         
                         if file_month < current_month:
                             target_monthly = f"oponentes_mes_{file_month}.csv"
                             print(f"  - Consolidando semanal antigo {f} para mensal {target_monthly}")
-                            self._merge_csv_files(f, target_monthly)
+                            count = self._merge_csv_files(f, target_monthly)
+                            total_consolidated += count
                             os.remove(f)
                             deleted_count += 1
             except Exception as e:
                 print(f"  - Erro ao consolidar {f} para mensal: {e}")
 
+        # 3. Consolidar Mensais de anos anteriores para Anual
+        current_year = datetime.now().year
+        monthly_files = [f for f in os.listdir('.') if f.startswith('oponentes_mes_')]
+        
+        for f in sorted(monthly_files):
+            try:
+                # oponentes_mes_202512.csv -> 2025
+                file_year_str = f.split('mes_')[1][:4]
+                if not file_year_str.isdigit(): continue
+                file_year = int(file_year_str)
+                
+                if file_year < current_year:
+                    target_annual = f"oponentes_ano_{file_year}.csv"
+                    print(f"  - Migrando mes antigo {f} para anual {target_annual}")
+                    count = self._merge_csv_files(f, target_annual)
+                    total_consolidated += count
+                    os.remove(f)
+                    deleted_count += 1
+            except Exception as e:
+                print(f"  - Erro ao consolidar anual {f}: {e}")
+
+        print("-" * 60)
+        print(f"Consolidacao concluida!")
+        print(f"Total de novos registros movidos: {total_consolidated}")
+        print(f"Arquivos removidos: {deleted_count}")
+        print("=" * 60 + "\n")
+
     def _merge_csv_files(self, source_file, target_file):
-        """Metodo auxiliar para mesclar arquivos CSV sem duplicatas"""
+        """Metodo auxiliar para mesclar arquivos CSV sem duplicatas. Retorna contagem de novos registros."""
         if not os.path.exists(source_file):
-            return
+            return 0
             
-        with open(source_file, 'r', encoding='utf-8-sig') as src_f:
-            reader = csv.DictReader(src_f)
-            rows = list(reader)
+        rows = []
+        try:
+            # Detecta separador do source
+            delimiter = ';'
+            with open(source_file, 'r', encoding='utf-8-sig') as src_f:
+                content = src_f.read(1024)
+                if ',' in content and ';' not in content:
+                    delimiter = ','
+                src_f.seek(0)
+                
+                # Tenta detectar se tem header
+                test_reader = csv.reader(src_f, delimiter=delimiter)
+                first_row = next(test_reader, None)
+                src_f.seek(0)
+                
+                has_header = True
+                if first_row and len(first_row) > 0:
+                    # Se começa com algo tipo "20/04/2026", nao é header
+                    if '/' in first_row[0] and any(c.isdigit() for c in first_row[0]):
+                        has_header = False
+                
+                if has_header:
+                    reader = csv.DictReader(src_f, delimiter=delimiter)
+                else:
+                    reader = csv.DictReader(src_f, delimiter=delimiter, fieldnames=self.FIELDNAMES)
+                
+                rows = list(reader)
+        except Exception as e:
+            print(f"    * Erro ao ler {source_file}: {e}")
+            return 0
             
         if not rows:
-            return
+            return 0
             
         existing_keys = set()
         if os.path.exists(target_file):
-            with open(target_file, 'r', encoding='utf-8-sig') as tgt_f:
-                tgt_reader = csv.DictReader(tgt_f)
-                for r in tgt_reader:
-                    key = f"{r.get('data')}_{r.get('tag_oponente')}_{r.get('modo_jogo')}"
-                    existing_keys.add(key)
+            try:
+                target_delimiter = ';'
+                if os.path.exists(target_file):
+                    with open(target_file, 'r', encoding='utf-8-sig') as tgt_f:
+                        content = tgt_f.read(1024)
+                        if ',' in content and ';' not in content:
+                            target_delimiter = ','
+                        tgt_f.seek(0)
+                        tgt_reader = csv.DictReader(tgt_f, delimiter=target_delimiter)
+                        for r in tgt_reader:
+                            key = f"{r.get('data')}_{r.get('tag_oponente')}_{r.get('modo_jogo')}"
+                            existing_keys.add(key)
+            except Exception as e:
+                print(f"    * Erro ao ler destino {target_file}: {e}")
         
         new_rows = []
         for r in rows:
@@ -659,67 +747,13 @@ class OpponentsReporter:
         if new_rows:
             file_exists = os.path.exists(target_file)
             with open(target_file, 'a' if file_exists else 'w', newline='', encoding='utf-8-sig') as tgt_f:
-                fieldnames = list(rows[0].keys())
-                if 'vezes_enfrentado' not in fieldnames:
-                    fieldnames.append('vezes_enfrentado')
-                
-                writer = csv.DictWriter(tgt_f, fieldnames=fieldnames, extrasaction='ignore')
+                writer = csv.DictWriter(tgt_f, fieldnames=self.FIELDNAMES, extrasaction='ignore', delimiter=';')
                 if not file_exists:
                     writer.writeheader()
                 writer.writerows(new_rows)
-
+            return len(new_rows)
         
-        # 2. Consolidar Mensais de anos anteriores para Anual
-        current_year = datetime.now().year
-        monthly_files = [f for f in os.listdir('.') if f.startswith('oponentes_mes_')]
-        
-        for f in sorted(monthly_files):
-            try:
-                # oponentes_mes_202604.csv -> 2026
-                file_year_str = f.split('mes_')[1][:4]
-                if not file_year_str.isdigit(): continue
-                file_year = int(file_year_str)
-                
-                if file_year < current_year:
-                    target_annual = f"oponentes_ano_{file_year}.csv"
-                    print(f"  - Migrando mes antigo {f} para anual {target_annual}")
-                    
-                    with open(f, 'r', encoding='utf-8-sig') as src_file:
-                        reader = csv.DictReader(src_file)
-                        rows = list(reader)
-                    
-                    if rows:
-                        # Evita duplicatas no anual
-                        existing_keys = set()
-                        if os.path.exists(target_annual):
-                            with open(target_annual, 'r', encoding='utf-8-sig') as tgt_file:
-                                tgt_reader = csv.DictReader(tgt_file)
-                                for r in tgt_reader:
-                                    key = f"{r.get('data')}_{r.get('tag_oponente')}_{r.get('modo_jogo')}"
-                                    existing_keys.add(key)
-                        
-                        new_rows = [r for r in rows if f"{r.get('data')}_{r.get('tag_oponente')}_{r.get('modo_jogo')}" not in existing_keys]
-                        
-                        if new_rows:
-                            file_exists = os.path.exists(target_annual)
-                            with open(target_annual, 'a' if file_exists else 'w', newline='', encoding='utf-8-sig') as tgt_file:
-                                writer = csv.DictWriter(tgt_file, fieldnames=list(rows[0].keys()), extrasaction='ignore')
-                                if not file_exists:
-                                    writer.writeheader()
-                                writer.writerows(new_rows)
-                        
-                        print(f"  - {len(new_rows)} registros movidos para {target_annual}")
-                    
-                    os.remove(f)
-                    deleted_count += 1
-            except Exception as e:
-                print(f"  - Erro ao consolidar anual {f}: {e}")
-
-        print("-" * 60)
-        print(f"Consolidacao concluida!")
-        print(f"Total de novos registros: {consolidated_count}")
-        print(f"Arquivos removidos: {deleted_count}")
-        print("=" * 60 + "\n")
+        return 0
 
 def main():
     """Funcao principal"""
