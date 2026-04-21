@@ -238,8 +238,27 @@ def import_csv(db_name="all"):
                 placeholders = ','.join(['?'] * len(header))
                 rows = list(reader)
                 
-                if rows:
-                    cursor.executemany(f"INSERT OR REPLACE INTO {table} VALUES ({placeholders})", rows)
+                converted_rows = []
+                for row in rows:
+                    converted = []
+                    for val in row:
+                        if val == '':
+                            converted.append(None)
+                        else:
+                            try:
+                                # Tenta float se tiver ponto
+                                if '.' in val:
+                                    converted.append(float(val))
+                                else:
+                                    # Tenta int (como pontuações, troféus, quantidade de troféus alterados '-30', '+30')
+                                    converted.append(int(val))
+                            except ValueError:
+                                # Caso seja uma string normal
+                                converted.append(val)
+                    converted_rows.append(converted)
+                
+                if converted_rows:
+                    cursor.executemany(f"INSERT OR REPLACE INTO {table} VALUES ({placeholders})", converted_rows)
                     
                 print(f"  + Importou {len(rows)} registros para a tabela {table}")
                 

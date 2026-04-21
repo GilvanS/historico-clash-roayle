@@ -59,6 +59,9 @@ jobs:
         uv run python analyzer.py
     
     - name: Generate HTML reports
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
       run: |
         cd src
         uv run python html_generator.py
