@@ -29,6 +29,8 @@ class GitHubPagesHTMLGenerator:
                 "Content-Type": "application/json"
             }
         
+        self.failed_tags = set()
+        
         # Card name mapping for file names (GitHub Pages uses relative paths)
         self.card_name_mapping = {
             'Three Musketeers': '3M',
@@ -111,14 +113,27 @@ class GitHubPagesHTMLGenerator:
     
     def fetch_opponent_data_from_api(self, opponent_tag: str) -> Optional[Dict]:
         """Fetch opponent data from API and save to database"""
-        if not self.api_token or not opponent_tag:
+        if not self.api_token or not opponent_tag or opponent_tag in self.failed_tags:
             return None
         
+        # Valid tag check (should start with # and have alphanumeric chars)
+        if not opponent_tag.startswith('#'):
+            # If it's a name instead of a tag, it's likely a data issue from the source
+            print(f"Skipping invalid player tag: {opponent_tag}")
+            self.failed_tags.add(opponent_tag)
+            return None
+
         clean_tag = opponent_tag.replace('#', '')
         url = f"{self.base_url}/players/%23{clean_tag}"
         
         try:
             response = requests.get(url, headers=self.headers, timeout=10)
+            
+            if response.status_code == 404:
+                print(f"Player not found (404): {opponent_tag}")
+                self.failed_tags.add(opponent_tag)
+                return None
+                
             response.raise_for_status()
             player_data = response.json()
             

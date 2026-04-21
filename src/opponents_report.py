@@ -568,6 +568,159 @@ class OpponentsReporter:
         else:
             print("\nNenhum oponente foi enfrentado mais de uma vez no periodo.")
 
+    def consolidate_all_data(self):
+        """
+        Consolida arquivos CSV hierarquicamente:
+        1. Diarios -> Weekly (se a semana acabou)
+        2. Semanais -> Mensal (se o mes acabou)
+        3. Mensais -> Anual (se o ano acabou)
+        """
+        print("\n" + "=" * 60)
+        print("Iniciando Consolidacao de Arquivos CSV")
+        print("=" * 60)
+        
+        deleted_count = 0
+        
+        # 1. Consolidar Diarios para Weekly (se a semana acabou)
+        current_week = datetime.now().strftime('%Y%W')
+        files = [f for f in os.listdir('.') if f.startswith('oponentes_dia_')]
+        
+        for f in sorted(files):
+            try:
+                # Extrai data e calcula semana
+                file_date_str = f.split('dia_')[1][:8]
+                file_date = datetime.strptime(file_date_str, '%Y%m%d')
+                file_week = file_date.strftime('%Y%W')
+                
+                if file_week < current_week:
+                    target_weekly = f"oponentes_semana_{file_week}.csv"
+                    print(f"  - Consolidando diario antigo {f} para semanal {target_weekly}")
+                    self._merge_csv_files(f, target_weekly)
+                    os.remove(f)
+                    deleted_count += 1
+            except Exception as e:
+                print(f"  - Erro ao consolidar {f} para semanal: {e}")
+
+        # 2. Consolidar Semanais para Mensal (se o mes acabou)
+        current_month = datetime.now().strftime('%Y%m')
+        weekly_files = [f for f in os.listdir('.') if f.startswith('oponentes_semana_')]
+        
+        for f in sorted(weekly_files):
+            try:
+                # Extrai semana e tenta determinar o mes
+                file_week = f.split('semana_')[1][:6]
+                # Para simplificar, lemos a primeira linha do arquivo
+                with open(f, 'r', encoding='utf-8-sig') as src_file:
+                    reader = csv.DictReader(src_file)
+                    row = next(reader, None)
+                    if not row:
+                        os.remove(f)
+                        continue
+                    
+                    date_parts = row['data'].split('/')
+                    if len(date_parts) == 3:
+                        file_month = f"{date_parts[2]}{date_parts[1]}"
+                        
+                        if file_month < current_month:
+                            target_monthly = f"oponentes_mes_{file_month}.csv"
+                            print(f"  - Consolidando semanal antigo {f} para mensal {target_monthly}")
+                            self._merge_csv_files(f, target_monthly)
+                            os.remove(f)
+                            deleted_count += 1
+            except Exception as e:
+                print(f"  - Erro ao consolidar {f} para mensal: {e}")
+
+    def _merge_csv_files(self, source_file, target_file):
+        """Metodo auxiliar para mesclar arquivos CSV sem duplicatas"""
+        if not os.path.exists(source_file):
+            return
+            
+        with open(source_file, 'r', encoding='utf-8-sig') as src_f:
+            reader = csv.DictReader(src_f)
+            rows = list(reader)
+            
+        if not rows:
+            return
+            
+        existing_keys = set()
+        if os.path.exists(target_file):
+            with open(target_file, 'r', encoding='utf-8-sig') as tgt_f:
+                tgt_reader = csv.DictReader(tgt_f)
+                for r in tgt_reader:
+                    key = f"{r.get('data')}_{r.get('tag_oponente')}_{r.get('modo_jogo')}"
+                    existing_keys.add(key)
+        
+        new_rows = []
+        for r in rows:
+            key = f"{r.get('data')}_{r.get('tag_oponente')}_{r.get('modo_jogo')}"
+            if key not in existing_keys:
+                new_rows.append(r)
+        
+        if new_rows:
+            file_exists = os.path.exists(target_file)
+            with open(target_file, 'a' if file_exists else 'w', newline='', encoding='utf-8-sig') as tgt_f:
+                fieldnames = list(rows[0].keys())
+                if 'vezes_enfrentado' not in fieldnames:
+                    fieldnames.append('vezes_enfrentado')
+                
+                writer = csv.DictWriter(tgt_f, fieldnames=fieldnames, extrasaction='ignore')
+                if not file_exists:
+                    writer.writeheader()
+                writer.writerows(new_rows)
+
+        
+        # 2. Consolidar Mensais de anos anteriores para Anual
+        current_year = datetime.now().year
+        monthly_files = [f for f in os.listdir('.') if f.startswith('oponentes_mes_')]
+        
+        for f in sorted(monthly_files):
+            try:
+                # oponentes_mes_202604.csv -> 2026
+                file_year_str = f.split('mes_')[1][:4]
+                if not file_year_str.isdigit(): continue
+                file_year = int(file_year_str)
+                
+                if file_year < current_year:
+                    target_annual = f"oponentes_ano_{file_year}.csv"
+                    print(f"  - Migrando mes antigo {f} para anual {target_annual}")
+                    
+                    with open(f, 'r', encoding='utf-8-sig') as src_file:
+                        reader = csv.DictReader(src_file)
+                        rows = list(reader)
+                    
+                    if rows:
+                        # Evita duplicatas no anual
+                        existing_keys = set()
+                        if os.path.exists(target_annual):
+                            with open(target_annual, 'r', encoding='utf-8-sig') as tgt_file:
+                                tgt_reader = csv.DictReader(tgt_file)
+                                for r in tgt_reader:
+                                    key = f"{r.get('data')}_{r.get('tag_oponente')}_{r.get('modo_jogo')}"
+                                    existing_keys.add(key)
+                        
+                        new_rows = [r for r in rows if f"{r.get('data')}_{r.get('tag_oponente')}_{r.get('modo_jogo')}" not in existing_keys]
+                        
+                        if new_rows:
+                            file_exists = os.path.exists(target_annual)
+                            with open(target_annual, 'a' if file_exists else 'w', newline='', encoding='utf-8-sig') as tgt_file:
+                                writer = csv.DictWriter(tgt_file, fieldnames=list(rows[0].keys()), extrasaction='ignore')
+                                if not file_exists:
+                                    writer.writeheader()
+                                writer.writerows(new_rows)
+                        
+                        print(f"  - {len(new_rows)} registros movidos para {target_annual}")
+                    
+                    os.remove(f)
+                    deleted_count += 1
+            except Exception as e:
+                print(f"  - Erro ao consolidar anual {f}: {e}")
+
+        print("-" * 60)
+        print(f"Consolidacao concluida!")
+        print(f"Total de novos registros: {consolidated_count}")
+        print(f"Arquivos removidos: {deleted_count}")
+        print("=" * 60 + "\n")
+
 def main():
     """Funcao principal"""
     parser = argparse.ArgumentParser(
@@ -623,6 +776,11 @@ def main():
         action='store_true',
         help='Gera CSVs para dia, semana, mes e ano atual (acumulados do banco)'
     )
+    parser.add_argument(
+        '--consolidar',
+        action='store_true',
+        help='Consolida arquivos diários/semanais antigos em mensais/anuais'
+    )
     
     args = parser.parse_args()
     
@@ -662,6 +820,10 @@ def main():
     # Gera relatorio
     reporter = OpponentsReporter(API_TOKEN, db_path=args.banco)
     
+    # Realiza consolidacao se solicitado (pode ser standalone)
+    if args.consolidar:
+        reporter.consolidate_all_data()
+
     # Se gerar por periodos (dia, semana, mes, ano)
     if args.periodos:
         print("=" * 60)
@@ -671,6 +833,7 @@ def main():
         print(f"\nTotal de arquivos gerados: {len(arquivos)}")
         for arquivo in arquivos:
             print(f"  - {arquivo}")
+        
     # Se gerar do banco, usa dados acumulados
     elif args.do_banco:
         if all_battles:
