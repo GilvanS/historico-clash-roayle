@@ -2032,11 +2032,99 @@ class GitHubPagesHTMLGenerator:
         return html
     
     def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
-        """Generate HTML for repeated opponents list"""
+        """Gera HTML para oponentes repetidos: tabela com data BRT, horario e resultado por batalha."""
         if not opponents:
-            return "<p>Nenhum oponente encontrado que você enfrentou mais de uma vez.</p>"
+            return "<p>Nenhum oponente encontrado que voce enfrentou mais de uma vez.</p>"
         
-        html = ""
+        html = ''
+        for opponent in opponents:
+            tag = opponent.get('tag', '')
+            nome = opponent.get('nome', 'Desconhecido')
+            total = opponent.get('total', 0)
+            wins = opponent.get('wins', 0)
+            losses = opponent.get('losses', 0)
+            battles = opponent.get('battles', [])
+            last_deck = opponent.get('last_deck', '')
+
+            win_rate = round((wins / total * 100), 1) if total > 0 else 0
+            win_color = 'green' if win_rate >= 50 else '#e53e3e'
+
+            # Deck mais recente do oponente (imagem compacta)
+            deck_html = ''
+            if last_deck:
+                deck_html = f'''
+                <div style="margin-top: 10px;">
+                    <div style="font-size: 0.8em; color: #718096; margin-bottom: 4px;">🎴 Deck mais recente:</div>
+                    {self.generate_deck_cards_html(last_deck, show_names=False)}
+                </div>
+                '''
+
+            # Monta historico de batalhas como timeline de icones
+            battles_html = ''
+            for b in battles:
+                resultado = b.get('resultado', '').lower()
+                data_str = b.get('data_str', '')
+
+                # Converte data de DD/MM/YYYY HH:MM para DD/MM HH:MM (ja e BRT no CSV)
+                try:
+                    from datetime import datetime as _dt
+                    dt_obj = _dt.strptime(data_str, '%d/%m/%Y %H:%M')
+                    data_fmt = dt_obj.strftime('%d/%m')
+                    hora_fmt = dt_obj.strftime('%H:%M')
+                except Exception:
+                    data_fmt = data_str[:5] if len(data_str) >= 5 else data_str
+                    hora_fmt = data_str[11:16] if len(data_str) >= 16 else ''
+
+                if resultado in ['vitoria', 'victory']:
+                    icone = '✅'
+                    cor = 'rgba(72,187,120,0.15)'
+                    borda = '#48bb78'
+                elif resultado in ['derrota', 'defeat']:
+                    icone = '❌'
+                    cor = 'rgba(245,101,101,0.12)'
+                    borda = '#f56565'
+                else:
+                    icone = '🤝'
+                    cor = 'rgba(237,137,54,0.12)'
+                    borda = '#ed8936'
+
+                battles_html += f'''
+                <span style="display: inline-flex; align-items: center; gap: 4px;
+                             background: {cor}; border: 1px solid {borda};
+                             border-radius: 6px; padding: 3px 8px; font-size: 0.82em;
+                             white-space: nowrap; margin: 2px;">
+                    {icone} {data_fmt} {hora_fmt}
+                </span>'''
+
+            html += f'''
+            <div class="deck-item" style="margin-bottom: 16px; padding: 16px 18px;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between;
+                            flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                    <div>
+                        <span style="font-weight: bold; color: #2d3748; font-size: 1em;">{nome}</span>
+                        <span style="color: #718096; font-size: 0.85em; margin-left: 6px;">({tag})</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <span class="stat">🔁 {total}x</span>
+                        <span class="stat" style="color: green;">✅ {wins}V</span>
+                        <span class="stat" style="color: #e53e3e;">❌ {losses}D</span>
+                        <span class="stat" style="color: {win_color}; font-weight: bold;">{win_rate}%</span>
+                    </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
+                    {battles_html}
+                </div>
+                {deck_html}
+            </div>
+            '''
+
+        return html
+
+    def _generate_repeated_opponents_html_from_db_unused(self, opponents: List[Dict]) -> str:
+        """[DEPRECATED] Versao antiga que usava DB com paineis dia/semana/mes/ano."""
+        if not opponents:
+            return '<p>Nenhum oponente encontrado que voce enfrentou mais de uma vez.</p>'
+        html = ''
         for opponent in opponents:
             stats = opponent['stats']
             best_deck = opponent.get('best_deck')
@@ -2148,59 +2236,273 @@ class GitHubPagesHTMLGenerator:
         
         return html
     
-    def generate_deck_performance_with_tabs(self, decks: List[Dict], decks_same_level: List[Dict], 
+    def get_weekly_decks_from_csv(self) -> List[Dict]:
+        """Le CSVs diarios dos ultimos 7 dias e retorna top 10 decks por vitorias por dia."""
+        import csv
+        import glob
+        from datetime import date, timedelta
+        from collections import defaultdict
+
+        today = date.today()
+        results = []
+
+        for offset in range(7):
+            day = today - timedelta(days=offset)
+            date_str = day.strftime('%Y%m%d')
+            display_date = day.strftime('%d/%m/%Y')
+
+            # Localiza o arquivo CSV do dia
+            path_src = f"src/oponentes_dia_{date_str}.csv"
+            path_local = f"oponentes_dia_{date_str}.csv"
+            csv_path = None
+            if os.path.exists(path_src):
+                csv_path = path_src
+            elif os.path.exists(path_local):
+                csv_path = path_local
+
+            if not csv_path:
+                continue
+
+            deck_stats = defaultdict(lambda: {'wins': 0, 'losses': 0, 'draws': 0})
+
+            try:
+                with open(csv_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        deck = row.get('deck_jogador', '').strip()
+                        if not deck:
+                            continue
+                        resultado = row.get('resultado', '').lower()
+                        if resultado in ['vitoria', 'victory']:
+                            deck_stats[deck]['wins'] += 1
+                        elif resultado in ['derrota', 'defeat']:
+                            deck_stats[deck]['losses'] += 1
+                        else:
+                            deck_stats[deck]['draws'] += 1
+            except Exception as e:
+                print(f"Erro ao ler CSV {csv_path}: {e}")
+                continue
+
+            if not deck_stats:
+                continue
+
+            # Ordena por vitorias (desc) e pega top 10
+            sorted_decks = sorted(
+                deck_stats.items(),
+                key=lambda x: (-x[1]['wins'], -(x[1]['wins'] + x[1]['losses'] + x[1]['draws']))
+            )[:10]
+
+            day_decks = []
+            for deck_cards, st in sorted_decks:
+                total = st['wins'] + st['losses'] + st['draws']
+                win_rate = round((st['wins'] / total * 100), 1) if total > 0 else 0
+                day_decks.append({
+                    'deck_cards': deck_cards,
+                    'wins': st['wins'],
+                    'losses': st['losses'],
+                    'draws': st['draws'],
+                    'total': total,
+                    'win_rate': win_rate
+                })
+
+            total_day_wins = sum(d['wins'] for d in day_decks)
+            total_day_losses = sum(d['losses'] for d in day_decks)
+
+            results.append({
+                'date': display_date,
+                'day_iso': day.isoformat(),
+                'decks': day_decks,
+                'total_wins': total_day_wins,
+                'total_losses': total_day_losses,
+            })
+
+        return results
+
+    def generate_weekly_decks_html(self, weekly_data: List[Dict]) -> str:
+        """Gera HTML da aba 'Meus Decks da Semana' agrupado por dia."""
+        if not weekly_data:
+            return '<p>Nenhum dado encontrado para os ultimos 7 dias.</p>'
+
+        html = ''
+        for day_data in weekly_data:
+            day_win_rate = round(
+                (day_data['total_wins'] / max(day_data['total_wins'] + day_data['total_losses'], 1)) * 100, 1
+            )
+            win_color = 'green' if day_win_rate >= 50 else '#e53e3e'
+
+            html += f'''
+            <div style="margin-bottom: 28px; border-left: 4px solid #4299e1;
+                        padding-left: 16px; padding-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
+                    <h3 style="color: #2d3748; font-size: 1.05em;">📅 {day_data['date']}</h3>
+                    <span style="background: rgba(66,153,225,0.1); padding: 4px 10px;
+                                border-radius: 6px; font-size: 0.9em; color: #4299e1;">
+                        {len(day_data['decks'])} deck(s) usados
+                    </span>
+                    <span style="font-size: 0.9em; color: {win_color}; font-weight: bold;">
+                        ✅ {day_data['total_wins']}V / ❌ {day_data['total_losses']}D
+                        ({day_win_rate}%)
+                    </span>
+                </div>
+            '''
+
+            for i, deck in enumerate(day_data['decks'], 1):
+                win_rate_color = 'green' if deck['win_rate'] >= 50 else '#e53e3e'
+                deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
+
+                html += f'''
+                <div class="deck-item" style="margin-bottom: 12px; padding: 14px 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;
+                                margin-bottom: 10px; flex-wrap: wrap;">
+                        <span style="font-weight: bold; color: #4299e1; min-width: 28px;">#{i}</span>
+                        <span class="stat" style="background: rgba(72,187,120,0.15); color: green;">
+                            ✅ {deck['wins']} vitórias
+                        </span>
+                        <span class="stat" style="background: rgba(245,101,101,0.15); color: #e53e3e;">
+                            ❌ {deck['losses']} derrotas
+                        </span>
+                        <span class="stat">🏆 {deck['total']} batalhas</span>
+                        <span class="stat" style="color: {win_rate_color}; font-weight: bold;">
+                            {deck['win_rate']}% win rate
+                        </span>
+                    </div>
+                    {deck_cards_html}
+                </div>
+                '''
+
+            html += '</div>'
+
+        return html
+
+    def get_repeated_opponents_from_csv(self) -> List[Dict]:
+        """Le CSVs anuais de 2025 e 2026 e retorna oponentes com 2+ encontros com historico de batalhas."""
+        import csv
+        from collections import defaultdict
+        from datetime import datetime
+
+        # Caminhos possiveis para os CSVs anuais
+        annual_files = []
+        for ano in ['2025', '2026']:
+            for prefix in ['src/', '']:
+                p = f"{prefix}oponentes_ano_{ano}.csv"
+                if os.path.exists(p):
+                    annual_files.append(p)
+                    break
+
+        if not annual_files:
+            return []
+
+        # Mapeia tag_oponente -> [{'nome', 'tag', 'data_str', 'resultado'}, ...]
+        opponent_battles = defaultdict(list)
+
+        for csv_path in annual_files:
+            try:
+                with open(csv_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        tag = row.get('tag_oponente', '').strip()
+                        nome = row.get('nome_oponente', 'Desconhecido').strip()
+                        data_str = row.get('data', '').strip()
+                        resultado = row.get('resultado', '').strip()
+                        deck_oponente = row.get('deck_oponente', '').strip()
+
+                        if not tag or tag.upper() == 'SEM CLÃ':
+                            continue
+
+                        # Converte data para datetime para ordenacao
+                        try:
+                            dt = datetime.strptime(data_str, '%d/%m/%Y %H:%M')
+                        except Exception:
+                            try:
+                                dt = datetime.strptime(data_str, '%d/%m/%Y')
+                            except Exception:
+                                dt = None
+
+                        opponent_battles[tag].append({
+                            'nome': nome,
+                            'tag': tag,
+                            'data_str': data_str,
+                            'dt': dt,
+                            'resultado': resultado,
+                            'deck_oponente': deck_oponente
+                        })
+            except Exception as e:
+                print(f"Erro ao ler CSV {csv_path}: {e}")
+
+        # Filtra oponentes com 2+ batalhas e ordena por total desc
+        result = []
+        for tag, battles in opponent_battles.items():
+            if len(battles) < 2:
+                continue
+
+            nome = battles[-1]['nome']
+
+            # Ordena por data desc (mais recente primeiro)
+            battles_sorted = sorted(
+                battles,
+                key=lambda x: x['dt'] if x['dt'] else datetime.min,
+                reverse=True
+            )
+
+            # Stats globais
+            wins = sum(1 for b in battles if b['resultado'].lower() in ['vitoria', 'victory'])
+            losses = sum(1 for b in battles if b['resultado'].lower() in ['derrota', 'defeat'])
+            total = len(battles)
+
+            # Deck mais recente do oponente
+            last_deck = next((b['deck_oponente'] for b in battles_sorted if b['deck_oponente']), '')
+
+            result.append({
+                'tag': tag,
+                'nome': nome,
+                'total': total,
+                'wins': wins,
+                'losses': losses,
+                'battles': battles_sorted,
+                'last_deck': last_deck
+            })
+
+        result.sort(key=lambda x: -x['total'])
+        return result
+
+    def generate_deck_performance_with_tabs(self, decks: List[Dict], decks_same_level: List[Dict],
                                             decks_defeated_by: List[Dict], repeated_opponents: List[Dict],
                                             stats: Dict, player_tag: str = None) -> str:
-        """Generate HTML for deck performance section with tabs"""
-        
-        # Generate HTML for each tab
-        all_decks_html = self.generate_deck_list_html(decks, stats, player_tag, is_opponent_decks=False)
-        same_level_html = self.generate_deck_list_html(decks_same_level, stats, player_tag, is_opponent_decks=False)
-        defeated_by_html = self.generate_deck_list_html(decks_defeated_by, stats, player_tag, is_opponent_decks=True)
-        repeated_opponents_html = self.generate_repeated_opponents_html(repeated_opponents)
-        
+        """Generate HTML for deck performance section with 2 tabs: Meus Decks da Semana + Oponentes Repetidos"""
+
+        # Aba 1: Meus Decks da Semana - le CSVs diarios
+        weekly_data = self.get_weekly_decks_from_csv()
+        weekly_decks_html = self.generate_weekly_decks_html(weekly_data)
+
+        # Aba 2: Oponentes Repetidos - le CSVs anuais
+        csv_repeated = self.get_repeated_opponents_from_csv()
+        repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated)
+
         return f"""
         <div class="deck-tabs-container">
             <div class="deck-tabs">
-                <button class="tab-button active" onclick="switchDeckTab(event, 'all')">Todos os Decks</button>
-                <button class="tab-button" onclick="switchDeckTab(event, 'same-level')">Clã - Mesmo Nível</button>
-                <button class="tab-button" onclick="switchDeckTab(event, 'defeated-by')">Oponentes que me Derrotaram</button>
+                <button class="tab-button active" onclick="switchDeckTab(event, 'weekly-decks')">Meus Decks da Semana</button>
                 <button class="tab-button" onclick="switchDeckTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
             </div>
-            
-            <div id="tab-all" class="tab-content active">
-                {all_decks_html if all_decks_html else '<p>Nenhum deck encontrado.</p>'}
+
+            <div id="tab-weekly-decks" class="tab-content active">
+                {weekly_decks_html}
             </div>
-            
-            <div id="tab-same-level" class="tab-content">
-                {same_level_html if same_level_html else '<p>Nenhum deck encontrado de membros do clã com o mesmo nível.</p>'}
-            </div>
-            
-            <div id="tab-defeated-by" class="tab-content">
-                {defeated_by_html if defeated_by_html else '<p>Nenhum deck encontrado de oponentes que te derrotaram.</p>'}
-            </div>
-            
+
             <div id="tab-repeated-opponents" class="tab-content">
-                {repeated_opponents_html if repeated_opponents_html else '<p>Nenhum oponente encontrado que você enfrentou mais de uma vez.</p>'}
+                {repeated_opponents_html if repeated_opponents_html else '<p>Nenhum oponente encontrado que voce enfrentou mais de uma vez.</p>'}
             </div>
         </div>
-        
+
         <script>
         function switchDeckTab(event, tabName) {{
-            // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {{
                 content.classList.remove('active');
             }});
-            
-            // Remove active class from all buttons
             document.querySelectorAll('.tab-button').forEach(button => {{
                 button.classList.remove('active');
             }});
-            
-            // Show selected tab content
             document.getElementById('tab-' + tabName).classList.add('active');
-            
-            // Add active class to clicked button
             if (event && event.target) {{
                 event.target.classList.add('active');
             }}
@@ -2316,14 +2618,10 @@ class GitHubPagesHTMLGenerator:
         
         win_rate = (stats['wins'] / max(stats['total_battles'], 1)) * 100
         
-        # Get decks for tabs
-        decks_same_level = self.get_deck_performance_same_level(10, player_tag=player_tag)
-        decks_defeated_by = self.get_deck_performance_defeated_by(20, player_tag=player_tag)
-        repeated_opponents = self.get_repeated_opponents_stats(player_tag=player_tag)
-        
-        # Generate deck performance HTML with tabs
+        # Gera HTML das abas de decks (Meus Decks da Semana + Oponentes Repetidos)
+        # Os dados sao lidos dentro do proprio metodo via CSVs
         deck_performance_html = self.generate_deck_performance_with_tabs(
-            decks, decks_same_level, decks_defeated_by, repeated_opponents, stats, player_tag
+            decks, [], [], [], stats, player_tag
         )
         
         # Generate battle HTML
