@@ -1,0 +1,83 @@
+name: Collect Battles (Hourly)
+
+# Coleta batalhas da API a cada 1 hora (no :30 de cada hora)
+# Nao atualiza a pagina web - apenas salva os dados nos CSVs
+# Commit usa [skip ci] para nao disparar o workflow diario de atualizacao
+
+on:
+  schedule:
+    # Executa a cada hora no minuto :30 (UTC)
+    # Exemplos BRT (UTC-3): 00:30, 01:30, 02:30 ... 22:30, 23:30
+    - cron: '30 * * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: main
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: pip install requests
+
+    - name: Import existing CSVs to DB
+      run: |
+        cd src
+        python db_rehydration.py --import-csv --db oponentes.db
+
+    - name: Fetch battles from API and save to DB
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python opponents_report.py --salvar-banco --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
+
+    - name: Generate CSVs by period (day, week, month, year)
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python opponents_report.py --periodos --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
+
+    - name: Export DB to CSV
+      run: |
+        cd src
+        python db_rehydration.py --export --db oponentes.db
+
+    - name: Commit collected data
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        git add src/oponentes_*.csv src/data_csv_oficial/
+
+        if ! git diff --staged --quiet; then
+          git commit -m "chore: coleta horaria de batalhas $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+
+          for i in 1 2 3; do
+            if git push origin HEAD; then
+              echo "Push feito com sucesso"
+              break
+            else
+              echo "Tentativa $i/3 falhou, aguardando..."
+              sleep 5
+              git pull --rebase -X theirs origin main || true
+            fi
+          done
+        else
+          echo "Nenhuma batalha nova encontrada nesta coleta"
+        fi

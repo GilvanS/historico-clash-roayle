@@ -1,0 +1,106 @@
+name: Update Web Page (Daily 23h BRT)
+
+# Atualizacao completa diaria: coleta + README + pagina web
+# Executa as 23:00 BRT (02:00 UTC) e tambem a cada push no main
+
+on:
+  schedule:
+    # 02:00 UTC = 23:00 BRT (UTC-3)
+    - cron: '0 2 * * *'
+
+  # Executa em cada push no main (ex: quando voce comitar alteracoes no projeto)
+  push:
+    branches: [ main ]
+
+  # Permite execucao manual pela interface do GitHub Actions
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-full:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: main
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: pip install requests
+
+    # ── 1. Coleta de dados ──────────────────────────────────────────
+    - name: Import existing CSVs to DB
+      run: |
+        cd src
+        python db_rehydration.py --import-csv --db oponentes.db
+
+    - name: Fetch battles from API and save to DB
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python opponents_report.py --salvar-banco --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
+
+    - name: Generate CSVs by period (day, week, month, year)
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python opponents_report.py --periodos --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
+
+    - name: Export DB to CSV
+      run: |
+        cd src
+        python db_rehydration.py --export --db oponentes.db
+
+    # ── 2. Atualizacao da pagina web / README ───────────────────────
+    - name: Update README with deck statistics from latest CSV
+      run: |
+        python src/update_readme_from_csv.py --csv-dir src --readme README.md
+
+    # ── 3. Commit e push ────────────────────────────────────────────
+    - name: Commit and push all changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        git add src/oponentes_*.csv src/data_csv_oficial/ README.md
+
+        if ! git diff --staged --quiet; then
+          git commit -m "update: relatorio diario completo $(date -u +'%Y-%m-%d %H:%M UTC')"
+
+          for i in 1 2 3; do
+            if git push origin HEAD; then
+              echo "Push feito com sucesso"
+              break
+            else
+              echo "Tentativa $i/3 falhou, aguardando..."
+              sleep 5
+              git pull --rebase -X theirs origin main || true
+            fi
+          done
+        else
+          echo "Nenhuma mudanca para commitar"
+        fi
+
+    # ── 4. Resumo ───────────────────────────────────────────────────
+    - name: Show summary
+      run: |
+        echo "## Relatorio Diario Atualizado" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/oponentes_dia_*.csv\` - Batalhas do dia" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/oponentes_semana_*.csv\` - Batalhas da semana" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/oponentes_mes_*.csv\` - Batalhas do mes" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/oponentes_ano_*.csv\` - Batalhas do ano" >> $GITHUB_STEP_SUMMARY
+        echo "- \`README.md\` - Estatisticas atualizadas" >> $GITHUB_STEP_SUMMARY
