@@ -66,14 +66,32 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         
-        # Fetch and rebase to ensure local is up-to-date before adding files
-        git pull --rebase origin main || git pull origin main --no-edit || true
-        
+        # Add generated files to staging before pulling to avoid unstaged conflicts
         git add src/data_csv_oficial/oponentes_batalhas.csv src/oponentes_*.csv README.md
+        
         if ! git diff --staged --quiet; then
+          # Commit locally first
           git commit -m "Update opponents report and README stats (dia/semana/mes/ano) - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-          # Attempt push, if it fails, try pull and push again
-          git push origin HEAD || (git pull --rebase origin main && git push origin HEAD)
+          
+          # Now fetch and rebase on top of remote main (in case analysis workflow pushed first)
+          # -X theirs will keep our locally generated CSVs/README in case of conflict during rebase
+          git pull --rebase -X theirs origin main || {
+            echo "Rebase failed. Aborting and doing a standard merge..."
+            git rebase --abort || true
+            git pull origin main --no-edit -X ours || true
+          }
+          
+          # Attempt push with retry logic
+          for i in 1 2 3; do
+            if git push origin HEAD; then
+              echo "Push successful"
+              break
+            else
+              echo "Push failed, retrying $i/3..."
+              sleep 3
+              git pull --rebase -X theirs origin main || true
+            fi
+          done
         else
           echo "Nenhuma mudanca para commitar"
         fi

@@ -79,27 +79,23 @@ jobs:
         
     - name: Commit and push changes
       run: |
-        # Fetch latest changes
-        git fetch origin main
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
         
-        # Pull latest changes first to avoid conflicts
-        git pull origin main --no-rebase --no-edit || {
-          echo "Pull failed, trying merge strategy..."
-          git pull origin main --no-edit || {
-            echo "Merge failed, using theirs strategy for README.md conflicts..."
-            git checkout --theirs README.md || true
-            git add README.md || true
-            git pull origin main --no-edit || true
-          }
-        }
-        
-        # Add files to staging
+        # Add files to staging FIRST to avoid unstaged conflicts during pull
         git add src/data_csv_oficial/*.csv docs/index.html docs/clan.html docs/member_*.html README.md
         
         # Check if there are changes to commit
         if ! git diff --staged --quiet; then
-          # Commit changes
-          git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
+          # Commit locally first
+          git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          
+          # Fetch and rebase to seamlessly integrate any remote changes
+          git pull --rebase -X theirs origin main || {
+            echo "Rebase failed. Aborting and trying a merge..."
+            git rebase --abort || true
+            git pull origin main --no-edit -X ours || true
+          }
           
           # Push changes with retry logic
           for i in 1 2 3; do
@@ -108,17 +104,8 @@ jobs:
               break
             else
               echo "Push failed, attempt $i/3. Fetching and retrying..."
-              git fetch origin main
-              # Use merge strategy instead of rebase to avoid conflicts
-              git pull origin main --no-rebase --no-edit || {
-                echo "Merge conflict detected, using theirs strategy..."
-                git checkout --theirs README.md || true
-                git add README.md || true
-                git commit -m "Resolve merge conflict in README.md - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
-              }
-              git add src/data_csv_oficial/*.csv docs/index.html docs/clan.html docs/member_*.html README.md
-              git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')" || true
-              sleep 2
+              sleep 3
+              git pull --rebase -X theirs origin main || true
             fi
           done
         else
