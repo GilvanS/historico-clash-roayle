@@ -945,20 +945,22 @@ class GitHubPagesHTMLGenerator:
         cursor = conn.cursor()
         from datetime import timedelta
         
-        now = datetime.now(UTC)
+        now_utc = datetime.now(UTC)
+        brt_offset = timedelta(hours=-3)
+        now_brt = now_utc + brt_offset
         
-        # Calculate period start dates
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        days_since_monday = now.weekday()
-        week_start = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
-        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        # Calculate period start dates in BRT and shift back to UTC for query bounds
+        today_start_brt = now_brt.replace(hour=0, minute=0, second=0, microsecond=0)
+        days_since_monday = now_brt.weekday()
+        week_start_brt = (today_start_brt - timedelta(days=days_since_monday))
+        month_start_brt = today_start_brt.replace(day=1)
+        year_start_brt = today_start_brt.replace(month=1, day=1)
         
         periods = {
-            'day': today_start.strftime('%Y%m%dT%H%M%S.000Z'),
-            'week': week_start.strftime('%Y%m%dT%H%M%S.000Z'),
-            'month': month_start.strftime('%Y%m%dT%H%M%S.000Z'),
-            'year': year_start.strftime('%Y%m%dT%H%M%S.000Z')
+            'day': (today_start_brt - brt_offset).strftime('%Y%m%dT%H%M%S.000Z'),
+            'week': (week_start_brt - brt_offset).strftime('%Y%m%dT%H%M%S.000Z'),
+            'month': (month_start_brt - brt_offset).strftime('%Y%m%dT%H%M%S.000Z'),
+            'year': (year_start_brt - brt_offset).strftime('%Y%m%dT%H%M%S.000Z')
         }
         
         stats = {}

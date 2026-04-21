@@ -181,7 +181,10 @@ class ReadmeStatsUpdater:
         deck_melhor = stats['deck_melhor']
         
         section = "## 📊 Estatísticas Atuais\n\n"
-        section += f"**Última atualização:** {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+        now_utc = datetime.utcnow()
+        brt_offset = timedelta(hours=-3)
+        now_brt = now_utc + brt_offset
+        section += f"**Última atualização:** {now_brt.strftime('%d/%m/%Y %H:%M:%S')}\n\n"
         
         # Estatisticas gerais
         section += "### 📈 Estatísticas Gerais\n\n"

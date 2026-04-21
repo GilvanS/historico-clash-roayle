@@ -327,24 +327,31 @@ class OpponentsReporter:
     
     def generate_period_csvs(self, player_tag: str):
         """Gera CSVs para dia, semana, mes e ano atual (acumulados do banco)"""
-        now = datetime.now()
+        now_utc = datetime.utcnow()
+        brt_offset = timedelta(hours=-3)
+        now_brt = now_utc + brt_offset
         
         # Periodo: Dia atual
-        dia_inicio = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        dia_fim = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        dia_inicio_brt = now_brt.replace(hour=0, minute=0, second=0, microsecond=0)
+        dia_fim_brt = now_brt.replace(hour=23, minute=59, second=59, microsecond=999999)
+        dia_inicio = dia_inicio_brt - brt_offset
+        dia_fim = dia_fim_brt - brt_offset
         
         # Periodo: Semana atual (segunda a domingo)
-        dias_semana = now.weekday()  # 0 = segunda, 6 = domingo
-        semana_inicio = (now - timedelta(days=dias_semana)).replace(hour=0, minute=0, second=0, microsecond=0)
-        semana_fim = now
+        dias_semana = now_brt.weekday()  # 0 = segunda, 6 = domingo
+        semana_inicio_brt = (now_brt - timedelta(days=dias_semana)).replace(hour=0, minute=0, second=0, microsecond=0)
+        semana_inicio = semana_inicio_brt - brt_offset
+        semana_fim = dia_fim
         
         # Periodo: Mes atual
-        mes_inicio = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        mes_fim = now
+        mes_inicio_brt = now_brt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        mes_inicio = mes_inicio_brt - brt_offset
+        mes_fim = dia_fim
         
         # Periodo: Ano atual
-        ano_inicio = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        ano_fim = now
+        ano_inicio_brt = now_brt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        ano_inicio = ano_inicio_brt - brt_offset
+        ano_fim = dia_fim
         
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -358,22 +365,22 @@ class OpponentsReporter:
             'dia': {
                 'inicio': format_date_for_query(dia_inicio),
                 'fim': format_date_for_query(dia_fim),
-                'arquivo': f"oponentes_dia_{now.strftime('%Y%m%d')}.csv"
+                'arquivo': f"oponentes_dia_{now_brt.strftime('%Y%m%d')}.csv"
             },
             'semana': {
                 'inicio': format_date_for_query(semana_inicio),
                 'fim': format_date_for_query(semana_fim),
-                'arquivo': f"oponentes_semana_{now.strftime('%Y%W')}.csv"
+                'arquivo': f"oponentes_semana_{now_brt.strftime('%Y%W')}.csv"
             },
             'mes': {
                 'inicio': format_date_for_query(mes_inicio),
                 'fim': format_date_for_query(mes_fim),
-                'arquivo': f"oponentes_mes_{now.strftime('%Y%m')}.csv"
+                'arquivo': f"oponentes_mes_{now_brt.strftime('%Y%m')}.csv"
             },
             'ano': {
                 'inicio': format_date_for_query(ano_inicio),
                 'fim': format_date_for_query(ano_fim),
-                'arquivo': f"oponentes_ano_{now.year}.csv"
+                'arquivo': f"oponentes_ano_{now_brt.year}.csv"
             }
         }
         
