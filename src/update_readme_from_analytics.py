@@ -7,7 +7,7 @@ import sqlite3
 import os
 import sys
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class ReadmeAnalyticsUpdater:
     def __init__(self, db_path: str = "clash_royale.db", readme_path: str = "README.md"):
