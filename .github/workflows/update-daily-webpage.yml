@@ -64,24 +64,7 @@ jobs:
         cd src
         python db_rehydration.py --export --db oponentes.db
 
-    # ── 2. Gerar pagina web e README ───────────────────────────────
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
-      with:
-        version: "latest"
-
-    - name: Install full dependencies (uv)
-      run: uv sync
-
-    - name: Generate HTML web page
-      env:
-        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
-        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
-      run: |
-        cd src
-        uv run python html_generator.py
-        uv run python clan_generator.py
-
+    # ── 2. Atualizacao da pagina web / README ───────────────────────
     - name: Update README with deck statistics from latest CSV
       run: |
         python src/update_readme_from_csv.py --csv-dir src --readme README.md
@@ -92,7 +75,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        git add src/oponentes_*.csv src/data_csv_oficial/ docs/index.html docs/clan.html README.md
+        git add src/oponentes_*.csv src/data_csv_oficial/ README.md
 
         if ! git diff --staged --quiet; then
           git commit -m "update: relatorio diario completo $(date -u +'%Y-%m-%d %H:%M UTC')"
