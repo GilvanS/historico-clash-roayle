@@ -2293,7 +2293,192 @@ class GitHubPagesHTMLGenerator:
         }}
         </script>
         """
-    
+    def get_weekly_decks_from_csv(self) -> List[Dict]:
+        """Le os CSVs diarios dos ultimos 7 dias e consolida os 10 melhores decks."""
+        from datetime import datetime, timedelta
+        import glob
+        import csv
+        
+        # Coleta datas dos ultimos 7 dias
+        today = datetime.now()
+        target_dates = [(today - timedelta(days=i)).strftime('%Y%m%d') for i in range(8)]
+        
+        deck_stats = {}
+        
+        # Busca arquivos daily_history_YYYYMMDD.csv
+        for date_str in target_dates:
+            pattern = f"daily_history_{date_str}.csv"
+            files = glob.glob(pattern)
+            if not files: continue
+            
+            with open(files[0], 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    cards = row['deck_cards']
+                    res = row['resultado'].lower()
+                    data_b = row.get('data', '')
+                    
+                    if cards not in deck_stats:
+                        deck_stats[cards] = {'deck_cards': cards, 'wins': 0, 'losses': 0, 'total': 0, 'battles': []}
+                    
+                    deck_stats[cards]['total'] += 1
+                    if res in ['vitoria', 'victory']: deck_stats[cards]['wins'] += 1
+                    elif res in ['derrota', 'defeat']: deck_stats[cards]['losses'] += 1
+                    
+                    # Guarda as ultimas batalhas para a timeline (max 15)
+                    if len(deck_stats[cards]['battles']) < 15:
+                        deck_stats[cards]['battles'].append({'resultado': res, 'data': data_b})
+
+        # Calcula Win Rate e ordena
+        final_list = []
+        for d in deck_stats.values():
+            d['win_rate'] = round((d['wins'] / d['total'] * 100), 1) if d['total'] > 0 else 0
+            final_list.append(d)
+            
+        # Ordena por win_rate (desc) e total (desc), pega top 10
+        final_list.sort(key=lambda x: (x['win_rate'], x['total']), reverse=True)
+        return final_list[:10]
+
+    def generate_weekly_decks_html(self, weekly_data: List[Dict]) -> str:
+        """Gera HTML da aba 'Meus Decks' no estilo clash.royale.com/tools/top-decks."""
+        if not weekly_data:
+            return '<p>Nenhum dado encontrado para os ultimos 7 dias.</p>'
+
+        html = '<div class="cr-decks-list">'
+        for i, deck in enumerate(weekly_data, 1):
+            wins, losses, total = deck.get('wins', 0), deck.get('losses', 0), deck.get('total', 0)
+            draws = max(0, total - wins - losses)
+            win_rate = deck.get('win_rate', 0.0)
+            wins_pct = round((wins/total*100), 1) if total > 0 else 0
+            losses_pct = round((losses/total*100), 1) if total > 0 else 0
+            draws_pct = round(max(0, 100 - wins_pct - losses_pct), 1)
+
+            cards_list = [c.strip() for c in deck['deck_cards'].replace(' | ', '|').split('|')]
+            def card_html(card_name, _self=self):
+                img = _self.get_card_image_path(card_name)
+                return f'<div class="cr-card-wrap" title="{card_name}"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
+
+            top_h = "".join(card_html(c) for c in cards_list[:4])
+            bot_h = "".join(card_html(c) for c in cards_list[4:8])
+
+            battles_html = ""
+            for b in deck.get('battles', []):
+                res = b.get('resultado', '').lower()
+                d_str = b.get('data', '')
+                d_f, h_f = d_str[:5], d_str[11:16]
+                cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
+                ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
+                battles_html += f'<span class="cr-battle-badge" style="background:{cor};" title="{d_f} {h_f}">{ic}</span>'
+
+            wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
+            # Usando aspas simples para o f-string interno para evitar conflito com as aspas duplas externas do script
+            card_template = f'''
+            <div class="cr-deck-card">
+                <div class="cr-deck-header">
+                    <div class="cr-deck-meta"><span class="cr-deck-rank">#{{i}}</span><span class="cr-deck-label">Deck da Semana</span></div>
+                    <span class="cr-wr-badge" style="background:{{wr_c}};">{{win_rate}}% WR</span>
+                </div>
+                <div class="cr-progress-bar"><div class="cr-bar-wins" style="width:{{wins_pct}}%;"></div><div class="cr-bar-draws" style="width:{{draws_pct}}%;"></div><div class="cr-bar-losses" style="width:{{losses_pct}}%;"></div></div>
+                <div class="cr-deck-body">
+                    <div class="cr-cards-grid"><div class="cr-cards-row">{{top_h}}</div><div class="cr-cards-row">{{bot_h}}</div></div>
+                    <div class="cr-stats-panel">
+                        <table class="cr-stats-table"><thead><tr><th>WR%</th><th>Total</th><th class="cr-th-win">V</th><th class="cr-th-draw">E</th><th class="cr-th-loss">D</th></tr></thead>
+                        <tbody><tr><td style="color:{{wr_c}};font-weight:700;">{{win_rate}}%</td><td>{{total}}</td><td class="cr-td-win">{{wins}}</td><td class="cr-td-draw">{{draws}}</td><td class="cr-td-loss">{{losses}}</td></tr></tbody></table>
+                        <div class="cr-battles-timeline"><div class="cr-timeline-badges">{{battles_html}}</div></div>
+                    </div>
+                </div>
+            </div>'''
+            # Substituindo variaveis manualmente para evitar problemas com f-string aninhada no script
+            html += card_template.replace('{{i}}', str(i)).replace('{{wr_c}}', wr_c).replace('{{win_rate}}', str(win_rate)).replace('{{wins_pct}}', str(wins_pct)).replace('{{draws_pct}}', str(draws_pct)).replace('{{losses_pct}}', str(losses_pct)).replace('{{top_h}}', top_h).replace('{{bot_h}}', bot_h).replace('{{total}}', str(total)).replace('{{wins}}', str(wins)).replace('{{draws}}', str(draws)).replace('{{losses}}', str(losses)).replace('{{battles_html}}', battles_html)
+            
+        return html + '</div>'
+
+    def get_repeated_opponents_from_csv(self) -> List[Dict]:
+        """Le o historico anual e agrupa oponentes enfrentados mais de uma vez."""
+        import csv
+        import glob
+        from datetime import datetime
+        
+        all_battles = []
+        year_files = glob.glob("batalhas_*.csv")
+        for f_path in year_files:
+            with open(f_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                all_battles.extend(list(reader))
+        
+        opp_stats = {}
+        for b in all_battles:
+            tag = b['oponente_tag']
+            if not tag: continue
+            if tag not in opp_stats:
+                opp_stats[tag] = {'tag': tag, 'nome': b['oponente_nome'], 'total': 0, 'wins': 0, 'losses': 0, 'battles': [], 'last_deck': b.get('oponente_deck', '')}
+            
+            opp_stats[tag]['total'] += 1
+            res = b['resultado'].lower()
+            if res in ['vitoria', 'victory']: opp_stats[tag]['wins'] += 1
+            elif res in ['derrota', 'defeat']: opp_stats[tag]['losses'] += 1
+            
+            opp_stats[tag]['battles'].append({'resultado': res, 'data_str': b['data']})
+            # Atualiza deck mais recente se disponivel
+            if b.get('oponente_deck'): opp_stats[tag]['last_deck'] = b['oponente_deck']
+
+        # Filtra quem apareceu > 1 vez e ordena por total
+        repeated = [o for o in opp_stats.values() if o['total'] > 1]
+        repeated.sort(key=lambda x: x['total'], reverse=True)
+        return repeated[:15]
+
+    def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
+        """Gera HTML para oponentes repetidos no estilo Premium."""
+        if not opponents: return '<p>Nenhum oponente repetido.</p>'
+        html = '<div class="cr-decks-list">'
+        for i, opp in enumerate(opponents, 1):
+            wins, losses, total = opp['wins'], opp['losses'], opp['total']
+            draws = max(0, total - wins - losses)
+            wr = round((wins/total*100),1) if total > 0 else 0
+            w_p, l_p = round((wins/total*100),1), round((losses/total*100),1)
+            d_p = round(max(0, 100 - w_p - l_p), 1)
+            
+            cards_h = ""
+            if opp['last_deck']:
+                c_list = [c.strip() for c in opp['last_deck'].replace(' | ','|').split('|')]
+                def c_h(n, _self=self):
+                    img = _self.get_card_image_path(n)
+                    return f'<div class="cr-card-wrap" title="{n}"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
+                t_h = "".join(c_h(c) for c in c_list[:4])
+                b_h = "".join(c_h(c) for c in c_list[4:8])
+                cards_h = f'<div class="cr-cards-grid"><div class="cr-cards-row">{t_h}</div><div class="cr-cards-row">{b_h}</div></div>'
+            
+            timeline = ""
+            for b in opp['battles'][-10:]:
+                res = b['resultado'].lower()
+                d_s = b['data_str']
+                d_f, h_f = d_s[:5], d_s[11:16]
+                cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
+                ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
+                timeline += f'<div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span class="cr-battle-badge" style="background:{cor};">{ic}</span><span style="font-size:0.6em;color:#718096;">{d_f}</span></div>'
+
+            wr_c = '#48bb78' if wr >= 50 else '#f56565'
+            opp_template = f'''
+            <div class="cr-deck-card">
+                <div class="cr-deck-header">
+                    <div class="cr-deck-meta"><span class="cr-deck-rank">#{{i}}</span><span class="cr-deck-label">{{nome}}</span><span style="font-size:0.7em;color:#718096;">({{tag}})</span></div>
+                    <span class="cr-wr-badge" style="background:{{wr_c}};">{{wr}}% WR</span>
+                </div>
+                <div class="cr-progress-bar"><div class="cr-bar-wins" style="width:{{w_p}}%;"></div><div class="cr-bar-draws" style="width:{{d_p}}%;"></div><div class="cr-bar-losses" style="width:{{l_p}}%;"></div></div>
+                <div class="cr-deck-body">
+                    {{cards_h}}
+                    <div class="cr-stats-panel">
+                        <table class="cr-stats-table"><thead><tr><th>WR%</th><th>Enc.</th><th class="cr-th-win">V</th><th class="cr-th-draw">E</th><th class="cr-th-loss">D</th></tr></thead>
+                        <tbody><tr><td style="color:{{wr_c}};font-weight:700;">{{wr}}%</td><td>{{total}}x</td><td class="cr-td-win">{{wins}}</td><td class="cr-td-draw">{{draws}}</td><td class="cr-td-loss">{{losses}}</td></tr></tbody></table>
+                        <div class="cr-battles-timeline"><div class="cr-timeline-badges" style="display:flex;gap:5px;">{{timeline}}</div></div>
+                    </div>
+                </div>
+            </div>'''
+            html += opp_template.replace('{{i}}', str(i)).replace('{{nome}}', opp['nome']).replace('{{tag}}', opp['tag']).replace('{{wr_c}}', wr_c).replace('{{wr}}', str(wr)).replace('{{w_p}}', str(w_p)).replace('{{d_p}}', str(d_p)).replace('{{l_p}}', str(l_p)).replace('{{cards_h}}', cards_h or '<div style="width:270px;border:1px dashed #ccc;border-radius:8px;"></div>').replace('{{total}}', str(total)).replace('{{wins}}', str(wins)).replace('{{draws}}', str(draws)).replace('{{losses}}', str(losses)).replace('{{timeline}}', timeline)
+            
+        return html + "</div>"
+
+
     def generate_clan_member_activity_html(self, clan_members: List[Dict], deck_analytics: Dict, player_name: str) -> str:
         """Generate HTML for clan member activity section"""
         if not clan_members:
