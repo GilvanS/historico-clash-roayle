@@ -2294,44 +2294,67 @@ class GitHubPagesHTMLGenerator:
         </script>
         """
     def get_weekly_decks_from_csv(self) -> List[Dict]:
-        """Le os CSVs diarios dos ultimos 7 dias e consolida os 10 melhores decks."""
+        """Le o arquivo battles.csv oficial e consolida os 10 melhores decks."""
         from datetime import datetime, timedelta
-        import glob
         import csv
+        import os
         
-        # Coleta datas dos ultimos 7 dias
+        file_path = os.path.join("src", "data_csv_oficial", "battles.csv")
+        if not os.path.exists(file_path):
+            log.error(f"Arquivo de batalhas nao encontrado: {file_path}")
+            return []
+            
         today = datetime.now()
-        target_dates = [(today - timedelta(days=i)).strftime('%Y%m%d') for i in range(8)]
+        seven_days_ago = today - timedelta(days=7)
         
         deck_stats = {}
+        all_rows = []
         
-        # Busca arquivos daily_history_YYYYMMDD.csv
-        for date_str in target_dates:
-            pattern = f"daily_history_{date_str}.csv"
-            files = glob.glob(pattern)
-            if not files: continue
-            
-            with open(files[0], 'r', encoding='utf-8') as f:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
+                    all_rows.append(row)
+                    
+                    # Tenta converter battle_time (Ex: 20250725T185435.000Z)
+                    try:
+                        b_time = datetime.strptime(row['battle_time'], '%Y%m%dT%H%M%S.000Z')
+                    except Exception:
+                        continue
+                        
+                    # Filtra ultimos 7 dias (ou guarda para fallback se necessario)
+                    is_recent = b_time >= seven_days_ago
+                    
                     cards = row['deck_cards']
-                    res = row['resultado'].lower()
-                    data_b = row.get('data', '')
+                    res = row['result'].lower() # No battles.csv oficial e 'result'
                     
                     if cards not in deck_stats:
-                        deck_stats[cards] = {'deck_cards': cards, 'wins': 0, 'losses': 0, 'total': 0, 'battles': []}
+                        deck_stats[cards] = {'deck_cards': cards, 'wins': 0, 'losses': 0, 'total': 0, 'battles': [], 'recent_total': 0}
                     
+                    if is_recent:
+                        deck_stats[cards]['recent_total'] += 1
+                        
                     deck_stats[cards]['total'] += 1
                     if res in ['vitoria', 'victory']: deck_stats[cards]['wins'] += 1
                     elif res in ['derrota', 'defeat']: deck_stats[cards]['losses'] += 1
                     
                     # Guarda as ultimas batalhas para a timeline (max 15)
                     if len(deck_stats[cards]['battles']) < 15:
-                        deck_stats[cards]['battles'].append({'resultado': res, 'data': data_b})
+                        # Formatando data para exibicao: 25/07 18:54
+                        d_str = b_time.strftime('%d/%m %H:%M')
+                        deck_stats[cards]['battles'].append({'resultado': res, 'data': d_str})
+        except Exception as e:
+            log.error(f"Erro ao ler battles.csv: {str(e)}")
+            return []
 
-        # Calcula Win Rate e ordena
+        # Se nao houver dados nos ultimos 7 dias, usamos o total para nao ficar vazio
+        # (Uteis para quando os dados do repo estao desatualizados)
+        use_fallback = not any(d['recent_total'] > 0 for d in deck_stats.values())
+        
         final_list = []
         for d in deck_stats.values():
+            if not use_fallback and d['recent_total'] == 0:
+                continue
             d['win_rate'] = round((d['wins'] / d['total'] * 100), 1) if d['total'] > 0 else 0
             final_list.append(d)
             
@@ -2394,33 +2417,56 @@ class GitHubPagesHTMLGenerator:
         return html + '</div>'
 
     def get_repeated_opponents_from_csv(self) -> List[Dict]:
-        """Le o historico anual e agrupa oponentes enfrentados mais de uma vez."""
+        """Le o arquivo oponentes_batalhas.csv oficial e agrupa oponentes repetidos."""
         import csv
-        import glob
+        import os
         from datetime import datetime
         
-        all_battles = []
-        year_files = glob.glob("batalhas_*.csv")
-        for f_path in year_files:
-            with open(f_path, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                all_battles.extend(list(reader))
-        
+        file_path = os.path.join("src", "data_csv_oficial", "oponentes_batalhas.csv")
+        if not os.path.exists(file_path):
+            log.error(f"Arquivo de oponentes nao encontrado: {file_path}")
+            return []
+            
         opp_stats = {}
-        for b in all_battles:
-            tag = b['oponente_tag']
-            if not tag: continue
-            if tag not in opp_stats:
-                opp_stats[tag] = {'tag': tag, 'nome': b['oponente_nome'], 'total': 0, 'wins': 0, 'losses': 0, 'battles': [], 'last_deck': b.get('oponente_deck', '')}
-            
-            opp_stats[tag]['total'] += 1
-            res = b['resultado'].lower()
-            if res in ['vitoria', 'victory']: opp_stats[tag]['wins'] += 1
-            elif res in ['derrota', 'defeat']: opp_stats[tag]['losses'] += 1
-            
-            opp_stats[tag]['battles'].append({'resultado': res, 'data_str': b['data']})
-            # Atualiza deck mais recente se disponivel
-            if b.get('oponente_deck'): opp_stats[tag]['last_deck'] = b['oponente_deck']
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for b in reader:
+                    tag = b.get('tag_oponente')
+                    if not tag: continue
+                    
+                    if tag not in opp_stats:
+                        opp_stats[tag] = {
+                            'tag': tag, 
+                            'nome': b.get('nome_oponente', 'Desconhecido'), 
+                            'total': 0, 
+                            'wins': 0, 
+                            'losses': 0, 
+                            'battles': [], 
+                            'last_deck': b.get('deck_oponente', '')
+                        }
+                    
+                    opp_stats[tag]['total'] += 1
+                    res = b.get('resultado', '').lower()
+                    if res in ['vitoria', 'victory']: opp_stats[tag]['wins'] += 1
+                    elif res in ['derrota', 'defeat']: opp_stats[tag]['losses'] += 1
+                    
+                    # Formata data/hora para a timeline
+                    b_time_str = b.get('battle_time', '')
+                    d_display = b_time_str
+                    try:
+                        if b_time_str:
+                            # Tenta parsear 20250725T185435.000Z
+                            dt = datetime.strptime(b_time_str, '%Y%m%dT%H%M%S.000Z')
+                            d_display = dt.strftime('%d/%m %H:%M')
+                    except Exception:
+                        pass
+                        
+                    opp_stats[tag]['battles'].append({'resultado': res, 'data_str': d_display})
+                    if b.get('deck_oponente'): opp_stats[tag]['last_deck'] = b['deck_oponente']
+        except Exception as e:
+            log.error(f"Erro ao ler oponentes_batalhas.csv: {str(e)}")
+            return []
 
         # Filtra quem apareceu > 1 vez e ordena por total
         repeated = [o for o in opp_stats.values() if o['total'] > 1]
