@@ -224,17 +224,14 @@ class OpponentsReporter:
         }
     
     def format_battle_date(self, battle_time_str: str) -> str:
-        """Formata a data da batalha para formato legivel"""
+        """Formata a data da batalha para formato legivel (converte UTC para BRT)"""
         try:
             # Formato: "20240115T123456.000Z"
-            if len(battle_time_str) >= 8:
-                year = battle_time_str[:4]
-                month = battle_time_str[4:6]
-                day = battle_time_str[6:8]
-                hour = battle_time_str[9:11] if len(battle_time_str) > 9 else '00'
-                minute = battle_time_str[11:13] if len(battle_time_str) > 11 else '00'
-                return f"{day}/{month}/{year} {hour}:{minute}"
-        except (ValueError, IndexError):
+            if len(battle_time_str) >= 15:
+                dt_utc = datetime.strptime(battle_time_str[:15], '%Y%m%dT%H%M%S')
+                dt_brt = dt_utc - timedelta(hours=3)
+                return dt_brt.strftime('%d/%m/%Y %H:%M')
+        except Exception:
             pass
         return battle_time_str
     
