@@ -2031,340 +2031,75 @@ class GitHubPagesHTMLGenerator:
         
         return html
     
-    def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
-        """Gera HTML para oponentes repetidos: tabela com data BRT, horario e resultado por batalha."""
-        if not opponents:
-            return "<p>Nenhum oponente encontrado que voce enfrentou mais de uma vez.</p>"
-        
-        html = ''
-        for opponent in opponents:
-            tag = opponent.get('tag', '')
-            nome = opponent.get('nome', 'Desconhecido')
-            total = opponent.get('total', 0)
-            wins = opponent.get('wins', 0)
-            losses = opponent.get('losses', 0)
-            battles = opponent.get('battles', [])
-            last_deck = opponent.get('last_deck', '')
-
-            win_rate = round((wins / total * 100), 1) if total > 0 else 0
-            win_color = 'green' if win_rate >= 50 else '#e53e3e'
-
-            # Deck mais recente do oponente (imagem compacta)
-            deck_html = ''
-            if last_deck:
-                deck_html = f'''
-                <div style="margin-top: 10px;">
-                    <div style="font-size: 0.8em; color: #718096; margin-bottom: 4px;">🎴 Deck mais recente:</div>
-                    {self.generate_deck_cards_html(last_deck, show_names=False)}
-                </div>
-                '''
-
-            # Monta historico de batalhas como timeline de icones
-            battles_html = ''
-            for b in battles:
-                resultado = b.get('resultado', '').lower()
-                data_str = b.get('data_str', '')
-
-                # Converte data de DD/MM/YYYY HH:MM para DD/MM HH:MM (ja e BRT no CSV)
-                try:
-                    from datetime import datetime as _dt
-                    dt_obj = _dt.strptime(data_str, '%d/%m/%Y %H:%M')
-                    data_fmt = dt_obj.strftime('%d/%m')
-                    hora_fmt = dt_obj.strftime('%H:%M')
-                except Exception:
-                    data_fmt = data_str[:5] if len(data_str) >= 5 else data_str
-                    hora_fmt = data_str[11:16] if len(data_str) >= 16 else ''
-
-                if resultado in ['vitoria', 'victory']:
-                    icone = '✅'
-                    cor = 'rgba(72,187,120,0.15)'
-                    borda = '#48bb78'
-                elif resultado in ['derrota', 'defeat']:
-                    icone = '❌'
-                    cor = 'rgba(245,101,101,0.12)'
-                    borda = '#f56565'
-                else:
-                    icone = '🤝'
-                    cor = 'rgba(237,137,54,0.12)'
-                    borda = '#ed8936'
-
-                battles_html += f'''
-                <span style="display: inline-flex; align-items: center; gap: 4px;
-                             background: {cor}; border: 1px solid {borda};
-                             border-radius: 6px; padding: 3px 8px; font-size: 0.82em;
-                             white-space: nowrap; margin: 2px;">
-                    {icone} {data_fmt} {hora_fmt}
-                </span>'''
-
-            html += f'''
-            <div class="deck-item" style="margin-bottom: 16px; padding: 16px 18px;">
-                <div style="display: flex; align-items: flex-start; justify-content: space-between;
-                            flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-                    <div>
-                        <span style="font-weight: bold; color: #2d3748; font-size: 1em;">{nome}</span>
-                        <span style="color: #718096; font-size: 0.85em; margin-left: 6px;">({tag})</span>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                        <span class="stat">🔁 {total}x</span>
-                        <span class="stat" style="color: green;">✅ {wins}V</span>
-                        <span class="stat" style="color: #e53e3e;">❌ {losses}D</span>
-                        <span class="stat" style="color: {win_color}; font-weight: bold;">{win_rate}%</span>
-                    </div>
-                </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
-                    {battles_html}
-                </div>
-                {deck_html}
-            </div>
-            '''
-
-        return html
-
-    def _generate_repeated_opponents_html_from_db_unused(self, opponents: List[Dict]) -> str:
-        """[DEPRECATED] Versao antiga que usava DB com paineis dia/semana/mes/ano."""
+    def generate_repeated_opponents_html(self, opponents):
+        """Gera HTML para oponentes repetidos no estilo Premium do CR Dashboard."""
         if not opponents:
             return '<p>Nenhum oponente encontrado que voce enfrentou mais de uma vez.</p>'
-        html = ''
-        for opponent in opponents:
-            stats = opponent['stats']
-            best_deck = opponent.get('best_deck')
-            trophy_diff_color = "green" if opponent['trophy_diff'] >= 0 else "red"
-            trophy_diff_sign = "+" if opponent['trophy_diff'] >= 0 else ""
-            
-            # Get opponent game stats and info
-            opponent_game_stats = opponent.get('opponent_game_stats')
-            opponent_info = opponent.get('opponent_info')
-            
-            # Build opponent info section with game stats - show stats in the format requested
-            opponent_info_html = ""
-            if opponent_game_stats:
-                trophy_change_color = "green" if opponent_game_stats.get('total_trophy_change', 0) >= 0 else "red"
-                opponent_info_html = f"""
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                        <h4 style="color: #4299e1; margin-bottom: 10px; font-size: 1em;">📊 Dados do Oponente no Jogo</h4>
-                        <div class="deck-stats">
-                            <span class="stat">🏆 {opponent_game_stats.get('total_battles', 0)} batalhas</span>
-                            <span class="stat">✅ {opponent_game_stats.get('wins', 0)} vitórias</span>
-                            <span class="stat">❌ {opponent_game_stats.get('losses', 0)} derrotas</span>
-                            <span class="stat" style="color: {trophy_change_color}">📈 {opponent_game_stats.get('total_trophy_change', 0):+d} trofeus</span>
-                            <span class="stat">👑 {opponent_game_stats.get('avg_crowns', 0):.1f} coroas médias</span>
-                        </div>
-                    </div>
-                """
-            elif opponent_info:
-                # If we have basic info but no game stats, show basic info
-                opponent_info_html = f"""
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                        <h4 style="color: #4299e1; margin-bottom: 10px; font-size: 1em;">📊 Dados do Oponente</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">🏆 Trofeus: {opponent_info.get('trophies', opponent['latest_opponent_trophies'])}</span>
-                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">⭐ Melhor: {opponent_info.get('best_trophies', 'N/A')}</span>
-                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">📈 Nivel: {opponent_info.get('level', 'N/A')}</span>
-                            {f"<span style=\"background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;\">👥 Clã: {opponent_info.get('clan_name', 'Sem clã')}</span>" if opponent_info.get('clan_name') else ""}
-                        </div>
-                        <p style="color: #718096; font-size: 0.9em;">Dados de batalhas do oponente não disponíveis. Os dados serão atualizados quando o sistema buscar as batalhas deste oponente.</p>
-                    </div>
-                """
-            
-            # Generate deck cards HTML if best_deck exists
-            best_deck_html = ""
-            if best_deck and best_deck.get('deck_cards'):
-                best_deck_html = self.generate_deck_cards_html(best_deck['deck_cards'], show_names=False)
-                best_deck_html = f"""
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                        <h4 style="color: #4299e1; margin-bottom: 10px; font-size: 1em;">🎴 Melhor Deck ({best_deck['win_rate']:.1f}% Taxa de Vitória - {best_deck['total_battles']} batalhas)</h4>
-                        {best_deck_html}
-                    </div>
-                """
-            
-            html += f"""
-                <div class="opponent-item" style="background: rgba(247, 250, 252, 0.8); border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-                    <div style="margin-bottom: 15px;">
-                        <h3 style="color: #2d3748; margin-bottom: 8px;">{opponent['opponent_name']} ({opponent['opponent_tag']})</h3>
-                        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 10px;">
-                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">🏆 {opponent['total_battles']} vezes enfrentado</span>
-                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em; color: {trophy_diff_color}">📊 Diferença: {trophy_diff_sign}{opponent['trophy_diff']} trofeus</span>
-                            <span style="background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 0.9em;">Você: {opponent['user_trophies']} | Oponente: {opponent['latest_opponent_trophies']}</span>
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px;">
-                            <h4 style="color: #4299e1; margin-bottom: 8px; font-size: 1em;">📅 Hoje</h4>
-                            <div style="font-size: 0.9em;">
-                                <div>Batalhas: {stats['day']['total']}</div>
-                                <div>✅ {stats['day']['wins']} | ❌ {stats['day']['losses']} | 🤝 {stats['day']['draws']}</div>
-                                <div style="color: {'green' if stats['day']['win_rate'] >= 50 else 'red'}; font-weight: bold;">Taxa: {stats['day']['win_rate']}%</div>
-                                <div style="color: {'green' if stats['day']['trophy_change'] >= 0 else 'red'};">Trofeus: {stats['day']['trophy_change']:+d}</div>
-                            </div>
-                        </div>
-                        
-                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px;">
-                            <h4 style="color: #4299e1; margin-bottom: 8px; font-size: 1em;">📆 Semana</h4>
-                            <div style="font-size: 0.9em;">
-                                <div>Batalhas: {stats['week']['total']}</div>
-                                <div>✅ {stats['week']['wins']} | ❌ {stats['week']['losses']} | 🤝 {stats['week']['draws']}</div>
-                                <div style="color: {'green' if stats['week']['win_rate'] >= 50 else 'red'}; font-weight: bold;">Taxa: {stats['week']['win_rate']}%</div>
-                                <div style="color: {'green' if stats['week']['trophy_change'] >= 0 else 'red'};">Trofeus: {stats['week']['trophy_change']:+d}</div>
-                            </div>
-                        </div>
-                        
-                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px;">
-                            <h4 style="color: #4299e1; margin-bottom: 8px; font-size: 1em;">📅 Mês</h4>
-                            <div style="font-size: 0.9em;">
-                                <div>Batalhas: {stats['month']['total']}</div>
-                                <div>✅ {stats['month']['wins']} | ❌ {stats['month']['losses']} | 🤝 {stats['month']['draws']}</div>
-                                <div style="color: {'green' if stats['month']['win_rate'] >= 50 else 'red'}; font-weight: bold;">Taxa: {stats['month']['win_rate']}%</div>
-                                <div style="color: {'green' if stats['month']['trophy_change'] >= 0 else 'red'};">Trofeus: {stats['month']['trophy_change']:+d}</div>
-                            </div>
-                        </div>
-                        
-                        <div style="background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 8px;">
-                            <h4 style="color: #4299e1; margin-bottom: 8px; font-size: 1em;">📆 Ano</h4>
-                            <div style="font-size: 0.9em;">
-                                <div>Batalhas: {stats['year']['total']}</div>
-                                <div>✅ {stats['year']['wins']} | ❌ {stats['year']['losses']} | 🤝 {stats['year']['draws']}</div>
-                                <div style="color: {'green' if stats['year']['win_rate'] >= 50 else 'red'}; font-weight: bold;">Taxa: {stats['year']['win_rate']}%</div>
-                                <div style="color: {'green' if stats['year']['trophy_change'] >= 0 else 'red'};">Trofeus: {stats['year']['trophy_change']:+d}</div>
-                            </div>
-                        </div>
-                    </div>
-                    {opponent_info_html}
-                    {best_deck_html}
-                </div>
-            """
-        
-        return html
-    
-    def get_weekly_decks_from_csv(self) -> List[Dict]:
-        """Le CSVs diarios dos ultimos 7 dias e retorna top 10 decks com mais vitorias globais, com historico de batalhas."""
-        import csv
-        from datetime import date, timedelta
-        from collections import defaultdict
 
-        today = date.today()
-        # key: deck_cards, value: {wins, losses, draws, battles: [{data, resultado}]}
-        deck_data = defaultdict(lambda: {'wins': 0, 'losses': 0, 'draws': 0, 'battles': []})
-
-        for offset in range(7):
-            day = today - timedelta(days=offset)
-            date_str = day.strftime('%Y%m%d')
-
-            # Localiza o arquivo CSV do dia
-            csv_path = None
-            for prefix in ['src/', '']:
-                p = f"{prefix}oponentes_dia_{date_str}.csv"
-                if os.path.exists(p):
-                    csv_path = p
-                    break
-
-            if not csv_path:
-                continue
-
-            try:
-                # Alteracao: 2024-03-24 - Lendo CSV diario para consolidar performance semanal dos decks
-                with open(csv_path, 'r', encoding='utf-8-sig') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        deck = row.get('deck_jogador', '').strip()
-                        if not deck:
-                            continue
-                        
-                        resultado = row.get('resultado', '').lower()
-                        data_full = row.get('data', '') # Formato DD/MM/YYYY HH:MM
-                        
-                        if resultado in ['vitoria', 'victory']:
-                            deck_data[deck]['wins'] += 1
-                        elif resultado in ['derrota', 'defeat']:
-                            deck_data[deck]['losses'] += 1
-                        else:
-                            deck_data[deck]['draws'] += 1
-                        
-                        # Adiciona a batalha ao historico deste deck
-                        deck_data[deck]['battles'].append({
-                            'data': data_full,
-                            'resultado': resultado
-                        })
-            except Exception as e:
-                print(f"Erro ao ler CSV {csv_path}: {e}")
-                continue
-
-        if not deck_data:
-            return []
-
-        # Ordena por vitorias (desc) e depois por total de batalhas
-        sorted_decks = sorted(
-            deck_data.items(),
-            key=lambda x: (-x[1]['wins'], -(x[1]['wins'] + x[1]['losses'] + x[1]['draws']))
-        )[:10]
-
-        final_results = []
-        for deck_cards, info in sorted_decks:
-            total = info['wins'] + info['losses'] + info['draws']
-            win_rate = round((info['wins'] / total * 100), 1) if total > 0 else 0
-            
-            # Ordena as batalhas do deck por data (mais recente primeiro)
-            try:
-                from datetime import datetime as _dt
-                info['battles'].sort(key=lambda x: _dt.strptime(x['data'], '%d/%m/%Y %H:%M'), reverse=True)
-            except:
-                pass
-
-            final_results.append({
-                'deck_cards': deck_cards,
-                'wins': info['wins'],
-                'losses': info['losses'],
-                'draws': info['draws'],
-                'total': total,
-                'win_rate': win_rate,
-                'battles': info['battles'][:15] # Limita a mostra das ultimas 15 batalhas
-            })
-
-        return final_results
-
-    def generate_weekly_decks_html(self, weekly_data):
-        """Gera HTML da aba Meus Decks no estilo clash.royale.com/tools/top-decks."""
-        if not weekly_data:
-            return '<p>Nenhum dado encontrado para os ultimos 7 dias.</p>'
-
+        from datetime import datetime as _dt
         html = '<div class="cr-decks-list">'
 
-        for i, deck in enumerate(weekly_data, 1):
-            wins   = deck.get('wins', 0)
-            losses = deck.get('losses', 0)
-            total  = deck.get('total', 0)
-            draws  = max(0, total - wins - losses)
-            win_rate = deck.get('win_rate', 0.0)
+        for i, opponent in enumerate(opponents, 1):
+            tag       = opponent.get('tag', '')
+            nome      = opponent.get('nome', 'Desconhecido')
+            total     = opponent.get('total', 0)
+            wins      = opponent.get('wins', 0)
+            losses    = opponent.get('losses', 0)
+            battles   = opponent.get('battles', [])
+            last_deck = opponent.get('last_deck', '')
+
+            draws = max(0, total - wins - losses)
+            win_rate = round((wins / total * 100), 1) if total > 0 else 0
 
             wins_pct   = round((wins / total * 100), 1) if total > 0 else 0
             losses_pct = round((losses / total * 100), 1) if total > 0 else 0
             draws_pct  = round(max(0, 100 - wins_pct - losses_pct), 1)
 
-            cards_list = [c.strip() for c in deck['deck_cards'].replace(' | ', '|').split('|')]
-            cards_top  = cards_list[:4]
-            cards_bot  = cards_list[4:8]
+            wr_color = '#48bb78' if win_rate >= 50 else '#f56565'
 
-            def card_html(card_name, _self=self):
-                img_path = _self.get_card_image_path(card_name)
-                return (
-                    '<div class="cr-card-wrap" title="' + card_name + '">'
-                    '<img src="' + img_path + '" alt="' + card_name + '" class="cr-card-img" loading="lazy">'
+            # ---- Deck mais recente (grid 4+4) ----
+            cards_section = ''
+            if last_deck:
+                cards_list = [c.strip() for c in last_deck.replace(' | ', '|').split('|')]
+                cards_top  = cards_list[:4]
+                cards_bot  = cards_list[4:8]
+
+                def card_html(card_name, _self=self):
+                    img_path = _self.get_card_image_path(card_name)
+                    return (
+                        '<div class="cr-card-wrap" title="' + card_name + '">'
+                        '<img src="' + img_path + '" alt="' + card_name + '" class="cr-card-img" loading="lazy">'
+                        '</div>'
+                    )
+
+                top_h = ''.join(card_html(c) for c in cards_top)
+                bot_h = ''.join(card_html(c) for c in cards_bot)
+                cards_section = (
+                    '<div class="cr-cards-grid">'
+                    '<div class="cr-opp-deck-label" style="font-size:0.7em;color:#718096;font-weight:600;margin-bottom:4px;text-transform:uppercase;">Ultimo deck visto:</div>'
+                    '<div class="cr-cards-row">' + top_h + '</div>'
+                    '<div class="cr-cards-row">' + bot_h + '</div>'
                     '</div>'
                 )
+            else:
+                cards_section = '<div class="cr-no-deck" style="color:#a0aec0;font-size:0.8em;font-style:italic;width:270px;display:flex;align-items:center;justify-content:center;border:1px dashed #cbd5e0;border-radius:8px;">Deck nao disponível</div>'
 
-            cards_top_html = ''.join(card_html(c) for c in cards_top)
-            cards_bot_html = ''.join(card_html(c) for c in cards_bot)
-
+            # ---- Timeline de batalhas com data e hora preservadas ----
             battles_html = ''
-            for b in deck.get('battles', []):
+            for b in battles:
                 resultado = b.get('resultado', '').lower()
-                data_str  = b.get('data', '')
+                data_str  = b.get('data_str', '')
+
                 try:
-                    data_fmt = data_str[:5]
-                    hora_fmt = data_str[11:16]
+                    # Tenta converter se for string longa ou ja formatada
+                    if '/' in data_str and ':' in data_str:
+                        d_part = data_str.split(' ')[0]
+                        h_part = data_str.split(' ')[1][:5]
+                        data_fmt, hora_fmt = d_part[:5], h_part
+                    else:
+                        data_fmt, hora_fmt = data_str[:5], data_str[11:16]
                 except Exception:
-                    data_fmt = data_str
-                    hora_fmt = ''
+                    data_fmt, hora_fmt = data_str, ''
 
                 if resultado in ['vitoria', 'victory']:
                     icone, cor, borda_c = 'V', '#48bb78', '#276749'
@@ -2374,19 +2109,22 @@ class GitHubPagesHTMLGenerator:
                     icone, cor, borda_c = 'E', '#ed8936', '#7b341e'
 
                 battles_html += (
+                    '<div class="cr-timeline-item" style="display:flex;flex-direction:column;align-items:center;gap:2px;">'
                     '<span class="cr-battle-badge" '
-                    'style="background:' + cor + ';border-color:' + borda_c + ';" '
-                    'title="' + data_fmt + ' ' + hora_fmt + '">' + icone + '</span>'
+                    'style="background:' + cor + ';border-color:' + borda_c + ';margin:0;" '
+                    'title="' + data_str + '">' + icone + '</span>'
+                    '<span style="font-size:0.65em;color:#718096;font-weight:600;">' + data_fmt + '</span>'
+                    '<span style="font-size:0.6em;color:#a0aec0;">' + hora_fmt + '</span>'
+                    '</div>'
                 )
-
-            wr_color = '#48bb78' if win_rate >= 50 else '#f56565'
 
             html += (
                 '<div class="cr-deck-card">'
                 '<div class="cr-deck-header">'
                 '<div class="cr-deck-meta">'
                 '<span class="cr-deck-rank">#' + str(i) + '</span>'
-                '<span class="cr-deck-label">Deck da Semana</span>'
+                '<span class="cr-deck-label" style="font-size:1em;color:#1a202c;font-weight:700;">' + nome + '</span>'
+                '<span style="font-size:0.75em;color:#718096;">(' + tag + ')</span>'
                 '</div>'
                 '<span class="cr-wr-badge" style="background:' + wr_color + ';">' + str(win_rate) + '% WR</span>'
                 '</div>'
@@ -2396,29 +2134,25 @@ class GitHubPagesHTMLGenerator:
                 '<div class="cr-bar-losses" style="width:' + str(losses_pct) + '%;"></div>'
                 '</div>'
                 '<div class="cr-deck-body">'
-                '<div class="cr-cards-grid">'
-                '<div class="cr-cards-row">' + cards_top_html + '</div>'
-                '<div class="cr-cards-row">' + cards_bot_html + '</div>'
-                '</div>'
+                + cards_section +
                 '<div class="cr-stats-panel">'
                 '<table class="cr-stats-table"><thead><tr>'
-                '<th>WR%</th><th>Total</th>'
+                '<th>WR%</th><th>Encontros</th>'
                 '<th class="cr-th-win">Vitorias</th>'
                 '<th class="cr-th-draw">Empates</th>'
                 '<th class="cr-th-loss">Derrotas</th>'
                 '</tr></thead><tbody><tr>'
                 '<td style="color:' + wr_color + ';font-weight:700;">' + str(win_rate) + '%</td>'
-                '<td>' + str(total) + '</td>'
+                '<td>' + str(total) + 'x</td>'
                 '<td class="cr-td-win">' + str(wins) + '</td>'
                 '<td class="cr-td-draw">' + str(draws) + '</td>'
                 '<td class="cr-td-loss">' + str(losses) + '</td>'
                 '</tr></tbody></table>'
                 '<div class="cr-battles-timeline">'
-                '<span class="cr-timeline-label">Historico:</span>'
-                '<div class="cr-timeline-badges">' +
-                (battles_html if battles_html else "<em style='color:#718096;font-size:0.8em'>Sem batalhas</em>") +
-                '</div></div>'
-                '</div></div></div>'
+                '<span class="cr-timeline-label">Historico Detalhado:</span>'
+                '<div class="cr-timeline-badges" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:5px;">'
+                + battles_html +
+                '</div></div></div></div></div>'
             )
 
         html += '</div>'
@@ -3039,7 +2773,7 @@ class GitHubPagesHTMLGenerator:
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 22px;
+            min-width: 22px;
             height: 22px;
             border-radius: 4px;
             border: 1.5px solid transparent;
@@ -3047,6 +2781,37 @@ class GitHubPagesHTMLGenerator:
             font-weight: 700;
             font-size: 0.72em;
             cursor: default;
+            padding: 0 3px;
+            gap: 3px;
+        }
+        .cr-badge-with-date {
+            min-width: 70px;
+            height: auto;
+            padding: 3px 6px;
+            border-radius: 6px;
+            flex-direction: column;
+            gap: 1px;
+            font-size: 0.78em;
+        }
+        .cr-badge-date {
+            font-size: 0.78em;
+            font-weight: 500;
+            opacity: 0.92;
+            white-space: nowrap;
+        }
+        .cr-no-deck {
+            font-size: 0.82em;
+            color: #a0aec0;
+            padding: 8px;
+            font-style: italic;
+        }
+        .cr-opp-deck-label {
+            font-size: 0.75em;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
         }
 
         @media (max-width: 600px) {
