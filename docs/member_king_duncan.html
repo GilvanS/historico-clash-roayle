@@ -113,6 +113,185 @@
             padding-bottom: 10px;
         }
         
+        /* ============================================================
+           Clash Royale Top-Decks style – cr-deck-card components
+           ============================================================ */
+        .cr-decks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .cr-deck-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: box-shadow 0.2s;
+        }
+        .cr-deck-card:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+        }
+
+        .cr-deck-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px 8px 14px;
+            border-bottom: 1px solid #edf2f7;
+            background: #f7fafc;
+        }
+        .cr-deck-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cr-deck-rank {
+            background: #4299e1;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.82em;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .cr-deck-label {
+            font-size: 0.85em;
+            color: #4a5568;
+            font-weight: 600;
+        }
+        .cr-wr-badge {
+            color: #fff;
+            font-size: 0.82em;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        /* Barra de progresso W / D / L */
+        .cr-progress-bar {
+            display: flex;
+            height: 8px;
+            width: 100%;
+        }
+        .cr-bar-wins   { background: #48bb78; transition: width 0.4s; }
+        .cr-bar-draws  { background: #ed8936; transition: width 0.4s; }
+        .cr-bar-losses { background: #f56565; transition: width 0.4s; }
+
+        /* Corpo: cards (esq) + stats (dir) */
+        .cr-deck-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 14px;
+        }
+
+        /* Grid 4+4 de cartas */
+        .cr-cards-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .cr-cards-row {
+            display: flex;
+            gap: 5px;
+        }
+        .cr-card-wrap {
+            width: 64px;
+            height: 72px;
+            background: #1a202c;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            transition: transform 0.15s;
+        }
+        .cr-card-wrap:hover { transform: scale(1.08); }
+        .cr-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Painel de estatisticas */
+        .cr-stats-panel {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .cr-stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.87em;
+            background: transparent;
+            border-radius: 0;
+            overflow: visible;
+        }
+        .cr-stats-table th {
+            background: #f7fafc;
+            color: #718096;
+            font-weight: 600;
+            font-size: 0.8em;
+            padding: 5px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .cr-stats-table td {
+            text-align: center;
+            padding: 5px 8px;
+            border-bottom: none;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .cr-th-win, .cr-td-win { color: #48bb78 !important; }
+        .cr-th-draw,.cr-td-draw{ color: #ed8936 !important; }
+        .cr-th-loss,.cr-td-loss{ color: #f56565 !important; }
+
+        /* Timeline de batalhas */
+        .cr-battles-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .cr-timeline-label {
+            font-size: 0.75em;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .cr-timeline-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .cr-battle-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            border: 1.5px solid transparent;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.72em;
+            cursor: default;
+        }
+
+        @media (max-width: 600px) {
+            .cr-deck-body { flex-direction: column; }
+            .cr-card-wrap { width: 52px; height: 60px; }
+        }
+        /* ============================================================ */
+
         .deck-tabs-container {
             margin-top: 20px;
         }
@@ -1572,7 +1751,7 @@
         </div>
 
         <div class="footer">
-            <p>Member profile generated on 2026-04-23 21:29:16</p>
+            <p>Member profile generated on 2026-04-23 22:19:51</p>
             <p>Last seen: 250 days ago</p>
             <p><a href="clan.html" class="back-link">← Back to Clan Analytics</a></p>
         </div>
