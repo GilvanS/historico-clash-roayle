@@ -2237,141 +2237,191 @@ class GitHubPagesHTMLGenerator:
         return html
     
     def get_weekly_decks_from_csv(self) -> List[Dict]:
-        """Le CSVs diarios dos ultimos 7 dias e retorna top 10 decks por vitorias por dia."""
+        """Le CSVs diarios dos ultimos 7 dias e retorna top 10 decks com mais vitorias globais, com historico de batalhas."""
         import csv
-        import glob
         from datetime import date, timedelta
         from collections import defaultdict
 
         today = date.today()
-        results = []
+        # key: deck_cards, value: {wins, losses, draws, battles: [{data, resultado}]}
+        deck_data = defaultdict(lambda: {'wins': 0, 'losses': 0, 'draws': 0, 'battles': []})
 
         for offset in range(7):
             day = today - timedelta(days=offset)
             date_str = day.strftime('%Y%m%d')
-            display_date = day.strftime('%d/%m/%Y')
 
             # Localiza o arquivo CSV do dia
-            path_src = f"src/oponentes_dia_{date_str}.csv"
-            path_local = f"oponentes_dia_{date_str}.csv"
             csv_path = None
-            if os.path.exists(path_src):
-                csv_path = path_src
-            elif os.path.exists(path_local):
-                csv_path = path_local
+            for prefix in ['src/', '']:
+                p = f"{prefix}oponentes_dia_{date_str}.csv"
+                if os.path.exists(p):
+                    csv_path = p
+                    break
 
             if not csv_path:
                 continue
 
-            deck_stats = defaultdict(lambda: {'wins': 0, 'losses': 0, 'draws': 0})
-
             try:
+                # Alteracao: 2024-03-24 - Lendo CSV diario para consolidar performance semanal dos decks
                 with open(csv_path, 'r', encoding='utf-8-sig') as f:
                     reader = csv.DictReader(f)
                     for row in reader:
                         deck = row.get('deck_jogador', '').strip()
                         if not deck:
                             continue
+                        
                         resultado = row.get('resultado', '').lower()
+                        data_full = row.get('data', '') # Formato DD/MM/YYYY HH:MM
+                        
                         if resultado in ['vitoria', 'victory']:
-                            deck_stats[deck]['wins'] += 1
+                            deck_data[deck]['wins'] += 1
                         elif resultado in ['derrota', 'defeat']:
-                            deck_stats[deck]['losses'] += 1
+                            deck_data[deck]['losses'] += 1
                         else:
-                            deck_stats[deck]['draws'] += 1
+                            deck_data[deck]['draws'] += 1
+                        
+                        # Adiciona a batalha ao historico deste deck
+                        deck_data[deck]['battles'].append({
+                            'data': data_full,
+                            'resultado': resultado
+                        })
             except Exception as e:
                 print(f"Erro ao ler CSV {csv_path}: {e}")
                 continue
 
-            if not deck_stats:
-                continue
+        if not deck_data:
+            return []
 
-            # Ordena por vitorias (desc) e pega top 10
-            sorted_decks = sorted(
-                deck_stats.items(),
-                key=lambda x: (-x[1]['wins'], -(x[1]['wins'] + x[1]['losses'] + x[1]['draws']))
-            )[:10]
+        # Ordena por vitorias (desc) e depois por total de batalhas
+        sorted_decks = sorted(
+            deck_data.items(),
+            key=lambda x: (-x[1]['wins'], -(x[1]['wins'] + x[1]['losses'] + x[1]['draws']))
+        )[:10]
 
-            day_decks = []
-            for deck_cards, st in sorted_decks:
-                total = st['wins'] + st['losses'] + st['draws']
-                win_rate = round((st['wins'] / total * 100), 1) if total > 0 else 0
-                day_decks.append({
-                    'deck_cards': deck_cards,
-                    'wins': st['wins'],
-                    'losses': st['losses'],
-                    'draws': st['draws'],
-                    'total': total,
-                    'win_rate': win_rate
-                })
+        final_results = []
+        for deck_cards, info in sorted_decks:
+            total = info['wins'] + info['losses'] + info['draws']
+            win_rate = round((info['wins'] / total * 100), 1) if total > 0 else 0
+            
+            # Ordena as batalhas do deck por data (mais recente primeiro)
+            try:
+                from datetime import datetime as _dt
+                info['battles'].sort(key=lambda x: _dt.strptime(x['data'], '%d/%m/%Y %H:%M'), reverse=True)
+            except:
+                pass
 
-            total_day_wins = sum(d['wins'] for d in day_decks)
-            total_day_losses = sum(d['losses'] for d in day_decks)
-
-            results.append({
-                'date': display_date,
-                'day_iso': day.isoformat(),
-                'decks': day_decks,
-                'total_wins': total_day_wins,
-                'total_losses': total_day_losses,
+            final_results.append({
+                'deck_cards': deck_cards,
+                'wins': info['wins'],
+                'losses': info['losses'],
+                'draws': info['draws'],
+                'total': total,
+                'win_rate': win_rate,
+                'battles': info['battles'][:15] # Limita a mostra das ultimas 15 batalhas
             })
 
-        return results
+        return final_results
 
-    def generate_weekly_decks_html(self, weekly_data: List[Dict]) -> str:
-        """Gera HTML da aba 'Meus Decks da Semana' agrupado por dia."""
+    def generate_weekly_decks_html(self, weekly_data):
+        """Gera HTML da aba Meus Decks no estilo clash.royale.com/tools/top-decks."""
         if not weekly_data:
             return '<p>Nenhum dado encontrado para os ultimos 7 dias.</p>'
 
-        html = ''
-        for day_data in weekly_data:
-            day_win_rate = round(
-                (day_data['total_wins'] / max(day_data['total_wins'] + day_data['total_losses'], 1)) * 100, 1
+        html = '<div class="cr-decks-list">'
+
+        for i, deck in enumerate(weekly_data, 1):
+            wins   = deck.get('wins', 0)
+            losses = deck.get('losses', 0)
+            total  = deck.get('total', 0)
+            draws  = max(0, total - wins - losses)
+            win_rate = deck.get('win_rate', 0.0)
+
+            wins_pct   = round((wins / total * 100), 1) if total > 0 else 0
+            losses_pct = round((losses / total * 100), 1) if total > 0 else 0
+            draws_pct  = round(max(0, 100 - wins_pct - losses_pct), 1)
+
+            cards_list = [c.strip() for c in deck['deck_cards'].replace(' | ', '|').split('|')]
+            cards_top  = cards_list[:4]
+            cards_bot  = cards_list[4:8]
+
+            def card_html(card_name, _self=self):
+                img_path = _self.get_card_image_path(card_name)
+                return (
+                    '<div class="cr-card-wrap" title="' + card_name + '">'
+                    '<img src="' + img_path + '" alt="' + card_name + '" class="cr-card-img" loading="lazy">'
+                    '</div>'
+                )
+
+            cards_top_html = ''.join(card_html(c) for c in cards_top)
+            cards_bot_html = ''.join(card_html(c) for c in cards_bot)
+
+            battles_html = ''
+            for b in deck.get('battles', []):
+                resultado = b.get('resultado', '').lower()
+                data_str  = b.get('data', '')
+                try:
+                    data_fmt = data_str[:5]
+                    hora_fmt = data_str[11:16]
+                except Exception:
+                    data_fmt = data_str
+                    hora_fmt = ''
+
+                if resultado in ['vitoria', 'victory']:
+                    icone, cor, borda_c = 'V', '#48bb78', '#276749'
+                elif resultado in ['derrota', 'defeat']:
+                    icone, cor, borda_c = 'D', '#f56565', '#9b2c2c'
+                else:
+                    icone, cor, borda_c = 'E', '#ed8936', '#7b341e'
+
+                battles_html += (
+                    '<span class="cr-battle-badge" '
+                    'style="background:' + cor + ';border-color:' + borda_c + ';" '
+                    'title="' + data_fmt + ' ' + hora_fmt + '">' + icone + '</span>'
+                )
+
+            wr_color = '#48bb78' if win_rate >= 50 else '#f56565'
+
+            html += (
+                '<div class="cr-deck-card">'
+                '<div class="cr-deck-header">'
+                '<div class="cr-deck-meta">'
+                '<span class="cr-deck-rank">#' + str(i) + '</span>'
+                '<span class="cr-deck-label">Deck da Semana</span>'
+                '</div>'
+                '<span class="cr-wr-badge" style="background:' + wr_color + ';">' + str(win_rate) + '% WR</span>'
+                '</div>'
+                '<div class="cr-progress-bar" title="Vitorias ' + str(wins_pct) + '% | Derrotas ' + str(losses_pct) + '% | Empates ' + str(draws_pct) + '%">'
+                '<div class="cr-bar-wins" style="width:' + str(wins_pct) + '%;"></div>'
+                '<div class="cr-bar-draws" style="width:' + str(draws_pct) + '%;"></div>'
+                '<div class="cr-bar-losses" style="width:' + str(losses_pct) + '%;"></div>'
+                '</div>'
+                '<div class="cr-deck-body">'
+                '<div class="cr-cards-grid">'
+                '<div class="cr-cards-row">' + cards_top_html + '</div>'
+                '<div class="cr-cards-row">' + cards_bot_html + '</div>'
+                '</div>'
+                '<div class="cr-stats-panel">'
+                '<table class="cr-stats-table"><thead><tr>'
+                '<th>WR%</th><th>Total</th>'
+                '<th class="cr-th-win">Vitorias</th>'
+                '<th class="cr-th-draw">Empates</th>'
+                '<th class="cr-th-loss">Derrotas</th>'
+                '</tr></thead><tbody><tr>'
+                '<td style="color:' + wr_color + ';font-weight:700;">' + str(win_rate) + '%</td>'
+                '<td>' + str(total) + '</td>'
+                '<td class="cr-td-win">' + str(wins) + '</td>'
+                '<td class="cr-td-draw">' + str(draws) + '</td>'
+                '<td class="cr-td-loss">' + str(losses) + '</td>'
+                '</tr></tbody></table>'
+                '<div class="cr-battles-timeline">'
+                '<span class="cr-timeline-label">Historico:</span>'
+                '<div class="cr-timeline-badges">' +
+                (battles_html if battles_html else "<em style='color:#718096;font-size:0.8em'>Sem batalhas</em>") +
+                '</div></div>'
+                '</div></div></div>'
             )
-            win_color = 'green' if day_win_rate >= 50 else '#e53e3e'
 
-            html += f'''
-            <div style="margin-bottom: 28px; border-left: 4px solid #4299e1;
-                        padding-left: 16px; padding-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
-                    <h3 style="color: #2d3748; font-size: 1.05em;">📅 {day_data['date']}</h3>
-                    <span style="background: rgba(66,153,225,0.1); padding: 4px 10px;
-                                border-radius: 6px; font-size: 0.9em; color: #4299e1;">
-                        {len(day_data['decks'])} deck(s) usados
-                    </span>
-                    <span style="font-size: 0.9em; color: {win_color}; font-weight: bold;">
-                        ✅ {day_data['total_wins']}V / ❌ {day_data['total_losses']}D
-                        ({day_win_rate}%)
-                    </span>
-                </div>
-            '''
-
-            for i, deck in enumerate(day_data['decks'], 1):
-                win_rate_color = 'green' if deck['win_rate'] >= 50 else '#e53e3e'
-                deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
-
-                html += f'''
-                <div class="deck-item" style="margin-bottom: 12px; padding: 14px 16px;">
-                    <div style="display: flex; align-items: center; gap: 12px;
-                                margin-bottom: 10px; flex-wrap: wrap;">
-                        <span style="font-weight: bold; color: #4299e1; min-width: 28px;">#{i}</span>
-                        <span class="stat" style="background: rgba(72,187,120,0.15); color: green;">
-                            ✅ {deck['wins']} vitórias
-                        </span>
-                        <span class="stat" style="background: rgba(245,101,101,0.15); color: #e53e3e;">
-                            ❌ {deck['losses']} derrotas
-                        </span>
-                        <span class="stat">🏆 {deck['total']} batalhas</span>
-                        <span class="stat" style="color: {win_rate_color}; font-weight: bold;">
-                            {deck['win_rate']}% win rate
-                        </span>
-                    </div>
-                    {deck_cards_html}
-                </div>
-                '''
-
-            html += '</div>'
-
+        html += '</div>'
         return html
 
     def get_repeated_opponents_from_csv(self) -> List[Dict]:
@@ -2826,6 +2876,185 @@ class GitHubPagesHTMLGenerator:
             padding-bottom: 10px;
         }
         
+        /* ============================================================
+           Clash Royale Top-Decks style – cr-deck-card components
+           ============================================================ */
+        .cr-decks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .cr-deck-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: box-shadow 0.2s;
+        }
+        .cr-deck-card:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+        }
+
+        .cr-deck-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px 8px 14px;
+            border-bottom: 1px solid #edf2f7;
+            background: #f7fafc;
+        }
+        .cr-deck-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cr-deck-rank {
+            background: #4299e1;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.82em;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .cr-deck-label {
+            font-size: 0.85em;
+            color: #4a5568;
+            font-weight: 600;
+        }
+        .cr-wr-badge {
+            color: #fff;
+            font-size: 0.82em;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        /* Barra de progresso W / D / L */
+        .cr-progress-bar {
+            display: flex;
+            height: 8px;
+            width: 100%;
+        }
+        .cr-bar-wins   { background: #48bb78; transition: width 0.4s; }
+        .cr-bar-draws  { background: #ed8936; transition: width 0.4s; }
+        .cr-bar-losses { background: #f56565; transition: width 0.4s; }
+
+        /* Corpo: cards (esq) + stats (dir) */
+        .cr-deck-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 14px;
+        }
+
+        /* Grid 4+4 de cartas */
+        .cr-cards-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .cr-cards-row {
+            display: flex;
+            gap: 5px;
+        }
+        .cr-card-wrap {
+            width: 64px;
+            height: 72px;
+            background: #1a202c;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            transition: transform 0.15s;
+        }
+        .cr-card-wrap:hover { transform: scale(1.08); }
+        .cr-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Painel de estatisticas */
+        .cr-stats-panel {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .cr-stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.87em;
+            background: transparent;
+            border-radius: 0;
+            overflow: visible;
+        }
+        .cr-stats-table th {
+            background: #f7fafc;
+            color: #718096;
+            font-weight: 600;
+            font-size: 0.8em;
+            padding: 5px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .cr-stats-table td {
+            text-align: center;
+            padding: 5px 8px;
+            border-bottom: none;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .cr-th-win, .cr-td-win { color: #48bb78 !important; }
+        .cr-th-draw,.cr-td-draw{ color: #ed8936 !important; }
+        .cr-th-loss,.cr-td-loss{ color: #f56565 !important; }
+
+        /* Timeline de batalhas */
+        .cr-battles-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .cr-timeline-label {
+            font-size: 0.75em;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .cr-timeline-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .cr-battle-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            border: 1.5px solid transparent;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.72em;
+            cursor: default;
+        }
+
+        @media (max-width: 600px) {
+            .cr-deck-body { flex-direction: column; }
+            .cr-card-wrap { width: 52px; height: 60px; }
+        }
+        /* ============================================================ */
+
         .deck-tabs-container {
             margin-top: 20px;
         }
