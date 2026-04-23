@@ -276,7 +276,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 22px;
+            min-width: 22px;
             height: 22px;
             border-radius: 4px;
             border: 1.5px solid transparent;
@@ -284,6 +284,37 @@
             font-weight: 700;
             font-size: 0.72em;
             cursor: default;
+            padding: 0 3px;
+            gap: 3px;
+        }
+        .cr-badge-with-date {
+            min-width: 70px;
+            height: auto;
+            padding: 3px 6px;
+            border-radius: 6px;
+            flex-direction: column;
+            gap: 1px;
+            font-size: 0.78em;
+        }
+        .cr-badge-date {
+            font-size: 0.78em;
+            font-weight: 500;
+            opacity: 0.92;
+            white-space: nowrap;
+        }
+        .cr-no-deck {
+            font-size: 0.82em;
+            color: #a0aec0;
+            padding: 8px;
+            font-style: italic;
+        }
+        .cr-opp-deck-label {
+            font-size: 0.75em;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
         }
 
         @media (max-width: 600px) {
@@ -1481,8 +1512,8 @@
         </div>
 
         <div class="footer">
-            <p>Member profile generated on 2026-04-23 22:19:51</p>
-            <p>Last seen: 5 hours ago</p>
+            <p>Member profile generated on 2026-04-23 23:03:43</p>
+            <p>Last seen: 6 hours ago</p>
             <p><a href="clan.html" class="back-link">← Back to Clan Analytics</a></p>
         </div>
     </div>
