@@ -328,6 +328,12 @@ class GitHubPagesHTMLGenerator:
         """, (player_tag_from_db,))
         battle_stats = cursor.fetchone()
         
+        # Get donations from clan_members table for this player
+        cursor.execute("SELECT donations, donations_received FROM clan_members WHERE name = ?", (player_row[1],))
+        clan_info = cursor.fetchone()
+        donations = clan_info[0] if clan_info else 0
+        donations_received = clan_info[1] if clan_info else 0
+
         conn.close()
         
         return {
@@ -345,7 +351,9 @@ class GitHubPagesHTMLGenerator:
             'draws': battle_stats[3] or 0,
             'total_trophy_change': battle_stats[4] or 0,
             'last_battle': battle_stats[5],
-            'first_battle': battle_stats[6]
+            'first_battle': battle_stats[6],
+            'donations': donations,
+            'donations_received': donations_received
         }
     
     def get_deck_performance(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
@@ -2053,15 +2061,15 @@ class GitHubPagesHTMLGenerator:
         return f"""
         <div class="deck-tabs-container">
             <div class="deck-tabs">
-                <button class="tab-button active" onclick="switchDeckTab(event, 'weekly-decks')">Meus Decks da Semana</button>
-                <button class="tab-button" onclick="switchDeckTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
+                <button class="tab-button" onclick="switchDeckTab(event, 'weekly-decks')">Meus Decks da Semana</button>
+                <button class="tab-button active" onclick="switchDeckTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
             </div>
 
-            <div id="tab-weekly-decks" class="tab-content active">
+            <div id="tab-weekly-decks" class="tab-content">
                 {weekly_decks_html}
             </div>
 
-            <div id="tab-repeated-opponents" class="tab-content">
+            <div id="tab-repeated-opponents" class="tab-content active">
                 {repeated_opponents_html if repeated_opponents_html else '<p>Nenhum oponente encontrado que voce enfrentou mais de uma vez.</p>'}
             </div>
         </div>
@@ -2079,97 +2087,123 @@ class GitHubPagesHTMLGenerator:
         
         # Detecta diretório base (src/)
         base_dir = os.path.dirname(os.path.abspath(__file__))
+        from datetime import datetime, timedelta
+        all_data = []
+        limit_date = datetime.now() - timedelta(days=7)
+        print(f"Carregando dados das batalhas dos ultimos 7 dias (desde {limit_date.strftime('%d/%m/%Y')})")
         
-        # 1. Arquivos Oficiais (Com Header)
+        # 1. Process official files first (main source)
         official_paths = [
-            os.path.join(base_dir, "data_csv_oficial", "oponentes_batalhas.csv"),
-            os.path.join(base_dir, "data_csv_oficial", "battles.csv"),
-            os.path.join("src", "data_csv_oficial", "oponentes_batalhas.csv"),
-            os.path.join("src", "data_csv_oficial", "battles.csv")
+            'src/data_csv_oficial/battles.csv'
         ]
         
-        for f_path in list(set(official_paths)):
-            if os.path.exists(f_path):
-                try:
-                    with open(f_path, 'r', encoding='utf-8') as f:
-                        reader = csv.DictReader(f)
-                        for row in reader:
-                            b_time_str = row.get('battle_time', '')
-                            dt = self._parse_dt(b_time_str)
-                            opp_tag = (row.get('tag_oponente') or row.get('opponent_tag', '')).strip()
-                            if not dt or not opp_tag: continue
-                            
-                            sig = (dt.strftime('%Y%m%d%H%M'), opp_tag)
-                            if sig in seen_battles: continue
-                            
-                            all_data.append({
-                                'dt': dt, 'battle_time': b_time_str,
-                                'nome_oponente': row.get('nome_oponente') or row.get('opponent_name', 'Desconhecido'),
-                                'tag_oponente': opp_tag,
-                                'resultado': (row.get('resultado') or row.get('result', '')).lower(),
-                                'deck_jogador': row.get('deck_jogador') or row.get('deck_cards', ''),
-                                'deck_oponente': row.get('deck_oponente') or row.get('opponent_deck_cards', ''),
-                                'clan_oponente': row.get('clan_oponente') or row.get('opponent_clan_name', '')
-                            })
-                            seen_battles.add(sig)
-                except Exception: pass
-
-        # 2. Arquivos de Sistema (Sem Header) - Padrões expandidos
-        # Priorizamos arquivos específicos de 2026 e semanais
-        system_patterns = [
-            os.path.join(base_dir, "oponentes_semana_*.csv"),
-            os.path.join(base_dir, "oponentes_2026.csv"),
-            os.path.join(base_dir, "oponentes_ano_*.csv"),
-            os.path.join(base_dir, "oponentes_mes_*.csv"),
-            os.path.join(base_dir, "oponentes_dia_*.csv"),
-            os.path.join(base_dir, "oponentes_todos.csv"),
-            "src/oponentes_semana_*.csv",
-            "src/oponentes_2026.csv",
-            "src/oponentes_*.csv",
-            "oponentes_*.csv"
-        ]
-        
-        unique_files = set()
-        for p in system_patterns:
-            for f in glob.glob(p):
-                unique_files.add(os.path.abspath(f))
-
-        # Ordenar arquivos por data de modificação (mais recentes primeiro) para garantir 
-        # que as batalhas mais novas sejam as primeiras 'vistas' pelo set de unicidade
-        sorted_files = sorted(list(unique_files), key=os.path.getmtime, reverse=True)
-
-        for f_path in sorted_files:
-            if not os.path.exists(f_path): continue
-            try:
-                count = 0
-                with open(f_path, 'r', encoding='utf-8') as f:
-                    reader = csv.reader(f)
+        for path in official_paths:
+            if os.path.exists(path):
+                print(f"Processando arquivo oficial: {path}")
+                with open(path, mode='r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
                     for row in reader:
-                        if len(row) < 15: continue
-                        dt = self._parse_dt(row[0])
-                        opp_tag = row[2].strip()
-                        if not dt or not opp_tag: continue
+                        dt_str = row.get('battleTime') or row.get('battle_time') or row.get('data')
+                        if not dt_str: continue
                         
-                        # Assinatura única para evitar duplicatas entre arquivos
+                        dt = self._parse_dt(dt_str)
+                        if not dt or dt < limit_date: continue
+                        
+                        opp_tag = (row.get('opponent_tag') or row.get('tag_oponente') or "").strip()
                         sig = (dt.strftime('%Y%m%d%H%M'), opp_tag)
+                        
                         if sig in seen_battles: continue
+                        seen_battles.add(sig)
+                        
+                        # Normalizar nomes de campos para o resto da app
+                        all_data.append({
+                            'dt': dt, 
+                            'battle_time': dt_str,
+                            'nome_oponente': row.get('opponent_name') or row.get('nome_oponente', 'Desconhecido'),
+                            'tag_oponente': opp_tag,
+                            'resultado': (row.get('result') or row.get('resultado', '')).lower(),
+                            'deck_jogador': row.get('deck_jogador') or row.get('player_deck', ''),
+                            'deck_oponente': row.get('deck_oponente') or row.get('opponent_deck', ''),
+                            'clan_oponente': row.get('opponent_clan') or row.get('clan_oponente', '')
+                        })
+
+        # 2. Process system pattern files (secondary/recent)
+        system_patterns = [
+            'src/oponentes_2026.csv',
+            'src/oponentes_*.csv'
+        ]
+        
+        found_files = []
+        for pattern in system_patterns:
+            found_files.extend(glob.glob(pattern))
+        
+        # Sort by modification time (most recent first)
+        found_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+        
+        for path in found_files:
+            if path in official_paths: continue
+            print(f"Processando arquivo secundario: {path}")
+            with open(path, mode='r', encoding='utf-8') as f:
+                # Detect if file has header or is raw CSV
+                content = f.read(1024)
+                f.seek(0)
+                has_header = 'data' in content.lower() or 'battle' in content.lower()
+                
+                if has_header:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        dt_str = row.get('data') or row.get('battleTime') or ""
+                        if not dt_str: continue
+                        
+                        dt = self._parse_dt(dt_str)
+                        if not dt or dt < limit_date: continue
+                        
+                        opp_tag = (row.get('tag_oponente') or row.get('opponent_tag') or "").strip()
+                        sig = (dt.strftime('%Y%m%d%H%M'), opp_tag)
+                        
+                        if sig in seen_battles: continue
+                        seen_battles.add(sig)
                         
                         all_data.append({
                             'dt': dt, 
-                            'battle_time': row[0], 
+                            'battle_time': dt_str,
+                            'nome_oponente': row.get('nome_oponente') or row.get('opponent_name', 'Desconhecido'),
+                            'tag_oponente': opp_tag,
+                            'resultado': (row.get('resultado') or row.get('result', '')).lower(),
+                            'deck_jogador': row.get('deck_jogador') or "",
+                            'deck_oponente': row.get('deck_oponente') or "",
+                            'clan_oponente': row.get('clan_oponente') or ""
+                        })
+                else:
+                    reader = csv.reader(f)
+                    for row in reader:
+                        if len(row) < 7: continue
+                        
+                        dt = self._parse_dt(row[0])
+                        if not dt or dt < limit_date: continue
+                        
+                        opp_tag = row[2].strip()
+                        sig = (dt.strftime('%Y%m%d%H%M'), opp_tag)
+                        
+                        if sig in seen_battles: continue
+                        seen_battles.add(sig)
+                        
+                        # Mapeamento posicional fallback (baseado em oponentes_2026.csv sem header)
+                        # data[0], nome[1], tag[2], ..., resultado[6], ..., player_deck[13], opp_deck[14]
+                        all_data.append({
+                            'dt': dt, 
+                            'battle_time': row[0],
                             'nome_oponente': row[1],
                             'tag_oponente': opp_tag, 
-                            'resultado': row[6].lower(),
-                            'deck_jogador': row[13], 
-                            'deck_oponente': row[14], 
-                            'clan_oponente': row[5]
+                            'resultado': row[6].lower() if len(row) > 6 else "",
+                            'deck_jogador': row[13] if len(row) > 13 else "", 
+                            'deck_oponente': row[14] if len(row) > 14 else "", 
+                            'clan_oponente': row[5] if len(row) > 5 else ""
                         })
-                        seen_battles.add(sig)
-                        count += 1
-            except Exception: pass
                 
         # Ordena por data decrescente (Global)
         all_data.sort(key=lambda x: x['dt'], reverse=True)
+        print(f"Total de batalhas carregadas para analise: {len(all_data)}")
         return all_data
 
     def _parse_dt(self, b_time_str: str):
@@ -2275,9 +2309,9 @@ class GitHubPagesHTMLGenerator:
                 b_json = urllib.parse.quote(json.dumps({'my_deck': b['my_deck'], 'opp_deck': b['opp_deck']}))
                 active = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == 0 else ""
                 
-                # Formata data para a timeline
-                d_short = b['data'].split(' ')[0]
-                h_short = b['data'].split(' ')[1] if ' ' in b['data'] else ""
+                # Formata data para a timeline usando o objeto datetime
+                d_short = b['dt_obj'].strftime('%d/%m')
+                h_short = b['dt_obj'].strftime('%H:%M')
                 
                 timeline_h += f'''
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;" onclick="updateBattlePreview('{deck_id}', {idx}, '{b_json}')">
@@ -2701,7 +2735,7 @@ class GitHubPagesHTMLGenerator:
                                          daily_histogram_html, clan_member_activity_html,
                                          battles_table_html, battles_cards_html)
         except Exception as e:
-            log.error(f"Erro ao gerar relatório HTML: {str(e)}")
+            print(f"Erro ao gerar relatorio HTML: {str(e)}")
             return self.generate_error_page()
     
     def generate_error_page(self) -> str:
@@ -4082,6 +4116,11 @@ class GitHubPagesHTMLGenerator:
                     <h3>Mudança de Trofeus</h3>
                     <div class="value" style="color: {'green' if stats['total_trophy_change'] >= 0 else 'red'}">{stats['total_trophy_change']:+d}</div>
                     <small>Total das batalhas</small>
+                </div>
+                <div class="stat-card">
+                    <h3>Doações Semanais</h3>
+                    <div class="value">{stats.get('donations', 0)}</div>
+                    <small>Recebidas: {stats.get('donations_received', 0)}</small>
                 </div>
             </div>
         </div>
