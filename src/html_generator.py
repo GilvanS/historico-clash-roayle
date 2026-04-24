@@ -18,8 +18,12 @@ except ImportError:
 from typing import List, Dict, Optional
 
 class GitHubPagesHTMLGenerator:
-    def __init__(self, db_path: str = "clash_royale.db"):
+    def __init__(self, db_path: str = None):
+        if db_path is None:
+            # Tenta encontrar o banco na mesma pasta do script
+            db_path = os.path.join(os.path.dirname(__file__), 'clash_royale.db')
         self.db_path = db_path
+        print(f"DEBUG: db_path configurado como: {os.path.abspath(self.db_path)}")
         self.base_url = "https://proxy.royaleapi.dev/v1"
         self.api_token = os.getenv("CR_API_TOKEN")
         self.headers = None
@@ -2158,96 +2162,6 @@ class GitHubPagesHTMLGenerator:
         html += '</div>'
         return html
 
-    def get_repeated_opponents_from_csv(self) -> List[Dict]:
-        """Le CSVs anuais de 2025 e 2026 e retorna oponentes com 2+ encontros com historico de batalhas."""
-        import csv
-        from collections import defaultdict
-        from datetime import datetime
-
-        # Caminhos possiveis para os CSVs anuais
-        annual_files = []
-        for ano in ['2025', '2026']:
-            for prefix in ['src/', '']:
-                p = f"{prefix}oponentes_ano_{ano}.csv"
-                if os.path.exists(p):
-                    annual_files.append(p)
-                    break
-
-        if not annual_files:
-            return []
-
-        # Mapeia tag_oponente -> [{'nome', 'tag', 'data_str', 'resultado'}, ...]
-        opponent_battles = defaultdict(list)
-
-        for csv_path in annual_files:
-            try:
-                with open(csv_path, 'r', encoding='utf-8-sig') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        tag = row.get('tag_oponente', '').strip()
-                        nome = row.get('nome_oponente', 'Desconhecido').strip()
-                        data_str = row.get('data', '').strip()
-                        resultado = row.get('resultado', '').strip()
-                        deck_oponente = row.get('deck_oponente', '').strip()
-
-                        if not tag or tag.upper() == 'SEM CLÃ':
-                            continue
-
-                        # Converte data para datetime para ordenacao
-                        try:
-                            dt = datetime.strptime(data_str, '%d/%m/%Y %H:%M')
-                        except Exception:
-                            try:
-                                dt = datetime.strptime(data_str, '%d/%m/%Y')
-                            except Exception:
-                                dt = None
-
-                        opponent_battles[tag].append({
-                            'nome': nome,
-                            'tag': tag,
-                            'data_str': data_str,
-                            'dt': dt,
-                            'resultado': resultado,
-                            'deck_oponente': deck_oponente
-                        })
-            except Exception as e:
-                print(f"Erro ao ler CSV {csv_path}: {e}")
-
-        # Filtra oponentes com 2+ batalhas e ordena por total desc
-        result = []
-        for tag, battles in opponent_battles.items():
-            if len(battles) < 2:
-                continue
-
-            nome = battles[-1]['nome']
-
-            # Ordena por data desc (mais recente primeiro)
-            battles_sorted = sorted(
-                battles,
-                key=lambda x: x['dt'] if x['dt'] else datetime.min,
-                reverse=True
-            )
-
-            # Stats globais
-            wins = sum(1 for b in battles if b['resultado'].lower() in ['vitoria', 'victory'])
-            losses = sum(1 for b in battles if b['resultado'].lower() in ['derrota', 'defeat'])
-            total = len(battles)
-
-            # Deck mais recente do oponente
-            last_deck = next((b['deck_oponente'] for b in battles_sorted if b['deck_oponente']), '')
-
-            result.append({
-                'tag': tag,
-                'nome': nome,
-                'total': total,
-                'wins': wins,
-                'losses': losses,
-                'battles': battles_sorted,
-                'last_deck': last_deck
-            })
-
-        result.sort(key=lambda x: -x['total'])
-        return result
 
     def generate_deck_performance_with_tabs(self, decks: List[Dict], decks_same_level: List[Dict],
                                             decks_defeated_by: List[Dict], repeated_opponents: List[Dict],
@@ -2301,7 +2215,6 @@ class GitHubPagesHTMLGenerator:
         
         file_path = os.path.join("src", "data_csv_oficial", "battles.csv")
         if not os.path.exists(file_path):
-            log.error(f"Arquivo de batalhas nao encontrado: {file_path}")
             return []
             
         today = datetime.now()
@@ -2343,8 +2256,7 @@ class GitHubPagesHTMLGenerator:
                         # Formatando data para exibicao: 25/07 18:54
                         d_str = b_time.strftime('%d/%m %H:%M')
                         deck_stats[cards]['battles'].append({'resultado': res, 'data': d_str})
-        except Exception as e:
-            log.error(f"Erro ao ler battles.csv: {str(e)}")
+        except Exception:
             return []
 
         # Se nao houver dados nos ultimos 7 dias, usamos o total para nao ficar vazio
@@ -2388,31 +2300,35 @@ class GitHubPagesHTMLGenerator:
             for b in deck.get('battles', []):
                 res = b.get('resultado', '').lower()
                 d_str = b.get('data', '')
-                d_f, h_f = d_str[:5], d_str[11:16]
+                d_f, h_f = d_str[:5], d_str[6:11]
                 cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
                 ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
                 battles_html += f'<span class="cr-battle-badge" style="background:{cor};" title="{d_f} {h_f}">{ic}</span>'
 
             wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
-            # Usando aspas simples para o f-string interno para evitar conflito com as aspas duplas externas do script
-            card_template = f'''
+            card_template = '''
             <div class="cr-deck-card">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta"><span class="cr-deck-rank">#{{i}}</span><span class="cr-deck-label">Deck da Semana</span></div>
-                    <span class="cr-wr-badge" style="background:{{wr_c}};">{{win_rate}}% WR</span>
+                    <div class="cr-deck-meta"><span class="cr-deck-rank">#{i}</span><span class="cr-deck-label">Deck da Semana</span></div>
+                    <span class="cr-wr-badge" style="background:{wr_c};">{win_rate}% WR</span>
                 </div>
-                <div class="cr-progress-bar"><div class="cr-bar-wins" style="width:{{wins_pct}}%;"></div><div class="cr-bar-draws" style="width:{{draws_pct}}%;"></div><div class="cr-bar-losses" style="width:{{losses_pct}}%;"></div></div>
+                <div class="cr-progress-bar"><div class="cr-bar-wins" style="width:{wins_pct}%;"></div><div class="cr-bar-draws" style="width:{draws_pct}%;"></div><div class="cr-bar-losses" style="width:{losses_pct}%;"></div></div>
                 <div class="cr-deck-body">
-                    <div class="cr-cards-grid"><div class="cr-cards-row">{{top_h}}</div><div class="cr-cards-row">{{bot_h}}</div></div>
+                    <div class="cr-cards-grid"><div class="cr-cards-row">{top_h}</div><div class="cr-cards-row">{bot_h}</div></div>
                     <div class="cr-stats-panel">
                         <table class="cr-stats-table"><thead><tr><th>WR%</th><th>Total</th><th class="cr-th-win">V</th><th class="cr-th-draw">E</th><th class="cr-th-loss">D</th></tr></thead>
-                        <tbody><tr><td style="color:{{wr_c}};font-weight:700;">{{win_rate}}%</td><td>{{total}}</td><td class="cr-td-win">{{wins}}</td><td class="cr-td-draw">{{draws}}</td><td class="cr-td-loss">{{losses}}</td></tr></tbody></table>
-                        <div class="cr-battles-timeline"><div class="cr-timeline-badges">{{battles_html}}</div></div>
+                        <tbody><tr><td style="color:{wr_c};font-weight:700;">{win_rate}%</td><td>{total}</td><td class="cr-td-win">{wins}</td><td class="cr-td-draw">{draws}</td><td class="cr-td-loss">{losses}</td></tr></tbody></table>
+                        <div class="cr-battles-timeline"><div class="cr-timeline-badges">{battles_html}</div></div>
                     </div>
                 </div>
             </div>'''
-            # Substituindo variaveis manualmente para evitar problemas com f-string aninhada no script
-            html += card_template.replace('{{i}}', str(i)).replace('{{wr_c}}', wr_c).replace('{{win_rate}}', str(win_rate)).replace('{{wins_pct}}', str(wins_pct)).replace('{{draws_pct}}', str(draws_pct)).replace('{{losses_pct}}', str(losses_pct)).replace('{{top_h}}', top_h).replace('{{bot_h}}', bot_h).replace('{{total}}', str(total)).replace('{{wins}}', str(wins)).replace('{{draws}}', str(draws)).replace('{{losses}}', str(losses)).replace('{{battles_html}}', battles_html)
+            html += card_template.format(
+                i=i, wr_c=wr_c, win_rate=win_rate, 
+                wins_pct=wins_pct, draws_pct=draws_pct, losses_pct=losses_pct, 
+                top_h=top_h, bot_h=bot_h, total=total, 
+                wins=wins, draws=draws, losses=losses, 
+                battles_html=battles_html
+            )
             
         return html + '</div>'
 
@@ -2424,7 +2340,6 @@ class GitHubPagesHTMLGenerator:
         
         file_path = os.path.join("src", "data_csv_oficial", "oponentes_batalhas.csv")
         if not os.path.exists(file_path):
-            log.error(f"Arquivo de oponentes nao encontrado: {file_path}")
             return []
             
         opp_stats = {}
@@ -2432,7 +2347,7 @@ class GitHubPagesHTMLGenerator:
             with open(file_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for b in reader:
-                    tag = b.get('tag_oponente')
+                    tag = b.get('tag_oponente', '').strip()
                     if not tag: continue
                     
                     if tag not in opp_stats:
@@ -2456,16 +2371,25 @@ class GitHubPagesHTMLGenerator:
                     d_display = b_time_str
                     try:
                         if b_time_str:
-                            # Tenta parsear 20250725T185435.000Z
-                            dt = datetime.strptime(b_time_str, '%Y%m%dT%H%M%S.000Z')
-                            d_display = dt.strftime('%d/%m %H:%M')
+                            # Tenta parsear formatos comuns
+                            for fmt in ['%Y%m%dT%H%M%S.000Z', '%Y-%m-%d %H:%M:%S', '%d/%m/%Y %H:%M']:
+                                try:
+                                    dt = datetime.strptime(b_time_str, fmt)
+                                    d_display = dt.strftime('%d/%m %H:%M')
+                                    break
+                                except ValueError:
+                                    continue
                     except Exception:
                         pass
                         
-                    opp_stats[tag]['battles'].append({'resultado': res, 'data_str': d_display})
+                    opp_stats[tag]['battles'].append({
+                        'resultado': res, 
+                        'data_str': d_display,
+                        'my_deck': b.get('deck_jogador', ''),
+                        'opp_deck': b.get('deck_oponente', '')
+                    })
                     if b.get('deck_oponente'): opp_stats[tag]['last_deck'] = b['deck_oponente']
-        except Exception as e:
-            log.error(f"Erro ao ler oponentes_batalhas.csv: {str(e)}")
+        except Exception:
             return []
 
         # Filtra quem apareceu > 1 vez e ordena por total
@@ -2474,53 +2398,184 @@ class GitHubPagesHTMLGenerator:
         return repeated[:15]
 
     def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
-        """Gera HTML para oponentes repetidos no estilo Premium."""
+        """Gera HTML para oponentes repetidos no estilo Premium com Preview de Batalha."""
         if not opponents: return '<p>Nenhum oponente repetido.</p>'
-        html = '<div class="cr-decks-list">'
+        
+        # Adiciona script global para troca de decks (apenas uma vez)
+        script_js = r"""
+        <script>
+        function updateBattlePreview(oppTag, battleIdx, battleData) {
+            const container = document.getElementById('preview-' + oppTag);
+            if (!container) return;
+            
+            // battleData e passada como string JSON escapada
+            const data = JSON.parse(decodeURIComponent(battleData));
+            
+            // Atualiza deck do jogador
+            const myCards = data.my_deck.replace(/ \| /g, '|').split('|');
+            const myImgs = container.querySelectorAll('.my-deck-side .cr-card-img');
+            myCards.forEach((card, i) => {
+                if (myImgs[i]) {
+                    myImgs[i].src = getCardPathJS(card.trim());
+                    myImgs[i].parentElement.title = card.trim();
+                }
+            });
+            
+            // Atualiza deck do oponente
+            const oppCards = data.opp_deck.replace(/ \| /g, '|').split('|');
+            const oppImgs = container.querySelectorAll('.opp-deck-side .cr-card-img');
+            oppCards.forEach((card, i) => {
+                if (oppImgs[i]) {
+                    oppImgs[i].src = getCardPathJS(card.trim());
+                    oppImgs[i].parentElement.title = card.trim();
+                }
+            });
+            
+            // Atualiza badges da timeline (active state)
+            const badges = document.querySelectorAll('.timeline-' + oppTag + ' .cr-battle-badge');
+            badges.forEach((b, i) => {
+                if (i === battleIdx) {
+                    b.style.boxShadow = '0 0 0 3px #4299e1';
+                    b.style.transform = 'scale(1.1)';
+                } else {
+                    b.style.boxShadow = 'none';
+                    b.style.transform = 'scale(1)';
+                }
+            });
+        }
+        
+        function getCardPathJS(name) {
+            if (!name) return '';
+            const mapping = {
+                'Three Musketeers': '3M', 'Hero Musketeer': 'Musk', 'Musketeer': 'Musk',
+                'Archer Queen': 'ArcherQueen', 'Baby Dragon': 'BabyD', 'Barbarian Barrel': 'BarbBarrel',
+                'Barbarians': 'Barbs', 'Battle Healer': 'BattleHealer', 'Goblin Barrel': 'Barrel',
+                'Bomb Tower': 'BombTower', 'Boss Bandit': 'BossBandit', 'Cannon Cart': 'CannonCart',
+                'Dark Prince': 'DarkPrince', 'Dart Goblin': 'DartGob', 'Electro Giant': 'ElectroGiant',
+                'Electro Spirit': 'ElectroSpirit', 'Elixir Golem': 'ElixirGolem', 'Executioner': 'Exe',
+                'Fire Spirit': 'FireSpirit', 'Flying Machine': 'FlyingMachine', 'Goblin Gang': 'GobGang',
+                'Goblin Giant': 'GobGiant', 'Goblin Hut': 'GobHut', 'Goblin Cage': 'GoblinCage',
+                'Goblin Curse': 'GoblinCurse', 'Goblin Demolisher': 'GoblinDemolisher', 'Goblin Drill': 'GoblinDrill',
+                'Goblin Machine': 'GoblinMachine', 'Spear Goblins': 'Gobs', 'Golden Knight': 'GoldenKnight',
+                'Giant Skeleton': 'GiantSkelly', 'Heal Spirit': 'HealSpirit', 'Hog Rider': 'Hog',
+                'Minion Horde': 'Horde', 'Ice Golem': 'IceGolem', 'Ice Spirit': 'IceSpirit',
+                'Ice Wizard': 'IceWiz', 'Inferno Tower': 'Inferno', 'Inferno Dragon': 'InfernoD',
+                'Lava Hound': 'Lava', 'Little Prince': 'LittlePrince', 'The Log': 'Log',
+                'Lumberjack': 'Lumber', 'Mega Minion': 'MM', 'Mini P.E.K.K.A': 'MP',
+                'Magic Archer': 'MagicArcher', 'Mega Knight': 'MegaKnight', 'Mighty Miner': 'MightyMiner',
+                'Mother Witch': 'MotherWitch', 'Night Witch': 'NightWitch', 'P.E.K.K.A': 'PEKKA',
+                'Elixir Collector': 'Pump', 'Royal Giant': 'RG', 'Battle Ram': 'Ram',
+                'Ram Rider': 'RamRider', 'Royal Delivery': 'RoyalDelivery', 'Royal Hogs': 'RoyalHogs',
+                'Royal Recruits': 'RoyalRecruits', 'Skeleton Army': 'Skarmy', 'Skeleton Dragons': 'SkeletonDragons',
+                'Skeleton King': 'SkeletonKing', 'Skeletons': 'Skellies', 'Skeleton Barrel': 'SkellyBarrel',
+                'Giant Snowball': 'Snowball', 'Spear Goblins': 'SpearGobs', 'Goblins': 'Gobs',
+                'Spirit Empress': 'SpiritEmpress', 'Suspicious Bush': 'SuspiciousBush', 'Valkyrie': 'Valk',
+                'Wall Breakers': 'WallBreakers', 'Wizard': 'Wiz', 'X-Bow': 'XBow',
+                'Elite Barbarians': 'eBarbs', 'Electro Dragon': 'eDragon', 'Electro Wizard': 'eWiz',
+                'Archer': 'Archers', 'Knight': 'Knight', 'Archers': 'Archers', 'Firecracker': 'Firecracker',
+                'Tesla': 'Tesla', 'Arrows': 'Arrows', 'Giant': 'Giant', 'Wall Breaker': 'WallBreakers',
+                'Prince': 'Prince', 'Bandit': 'Bandit', 'E-Wiz': 'eWiz', 'Electro Wiz': 'eWiz',
+                'Furnace': 'Furnace', 'Lightning': 'Lightning', 'Zap': 'Zap'
+            };
+            let filename = mapping[name] || name.replace(/ /g, '').replace(/\./g, '').replace(/-/g, '').replace(/'/g, '');
+            // Fallback para nomes comuns que podem vir do CSV
+            if (filename === 'EliteBarbs') filename = 'eBarbs';
+            if (filename === 'ElectroWiz') filename = 'eWiz';
+            if (filename === 'MegaMinion') filename = 'MM';
+            if (filename === 'MiniPEKKA') filename = 'MP';
+            
+            return 'cards/normal_cards/' + filename + '.png';
+        }
+        </script>
+        """
+
+        html = script_js + '<div class="cr-decks-list">'
+        import json
+        import urllib.parse
+        
         for i, opp in enumerate(opponents, 1):
+            tag_clean = opp['tag'].replace('#', '')
             wins, losses, total = opp['wins'], opp['losses'], opp['total']
             draws = max(0, total - wins - losses)
             wr = round((wins/total*100),1) if total > 0 else 0
             w_p, l_p = round((wins/total*100),1), round((losses/total*100),1)
             d_p = round(max(0, 100 - w_p - l_p), 1)
             
-            cards_h = ""
-            if opp['last_deck']:
-                c_list = [c.strip() for c in opp['last_deck'].replace(' | ','|').split('|')]
-                def c_h(n, _self=self):
-                    img = _self.get_card_image_path(n)
-                    return f'<div class="cr-card-wrap" title="{n}"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
+            # Carrega decks da ultima batalha por padrao no preview
+            last_b = opp['battles'][-1] if opp['battles'] else {}
+            my_deck_last = last_b.get('my_deck', '')
+            opp_deck_last = last_b.get('opp_deck', '')
+            
+            def get_deck_grid_html(deck_str, side_class):
+                if not deck_str: return f'<div class="{side_class}" style="width:140px;height:100px;border:1px dashed #cbd5e0;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#a0aec0;font-size:0.8em;">Deck N/D</div>'
+                c_list = [c.strip() for c in deck_str.replace(' | ','|').split('|')]
+                def c_h(n):
+                    img = self.get_card_image_path(n)
+                    return f'<div class="cr-card-wrap" title="{n}" style="width:38px;height:45px;"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
                 t_h = "".join(c_h(c) for c in c_list[:4])
                 b_h = "".join(c_h(c) for c in c_list[4:8])
-                cards_h = f'<div class="cr-cards-grid"><div class="cr-cards-row">{t_h}</div><div class="cr-cards-row">{b_h}</div></div>'
+                return f'<div class="{side_class}"><div class="cr-cards-grid" style="gap:2px;padding:0;"><div class="cr-cards-row" style="gap:2px;">{t_h}</div><div class="cr-cards-row" style="gap:2px;">{b_h}</div></div></div>'
+
+            preview_html = f"""
+            <div id="preview-{tag_clean}" class="cr-battle-preview" style="display:flex; justify-content:space-around; align-items:center; gap:10px; padding:12px; background:linear-gradient(to bottom, #f8fafc, #f1f5f9); border-radius:12px; margin:10px 0; border:1px solid #e2e8f0; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.05);">
+                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Seu Deck</small>{get_deck_grid_html(my_deck_last, 'my-deck-side')}</div>
+                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
+                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small>{get_deck_grid_html(opp_deck_last, 'opp-deck-side')}</div>
+            </div>
+            """
             
             timeline = ""
-            for b in opp['battles'][-10:]:
+            recent_battles = opp['battles'][-15:]
+            for idx, b in enumerate(recent_battles):
                 res = b['resultado'].lower()
                 d_s = b['data_str']
-                d_f, h_f = d_s[:5], d_s[11:16]
+                # data_str format: "25/07 18:54"
+                d_f, h_f = d_s[:5], d_s[6:11]
                 cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
                 ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
-                timeline += f'<div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span class="cr-battle-badge" style="background:{cor};">{ic}</span><span style="font-size:0.6em;color:#718096;">{d_f}</span></div>'
+                
+                b_data = urllib.parse.quote(json.dumps(b))
+                # Destaca a ultima batalha por padrao
+                active_style = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == (len(recent_battles)-1) else ""
+                
+                timeline += f'''
+                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all 0.2s;" onclick="updateBattlePreview('{tag_clean}', {idx}, '{b_data}')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                    <span class="cr-battle-badge" style="background:{cor};{active_style}">{ic}</span>
+                    <span style="font-size:0.65em;color:#4a5568;font-weight:700;">{d_f}</span>
+                    <span style="font-size:0.55em;color:#718096;">{h_f}</span>
+                </div>'''
 
             wr_c = '#48bb78' if wr >= 50 else '#f56565'
-            opp_template = f'''
-            <div class="cr-deck-card">
-                <div class="cr-deck-header">
-                    <div class="cr-deck-meta"><span class="cr-deck-rank">#{{i}}</span><span class="cr-deck-label">{{nome}}</span><span style="font-size:0.7em;color:#718096;">({{tag}})</span></div>
-                    <span class="cr-wr-badge" style="background:{{wr_c}};">{{wr}}% WR</span>
+            html += f'''
+            <div class="cr-deck-card" style="padding:15px;">
+                <div class="cr-deck-header" style="margin-bottom:12px;">
+                    <div class="cr-deck-meta">
+                        <span class="cr-deck-rank">#{i}</span>
+                        <span class="cr-deck-label" style="font-size:1.1em;">{opp['nome']}</span>
+                        <span style="font-size:0.75em;color:#718096;font-family:monospace;margin-left:5px;">{opp['tag']}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="cr-wr-badge" style="background:{wr_c}; font-size:0.9em; padding:4px 10px;">{wr}% WR</span>
+                    </div>
                 </div>
-                <div class="cr-progress-bar"><div class="cr-bar-wins" style="width:{{w_p}}%;"></div><div class="cr-bar-draws" style="width:{{d_p}}%;"></div><div class="cr-bar-losses" style="width:{{l_p}}%;"></div></div>
-                <div class="cr-deck-body">
-                    {{cards_h}}
-                    <div class="cr-stats-panel">
-                        <table class="cr-stats-table"><thead><tr><th>WR%</th><th>Enc.</th><th class="cr-th-win">V</th><th class="cr-th-draw">E</th><th class="cr-th-loss">D</th></tr></thead>
-                        <tbody><tr><td style="color:{{wr_c}};font-weight:700;">{{wr}}%</td><td>{{total}}x</td><td class="cr-td-win">{{wins}}</td><td class="cr-td-draw">{{draws}}</td><td class="cr-td-loss">{{losses}}</td></tr></tbody></table>
-                        <div class="cr-battles-timeline"><div class="cr-timeline-badges" style="display:flex;gap:5px;">{{timeline}}</div></div>
+                
+                {preview_html}
+                
+                <div class="cr-progress-bar" style="height:8px; margin-bottom:15px;"><div class="cr-bar-wins" style="width:{w_p}%;"></div><div class="cr-bar-draws" style="width:{d_p}%;"></div><div class="cr-bar-losses" style="width:{l_p}%;"></div></div>
+                
+                <div class="cr-deck-body" style="padding-top:0;">
+                    <div class="cr-stats-panel" style="width:100%;">
+                        <table class="cr-stats-table" style="margin-bottom:15px;">
+                            <thead><tr><th>Taxa de Vitoria</th><th>Encontros</th><th class="cr-th-win">V</th><th class="cr-th-draw">E</th><th class="cr-th-loss">D</th></tr></thead>
+                            <tbody><tr><td style="color:{wr_c};font-weight:800;font-size:1.1em;">{wr}%</td><td style="font-weight:600;">{total}x</td><td class="cr-td-win">{wins}</td><td class="cr-td-draw">{draws}</td><td class="cr-td-loss">{losses}</td></tr></tbody>
+                        </table>
+                        <div class="cr-battles-timeline" style="background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #edf2f7;">
+                            <div class="cr-timeline-label" style="font-size:0.75em; color:#718096; margin-bottom:8px; font-weight:600; text-transform:uppercase;">Histórico de Batalhas (Clique para ver os decks)</div>
+                            <div class="cr-timeline-badges timeline-{tag_clean}" style="display:flex;gap:10px;padding:5px 0;overflow-x:auto;">{timeline}</div>
+                        </div>
                     </div>
                 </div>
             </div>'''
-            html += opp_template.replace('{{i}}', str(i)).replace('{{nome}}', opp['nome']).replace('{{tag}}', opp['tag']).replace('{{wr_c}}', wr_c).replace('{{wr}}', str(wr)).replace('{{w_p}}', str(w_p)).replace('{{d_p}}', str(d_p)).replace('{{l_p}}', str(l_p)).replace('{{cards_h}}', cards_h or '<div style="width:270px;border:1px dashed #ccc;border-radius:8px;"></div>').replace('{{total}}', str(total)).replace('{{wins}}', str(wins)).replace('{{draws}}', str(draws)).replace('{{losses}}', str(losses)).replace('{{timeline}}', timeline)
             
         return html + "</div>"
 
@@ -2617,85 +2672,83 @@ class GitHubPagesHTMLGenerator:
         """
     
     def generate_html_report(self) -> str:
-        """Generate complete HTML report for GitHub Pages"""
-        stats = self.get_player_stats()
-        player_tag = stats.get('player_tag') if stats else None
-        decks = self.get_deck_performance(10, player_tag=player_tag)
-        battles = self.get_recent_battles(15, player_tag=player_tag)  # Recent Battles section - ONLY user's battles
-        daily_stats = self.get_daily_battle_stats(30, player_tag=player_tag)  # Daily stats - ONLY user's battles
-        clan_rankings = self.get_clan_rankings_data()
-        clan_members = self.get_clan_members()
-        deck_analytics = self.get_clan_deck_analytics()
-        # card_level_analytics = self.get_card_level_analytics()  # Commented out - Advanced Battle Analytics section
-        
-        if not stats:
+        """Gera o relatório HTML completo consolidando todas as seções."""
+        try:
+            stats = self.get_player_stats()
+            if not stats:
+                return self.generate_error_page()
+                
+            player_tag = stats.get('player_tag')
+            win_rate = (stats['wins'] / max(stats['total_battles'], 1)) * 100
+            
+            # Gera dados auxiliares
+            battles = self.get_recent_battles(15, player_tag=player_tag)
+            daily_stats = self.get_daily_battle_stats(30, player_tag=player_tag)
+            clan_members = self.get_clan_members()
+            deck_analytics = self.get_clan_deck_analytics()
+            
+            # Gera HTML das abas de decks (Meus Decks da Semana + Oponentes Repetidos)
+            # Os dados são lidos internamente via CSVs
+            deck_performance_html = self.generate_deck_performance_with_tabs(
+                [], [], [], [], stats, player_tag
+            )
+            
+            # Batalhas Recentes
+            battles_table_html = ""
+            battles_cards_html = ""
+            for battle in battles[:10]:
+                result_class = battle['result']
+                result_text = battle['result'].upper()
+                trophy_color = "green" if battle['trophy_change'] >= 0 else "red"
+                result_display = 'Vitória' if result_text == 'VICTORY' else 'Derrota' if result_text == 'DEFEAT' else 'Empate'
+                if result_text == 'VICTORY' and stats.get('name'):
+                    result_display = f"Vitória - {stats['name']}"
+                
+                battles_table_html += f"""
+                    <tr class="battle-{result_class}">
+                        <td>{self.format_time_ago(battle['battle_time'])}</td>
+                        <td><span class="result-{result_class}">{result_display}</span></td>
+                        <td>{battle['opponent_name']}</td>
+                        <td>{battle['crowns']}</td>
+                        <td style="color: {trophy_color}">{battle['trophy_change']:+d}</td>
+                        <td>{battle['arena_name']}</td>
+                    </tr>
+                """
+                
+                battles_cards_html += f"""
+                    <div class="battle-card battle-{result_class}">
+                        <div class="battle-card-header">
+                            <span class="result-{result_class} battle-result">{result_display}</span>
+                            <span class="battle-time">{self.format_time_ago(battle['battle_time'])}</span>
+                        </div>
+                        <div class="battle-card-content">
+                            <div class="battle-info">
+                                <strong>vs {battle['opponent_name']}</strong>
+                                <span>{battle['arena_name']}</span>
+                            </div>
+                            <div class="battle-stats">
+                                <span class="crown-count">👑 {battle['crowns']}</span>
+                                <span class="trophy-change" style="color: {trophy_color}">🏆 {battle['trophy_change']:+d}</span>
+                            </div>
+                        </div>
+                    </div>
+                """
+            
+            # Histograma Diário
+            daily_stats_7_days = self.get_daily_battle_stats(7, player_tag=player_tag)
+            daily_histogram_desktop = self.generate_daily_histogram_html(daily_stats, "histogram-desktop", include_legend=True)
+            daily_histogram_mobile = self.generate_daily_histogram_html(daily_stats_7_days, "histogram-mobile", include_legend=False)
+            daily_histogram_html = daily_histogram_desktop + daily_histogram_mobile
+            
+            # Atividade do Clã
+            clan_member_activity_html = self.generate_clan_member_activity_html(clan_members, deck_analytics, stats.get('name', ''))
+            
+            return self.generate_full_html(stats, win_rate, deck_performance_html, 
+                                         daily_histogram_html, clan_member_activity_html,
+                                         battles_table_html, battles_cards_html)
+        except Exception as e:
+            log.error(f"Erro ao gerar relatório HTML: {str(e)}")
             return self.generate_error_page()
-        
-        win_rate = (stats['wins'] / max(stats['total_battles'], 1)) * 100
-        
-        # Gera HTML das abas de decks (Meus Decks da Semana + Oponentes Repetidos)
-        # Os dados sao lidos dentro do proprio metodo via CSVs
-        deck_performance_html = self.generate_deck_performance_with_tabs(
-            decks, [], [], [], stats, player_tag
-        )
-        
-        # Generate battle HTML
-        battles_table_html = ""
-        battles_cards_html = ""
-        
-        for battle in battles[:10]:
-            result_class = battle['result']
-            result_text = battle['result'].upper()
-            trophy_color = "green" if battle['trophy_change'] >= 0 else "red"
-            
-            # Table and card HTML generation
-            # Format result text with player name for victories
-            result_display = 'Vitória' if result_text == 'VICTORY' else 'Derrota' if result_text == 'DEFEAT' else 'Empate'
-            if result_text == 'VICTORY' and stats.get('name'):
-                result_display = f"Vitória - {stats['name']}"
-            
-            battles_table_html += f"""
-                <tr class="battle-{result_class}">
-                    <td>{self.format_time_ago(battle['battle_time'])}</td>
-                    <td><span class="result-{result_class}">{result_display}</span></td>
-                    <td>{battle['opponent_name']}</td>
-                    <td>{battle['crowns']}</td>
-                    <td style="color: {trophy_color}">{battle['trophy_change']:+d}</td>
-                    <td>{battle['arena_name']}</td>
-                </tr>
-            """
-            
-            battles_cards_html += f"""
-                <div class="battle-card battle-{result_class}">
-                    <div class="battle-card-header">
-                        <span class="result-{result_class} battle-result">{result_display}</span>
-                        <span class="battle-time">{self.format_time_ago(battle['battle_time'])}</span>
-                    </div>
-                    <div class="battle-card-content">
-                        <div class="battle-info">
-                            <strong>vs {battle['opponent_name']}</strong>
-                            <span>{battle['arena_name']}</span>
-                        </div>
-                        <div class="battle-stats">
-                            <span class="crown-count">👑 {battle['crowns']}</span>
-                            <span class="trophy-change" style="color: {trophy_color}">🏆 {battle['trophy_change']:+d}</span>
-                        </div>
-                    </div>
-                </div>
-            """
-        
-        # Generate daily histogram for both desktop (30 days) and mobile (7 days)
-        daily_stats_7_days = self.get_daily_battle_stats(7, player_tag=player_tag)
-        daily_histogram_desktop = self.generate_daily_histogram_html(daily_stats, "histogram-desktop", include_legend=True)
-        daily_histogram_mobile = self.generate_daily_histogram_html(daily_stats_7_days, "histogram-mobile", include_legend=False)
-        daily_histogram_html = daily_histogram_desktop + daily_histogram_mobile
-        # clan_favorite_cards_html = self.generate_clan_favorite_cards_html(deck_analytics)  # Commented out
-        # card_level_analytics_html = self.generate_card_level_analytics_html(card_level_analytics)  # Commented out
-        clan_member_activity_html = self.generate_clan_member_activity_html(clan_members, deck_analytics, stats['name'])
-        
-        return self.generate_full_html(stats, win_rate, deck_performance_html, 
-                                     daily_histogram_html, clan_member_activity_html,
-                                     battles_table_html, battles_cards_html)
     
     def generate_error_page(self) -> str:
         """Generate error page when no data is available"""
@@ -4244,13 +4297,17 @@ def main():
     html_content = generator.generate_html_report()
     
     # Ensure docs directory exists
-    os.makedirs('../docs', exist_ok=True)
+    # O script pode ser rodado da raiz ou de dentro de src/
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    docs_dir = os.path.join(root_dir, 'docs')
+    os.makedirs(docs_dir, exist_ok=True)
     
     # Save as index.html for GitHub Pages in docs directory
-    with open('../docs/index.html', 'w', encoding='utf-8') as f:
+    index_path = os.path.join(docs_dir, 'index.html')
+    with open(index_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print("GitHub Pages HTML report generated: ../docs/index.html")
+    print(f"GitHub Pages HTML report generated: {index_path}")
 
 if __name__ == "__main__":
     main()
