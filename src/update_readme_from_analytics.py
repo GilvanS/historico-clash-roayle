@@ -6,20 +6,23 @@ Script para atualizar o README com estatisticas de decks do banco clash_royale.d
 import sqlite3
 import os
 import sys
+from csv_database_manager import CSVDatabaseManager
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
 class ReadmeAnalyticsUpdater:
-    def __init__(self, db_path: str = "clash_royale.db", readme_path: str = "README.md"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None, readme_path: str = "README.md"):
+        # Inicializa o gerenciador de CSV e carrega os dados para a memoria
+        self.csv_manager = CSVDatabaseManager()
+        self.csv_manager.load_all_csvs()
+        
+        # Define o path como a URI de memoria compartilhada
+        self.db_path = self.csv_manager.db_path
         self.readme_path = readme_path
     
     def get_deck_stats(self, player_tag: str) -> Dict:
-        """Analisa estatisticas de decks do banco de dados clash_royale.db"""
-        if not os.path.exists(self.db_path):
-            return None
-        
-        conn = sqlite3.connect(self.db_path)
+        """Analisa estatisticas de decks do banco de dados em memoria"""
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Deck atual (mais recente)

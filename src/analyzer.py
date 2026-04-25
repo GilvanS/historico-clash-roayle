@@ -11,16 +11,25 @@ import os
 from datetime import datetime
 from typing import List, Dict, Optional
 import time
+from csv_database_manager import CSVDatabaseManager
 
 class ClashRoyaleAnalyzer:
     def __init__(self, api_token: str):
         self.api_token = api_token
-        self.db_path = "clash_royale.db"
+        # Inicializa o gerenciador de CSV e carrega os dados para a memoria
+        self.csv_manager = CSVDatabaseManager()
+        self.csv_manager.load_all_csvs()
+        
+        # Usa a URI de memoria compartilhada
+        self.db_path = self.csv_manager.db_path
+        
         self.base_url = "https://proxy.royaleapi.dev/v1"
         self.headers = {
             "Authorization": f"Bearer {api_token}",
             "Content-Type": "application/json"
         }
+        # Nao precisamos mais do init_database manual pois o CSVDatabaseManager ja cuida disso
+        # mas mantemos a chamada se houver tabelas extras que o manager nao cria
         self.init_database()
     
     def init_database(self):
@@ -173,6 +182,21 @@ class ClashRoyaleAnalyzer:
         
         conn.commit()
         conn.close()
+    
+    def persist_to_csv(self):
+        """Persist all in-memory tables back to official CSV files"""
+        print("Persisting updated data back to CSV files...")
+        tables_to_export = {
+            'players': 'players.csv',
+            'battles': 'battles.csv',
+            'clan_members': 'clan_members.csv',
+            'clan_member_decks': 'clan_member_decks.csv',
+            'clan_rankings_history': 'clan_rankings_history.csv'
+        }
+        
+        for table, filename in tables_to_export.items():
+            csv_path = os.path.join(self.csv_manager.data_dir, filename)
+            self.csv_manager.save_to_csv(table, csv_path)
     
     def get_player_info(self, player_tag: str) -> Optional[Dict]:
         """Fetch player information from API"""
@@ -634,6 +658,9 @@ def main():
     # Initialize analyzer and update data
     analyzer = ClashRoyaleAnalyzer(API_TOKEN)
     analyzer.update_player_data(PLAYER_TAG)
+    
+    # Persist back to CSV
+    analyzer.persist_to_csv()
     
     print("Data collection completed successfully!")
 

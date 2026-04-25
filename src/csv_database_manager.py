@@ -258,6 +258,24 @@ class CSVDatabaseManager:
                     
                     return date_str
 
+                # Helper to normalize battle result to standard English keys
+                def normalize_result(res):
+                    if not res:
+                        return 'unknown'
+                    res = str(res).strip().lower().strip('"').strip("'")
+                    
+                    # Mapping victory
+                    if res in ['vitoria', 'vitória', 'victory', 'win']:
+                        return 'victory'
+                    # Mapping defeat
+                    if res in ['derrota', 'defeat', 'loss']:
+                        return 'defeat'
+                    # Mapping draw
+                    if res in ['empate', 'draw']:
+                        return 'draw'
+                        
+                    return res
+
                 for row in reader:
                     # Skip empty rows or rows that are just separators
                     if not any(v.strip() for v in row.values() if v):
@@ -296,6 +314,10 @@ class CSVDatabaseManager:
                         if not filtered_row['battle_time']:
                             continue
                     
+                    # Normalize result if present
+                    if 'result' in filtered_row:
+                        filtered_row['result'] = normalize_result(filtered_row['result'])
+                    
                     # Ensure all table columns have a value (None if missing in CSV)
                     values = [filtered_row.get(col) for col in table_columns]
                     rows_to_insert.append(values)
@@ -313,6 +335,25 @@ class CSVDatabaseManager:
 
     def get_connection(self):
         return self.conn
+
+    def save_to_csv(self, table_name: str, csv_path: str):
+        """Export a table from the in-memory database to a CSV file"""
+        try:
+            self.cursor.execute(f"SELECT * FROM {table_name}")
+            columns = [description[0] for description in self.cursor.description]
+            rows = self.cursor.fetchall()
+            
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            
+            with open(csv_path, 'w', encoding='utf-8', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(columns)
+                writer.writerows(rows)
+            
+            logger.info(f"Tabela {table_name} exportada com sucesso para {csv_path} ({len(rows)} registros)")
+        except Exception as e:
+            logger.error(f"Erro ao exportar {table_name} para CSV: {str(e)}")
 
     def close(self):
         self.conn.close()

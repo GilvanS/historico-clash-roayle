@@ -17,8 +17,7 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
     
     def get_member_deck_history(self, player_tag: str) -> List[Dict]:
         """Get complete deck change history for a member, consolidating consecutive identical decks"""
-        if not os.path.exists(self.db_path):
-            return []
+        # No memory DB, we don't check for file existence
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -120,8 +119,7 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
     
     def get_member_info(self, player_tag: str) -> Optional[Dict]:
         """Get member basic info"""
-        if not os.path.exists(self.db_path):
-            return None
+        # No memory DB, we don't check for file existence
             
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -499,17 +497,12 @@ def main():
     """Generate member pages for all clan members"""
     generator = MemberPageGenerator()
     
-    # Get all clan members
-    if not os.path.exists("clash_royale.db"):
-        print("Database not found")
-        return
-    
-    conn = sqlite3.connect("clash_royale.db")
+    # Use the connection from the generator's manager
+    conn = generator.csv_manager.conn
     cursor = conn.cursor()
     
     cursor.execute("SELECT DISTINCT player_tag, name FROM clan_members")
     members = cursor.fetchall()
-    conn.close()
     
     if not members:
         print("No clan members found")

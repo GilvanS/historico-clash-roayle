@@ -12,56 +12,52 @@ import argparse
 import requests
 import json
 from datetime import datetime, timedelta
+from csv_database_manager import CSVDatabaseManager
 from collections import Counter
 from typing import List, Dict, Optional
 
 class OpponentsReporter:
-    def __init__(self, api_token: str, db_path: str = "oponentes.db"):
+    def __init__(self, api_token: str, db_path: str = None):
         self.api_token = api_token
         self.base_url = "https://proxy.royaleapi.dev/v1"
         self.headers = {
             "Authorization": f"Bearer {api_token}",
             "Content-Type": "application/json"
         }
-        self.db_path = db_path
-        self.init_database()
+        
+        # Inicializa o gerenciador de CSV e carrega os dados para a memoria
+        self.csv_manager = CSVDatabaseManager()
+        self.csv_manager.load_all_csvs()
+        
+        # Define o path como a URI de memoria compartilhada
+        self.db_path = self.csv_manager.db_path
+        
+        # Sincroniza o esquema se necessario (o manager ja cria as tabelas base)
         self.init_database()
     
     def init_database(self):
-        """Inicializa o banco de dados SQLite"""
-        conn = sqlite3.connect(self.db_path)
+        """Inicializa tabelas adicionais se necessario"""
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS oponentes_batalhas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_tag TEXT,
-                battle_time TEXT,
-                data_formatada TEXT,
-                nome_oponente TEXT,
-                tag_oponente TEXT,
-                nivel_oponente INTEGER,
-                trofes_oponente INTEGER,
-                clan_oponente TEXT,
-                resultado TEXT,
-                coroas_jogador INTEGER,
-                coroas_oponente INTEGER,
-                mudanca_trofes INTEGER,
-                modo_jogo TEXT,
-                tipo_batalha TEXT,
-                arena TEXT,
-                deck_jogador TEXT,
-                deck_oponente TEXT,
-                UNIQUE(player_tag, battle_time, tag_oponente)
-            )
-        """)
+        # A tabela oponentes_batalhas ja é carregada pelo manager como 'battles'
+        # Mas vamos garantir que ela exista com o nome que o script espera se necessario
+        # Ou melhor, vamos fazer o script usar a tabela 'battles' que é o padrao do projeto
+        
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='oponentes_batalhas'")
+        if not cursor.fetchone():
+            cursor.execute("CREATE TABLE oponentes_batalhas AS SELECT * FROM battles WHERE 0")
+            # Adiciona colunas extras que este script usa
+            try:
+                cursor.execute("ALTER TABLE oponentes_batalhas ADD COLUMN data_formatada TEXT")
+            except: pass
         
         conn.commit()
         conn.close()
     
     def save_battles_to_db(self, player_tag: str, battles: List[Dict]):
         """Salva batalhas no banco de dados (evita duplicatas)"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         novas_batalhas = 0
@@ -237,7 +233,7 @@ class OpponentsReporter:
     
     def generate_csv_from_db(self, player_tag: str, year: int = None, output_file: str = None, all_battles: bool = False):
         """Gera CSV a partir do banco de dados (dados acumulados)"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         if all_battles:
@@ -350,7 +346,10 @@ class OpponentsReporter:
         ano_inicio = ano_inicio_brt - brt_offset
         ano_fim = dia_fim
         
-        conn = sqlite3.connect(self.db_path)
+        # Pasta de saida oficial
+        output_dir = self.csv_manager.data_dir
+        
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Funcao auxiliar para formatar data para query SQL (formato: 20240115T123456)
@@ -362,22 +361,22 @@ class OpponentsReporter:
             'dia': {
                 'inicio': format_date_for_query(dia_inicio),
                 'fim': format_date_for_query(dia_fim),
-                'arquivo': f"oponentes_dia_{now_brt.strftime('%Y%m%d')}.csv"
+                'arquivo': os.path.join(output_dir, f"oponentes_dia_{now_brt.strftime('%Y%m%d')}.csv")
             },
             'semana': {
                 'inicio': format_date_for_query(semana_inicio),
                 'fim': format_date_for_query(semana_fim),
-                'arquivo': f"oponentes_semana_{now_brt.strftime('%Y%W')}.csv"
+                'arquivo': os.path.join(output_dir, f"oponentes_semana_{now_brt.strftime('%Y%W')}.csv")
             },
             'mes': {
                 'inicio': format_date_for_query(mes_inicio),
                 'fim': format_date_for_query(mes_fim),
-                'arquivo': f"oponentes_mes_{now_brt.strftime('%Y%m')}.csv"
+                'arquivo': os.path.join(output_dir, f"oponentes_mes_{now_brt.strftime('%Y%m')}.csv")
             },
             'ano': {
                 'inicio': format_date_for_query(ano_inicio),
                 'fim': format_date_for_query(ano_fim),
-                'arquivo': f"oponentes_ano_{now_brt.year}.csv"
+                'arquivo': os.path.join(output_dir, f"oponentes_ano_{now_brt.year}.csv")
             }
         }
         
@@ -588,7 +587,8 @@ class OpponentsReporter:
         
         # 1. Consolidar Diarios para Weekly (se a semana acabou)
         current_week = datetime.now().strftime('%Y%W')
-        files = [f for f in os.listdir('.') if f.startswith('oponentes_dia_')]
+        data_dir = self.csv_manager.data_dir
+        files = [f for f in os.listdir(data_dir) if f.startswith('oponentes_dia_')]
         
         for f in sorted(files):
             try:
@@ -597,25 +597,27 @@ class OpponentsReporter:
                 file_date = datetime.strptime(file_date_str, '%Y%m%d')
                 file_week = file_date.strftime('%Y%W')
                 
+                source_path = os.path.join(data_dir, f)
                 if file_week < current_week:
-                    target_weekly = f"oponentes_semana_{file_week}.csv"
+                    target_weekly = os.path.join(data_dir, f"oponentes_semana_{file_week}.csv")
                     print(f"  - Consolidando diario antigo {f} para semanal {target_weekly}")
-                    count = self._merge_csv_files(f, target_weekly)
+                    count = self._merge_csv_files(source_path, target_weekly)
                     total_consolidated += count
-                    os.remove(f)
+                    os.remove(source_path)
                     deleted_count += 1
             except Exception as e:
                 print(f"  - Erro ao consolidar {f} para semanal: {e}")
 
         # 2. Consolidar Semanais para Mensal (se o mes acabou)
         current_month = datetime.now().strftime('%Y%m')
-        weekly_files = [f for f in os.listdir('.') if f.startswith('oponentes_semana_')]
+        weekly_files = [f for f in os.listdir(data_dir) if f.startswith('oponentes_semana_')]
         
         for f in sorted(weekly_files):
             try:
+                source_path = os.path.join(data_dir, f)
                 # Detecta o delimitador e tenta ler uma linha para extrair o mes
                 delimiter = ';'
-                with open(f, 'r', encoding='utf-8-sig') as test_f:
+                with open(source_path, 'r', encoding='utf-8-sig') as test_f:
                     head = test_f.read(1024)
                     if ',' in head and ';' not in head:
                         delimiter = ','
@@ -643,32 +645,33 @@ class OpponentsReporter:
                         file_month = f"{file_year}{date_parts[1]}"
                         
                         if file_month < current_month:
-                            target_monthly = f"oponentes_mes_{file_month}.csv"
+                            target_monthly = os.path.join(data_dir, f"oponentes_mes_{file_month}.csv")
                             print(f"  - Consolidando semanal antigo {f} para mensal {target_monthly}")
-                            count = self._merge_csv_files(f, target_monthly)
+                            count = self._merge_csv_files(source_path, target_monthly)
                             total_consolidated += count
-                            os.remove(f)
+                            os.remove(source_path)
                             deleted_count += 1
             except Exception as e:
                 print(f"  - Erro ao consolidar {f} para mensal: {e}")
 
         # 3. Consolidar Mensais de anos anteriores para Anual
         current_year = datetime.now().year
-        monthly_files = [f for f in os.listdir('.') if f.startswith('oponentes_mes_')]
+        monthly_files = [f for f in os.listdir(data_dir) if f.startswith('oponentes_mes_')]
         
         for f in sorted(monthly_files):
             try:
+                source_path = os.path.join(data_dir, f)
                 # oponentes_mes_202512.csv -> 2025
                 file_year_str = f.split('mes_')[1][:4]
                 if not file_year_str.isdigit(): continue
                 file_year = int(file_year_str)
                 
                 if file_year < current_year:
-                    target_annual = f"oponentes_ano_{file_year}.csv"
+                    target_annual = os.path.join(data_dir, f"oponentes_ano_{file_year}.csv")
                     print(f"  - Migrando mes antigo {f} para anual {target_annual}")
-                    count = self._merge_csv_files(f, target_annual)
+                    count = self._merge_csv_files(source_path, target_annual)
                     total_consolidated += count
-                    os.remove(f)
+                    os.remove(source_path)
                     deleted_count += 1
             except Exception as e:
                 print(f"  - Erro ao consolidar anual {f}: {e}")

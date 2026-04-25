@@ -6,28 +6,31 @@ Script para atualizar o README com estatisticas de decks e performance
 import sqlite3
 import os
 import sys
+from csv_database_manager import CSVDatabaseManager
 from typing import Dict, List, Optional
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class ReadmeStatsUpdater:
-    def __init__(self, db_path: str = "oponentes.db", readme_path: str = "README.md"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None, readme_path: str = "README.md"):
+        # Inicializa o gerenciador de CSV e carrega os dados para a memoria
+        self.csv_manager = CSVDatabaseManager()
+        self.csv_manager.load_all_csvs()
+        
+        # Define o path como a URI de memoria compartilhada
+        self.db_path = self.csv_manager.db_path
         self.readme_path = readme_path
     
     def get_deck_stats(self, player_tag: str) -> Dict:
-        """Analisa estatisticas de decks do banco de dados"""
-        if not os.path.exists(self.db_path):
-            return None
-        
-        conn = sqlite3.connect(self.db_path)
+        """Analisa estatisticas de decks do banco de dados em memoria"""
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Deck atual (mais recente)
         cursor.execute("""
-            SELECT deck_jogador, resultado, data_formatada, battle_time
-            FROM oponentes_batalhas
-            WHERE player_tag = ? AND deck_jogador IS NOT NULL AND deck_jogador != ''
+            SELECT deck_cards, result, battle_time
+            FROM battles
+            WHERE player_tag = ? AND deck_cards IS NOT NULL AND deck_cards != ''
             ORDER BY battle_time DESC
             LIMIT 1
         """, (player_tag,))
@@ -38,22 +41,22 @@ class ReadmeStatsUpdater:
             deck_atual = {
                 'deck': deck_atual_row[0],
                 'ultimo_resultado': deck_atual_row[1],
-                'data': deck_atual_row[2],
-                'battle_time': deck_atual_row[3]
+                'data': deck_atual_row[2], # Usando o battle_time como data
+                'battle_time': deck_atual_row[2]
             }
         
         # Estatisticas por deck
         cursor.execute("""
             SELECT 
-                deck_jogador,
+                deck_cards,
                 COUNT(*) as total_batalhas,
-                SUM(CASE WHEN resultado = 'victory' THEN 1 ELSE 0 END) as vitorias,
-                SUM(CASE WHEN resultado = 'defeat' THEN 1 ELSE 0 END) as derrotas,
-                SUM(CASE WHEN resultado = 'victory' THEN mudanca_trofes ELSE 0 END) as trofes_ganhos,
-                SUM(CASE WHEN resultado = 'defeat' THEN mudanca_trofes ELSE 0 END) as trofes_perdidos
-            FROM oponentes_batalhas
-            WHERE player_tag = ? AND deck_jogador IS NOT NULL AND deck_jogador != ''
-            GROUP BY deck_jogador
+                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as vitorias,
+                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as derrotas,
+                SUM(CASE WHEN result = 'victory' THEN trophy_change ELSE 0 END) as trofes_ganhos,
+                SUM(CASE WHEN result = 'defeat' THEN trophy_change ELSE 0 END) as trofes_perdidos
+            FROM battles
+            WHERE player_tag = ? AND deck_cards IS NOT NULL AND deck_cards != ''
+            GROUP BY deck_cards
             HAVING total_batalhas >= 1
             ORDER BY 
                 (CAST(vitorias AS FLOAT) / CAST(total_batalhas AS FLOAT)) DESC,
@@ -79,10 +82,10 @@ class ReadmeStatsUpdater:
         cursor.execute("""
             SELECT 
                 COUNT(*) as total_batalhas,
-                SUM(CASE WHEN resultado = 'victory' THEN 1 ELSE 0 END) as vitorias,
-                SUM(CASE WHEN resultado = 'defeat' THEN 1 ELSE 0 END) as derrotas,
-                SUM(mudanca_trofes) as trofes_total
-            FROM oponentes_batalhas
+                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as vitorias,
+                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as derrotas,
+                SUM(trophy_change) as trofes_total
+            FROM battles
             WHERE player_tag = ?
         """, (player_tag,))
         
