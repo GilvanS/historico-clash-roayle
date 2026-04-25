@@ -1242,7 +1242,7 @@ class GitHubPagesHTMLGenerator:
                 COALESCE(COUNT(b.id), 0) as total_battles
             FROM date_range dr
             LEFT JOIN battles b ON 
-                SUBSTR(b.battle_time, 1, 4) || '-' || SUBSTR(b.battle_time, 5, 2) || '-' || SUBSTR(b.battle_time, 7, 2) = dr.date
+                DATE(b.battle_time) = dr.date
                 AND b.battle_time IS NOT NULL
                 AND b.player_tag = ?
             GROUP BY dr.date
@@ -1501,13 +1501,13 @@ class GitHubPagesHTMLGenerator:
             return "unknown"
             
         try:
-            if 'T' in timestamp:
-                if timestamp.endswith('Z'):
-                    dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                else:
-                    dt = datetime.fromisoformat(timestamp)
+            # Tenta lidar com formatos ISO (com T ou espaco)
+            clean_str = timestamp.replace('Z', '+00:00').replace(' ', 'T')
+            if 'T' in clean_str:
+                dt = datetime.fromisoformat(clean_str)
             else:
-                dt = datetime.fromisoformat(timestamp)
+                # Fallback para outros formatos comuns
+                dt = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
                 
             return dt.strftime('%B %d, %Y')
         except:
