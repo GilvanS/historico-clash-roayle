@@ -1960,7 +1960,7 @@ class GitHubPagesHTMLGenerator:
         """
 
     def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
-        """Gera HTML para oponentes repetidos no estilo Premium com Preview de Batalha."""
+        """Gera HTML para oponentes repetidos no estilo Premium com Preview de Batalha e Categorização de Rivalidade."""
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
         
         html = '<div class="cr-decks-list">'
@@ -1968,16 +1968,23 @@ class GitHubPagesHTMLGenerator:
         import urllib.parse
         
         for i, opp in enumerate(opponents, 1):
-            tag_clean = opp['tag'].replace('#', '')
-            wins, losses, total = opp['wins'], opp['losses'], opp['total']
-            draws = max(0, total - wins - losses)
-            wr = round((wins/total*100),1) if total > 0 else 0
-            w_p, l_p = round((wins/total*100),1), round((losses/total*100),1)
+            tag_clean = opp['opponent_tag'].replace('#', '')
+            wins = opp['user_wins']
+            losses = opp['user_losses']
+            draws = opp['user_draws']
+            total = opp['total_battles']
+            wr = opp['user_win_rate']
+            category = opp['category']
+            cat_class = opp['category_class']
+            
+            # Cálculo de porcentagens para a barra de progresso
+            w_p = round((wins/total*100),1) if total > 0 else 0
+            l_p = round((losses/total*100),1) if total > 0 else 0
             d_p = round(max(0, 100 - w_p - l_p), 1)
             
-            # Pega a batalha mais recente (primeira da lista ja que esta ordenada DESC)
-            recent_battles = opp['battles']
-            last_b = recent_battles[0] if recent_battles else {}
+            # Pega a batalha mais recente
+            stats = opp['stats']
+            last_b = stats[0] if stats else {} # Usando o campo 'stats' que contem as batalhas individuais
             my_deck_last = last_b.get('my_deck', '')
             opp_deck_last = last_b.get('opp_deck', '')
             
@@ -2000,14 +2007,10 @@ class GitHubPagesHTMLGenerator:
             """
             
             timeline = ""
-            # Mostra as últimas 15 batalhas na timeline
-            for idx, b in enumerate(recent_battles[:15]):
-                res = b['resultado'].lower()
-                d_s = b['data_str']
-                # Formato d_s: "23/04 19:07"
-                parts = d_s.split(' ')
-                d_f = parts[0]
-                h_f = parts[1] if len(parts) > 1 else ""
+            for idx, b in enumerate(stats[:15]):
+                res = b['result'].lower()
+                d_f = b['battle_time'].split('T')[0].split('-')[-1] + "/" + b['battle_time'].split('T')[0].split('-')[-2]
+                h_f = b['battle_time'].split('T')[1][:5]
                 
                 cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
                 ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
@@ -2017,7 +2020,6 @@ class GitHubPagesHTMLGenerator:
                     'opp_deck': b['opp_deck']
                 }))
                 
-                # Destaca a primeira batalha (mais recente) por padrão
                 active_style = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == 0 else ""
                 
                 timeline += f'''
@@ -2027,18 +2029,30 @@ class GitHubPagesHTMLGenerator:
                     <span style="font-size:0.55em;color:#718096;">{h_f}</span>
                 </div>'''
 
-            wr_c = '#48bb78' if wr >= 50 else '#f56565'
+            wr_c = '#48bb78' if wr >= 60 else ('#f56565' if wr <= 40 else '#718096')
+            
             html += f'''
             <div class="cr-deck-card" style="padding:15px;">
                 <div class="cr-deck-header" style="margin-bottom:12px;">
                     <div class="cr-deck-meta">
                         <span class="cr-deck-rank">#{i}</span>
-                        <span class="cr-deck-label" style="font-size:1.1em;">{opp['nome']}</span>
-                        <span style="font-size:0.75em;color:#718096;font-family:monospace;margin-left:5px;">{opp['tag']}</span>
+                        <span class="cr-deck-label" style="font-size:1.1em;">{opp['opponent_name']}</span>
+                        <span class="{cat_class}-badge">{category}</span>
                     </div>
                     <div style="text-align:right;">
+                        <span style="font-size:0.75em;color:#718096;font-family:monospace;display:block;margin-bottom:2px;">{opp['opponent_tag']}</span>
                         <span class="cr-wr-badge" style="background:{wr_c}; font-size:0.9em; padding:4px 10px;">{wr}% WR</span>
                     </div>
+                </div>
+
+                <div class="cr-h2h-panel {cat_class}">
+                    <div style="font-size:0.8em; font-weight:700; color:#4a5568;">HEAD-TO-HEAD:</div>
+                    <div style="display:flex; gap:10px; font-size:0.9em; font-weight:800;">
+                        <span style="color:#38a169;">{wins}V</span>
+                        <span style="color:#718096;">{draws}E</span>
+                        <span style="color:#e53e3e;">{losses}D</span>
+                    </div>
+                    <div style="margin-left:auto; font-size:0.75em; color:#718096;">Último: {opp['last_encounter'][:16].replace('T', ' ')}</div>
                 </div>
                 
                 {preview_html}
@@ -2047,10 +2061,6 @@ class GitHubPagesHTMLGenerator:
                 
                 <div class="cr-deck-body" style="padding-top:0;">
                     <div class="cr-stats-panel" style="width:100%;">
-                        <table class="cr-stats-table" style="margin-bottom:15px;">
-                            <thead><tr><th>Taxa de Vitoria</th><th>Encontros</th><th class="cr-th-win">V</th><th class="cr-th-draw">E</th><th class="cr-th-loss">D</th></tr></thead>
-                            <tbody><tr><td style="color:{wr_c};font-weight:800;font-size:1.1em;">{wr}%</td><td style="font-weight:600;">{total}x</td><td class="cr-td-win">{wins}</td><td class="cr-td-draw">{draws}</td><td class="cr-td-loss">{losses}</td></tr></tbody>
-                        </table>
                         <div class="cr-battles-timeline" style="background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #edf2f7;">
                             <div class="cr-timeline-label" style="font-size:0.75em; color:#718096; margin-bottom:8px; font-weight:600; text-transform:uppercase;">Histórico de Batalhas (Clique para ver os decks)</div>
                             <div class="cr-timeline-badges timeline-{tag_clean}" style="display:flex;gap:10px;padding:5px 0;overflow-x:auto;">{timeline}</div>
@@ -2498,6 +2508,24 @@ class GitHubPagesHTMLGenerator:
             border-radius: 0;
             overflow: visible;
         }
+
+        /* Estilos de Rivais */
+        .nemesis-badge { background: #e53e3e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
+        .customer-badge { background: #38a169; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
+        .balanced-badge { background: #718096; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .cr-h2h-panel {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #fdf2f2;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid #e53e3e;
+            margin-bottom: 10px;
+        }
+        .cr-h2h-panel.customer { background: #f0fff4; border-left-color: #38a169; }
+        .cr-h2h-panel.balanced { background: #f7fafc; border-left-color: #718096; }
         .cr-stats-table th {
             background: #f7fafc;
             color: #718096;

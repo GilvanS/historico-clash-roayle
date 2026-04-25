@@ -9,5 +9,5 @@
 - [x] Implementar Sistema de Maiores Rivais (Nêmese vs Freguês)
     - [x] Refatorar `get_repeated_opponents_stats` para categorização
     - [x] Adicionar métricas H2H (Wins/Losses) e Win Rate do usuário
-- [ ] Atualizar Template HTML para exibir novo painel de Rivais
-- [ ] Criar Dashboard de "Decks que mais me batem"
+- [x] Atualizar Template HTML para exibir novo painel de Rivais
+- [/] Criar Dashboard de "Decks que mais me batem"
