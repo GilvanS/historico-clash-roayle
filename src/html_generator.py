@@ -9,6 +9,7 @@ import os
 import re
 import requests
 import time
+import logging
 from datetime import datetime, timezone
 try:
     from datetime import UTC
@@ -16,14 +17,19 @@ except ImportError:
     # Python < 3.11 compatibility
     UTC = timezone.utc
 from typing import List, Dict, Optional
+from csv_database_manager import CSVDatabaseManager
+
+logger = logging.getLogger(__name__)
 
 class GitHubPagesHTMLGenerator:
     def __init__(self, db_path: str = None):
-        if db_path is None:
-            # Tenta encontrar o banco na mesma pasta do script
-            db_path = os.path.join(os.path.dirname(__file__), 'clash_royale.db')
-        self.db_path = db_path
-        print(f"DEBUG: db_path configurado como: {os.path.abspath(self.db_path)}")
+        # Inicializa o gerenciador de CSV e carrega os dados para a memoria
+        self.csv_manager = CSVDatabaseManager()
+        self.csv_manager.load_all_csvs()
+        
+        # Define o path como a URI de memoria compartilhada
+        self.db_path = self.csv_manager.db_path
+        logger.info(f"DEBUG: Banco de dados em memoria (CSV-First) configurado")
         self.base_url = "https://proxy.royaleapi.dev/v1"
         self.api_token = os.getenv("CR_API_TOKEN")
         self.headers = None
@@ -142,7 +148,7 @@ class GitHubPagesHTMLGenerator:
             player_data = response.json()
             
             # Save to players table
-            conn = sqlite3.connect(self.db_path)
+            conn = sqlite3.connect(self.db_path, uri=True)
             cursor = conn.cursor()
             
             clan_info = player_data.get('clan', {})
@@ -187,7 +193,7 @@ class GitHubPagesHTMLGenerator:
             
             # Save battles to database (similar to analyzer.py)
             if battles:
-                conn = sqlite3.connect(self.db_path)
+                conn = sqlite3.connect(self.db_path, uri=True)
                 cursor = conn.cursor()
                 
                 for battle in battles:
@@ -298,10 +304,9 @@ class GitHubPagesHTMLGenerator:
     
     def get_player_stats(self) -> Optional[Dict]:
         """Get player statistics from database"""
-        if not os.path.exists(self.db_path):
-            return None
+        # Memory DB initialized - continue
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Get player info
@@ -312,8 +317,7 @@ class GitHubPagesHTMLGenerator:
             conn.close()
             return None
             
-        # Get battle stats - ONLY from the player in players table
-        player_tag_from_db = player_row[0]
+        # Get battle stats - Get ALL battles from the database (consolidated history)
         cursor.execute("""
             SELECT 
                 COUNT(*) as total_battles,
@@ -324,8 +328,7 @@ class GitHubPagesHTMLGenerator:
                 MAX(battle_time) as last_battle,
                 MIN(battle_time) as first_battle
             FROM battles
-            WHERE player_tag = ?
-        """, (player_tag_from_db,))
+        """)
         battle_stats = cursor.fetchone()
         
         # Get donations from clan_members table for this player
@@ -358,10 +361,10 @@ class GitHubPagesHTMLGenerator:
     
     def get_deck_performance(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
         """Get deck performance data, showing ONLY user's decks - Λ Яᄃ λ Ð Є (#2QR292P)"""
-        if not os.path.exists(self.db_path) or not player_tag:
+        if not player_tag:
             return []
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Get decks ONLY from the user - filter by player_tag
@@ -376,15 +379,14 @@ class GitHubPagesHTMLGenerator:
                 ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
                 ROUND(AVG(crowns), 2) as avg_crowns
             FROM battles 
-            WHERE player_tag = ?
-                AND deck_cards IS NOT NULL 
+            WHERE deck_cards IS NOT NULL 
                 AND deck_cards != ''
             GROUP BY deck_cards
             HAVING total_battles >= 1
             ORDER BY win_rate DESC, total_battles DESC
             LIMIT ?
         """
-        params = [player_tag, limit]
+        params = [limit]
         
         cursor.execute(query, params)
         
@@ -406,10 +408,10 @@ class GitHubPagesHTMLGenerator:
     
     def get_deck_performance_same_level(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
         """Get deck performance data from clan members with same trophies level (>=10K) as user"""
-        if not os.path.exists(self.db_path) or not player_tag:
+        if not player_tag:
             return []
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Get user's trophies
@@ -418,7 +420,7 @@ class GitHubPagesHTMLGenerator:
         """, (player_tag,))
         user_trophies_row = cursor.fetchone()
         
-        if not user_trophies_row or not user_trophies_row[0] or user_trophies_row[0] < 10000:
+        if not user_trophies_row or not user_trophies_row[0] or int(user_trophies_row[0]) < 10000:
             conn.close()
             return []
         
@@ -625,10 +627,10 @@ class GitHubPagesHTMLGenerator:
     
     def get_deck_performance_defeated_by(self, limit: int = 20, player_tag: str = None) -> List[Dict]:
         """Get deck performance data from opponents who defeated the user (this week, up to 20 unique tags)"""
-        if not os.path.exists(self.db_path) or not player_tag:
+        if not player_tag:
             return []
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Calculate start of current week (Monday)
@@ -795,10 +797,10 @@ class GitHubPagesHTMLGenerator:
     
     def get_repeated_opponents_stats(self, player_tag: str = None) -> List[Dict]:
         """Get statistics for opponents faced multiple times with performance by period and their game stats"""
-        if not os.path.exists(self.db_path) or not player_tag:
+        if not player_tag:
             return []
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Get user's current trophies
@@ -1033,10 +1035,9 @@ class GitHubPagesHTMLGenerator:
     
     def get_card_level_analytics(self) -> Dict:
         """Get card level analytics from enhanced battle data"""
-        if not os.path.exists(self.db_path):
-            return {}
+        # Memory DB initialized - continue
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Check if new columns exist
@@ -1113,8 +1114,8 @@ class GitHubPagesHTMLGenerator:
         battles = []
         
         # Primeiro, tenta buscar do banco de dados
-        if os.path.exists(self.db_path) and player_tag:
-            conn = sqlite3.connect(self.db_path)
+        if player_tag:
+            conn = sqlite3.connect(self.db_path, uri=True)
             cursor = conn.cursor()
             
             cursor.execute("""
@@ -1217,10 +1218,9 @@ class GitHubPagesHTMLGenerator:
     
     def get_clan_members(self) -> List[Dict]:
         """Get clan member data"""
-        if not os.path.exists(self.db_path):
-            return []
+        # Memory DB initialized - continue
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         cursor.execute("""
@@ -1252,10 +1252,10 @@ class GitHubPagesHTMLGenerator:
     
     def get_daily_battle_stats(self, days_limit: int = 30, player_tag: str = None) -> List[Dict]:
         """Get daily wins/losses aggregation for histogram, including days with no battles - ONLY user's battles"""
-        if not os.path.exists(self.db_path) or not player_tag:
+        if not player_tag:
             return []
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # First, create a complete date range for the last N days
@@ -1297,10 +1297,9 @@ class GitHubPagesHTMLGenerator:
     
     def get_clan_rankings_data(self, days_limit: int = 7) -> List[Dict]:
         """Get latest clan rankings with progression data"""
-        if not os.path.exists(self.db_path):
-            return []
+        # Memory DB initialized - continue
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Check if table exists
@@ -1354,10 +1353,9 @@ class GitHubPagesHTMLGenerator:
     
     def get_player_clan_progression(self, player_tag: str, days_limit: int = 30) -> List[Dict]:
         """Get specific player's clan ranking progression over time"""
-        if not os.path.exists(self.db_path):
-            return []
+        # Memory DB initialized - continue
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         cursor.execute("""
@@ -1391,10 +1389,9 @@ class GitHubPagesHTMLGenerator:
     
     def get_clan_deck_analytics(self) -> Dict:
         """Get clan-wide deck and card analytics"""
-        if not os.path.exists(self.db_path):
-            return {}
+        # Memory DB initialized - continue
             
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, uri=True)
         cursor = conn.cursor()
         
         # Check if table exists
@@ -1902,7 +1899,7 @@ class GitHubPagesHTMLGenerator:
         html = ""
         user_deck_cards = None
         if player_tag:
-            conn = sqlite3.connect(self.db_path)
+            conn = sqlite3.connect(self.db_path, uri=True)
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT deck_cards
@@ -1922,7 +1919,7 @@ class GitHubPagesHTMLGenerator:
             
             # Identify deck owner
             deck_owner_info = ""
-            conn = sqlite3.connect(self.db_path)
+            conn = sqlite3.connect(self.db_path, uri=True)
             cursor = conn.cursor()
             
             if is_opponent_decks:
@@ -1986,7 +1983,7 @@ class GitHubPagesHTMLGenerator:
                             <span class="stat">🏆 {opponent_game_stats.get('total_battles', 0)} batalhas</span>
                             <span class="stat">✅ {opponent_game_stats.get('wins', 0)} vitórias</span>
                             <span class="stat">❌ {opponent_game_stats.get('losses', 0)} derrotas</span>
-                            <span class="stat" style="color: {trophy_change_color}">📈 {opponent_game_stats.get('total_trophy_change', 0):+d} trofeus</span>
+                            <span class="stat" style="color: {trophy_change_color}">📈 {int(opponent_game_stats.get('total_trophy_change', 0)):+d} trofeus</span>
                             <span class="stat">👑 {opponent_game_stats.get('avg_crowns', 0):.1f} coroas médias</span>
                         </div>
                     """
@@ -2016,7 +2013,7 @@ class GitHubPagesHTMLGenerator:
                             <span class="stat">🏆 {member_total} batalhas</span>
                             <span class="stat">✅ {member_wins} vitórias</span>
                             <span class="stat">❌ {member_losses} derrotas</span>
-                            <span class="stat" style="color: {member_trophy_color}">📈 {member_trophy_change:+d} trofeus</span>
+                            <span class="stat" style="color: {member_trophy_color}">📈 {int(member_trophy_change):+d} trofeus</span>
                             <span class="stat">👑 {member_avg_crowns:.1f} coroas médias</span>
                         </div>
                     """
@@ -2026,7 +2023,7 @@ class GitHubPagesHTMLGenerator:
                             <span class="stat">🏆 {deck['total_battles']} batalhas</span>
                             <span class="stat">✅ {deck['wins']} vitórias</span>
                             <span class="stat">❌ {deck['losses']} derrotas</span>
-                            <span class="stat" style="color: {trophy_color}">📈 {deck['total_trophy_change']:+d} trofeus</span>
+                            <span class="stat" style="color: {trophy_color}">📈 {int(deck['total_trophy_change']):+d} trofeus</span>
                             <span class="stat">👑 {deck['avg_crowns']:.1f} coroas médias</span>
                         </div>
                     """
@@ -2061,150 +2058,79 @@ class GitHubPagesHTMLGenerator:
         return f"""
         <div class="deck-tabs-container">
             <div class="deck-tabs">
-                <button class="tab-button" onclick="switchDeckTab(event, 'weekly-decks')">Meus Decks da Semana</button>
                 <button class="tab-button active" onclick="switchDeckTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
-            </div>
-
-            <div id="tab-weekly-decks" class="tab-content">
-                {weekly_decks_html}
+                <button class="tab-button" onclick="switchDeckTab(event, 'weekly-decks')">Meus Decks da Semana</button>
             </div>
 
             <div id="tab-repeated-opponents" class="tab-content active">
                 {repeated_opponents_html if repeated_opponents_html else '<p>Nenhum oponente encontrado que voce enfrentou mais de uma vez.</p>'}
             </div>
+
+            <div id="tab-weekly-decks" class="tab-content">
+                {weekly_decks_html}
+            </div>
         </div>
         {self.generate_dashboard_scripts()}
         """
     def load_all_data_rows(self) -> List[Dict]:
-        """Carrega e unifica dados de todas as fontes disponíveis, tratando caminhos de forma robusta."""
-        import csv
-        import os
-        import glob
-        from datetime import datetime
-        
-        all_data = []
-        seen_battles = set()
-        
-        # Detecta diretório base (src/)
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        """Carrega e unifica dados de todas as fontes disponíveis via SQL (Banco em memória)."""
         from datetime import datetime, timedelta
+        
         all_data = []
-        limit_date = datetime.now() - timedelta(days=7)
-        print(f"Carregando dados das batalhas dos ultimos 7 dias (desde {limit_date.strftime('%d/%m/%Y')})")
+        # Limite de 10 anos para abranger todo o histórico CSV
+        limit_date = datetime.now() - timedelta(days=3650)
+        # Formato ISO usado no banco
+        limit_date_str = limit_date.strftime('%Y-%m-%dT%H:%M:%S') 
         
-        # 1. Process official files first (main source)
-        official_paths = [
-            'src/data_csv_oficial/battles.csv'
-        ]
+        logger.info(f"Carregando dados das batalhas dos ultimos 10 anos (desde {limit_date.strftime('%d/%m/%Y')}) via SQL")
         
-        for path in official_paths:
-            if os.path.exists(path):
-                print(f"Processando arquivo oficial: {path}")
-                with open(path, mode='r', encoding='utf-8') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        dt_str = row.get('battleTime') or row.get('battle_time') or row.get('data')
-                        if not dt_str: continue
-                        
-                        dt = self._parse_dt(dt_str)
-                        if not dt or dt < limit_date: continue
-                        
-                        opp_tag = (row.get('opponent_tag') or row.get('tag_oponente') or "").strip()
-                        sig = (dt.strftime('%Y%m%d%H%M'), opp_tag)
-                        
-                        if sig in seen_battles: continue
-                        seen_battles.add(sig)
-                        
-                        # Normalizar nomes de campos para o resto da app
-                        all_data.append({
-                            'dt': dt, 
-                            'battle_time': dt_str,
-                            'nome_oponente': row.get('opponent_name') or row.get('nome_oponente', 'Desconhecido'),
-                            'tag_oponente': opp_tag,
-                            'resultado': (row.get('result') or row.get('resultado', '')).lower(),
-                            'deck_jogador': row.get('deck_jogador') or row.get('player_deck', ''),
-                            'deck_oponente': row.get('deck_oponente') or row.get('opponent_deck', ''),
-                            'clan_oponente': row.get('opponent_clan') or row.get('clan_oponente', '')
-                        })
-
-        # 2. Process system pattern files (secondary/recent)
-        system_patterns = [
-            'src/oponentes_2026.csv',
-            'src/oponentes_*.csv'
-        ]
-        
-        found_files = []
-        for pattern in system_patterns:
-            found_files.extend(glob.glob(pattern))
-        
-        # Sort by modification time (most recent first)
-        found_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-        
-        for path in found_files:
-            if path in official_paths: continue
-            print(f"Processando arquivo secundario: {path}")
-            with open(path, mode='r', encoding='utf-8') as f:
-                # Detect if file has header or is raw CSV
-                content = f.read(1024)
-                f.seek(0)
-                has_header = 'data' in content.lower() or 'battle' in content.lower()
+        try:
+            conn = sqlite3.connect(self.db_path, uri=True)
+            cursor = conn.cursor()
+            
+            # Busca todas as batalhas ordenadas por tempo
+            cursor.execute("""
+                SELECT 
+                    battle_time,
+                    opponent_name,
+                    opponent_tag,
+                    result,
+                    deck_cards,
+                    opponent_deck_cards,
+                    opponent_clan_name
+                FROM battles
+                WHERE battle_time >= ?
+                ORDER BY battle_time DESC
+            """, (limit_date_str,))
+            
+            for row in cursor.fetchall():
+                dt_str = row[0]
+                if not dt_str: continue
                 
-                if has_header:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        dt_str = row.get('data') or row.get('battleTime') or ""
-                        if not dt_str: continue
-                        
-                        dt = self._parse_dt(dt_str)
-                        if not dt or dt < limit_date: continue
-                        
-                        opp_tag = (row.get('tag_oponente') or row.get('opponent_tag') or "").strip()
-                        sig = (dt.strftime('%Y%m%d%H%M'), opp_tag)
-                        
-                        if sig in seen_battles: continue
-                        seen_battles.add(sig)
-                        
-                        all_data.append({
-                            'dt': dt, 
-                            'battle_time': dt_str,
-                            'nome_oponente': row.get('nome_oponente') or row.get('opponent_name', 'Desconhecido'),
-                            'tag_oponente': opp_tag,
-                            'resultado': (row.get('resultado') or row.get('result', '')).lower(),
-                            'deck_jogador': row.get('deck_jogador') or "",
-                            'deck_oponente': row.get('deck_oponente') or "",
-                            'clan_oponente': row.get('clan_oponente') or ""
-                        })
-                else:
-                    reader = csv.reader(f)
-                    for row in reader:
-                        if len(row) < 7: continue
-                        
-                        dt = self._parse_dt(row[0])
-                        if not dt or dt < limit_date: continue
-                        
-                        opp_tag = row[2].strip()
-                        sig = (dt.strftime('%Y%m%d%H%M'), opp_tag)
-                        
-                        if sig in seen_battles: continue
-                        seen_battles.add(sig)
-                        
-                        # Mapeamento posicional fallback (baseado em oponentes_2026.csv sem header)
-                        # data[0], nome[1], tag[2], ..., resultado[6], ..., player_deck[13], opp_deck[14]
-                        all_data.append({
-                            'dt': dt, 
-                            'battle_time': row[0],
-                            'nome_oponente': row[1],
-                            'tag_oponente': opp_tag, 
-                            'resultado': row[6].lower() if len(row) > 6 else "",
-                            'deck_jogador': row[13] if len(row) > 13 else "", 
-                            'deck_oponente': row[14] if len(row) > 14 else "", 
-                            'clan_oponente': row[5] if len(row) > 5 else ""
-                        })
+                dt = self._parse_dt(dt_str)
+                # Fallback para parsing se falhar
+                if not dt: continue
                 
-        # Ordena por data decrescente (Global)
-        all_data.sort(key=lambda x: x['dt'], reverse=True)
-        print(f"Total de batalhas carregadas para analise: {len(all_data)}")
+                all_data.append({
+                    'dt': dt, 
+                    'battle_time': dt_str,
+                    'nome_oponente': row[1] or 'Desconhecido',
+                    'tag_oponente': row[2] or '',
+                    'resultado': (row[3] or '').lower(),
+                    'deck_jogador': row[4] or '',
+                    'deck_oponente': row[5] or '',
+                    'clan_oponente': row[6] or ''
+                })
+            
+            conn.close()
+            logger.info(f"Total de batalhas carregadas via SQL: {len(all_data)}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao carregar dados via SQL: {e}")
+            # Se falhar o SQL, all_data continua vazio
+            
         return all_data
+
 
     def _parse_dt(self, b_time_str: str):
         from datetime import datetime
@@ -2698,7 +2624,7 @@ class GitHubPagesHTMLGenerator:
                         <td><span class="result-{result_class}">{result_display}</span></td>
                         <td>{battle['opponent_name']}</td>
                         <td>{battle['crowns']}</td>
-                        <td style="color: {trophy_color}">{battle['trophy_change']:+d}</td>
+                        <td style="color: {trophy_color}">{int(battle['trophy_change']):+d}</td>
                         <td>{battle['arena_name']}</td>
                     </tr>
                 """
@@ -2716,7 +2642,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
                             <div class="battle-stats">
                                 <span class="crown-count">👑 {battle['crowns']}</span>
-                                <span class="trophy-change" style="color: {trophy_color}">🏆 {battle['trophy_change']:+d}</span>
+                                <span class="trophy-change" style="color: {trophy_color}">🏆 {int(battle['trophy_change']):+d}</span>
                             </div>
                         </div>
                     </div>
@@ -4114,7 +4040,7 @@ class GitHubPagesHTMLGenerator:
                 </div>
                 <div class="stat-card">
                     <h3>Mudança de Trofeus</h3>
-                    <div class="value" style="color: {'green' if stats['total_trophy_change'] >= 0 else 'red'}">{stats['total_trophy_change']:+d}</div>
+                    <div class="value" style="color: {'green' if stats['total_trophy_change'] >= 0 else 'red'}">{int(stats['total_trophy_change']):+d}</div>
                     <small>Total das batalhas</small>
                 </div>
                 <div class="stat-card">
