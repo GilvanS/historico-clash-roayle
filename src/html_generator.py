@@ -768,7 +768,16 @@ class GitHubPagesHTMLGenerator:
             o_name = latest_b.get('opponent_name', 'Desconhecido')
             latest_o_trophies = latest_b.get('opponent_trophies', 0)
             
-            stats = self._get_opponent_period_stats_from_cache(battles)
+            period_stats = self._get_opponent_period_stats_from_cache(battles)
+            encounter_stats = []
+            for b in battles:
+                encounter_stats.append({
+                    'result': b.get('result', 'draw'),
+                    'battle_time': b.get('battle_time', ''),
+                    'my_deck': b.get('deck_cards', ''),
+                    'opp_deck': b.get('opponent_deck_cards', '')
+                })
+            encounter_stats.sort(key=lambda x: x.get('battle_time', ''), reverse=True)
             
             deck_stats = {}
             for b in battles:
@@ -822,7 +831,8 @@ class GitHubPagesHTMLGenerator:
                 'category': category,
                 'category_class': category_class,
                 'last_encounter': latest_b.get('battle_time'),
-                'stats': stats,
+                'stats': encounter_stats,
+                'period_stats': period_stats,
                 'best_deck': best_deck
             })
             
@@ -1740,8 +1750,8 @@ class GitHubPagesHTMLGenerator:
         weekly_data = self.get_weekly_decks_from_csv()
         weekly_decks_html = self.generate_weekly_decks_html(weekly_data)
 
-        # Aba 2: Oponentes Repetidos - le CSVs anuais
-        csv_repeated = self.get_repeated_opponents_from_csv()
+        # Aba 2: Oponentes Repetidos - usa estatisticas consolidadas do cache CSV
+        csv_repeated = self.get_repeated_opponents_stats(player_tag=player_tag)
         repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated)
 
         return f"""
@@ -1775,14 +1785,27 @@ class GitHubPagesHTMLGenerator:
         
         all_data = []
         for b in battles_list:
+            battle_time = b.get('battle_time', '')
+            dt = self._parse_dt(battle_time)
+            result = (b.get('result') or '').strip().lower()
+            opponent_tag = b.get('opponent_tag', '')
+            player_deck = b.get('deck_cards', '')
+            opponent_deck = b.get('opponent_deck_cards', '')
+
             all_data.append({
-                'battle_time': b['battle_time'],
+                'battle_time': battle_time,
+                'dt': dt,
                 'opponent_name': b.get('opponent_name', 'Oponente'),
-                'opponent_tag': b.get('opponent_tag', ''),
-                'result': b['result'],
-                'deck_cards': b.get('deck_cards', ''),
-                'opponent_deck_cards': b.get('opponent_deck_cards', ''),
-                'opponent_clan_name': b.get('opponent_clan_name', '')
+                'opponent_tag': opponent_tag,
+                'tag_oponente': opponent_tag,
+                'result': result,
+                'resultado': result,
+                'deck_cards': player_deck,
+                'deck_jogador': player_deck,
+                'opponent_deck_cards': opponent_deck,
+                'deck_oponente': opponent_deck,
+                'opponent_clan_name': b.get('opponent_clan_name', ''),
+                'nome_oponente': b.get('opponent_name', 'Oponente')
             })
             
         return all_data
@@ -1809,9 +1832,11 @@ class GitHubPagesHTMLGenerator:
         deck_stats = {}
 
         for row in all_rows:
-            dt = row['dt']
+            dt = row.get('dt') or self._parse_dt(row.get('battle_time', ''))
+            if not dt:
+                continue
             is_recent = dt >= seven_days_ago
-            cards = row['deck_jogador']
+            cards = row.get('deck_jogador') or row.get('deck_cards')
             if not cards: continue
             
             if cards not in deck_stats:
@@ -1832,7 +1857,7 @@ class GitHubPagesHTMLGenerator:
             if dt > deck_stats[cards]['last_played']:
                 deck_stats[cards]['last_played'] = dt
                 
-            res = row['resultado']
+            res = (row.get('resultado') or row.get('result') or '').strip().lower()
             if res in ['vitoria', 'victory']: deck_stats[cards]['wins'] += 1
             elif res in ['derrota', 'defeat']: deck_stats[cards]['losses'] += 1
             
@@ -1946,36 +1971,39 @@ class GitHubPagesHTMLGenerator:
             
         opp_stats = {}
         for b in all_rows:
-            tag = b['tag_oponente']
+            tag = b.get('tag_oponente') or b.get('opponent_tag')
             if not tag: continue
             
             if tag not in opp_stats:
                 opp_stats[tag] = {
                     'tag': tag, 
-                    'nome': b['nome_oponente'], 
+                    'nome': b.get('nome_oponente') or b.get('opponent_name', 'Oponente'), 
                     'total': 0, 
                     'wins': 0, 
                     'losses': 0, 
                     'battles': [], 
-                    'last_deck': b['deck_oponente']
+                    'last_deck': b.get('deck_oponente') or b.get('opponent_deck_cards', '')
                 }
             
             opp_stats[tag]['total'] += 1
-            res = b['resultado']
+            res = (b.get('resultado') or b.get('result') or '').strip().lower()
             if res in ['vitoria', 'victory']: opp_stats[tag]['wins'] += 1
             elif res in ['derrota', 'defeat']: opp_stats[tag]['losses'] += 1
             
-            dt = b['dt']
+            dt = b.get('dt') or self._parse_dt(b.get('battle_time', ''))
+            if not dt:
+                continue
             d_display = dt.strftime('%d/%m %H:%M')
                 
             opp_stats[tag]['battles'].append({
                 'resultado': res, 
                 'data_str': d_display,
-                'my_deck': b['deck_jogador'],
-                'opp_deck': b['deck_oponente'],
+                'my_deck': b.get('deck_jogador') or b.get('deck_cards', ''),
+                'opp_deck': b.get('deck_oponente') or b.get('opponent_deck_cards', ''),
                 'dt_obj': dt # Para ordenação posterior
             })
-            if b.get('deck_oponente'): opp_stats[tag]['last_deck'] = b['deck_oponente']
+            if b.get('deck_oponente') or b.get('opponent_deck_cards'):
+                opp_stats[tag]['last_deck'] = b.get('deck_oponente') or b.get('opponent_deck_cards')
 
         # Filtra quem apareceu > 1 vez
         repeated = []
@@ -2097,8 +2125,14 @@ class GitHubPagesHTMLGenerator:
             timeline = ""
             for idx, b in enumerate(stats[:15]):
                 res = b['result'].lower()
-                d_f = b['battle_time'].split('T')[0].split('-')[-1] + "/" + b['battle_time'].split('T')[0].split('-')[-2]
-                h_f = b['battle_time'].split('T')[1][:5]
+                bt = b.get('battle_time', '')
+                dt_obj = self._parse_dt(bt)
+                if dt_obj:
+                    d_f = dt_obj.strftime('%d/%m')
+                    h_f = dt_obj.strftime('%H:%M')
+                else:
+                    d_f = '--/--'
+                    h_f = '--:--'
                 
                 cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
                 ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
