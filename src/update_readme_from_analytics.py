@@ -8,7 +8,7 @@ import os
 import sys
 from csv_database_manager import CSVDatabaseManager
 from typing import Dict, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 class ReadmeAnalyticsUpdater:
     def __init__(self, db_path: str = None, readme_path: str = "README.md"):
@@ -181,7 +181,7 @@ class ReadmeAnalyticsUpdater:
         deck_melhor = stats['deck_melhor']
         
         section = "## 📊 Estatísticas Atuais\n\n"
-        now_utc = datetime.utcnow()
+        now_utc = datetime.now(timezone.utc)
         brt_offset = timedelta(hours=-3)
         now_brt = now_utc + brt_offset
         section += f"**Última atualização:** {now_brt.strftime('%d/%m/%Y %H:%M:%S')}\n\n"
@@ -191,7 +191,7 @@ class ReadmeAnalyticsUpdater:
         section += f"- **Total de Batalhas:** {stats_gerais['total_batalhas']}\n"
         section += f"- **Vitórias:** {stats_gerais['vitorias']} ({stats_gerais['win_rate']:.1f}%)\n"
         section += f"- **Derrotas:** {stats_gerais['derrotas']}\n"
-        section += f"- **Mudança Total de Troféus:** {stats_gerais['trofes_total']:+d}\n\n"
+        section += f"- **Mudança Total de Troféus:** {int(stats_gerais['trofes_total']):+d}\n\n"
         
         # Deck atual
         if deck_atual:
@@ -214,7 +214,7 @@ class ReadmeAnalyticsUpdater:
             section += f"- **Deck:** {self.format_deck_for_readme(deck_melhor['deck'])}\n"
             section += f"- **Win Rate:** {deck_melhor['win_rate']:.1f}%\n"
             section += f"- **Batalhas:** {deck_melhor['total_batalhas']} ({deck_melhor['vitorias']}V - {deck_melhor['derrotas']}D)\n"
-            section += f"- **Troféus:** {deck_melhor['trofes_total']:+d}\n\n"
+            section += f"- **Troféus:** {int(deck_melhor['trofes_total']):+d}\n\n"
         else:
             section += "### 🏆 Deck com Melhor Performance\n\n"
             section += "Nenhum deck com estatísticas suficientes encontrado.\n\n"

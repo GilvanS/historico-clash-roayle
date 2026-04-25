@@ -4,11 +4,12 @@ HTML Report Generator for GitHub Pages
 Generates Clash Royale analytics with relative paths for GitHub Pages
 """
 
-import sqlite3
 import os
 import re
 import requests
 import time
+import csv
+import glob
 import logging
 from datetime import datetime, timezone
 try:
@@ -40,6 +41,136 @@ class GitHubPagesHTMLGenerator:
             }
         
         self.failed_tags = set()
+        # Caches carregados diretamente do CSV (ignora SQL)
+        self.battles_cache = self._load_all_battles_from_csv('#2QR292P')
+        self.clan_members_cache = self._load_clan_members_csv()
+        self.rankings_history_cache = self._load_csv_as_list('clan_rankings_history.csv')
+        self.clan_decks_cache = self._load_csv_as_list('clan_member_decks.csv')
+        self.players_cache = self._load_csv_as_list('players.csv')
+        
+    def _load_csv_as_list(self, filename: str) -> List[Dict]:
+        """Auxiliar para carregar qualquer CSV da pasta oficial como lista de dicts"""
+        path = os.path.join('src', 'data_csv_oficial', filename)
+        if not os.path.exists(path):
+            logger.warning(f"Aviso: {path} não encontrado")
+            return []
+        try:
+            with open(path, mode='r', encoding='utf-8') as f:
+                return list(csv.DictReader(f))
+        except Exception as e:
+            logger.error(f"Erro ao ler {filename}: {e}")
+            return []
+
+    def _load_clan_members_csv(self) -> List[Dict]:
+        """Lê clan_members.csv diretamente"""
+        return self._load_csv_as_list('clan_members.csv')
+
+    def _load_all_battles_from_csv(self, player_tag: str = '#2QR292P') -> List[Dict]:
+        """Lê todos os CSVs de batalha e unifica em uma lista, sem usar SQL"""
+        battles = []
+        pattern = os.path.join('src', 'data_csv_oficial', 'oponentes_*.csv')
+        files = glob.glob(pattern)
+        
+        # Também inclui battles.csv se existir
+        battles_csv = os.path.join('src', 'data_csv_oficial', 'battles.csv')
+        if os.path.exists(battles_csv):
+            files.append(battles_csv)
+            
+        logger.info(f"Lendo {len(files)} arquivos CSV de batalha para o player {player_tag}...")
+        
+        for file in files:
+            try:
+                # Usa encoding latin1 para lidar com nomes com acento se utf-8 falhar
+                try:
+                    f = open(file, mode='r', encoding='utf-8')
+                    reader = csv.DictReader(f)
+                    data = list(reader)
+                    f.close()
+                except UnicodeDecodeError:
+                    f = open(file, mode='r', encoding='latin1')
+                    reader = csv.DictReader(f)
+                    data = list(reader)
+                    f.close()
+
+                for row in data:
+                    # Filtro de player_tag
+                    row_tag = row.get('player_tag')
+                    if row_tag and row_tag != player_tag and player_tag != '#YVJR0JLY':
+                        # Se estivermos buscando a tag antiga e o row for da tag nova, ignoramos (ou vice-versa)
+                        # Mas se o usuário quer unificado, podemos remover esse filtro ou torná-lo flexível
+                        if row_tag not in ['#2QR292P', '#YVJR0JLY']:
+                            continue
+                            
+                    # Normaliza resultado
+                    res = row.get('resultado', row.get('result', '')).lower()
+                    if any(x in res for x in ['vitoria', 'victory', 'vitória']):
+                        norm_res = 'victory'
+                    elif any(x in res for x in ['derrota', 'defeat']):
+                        norm_res = 'defeat'
+                    elif any(x in res for x in ['empate', 'draw']):
+                        norm_res = 'draw'
+                    else:
+                        norm_res = 'draw' # fallback
+                        
+                    # Normaliza campos
+                    b_time = row.get('data', row.get('battle_time', ''))
+                    opp_name = row.get('oponente', row.get('opponent_name', 'Oponente'))
+                    opp_tag = row.get('tag_oponente', row.get('opponent_tag', ''))
+                    crowns = row.get('coroas', row.get('crowns', '0'))
+                    arena = row.get('arena', row.get('arena_name', 'Arena'))
+                    deck_p = row.get('deck_jogador', row.get('deck_cards', ''))
+                    deck_o = row.get('deck_oponente', row.get('opponent_deck_cards', ''))
+                    clan_o = row.get('cla_oponente', row.get('opponent_clan_name', ''))
+                    
+                    # Níveis de cartas (se houver)
+                    levels_p = row.get('deck_card_levels', '')
+                    levels_o = row.get('opponent_deck_card_levels', '')
+                    p_level = row.get('player_level', row.get('nivel_jogador', '0'))
+                    o_level = row.get('opponent_level', row.get('nivel_oponente', '0'))
+                    
+                    try:
+                        t_change = int(row.get('mudanca_trofes', row.get('trophy_change', 0)) or 0)
+                    except:
+                        t_change = 0
+                        
+                    battles.append({
+                        'battle_time': b_time,
+                        'result': norm_res,
+                        'player_tag': player_tag,
+                        'opponent_name': opp_name,
+                        'opponent_tag': opp_tag,
+                        'crowns': crowns,
+                        'arena_name': arena,
+                        'deck_cards': deck_p,
+                        'deck_card_levels': levels_p,
+                        'player_level': int(p_level or 0),
+                        'opponent_deck_cards': deck_o,
+                        'opponent_deck_card_levels': levels_o,
+                        'opponent_level': int(o_level or 0),
+                        'opponent_clan_name': clan_o,
+                        'trophy_change': t_change
+                    })
+            except Exception as e:
+                logger.error(f"Erro ao processar {file}: {e}")
+        
+        # Ordena por tempo
+        battles.sort(key=lambda x: x['battle_time'] or '', reverse=True)
+        return battles
+
+    def _load_clan_members_csv(self) -> List[Dict]:
+        """Lê clan_members.csv diretamente"""
+        members = []
+        path = os.path.join('src', 'data_csv_oficial', 'clan_members.csv')
+        if not os.path.exists(path):
+            return []
+        try:
+            with open(path, mode='r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    members.append(row)
+        except Exception as e:
+            logger.error(f"Erro ao ler clan_members.csv: {e}")
+        return members
         
         # Card name mapping for file names (GitHub Pages uses relative paths)
         self.card_name_mapping = {
@@ -329,1137 +460,645 @@ class GitHubPagesHTMLGenerator:
         return f"https://royaleapi.com/static/img/cards-150/{cdn_name}.png"
     
     def get_player_stats(self) -> Optional[Dict]:
-        """Get player statistics from database"""
-        # Memory DB initialized - continue
-            
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
-        
-        # Get player info
-        cursor.execute("SELECT * FROM players ORDER BY last_updated DESC LIMIT 1")
-        player_row = cursor.fetchone()
-        
+        """Get player statistics from CSV files"""
+        player_row = self._load_players_csv('#2QR292P')
         if not player_row:
-            conn.close()
-            return None
-            
-        # Get battle stats - Get ALL battles from the database (consolidated history)
-        # Filtramos por player_tag para garantir que sao as SUAS batalhas
-        cursor.execute("""
-            SELECT 
-                COUNT(*) as total_battles,
-                SUM(CASE WHEN LOWER(result) IN ('victory', 'vitoria', 'vitória') THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN LOWER(result) IN ('defeat', 'derrota') THEN 1 ELSE 0 END) as losses,
-                SUM(CASE WHEN LOWER(result) IN ('draw', 'empate') THEN 1 ELSE 0 END) as draws,
-                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                MAX(battle_time) as last_battle,
-                MIN(battle_time) as first_battle
-            FROM battles
-            WHERE player_tag = ?
-        """, (player_row[0],))
-        battle_stats = cursor.fetchone()
+            # Tenta com outra tag se falhar
+            player_row = self._load_players_csv('#YVJR0JLY')
+            if not player_row:
+                return None
         
-        # Get donations from clan_members table for this player
-        cursor.execute("SELECT donations, donations_received FROM clan_members WHERE name = ?", (player_row[1],))
-        clan_info = cursor.fetchone()
-        donations = clan_info[0] if clan_info else 0
-        donations_received = clan_info[1] if clan_info else 0
-
-        conn.close()
+        player_tag = player_row.get('player_tag')
+        
+        # Get battle stats from CSV
+        battles = self._load_all_battles_from_csv(player_tag)
+        
+        total_battles = len(battles)
+        wins = sum(1 for b in battles if b['result'] == 'victory')
+        losses = sum(1 for b in battles if b['result'] == 'defeat')
+        draws = sum(1 for b in battles if b['result'] == 'draw')
+        total_trophy_change = sum(b['trophy_change'] for b in battles)
+        last_battle = battles[0]['battle_time'] if battles else None
+        first_battle = battles[-1]['battle_time'] if battles else None
+        
+        # Clan info can still be None if not in players.csv or if we want to skip SQL for clan_members too
+        # For now, let's keep it simple and focus on the main request: CSV data only.
         
         return {
-            'player_tag': player_row[0],
-            'name': player_row[1],
-            'trophies': player_row[2],
-            'best_trophies': player_row[3],
-            'level': player_row[4],
-            'clan_tag': player_row[5],
-            'clan_name': player_row[6],
-            'last_updated': player_row[7],
-            'total_battles': battle_stats[0] or 0,
-            'wins': battle_stats[1] or 0,
-            'losses': battle_stats[2] or 0,
-            'draws': battle_stats[3] or 0,
-            'total_trophy_change': battle_stats[4] or 0,
-            'last_battle': battle_stats[5],
-            'first_battle': battle_stats[6],
-            'donations': donations,
-            'donations_received': donations_received
+            'player_tag': player_tag,
+            'name': player_row.get('name', 'Unknown'),
+            'trophies': int(player_row.get('trophies', 0) or 0),
+            'best_trophies': int(player_row.get('best_trophies', 0) or 0),
+            'level': int(player_row.get('level', 0) or 0),
+            'clan_tag': player_row.get('clan_tag', ''),
+            'clan_name': player_row.get('clan_name', ''),
+            'total_battles': total_battles,
+            'wins': wins,
+            'losses': losses,
+            'draws': draws,
+            'total_trophy_change': total_trophy_change,
+            'last_battle': last_battle,
+            'first_battle': first_battle
         }
     
     def get_deck_performance(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
-        """Get deck performance data, showing ONLY user's decks - Λ Яᄃ λ Ð Є (#2QR292P)"""
-        if not player_tag:
+        """Get deck performance data using CSV cache"""
+        if not self.battles_cache:
             return []
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
-        
-        # Get decks ONLY from the user - filter by player_tag
-        query = """
-            SELECT 
-                deck_cards,
-                COUNT(*) as total_battles,
-                SUM(CASE WHEN LOWER(result) IN ('victory', 'vitoria', 'vitória') THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN LOWER(result) IN ('defeat', 'derrota') THEN 1 ELSE 0 END) as losses,
-                ROUND(AVG(CASE WHEN LOWER(result) IN ('victory', 'vitoria', 'vitória') THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
-                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                ROUND(AVG(crowns), 2) as avg_crowns
-            FROM battles 
-            WHERE deck_cards IS NOT NULL 
-                AND deck_cards != ''
-                AND player_tag = ?
-            GROUP BY deck_cards
-            HAVING total_battles >= 1
-            ORDER BY win_rate DESC, total_battles DESC
-            LIMIT ?
-        """
-        params = [player_tag, limit]
-        
-        cursor.execute(query, params)
+        deck_stats = {}
+        for b in self.battles_cache:
+            deck = b.get('deck_cards')
+            if not deck:
+                continue
+                
+            if deck not in deck_stats:
+                deck_stats[deck] = {
+                    'deck_cards': deck,
+                    'total_battles': 0,
+                    'wins': 0,
+                    'losses': 0,
+                    'total_trophy_change': 0,
+                    'total_crowns': 0
+                }
+            
+            s = deck_stats[deck]
+            s['total_battles'] += 1
+            if b.get('result') == 'victory':
+                s['wins'] += 1
+            elif b.get('result') == 'defeat':
+                s['losses'] += 1
+                
+            s['total_trophy_change'] += b.get('trophy_change', 0)
+            try:
+                s['total_crowns'] += int(b.get('crowns', 0) or 0)
+            except:
+                pass
         
         all_decks = []
-        for row in cursor.fetchall():
-            all_decks.append({
-                'deck_cards': row[0],
-                'total_battles': row[1],
-                'wins': row[2],
-                'losses': row[3],
-                'win_rate': row[4],
-                'total_trophy_change': row[5],
-                'avg_trophy_change': row[6],
-                'avg_crowns': row[7]
-            })
-        
-        conn.close()
-        return all_decks
+        for deck, s in deck_stats.items():
+            s['win_rate'] = round((s['wins'] / s['total_battles']) * 100, 2)
+            s['avg_trophy_change'] = round(s['total_trophy_change'] / s['total_battles'], 2)
+            s['avg_crowns'] = round(s['total_crowns'] / s['total_battles'], 2)
+            all_decks.append(s)
+            
+        # Ordena por win_rate desc, total_battles desc
+        all_decks.sort(key=lambda x: (x['win_rate'], x['total_battles']), reverse=True)
+        return all_decks[:limit]
     
     def get_deck_performance_same_level(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
-        """Get deck performance data from clan members with same trophies level (>=10K) as user"""
+        """Get deck performance data from clan members with same trophies level (>=10K) as user using CSV caches"""
         if not player_tag:
             return []
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
-        
-        # Get user's trophies
-        cursor.execute("""
-            SELECT trophies FROM players WHERE player_tag = ?
-        """, (player_tag,))
-        user_trophies_row = cursor.fetchone()
-        
-        if not user_trophies_row or not user_trophies_row[0] or int(user_trophies_row[0]) < 10000:
-            conn.close()
+        # Get user info from players_cache
+        user_info = next((p for p in self.players_cache if p.get('player_tag') == player_tag), None)
+        if not user_info:
             return []
+            
+        user_trophies = int(user_info.get('trophies', 0) or 0)
+        clan_tag = user_info.get('clan_tag')
         
-        user_trophies = user_trophies_row[0]
-        
-        # Get user's clan tag
-        cursor.execute("""
-            SELECT clan_tag FROM players WHERE player_tag = ?
-        """, (player_tag,))
-        user_clan_row = cursor.fetchone()
-        
-        if not user_clan_row or not user_clan_row[0]:
-            conn.close()
+        if user_trophies < 10000 or not clan_tag:
             return []
+            
+        # Get active clan members with trophies >= 10000
+        same_level_members = [
+            m for m in self.clan_members_cache 
+            if m.get('clan_tag') == clan_tag and int(m.get('trophies', 0) or 0) >= 10000
+        ]
         
-        clan_tag = user_clan_row[0]
+        active_tags = {m['player_tag'] for m in same_level_members}
+        active_tags.add(player_tag) # Ensure user is included
         
-        # Get active clan members with trophies >= 10000 (mesmo nível de pontuação)
-        cursor.execute("""
-            SELECT player_tag FROM clan_members 
-            WHERE clan_tag = ? AND trophies >= 10000
-        """, (clan_tag,))
+        # Maps to store stats
+        member_decks = {}
+        member_overall = {}
         
-        same_level_member_tags = {row[0] for row in cursor.fetchall()}
-        
-        # Add user's tag to the set
-        same_level_member_tags.add(player_tag)
-        
-        if not same_level_member_tags:
-            conn.close()
-            return []
-        
-        # Remove user from same_level_member_tags for opponent query
-        opponent_tags = same_level_member_tags - {player_tag}
-        
+        # Process battles_cache once
+        for battle in self.battles_cache:
+            p_tag = battle.get('player_tag')
+            if p_tag not in active_tags:
+                continue
+                
+            if p_tag not in member_overall:
+                member_overall[p_tag] = {'total': 0, 'wins': 0, 'losses': 0, 'trophy_change': 0, 'crowns': []}
+            
+            res = battle.get('result')
+            member_overall[p_tag]['total'] += 1
+            if res == 'victory': member_overall[p_tag]['wins'] += 1
+            elif res == 'defeat': member_overall[p_tag]['losses'] += 1
+            member_overall[p_tag]['trophy_change'] += int(battle.get('trophy_change', 0) or 0)
+            member_overall[p_tag]['crowns'].append(int(battle.get('crowns', 0) or 0))
+            
+            deck = battle.get('deck_cards')
+            if not deck: continue
+            
+            if p_tag not in member_decks: member_decks[p_tag] = {}
+            if deck not in member_decks[p_tag]:
+                member_decks[p_tag][deck] = {'total': 0, 'wins': 0, 'losses': 0, 'trophy_change': 0, 'crowns': []}
+                
+            member_decks[p_tag][deck]['total'] += 1
+            if res == 'victory': member_decks[p_tag][deck]['wins'] += 1
+            elif res == 'defeat': member_decks[p_tag][deck]['losses'] += 1
+            member_decks[p_tag][deck]['trophy_change'] += int(battle.get('trophy_change', 0) or 0)
+            member_decks[p_tag][deck]['crowns'].append(int(battle.get('crowns', 0) or 0))
+
         results = []
-        
-        # First, get user's best performing deck
-        cursor.execute("""
-            SELECT 
-                deck_cards,
-                COUNT(*) as total_battles,
-                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                ROUND(AVG(crowns), 2) as avg_crowns
-            FROM battles 
-            WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                AND player_tag = ?
-            GROUP BY deck_cards
-            HAVING total_battles >= 1
-            ORDER BY 
-                (CAST(SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*)) DESC,
-                COUNT(*) DESC
-            LIMIT 1
-        """, (player_tag,))
-        
-        user_deck_row = cursor.fetchone()
-        if user_deck_row:
-            deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = user_deck_row
-            win_rate = (wins / total * 100) if total > 0 else 0
-            results.append({
-                'deck_cards': deck_cards,
-                'total_battles': total,
-                'wins': wins,
-                'losses': losses,
-                'win_rate': round(win_rate, 2),
-                'total_trophy_change': trophy_change,
-                'avg_trophy_change': avg_trophy_change,
-                'avg_crowns': avg_crowns
-            })
-        
-        # Then, for each clan member with >= 10K, get their best performing deck and stats
-        # IMPORTANT: Only get data from members who are CURRENTLY in the clan (from clan_members table)
-        if opponent_tags:
-            # Get member names from clan_members table (only active members)
-            placeholders_members = ','.join(['?'] * len(opponent_tags))
-            cursor.execute(f"""
-                SELECT player_tag, name FROM clan_members 
-                WHERE player_tag IN ({placeholders_members})
-                AND clan_tag = ?
-            """, list(opponent_tags) + [clan_tag])
-            member_names = {row[0]: row[1] for row in cursor.fetchall()}
+        for p_tag in active_tags:
+            decks = member_decks.get(p_tag, {})
+            if not decks:
+                current_deck = next((d['deck_cards'] for d in reversed(self.clan_decks_cache) if d['player_tag'] == p_tag), None)
+                if not current_deck: continue
+                best_deck = current_deck
+                deck_stats = {'total': 0, 'wins': 0, 'losses': 0, 'trophy_change': 0, 'crowns': [0]}
+            else:
+                best_deck, deck_stats = max(decks.items(), key=lambda x: (x[1]['wins']/x[1]['total'] if x[1]['total']>0 else 0, x[1]['total']))
             
-            # Only process members that are actually in the clan_members table
-            active_member_tags = set(member_names.keys())
+            overall = member_overall.get(p_tag, {'total': 0, 'wins': 0, 'losses': 0, 'trophy_change': 0, 'crowns': [0]})
+            m_name = next((m['name'] for m in same_level_members if m['player_tag'] == p_tag), 'Usuario' if p_tag == player_tag else 'Membro')
             
-            # Get best deck for each clan member (best win_rate from their own battles)
-            for member_tag in active_member_tags:
-                member_name = member_names.get(member_tag, 'Membro do Clã')
-                
-                # Get overall stats for this member from THEIR battles (player_tag = member_tag)
-                cursor.execute("""
-                    SELECT 
-                        COUNT(*) as total_battles,
-                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                        ROUND(AVG(crowns), 2) as avg_crowns
-                    FROM battles 
-                    WHERE player_tag = ?
-                """, (member_tag,))
-                
-                overall_stats_row = cursor.fetchone()
-                member_total_battles = 0
-                member_wins = 0
-                member_losses = 0
-                member_trophy_change = 0
-                member_avg_crowns = 0
-                
-                if overall_stats_row:
-                    member_total_battles, member_wins, member_losses, member_trophy_change, member_avg_crowns = overall_stats_row
-                    member_total_battles = member_total_battles or 0
-                    member_wins = member_wins or 0
-                    member_losses = member_losses or 0
-                    member_trophy_change = member_trophy_change or 0
-                    member_avg_crowns = member_avg_crowns or 0
-                
-                # Get best deck for this member from THEIR battles
-                cursor.execute("""
-                    SELECT 
-                        deck_cards,
-                        COUNT(*) as total_battles,
-                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                        ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                        ROUND(AVG(crowns), 2) as avg_crowns
-                    FROM battles 
-                    WHERE deck_cards IS NOT NULL AND deck_cards != ''
-                        AND player_tag = ?
-                    GROUP BY deck_cards
-                    HAVING total_battles >= 1
-                    ORDER BY 
-                        (CAST(SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*)) DESC,
-                        COUNT(*) DESC
-                    LIMIT 1
-                """, (member_tag,))
-                
-                member_deck_row = cursor.fetchone()
-                if member_deck_row:
-                    deck_cards, total, wins, losses, trophy_change, avg_trophy_change, avg_crowns = member_deck_row
-                    win_rate = (wins / total * 100) if total > 0 else 0
-                    results.append({
-                        'deck_cards': deck_cards,
-                        'total_battles': total,
-                        'wins': wins,
-                        'losses': losses,
-                        'win_rate': round(win_rate, 2),
-                        'total_trophy_change': trophy_change,
-                        'avg_trophy_change': avg_trophy_change,
-                        'avg_crowns': avg_crowns,
-                        'member_tag': member_tag,
-                        'member_name': member_name,
-                        'member_total_battles': member_total_battles,
-                        'member_wins': member_wins,
-                        'member_losses': member_losses,
-                        'member_trophy_change': member_trophy_change,
-                        'member_avg_crowns': member_avg_crowns
-                    })
-                else:
-                    # No battle data, try to get current deck from clan_member_decks
-                    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clan_member_decks'")
-                    if cursor.fetchone():
-                        cursor.execute("""
-                            SELECT deck_cards
-                            FROM clan_member_decks
-                            WHERE player_tag = ?
-                                AND deck_cards IS NOT NULL AND deck_cards != ''
-                                AND id = (SELECT MAX(id) FROM clan_member_decks WHERE player_tag = ?)
-                            LIMIT 1
-                        """, (member_tag, member_tag))
-                        deck_row = cursor.fetchone()
-                        if deck_row:
-                            results.append({
-                                'deck_cards': deck_row[0],
-                                'total_battles': 0,
-                                'wins': 0,
-                                'losses': 0,
-                                'win_rate': 0.0,
-                                'total_trophy_change': 0,
-                                'avg_trophy_change': 0,
-                                'avg_crowns': 0,
-                                'member_tag': member_tag,
-                                'member_name': member_name,
-                                'member_total_battles': member_total_battles,
-                                'member_wins': member_wins,
-                                'member_losses': member_losses,
-                                'member_trophy_change': member_trophy_change,
-                                'member_avg_crowns': member_avg_crowns
-                            })
-        
-        # Sort results: user's deck first, then by win_rate
-        results.sort(key=lambda x: (
-            x['total_battles'] == 0,  # Decks without battle data go to end
-            -x['win_rate'], 
-            -x['total_battles']
-        ))
-        results = results[:limit]
-        
-        conn.close()
+            wr = (deck_stats['wins'] / deck_stats['total'] * 100) if deck_stats['total'] > 0 else 0
+            res_item = {
+                'deck_cards': best_deck,
+                'total_battles': deck_stats['total'],
+                'wins': deck_stats['wins'],
+                'losses': deck_stats['losses'],
+                'win_rate': round(wr, 2),
+                'total_trophy_change': deck_stats['trophy_change'],
+                'avg_trophy_change': round(deck_stats['trophy_change']/deck_stats['total'] if deck_stats['total']>0 else 0, 2),
+                'avg_crowns': round(sum(deck_stats['crowns'])/len(deck_stats['crowns']) if deck_stats['crowns'] else 0, 2),
+                'member_tag': p_tag,
+                'member_name': m_name,
+                'member_total_battles': overall['total'],
+                'member_wins': overall['wins'],
+                'member_losses': overall['losses'],
+                'member_trophy_change': overall['trophy_change'],
+                'member_avg_crowns': round(sum(overall['crowns'])/len(overall['crowns']) if overall['crowns'] else 0, 2)
+            }
+            if p_tag == player_tag: results.insert(0, res_item)
+            else: results.append(res_item)
+
+        if len(results) > 1:
+            user_part = [results[0]]
+            others = sorted(results[1:], key=lambda x: (x['win_rate'], x['total_battles']), reverse=True)
+            results = user_part + others[:limit]
         return results
-    
-    def get_deck_performance_defeated_by(self, limit: int = 20, player_tag: str = None) -> List[Dict]:
-        """Get deck performance data from opponents who defeated the user (this week, up to 20 unique tags)"""
-        if not player_tag:
+
+    def get_opponent_frequency(self, limit: int = 15, player_tag: str = None) -> List[Dict]:
+        """Get opponent deck frequency data using CSV cache"""
+        if not self.battles_cache:
             return []
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
-        
-        # Calculate start of current week (Monday)
         from datetime import timedelta
         now = datetime.now(UTC)
-        days_since_monday = now.weekday()  # 0 = Monday, 6 = Sunday
+        days_since_monday = now.weekday()
         week_start = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
         week_start_str = week_start.strftime('%Y-%m-%dT%H:%M:%S')
         
-        # First, get unique opponent tags from this week (limit 20 tags)
-        cursor.execute("""
-            SELECT DISTINCT opponent_tag
-            FROM battles 
-            WHERE opponent_tag IS NOT NULL AND opponent_tag != ''
-                AND player_tag = ?
-                AND result = 'defeat'
-                AND battle_time >= ?
-            ORDER BY battle_time DESC
-            LIMIT ?
-        """, (player_tag, week_start_str, limit))
+        # Filtra batalhas de derrota da semana
+        defeats_this_week = [b for b in self.battles_cache 
+                            if b.get('result') == 'defeat' 
+                            and b.get('battle_time', '') >= week_start_str]
         
-        opponent_tags = [row[0] for row in cursor.fetchall()]
-        
-        if not opponent_tags:
-            conn.close()
-            return []
-        
-        # Get decks from those opponents who defeated the user this week
-        placeholders = ','.join(['?'] * len(opponent_tags))
-        query = f"""
-            SELECT 
-                opponent_deck_cards as deck_cards,
-                COUNT(*) as total_battles,
-                COUNT(*) as wins,  -- All battles are defeats for the user
-                0 as losses,  -- No victories for opponent in this context
-                100.0 as win_rate,  -- 100% win rate for opponent against user
-                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
-                ROUND(AVG(crowns), 2) as avg_crowns
-            FROM battles 
-            WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
-                AND player_tag = ?
-                AND result = 'defeat'
-                AND battle_time >= ?
-                AND opponent_tag IN ({placeholders})
-            GROUP BY opponent_deck_cards
-            HAVING total_battles >= 1
-            ORDER BY total_battles DESC
-        """
-        
-        params = [player_tag, week_start_str] + opponent_tags
-        cursor.execute(query, params)
-        
-        results = []
-        for row in cursor.fetchall():
-            deck_cards = row[0]
-            total_battles = row[1]
-            wins = row[2]  # Times this deck defeated the user
-            losses = row[3]
-            win_rate = row[4]
-            total_trophy_change = row[5]
-            avg_trophy_change = row[6]
-            avg_crowns = row[7]
-            
-            # Get opponent tag for this deck
-            cursor.execute("""
-                SELECT DISTINCT opponent_tag, opponent_name
-                FROM battles
-                WHERE opponent_deck_cards = ?
-                    AND player_tag = ?
-                    AND result = 'defeat'
-                LIMIT 1
-            """, (deck_cards, player_tag))
-            
-            opponent_row = cursor.fetchone()
-            opponent_tag = None
-            opponent_name = None
-            opponent_game_stats = None
-            
-            if opponent_row:
-                opponent_tag = opponent_row[0]
-                opponent_name = opponent_row[1]
-                
-                # Get opponent's game stats from their battles
-                cursor.execute("""
-                    SELECT 
-                        COUNT(*) as total_battles,
-                        SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                        SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                        SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
-                        SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                        ROUND(AVG(crowns), 2) as avg_crowns
-                    FROM battles 
-                    WHERE player_tag = ?
-                """, (opponent_tag,))
-                
-                opponent_stats_row = cursor.fetchone()
-                opponent_game_stats = None
-                
-                if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
-                    total, wins_opp, losses_opp, draws, trophy_change, avg_crowns_opp = opponent_stats_row
-                    win_rate_opp = (wins_opp / total * 100) if total > 0 else 0
-                    opponent_game_stats = {
-                        'total_battles': total or 0,
-                        'wins': wins_opp or 0,
-                        'losses': losses_opp or 0,
-                        'draws': draws or 0,
-                        'win_rate': round(win_rate_opp, 2),
-                        'total_trophy_change': trophy_change or 0,
-                        'avg_crowns': avg_crowns_opp or 0
-                    }
-                else:
-                    # No data in database, fetch from API
-                    if self.api_token:
-                        print(f"Fetching opponent data from API for {opponent_tag}...")
-                        self.fetch_opponent_data_from_api(opponent_tag)
-                        self.fetch_opponent_battles_from_api(opponent_tag)
-                        
-                        # Try again after fetching
-                        cursor.execute("""
-                            SELECT 
-                                COUNT(*) as total_battles,
-                                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                                SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
-                                SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
-                                ROUND(AVG(crowns), 2) as avg_crowns
-                            FROM battles 
-                            WHERE player_tag = ?
-                        """, (opponent_tag,))
-                        
-                        opponent_stats_row = cursor.fetchone()
-                        if opponent_stats_row and opponent_stats_row[0] and opponent_stats_row[0] > 0:
-                            total, wins_opp, losses_opp, draws, trophy_change, avg_crowns_opp = opponent_stats_row
-                            win_rate_opp = (wins_opp / total * 100) if total > 0 else 0
-                            opponent_game_stats = {
-                                'total_battles': total or 0,
-                                'wins': wins_opp or 0,
-                                'losses': losses_opp or 0,
-                                'draws': draws or 0,
-                                'win_rate': round(win_rate_opp, 2),
-                                'total_trophy_change': trophy_change or 0,
-                                'avg_crowns': avg_crowns_opp or 0
-                            }
-                    else:
-                        print(f"API token not available. Cannot fetch data for {opponent_tag}")
-            
-            results.append({
-                'deck_cards': deck_cards,
-                'total_battles': total_battles,
-                'wins': wins,
-                'losses': losses,
-                'win_rate': win_rate,
-                'total_trophy_change': total_trophy_change,
-                'avg_trophy_change': avg_trophy_change,
-                'avg_crowns': avg_crowns,
-                'opponent_tag': opponent_tag,
-                'opponent_name': opponent_name,
-                'opponent_game_stats': opponent_game_stats
-            })
-        
-        conn.close()
-        return results
-    
-    def get_repeated_opponents_stats(self, player_tag: str = None) -> List[Dict]:
-        """Get statistics for opponents faced multiple times with performance by period and their game stats"""
-        if not player_tag:
+        if not defeats_this_week:
             return []
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
-        
-        # Get user's current trophies
-        cursor.execute("SELECT trophies FROM players WHERE player_tag = ?", (player_tag,))
-        user_trophies_row = cursor.fetchone()
-        try:
-            user_trophies = int(user_trophies_row[0]) if user_trophies_row and user_trophies_row[0] else 0
-        except ValueError:
-            user_trophies = 0
+        deck_stats = {}
+        for b in defeats_this_week:
+            deck = b.get('opponent_deck_cards')
+            if not deck:
+                continue
+                
+            if deck not in deck_stats:
+                deck_stats[deck] = {
+                    'deck_cards': deck,
+                    'total_battles': 0,
+                    'wins': 0, 
+                    'losses': 0,
+                    'total_trophy_change': 0,
+                    'total_crowns': 0,
+                    'opponent_tag': b.get('opponent_tag'),
+                    'opponent_name': b.get('opponent_name')
+                }
             
-        # Get opponents faced more than once
-        cursor.execute("""
-            SELECT 
-                opponent_tag,
-                opponent_name,
-                MAX(opponent_trophies) as latest_opponent_trophies,
-                COUNT(*) as total_battles
-            FROM battles 
-            WHERE opponent_tag IS NOT NULL AND opponent_tag != ''
-                AND player_tag = ?
-            GROUP BY opponent_tag, opponent_name
-            HAVING COUNT(*) > 1
-            ORDER BY total_battles DESC, opponent_name
-        """, (player_tag,))
-        
-        opponents_data = []
-        for row in cursor.fetchall():
-            opponent_tag, opponent_name, latest_opponent_trophies, total_battles = row
+            s = deck_stats[deck]
+            s['total_battles'] += 1
+            s['wins'] += 1
+            s['total_trophy_change'] += b.get('trophy_change', 0)
             try:
-                latest_opponent_trophies = int(latest_opponent_trophies) if latest_opponent_trophies else 0
-            except ValueError:
-                latest_opponent_trophies = 0
+                s['total_crowns'] += int(b.get('crowns', 0) or 0)
+            except:
+                pass
                 
-            # Calculate trophy difference
-            trophy_diff = user_trophies - latest_opponent_trophies
+        results = []
+        for deck, s in deck_stats.items():
+            s['win_rate'] = 100.0
+            s['avg_trophy_change'] = round(s['total_trophy_change'] / s['total_battles'], 2)
+            s['avg_crowns'] = round(s['total_crowns'] / s['total_battles'], 2)
+            results.append(s)
             
-            # Get statistics for each period
-            stats = self.get_opponent_period_stats(player_tag, opponent_tag, conn)
+        results.sort(key=lambda x: x['total_battles'], reverse=True)
+        return results[:limit]
+
+    def get_repeated_opponents_stats(self, player_tag: str = None) -> List[Dict]:
+        """Get statistics for opponents faced multiple times using CSV cache"""
+        if not self.battles_cache:
+            return []
             
-            # Manter apenas estatisticas de confronto direto para evitar 'inventar' dados globais do oponente
-            opponent_game_stats = None
+        # Agrupar batalhas por oponente
+        opponents_battles = {}
+        for b in self.battles_cache:
+            o_tag = b.get('opponent_tag')
+            if not o_tag: continue
+            if o_tag not in opponents_battles:
+                opponents_battles[o_tag] = []
+            opponents_battles[o_tag].append(b)
             
-            # Get opponent's current info from players table (if available)
-            opponent_info = None
-            cursor.execute("""
-                SELECT name, trophies, best_trophies, level, clan_name
-                FROM players 
-                WHERE player_tag = ?
-            """, (opponent_tag,))
-            opponent_info_row = cursor.fetchone()
-            if opponent_info_row:
-                opponent_info = {
-                    'name': opponent_info_row[0],
-                    'trophies': opponent_info_row[1] or latest_opponent_trophies,
-                    'best_trophies': opponent_info_row[2] or 0,
-                    'level': opponent_info_row[3] or 0,
-                    'clan_name': opponent_info_row[4]
-                }
+        results = []
+        for o_tag, battles in opponents_battles.items():
+            if len(battles) < 2: continue
             
-            # Get best performing deck for this opponent
-            cursor.execute("""
-                SELECT 
-                    opponent_deck_cards as deck_cards,
-                    COUNT(*) as total_battles,
-                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                    ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate
-                FROM battles 
-                WHERE opponent_deck_cards IS NOT NULL AND opponent_deck_cards != ''
-                    AND player_tag = ?
-                    AND opponent_tag = ?
-                GROUP BY opponent_deck_cards
-                HAVING total_battles >= 1
-                ORDER BY 
-                    (CAST(SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*)) DESC,
-                    COUNT(*) DESC
-                LIMIT 1
-            """, (player_tag, opponent_tag))
+            latest_b = battles[0]
+            o_name = latest_b.get('opponent_name', 'Desconhecido')
+            latest_o_trophies = latest_b.get('opponent_trophies', 0)
             
-            best_deck_row = cursor.fetchone()
+            stats = self._get_opponent_period_stats_from_cache(battles)
+            
+            deck_stats = {}
+            for b in battles:
+                deck = b.get('opponent_deck_cards')
+                if not deck: continue
+                if deck not in deck_stats:
+                    deck_stats[deck] = {'total': 0, 'wins': 0}
+                deck_stats[deck]['total'] += 1
+                if b.get('result') == 'defeat': # Se o usuário foi derrotado, o deck do oponente "venceu"
+                    deck_stats[deck]['wins'] += 1
+            
             best_deck = None
-            if best_deck_row:
+            if deck_stats:
+                sorted_decks = sorted(deck_stats.items(), key=lambda x: (x[1]['wins']/x[1]['total'], x[1]['total']), reverse=True)
+                deck_id, d_s = sorted_decks[0]
                 best_deck = {
-                    'deck_cards': best_deck_row[0],
-                    'total_battles': best_deck_row[1],
-                    'wins': best_deck_row[2],
-                    'losses': best_deck_row[3],
-                    'win_rate': best_deck_row[4]
+                    'deck_cards': deck_id,
+                    'total_battles': d_s['total'],
+                    'wins': d_s['wins'],
+                    'losses': d_s['total'] - d_s['wins'],
+                    'win_rate': round(d_s['wins']/d_s['total']*100, 2)
                 }
+                
+            # Estatísticas do usuário contra este oponente
+            user_wins = sum(1 for b in battles if b.get('result') == 'victory')
+            user_losses = sum(1 for b in battles if b.get('result') == 'defeat')
+            user_draws = sum(1 for b in battles if b.get('result') == 'draw')
+            total_encounters = len(battles)
+            user_wr = (user_wins / total_encounters * 100) if total_encounters > 0 else 0
             
-            opponents_data.append({
-                'opponent_tag': opponent_tag,
-                'opponent_name': opponent_name or 'Desconhecido',
-                'latest_opponent_trophies': latest_opponent_trophies,
-                'user_trophies': user_trophies,
-                'trophy_diff': trophy_diff,
-                'total_battles': total_battles,
+            # Categorização
+            if user_wr < 40:
+                category = "Nêmese"
+                category_class = "nemesis"
+            elif user_wr > 60:
+                category = "Freguês"
+                category_class = "customer"
+            else:
+                category = "Equilibrado"
+                category_class = "balanced"
+
+            results.append({
+                'opponent_tag': o_tag,
+                'opponent_name': o_name,
+                'latest_opponent_trophies': latest_o_trophies,
+                'total_battles': total_encounters,
+                'user_wins': user_wins,
+                'user_losses': user_losses,
+                'user_draws': user_draws,
+                'user_win_rate': round(user_wr, 2),
+                'category': category,
+                'category_class': category_class,
+                'last_encounter': latest_b.get('battle_time'),
                 'stats': stats,
-                'best_deck': best_deck,
-                'opponent_game_stats': opponent_game_stats,
-                'opponent_info': opponent_info
+                'best_deck': best_deck
             })
-        
-        conn.close()
-        return opponents_data
-    
-    def get_opponent_period_stats(self, player_tag: str, opponent_tag: str, conn) -> Dict:
-        """Get battle statistics for a specific opponent by period (day, week, month, year)"""
-        cursor = conn.cursor()
+            
+        # Ordena por total de batalhas desc, win rate do usuário asc (nemeses primeiro)
+        results.sort(key=lambda x: (x['total_battles'], -x['user_win_rate']), reverse=True)
+        return results
+
+    def _get_opponent_period_stats_from_cache(self, battles: List[Dict]) -> Dict:
+        """Helper to calculate period stats from a list of battles"""
         from datetime import timedelta
-        
         now_utc = datetime.now(UTC)
         brt_offset = timedelta(hours=-3)
         now_brt = now_utc + brt_offset
         
-        # Calculate period start dates in BRT and shift back to UTC for query bounds
-        today_start_brt = now_brt.replace(hour=0, minute=0, second=0, microsecond=0)
-        days_since_monday = now_brt.weekday()
-        week_start_brt = (today_start_brt - timedelta(days=days_since_monday))
-        month_start_brt = today_start_brt.replace(day=1)
-        year_start_brt = today_start_brt.replace(month=1, day=1)
+        today_start = (now_brt.replace(hour=0, minute=0, second=0, microsecond=0) - brt_offset).strftime('%Y-%m-%dT%H:%M:%S')
+        week_start = ((now_brt - timedelta(days=now_brt.weekday())).replace(hour=0, minute=0, second=0, microsecond=0) - brt_offset).strftime('%Y-%m-%dT%H:%M:%S')
+        month_start = (now_brt.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - brt_offset).strftime('%Y-%m-%dT%H:%M:%S')
+        year_start = (now_brt.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0) - brt_offset).strftime('%Y-%m-%dT%H:%M:%S')
         
-        periods = {
-            'day': (today_start_brt - brt_offset).strftime('%Y-%m-%dT%H:%M:%S'),
-            'week': (week_start_brt - brt_offset).strftime('%Y-%m-%dT%H:%M:%S'),
-            'month': (month_start_brt - brt_offset).strftime('%Y-%m-%dT%H:%M:%S'),
-            'year': (year_start_brt - brt_offset).strftime('%Y-%m-%dT%H:%M:%S')
-        }
-        
+        periods = {'day': today_start, 'week': week_start, 'month': month_start, 'year': year_start}
         stats = {}
-        
-        for period_name, period_start in periods.items():
-            cursor.execute("""
-                SELECT 
-                    COUNT(*) as total,
-                    SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                    SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                    SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
-                    SUM(COALESCE(trophy_change, 0)) as trophy_change
-                FROM battles
-                WHERE player_tag = ?
-                    AND opponent_tag = ?
-                    AND battle_time >= ?
-            """, (player_tag, opponent_tag, period_start))
-            
-            row = cursor.fetchone()
-            if row:
-                total, wins, losses, draws, trophy_change = row
-                win_rate = (wins / total * 100) if total > 0 else 0
-                
-                stats[period_name] = {
-                    'total': total or 0,
-                    'wins': wins or 0,
-                    'losses': losses or 0,
-                    'draws': draws or 0,
-                    'win_rate': round(win_rate, 1),
-                    'trophy_change': trophy_change or 0
-                }
-            else:
-                stats[period_name] = {
-                    'total': 0,
-                    'wins': 0,
-                    'losses': 0,
-                    'draws': 0,
-                    'win_rate': 0.0,
-                    'trophy_change': 0
-                }
-        
+        for p_name, p_start in periods.items():
+            p_battles = [b for b in battles if b.get('battle_time', '') >= p_start]
+            total = len(p_battles)
+            wins = sum(1 for b in p_battles if b.get('result') == 'victory')
+            losses = sum(1 for b in p_battles if b.get('result') == 'defeat')
+            draws = sum(1 for b in p_battles if b.get('result') == 'draw')
+            trophy_change = sum(b.get('trophy_change', 0) for b in p_battles)
+            stats[p_name] = {
+                'total': total, 'wins': wins, 'losses': losses, 'draws': draws,
+                'win_rate': round(wins/total*100, 1) if total > 0 else 0,
+                'trophy_change': trophy_change
+            }
         return stats
     
     def get_card_level_analytics(self) -> Dict:
-        """Get card level analytics from enhanced battle data"""
-        # Memory DB initialized - continue
+        """Get card level analytics from CSV cache"""
+        if not self.battles_cache:
+            return {}
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
-        
-        # Check if new columns exist
-        cursor.execute("PRAGMA table_info(battles)")
-        columns = [col[1] for col in cursor.fetchall()]
-        if 'deck_card_levels' not in columns:
-            conn.close()
-            return {'message': 'Enhanced battle data not available yet. Will be collected from next battles.'}
-        
         analytics = {}
+        total_player_level = 0
+        total_opponent_level = 0
+        level_advantage_wins = 0
+        level_disadvantage_wins = 0
+        total_with_levels = 0
         
-        # Average card levels over time
-        cursor.execute("""
-            SELECT deck_card_levels, opponent_deck_card_levels, player_level, opponent_level, result
-            FROM battles 
-            WHERE deck_card_levels IS NOT NULL 
-            ORDER BY battle_time DESC 
-            LIMIT 50
-        """)
+        # Pega as últimas 50 batalhas do cache
+        recent_50 = self.battles_cache[:50]
         
-        battles = cursor.fetchall()
-        if battles:
-            total_player_level = 0
-            total_opponent_level = 0
-            level_advantage_wins = 0
-            level_disadvantage_wins = 0
-            total_with_levels = 0
+        for b in recent_50:
+            p_lvl = b.get('player_level', 0)
+            o_lvl = b.get('opponent_level', 0)
+            res = b.get('result')
             
-            for battle in battles:
-                player_level = battle[2]
-                opponent_level = battle[3]
-                result = battle[4]
+            if p_lvl and o_lvl:
+                total_player_level += p_lvl
+                total_opponent_level += o_lvl
+                total_with_levels += 1
                 
-                if player_level and opponent_level:
-                    total_player_level += player_level
-                    total_opponent_level += opponent_level
-                    total_with_levels += 1
-                    
-                    if result == 'victory':
-                        if player_level > opponent_level:
-                            level_advantage_wins += 1
-                        elif player_level < opponent_level:
-                            level_disadvantage_wins += 1
+                if res == 'victory':
+                    if p_lvl > o_lvl:
+                        level_advantage_wins += 1
+                    elif p_lvl < o_lvl:
+                        level_disadvantage_wins += 1
+        
+        if total_with_levels > 0:
+            analytics['avg_player_level'] = round(total_player_level / total_with_levels, 1)
+            analytics['avg_opponent_level'] = round(total_opponent_level / total_with_levels, 1)
+            analytics['level_advantage_wins'] = level_advantage_wins
+            analytics['level_disadvantage_wins'] = level_disadvantage_wins
+            analytics['total_with_levels'] = total_with_levels
             
-            if total_with_levels > 0:
-                analytics['avg_player_level'] = round(total_player_level / total_with_levels, 1)
-                analytics['avg_opponent_level'] = round(total_opponent_level / total_with_levels, 1)
-                analytics['level_advantage_wins'] = level_advantage_wins
-                analytics['level_disadvantage_wins'] = level_disadvantage_wins
-                analytics['total_with_levels'] = total_with_levels
-        
         # Opponent clan analysis
-        cursor.execute("""
-            SELECT opponent_clan_name, COUNT(*) as battles, 
-                   SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins
-            FROM battles 
-            WHERE opponent_clan_name IS NOT NULL 
-            GROUP BY opponent_clan_name 
-            ORDER BY battles DESC 
-            LIMIT 10
-        """)
+        clan_stats = {}
+        for b in self.battles_cache:
+            c_name = b.get('opponent_clan_name')
+            if not c_name:
+                continue
+            if c_name not in clan_stats:
+                clan_stats[c_name] = {'battles': 0, 'wins': 0}
+            clan_stats[c_name]['battles'] += 1
+            if b.get('result') == 'victory':
+                clan_stats[c_name]['wins'] += 1
+                
+        opp_clans = []
+        for name, stats in clan_stats.items():
+            opp_clans.append({
+                'opponent_clan_name': name,
+                'battles': stats['battles'],
+                'wins': stats['wins']
+            })
+        opp_clans.sort(key=lambda x: x['battles'], reverse=True)
+        analytics['opponent_clans'] = opp_clans[:10]
         
-        clan_battles = cursor.fetchall()
-        analytics['opponent_clans'] = [
-            {'name': row[0], 'battles': row[1], 'wins': row[2], 'win_rate': round((row[2] / row[1]) * 100, 1)}
-            for row in clan_battles
-        ]
-        
-        conn.close()
         return analytics
 
     def get_recent_battles(self, limit: int = 15, player_tag: str = None) -> List[Dict]:
-        """Get recent battle data from database and CSV - ONLY user's battles"""
-        battles = []
-        
-        # Primeiro, tenta buscar do banco de dados
-        if player_tag:
-            conn = sqlite3.connect(self.db_path, uri=True)
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                SELECT battle_time, result, opponent_name, opponent_tag, 
-                       crowns, trophy_change, deck_cards, arena_name
-                FROM battles 
-                WHERE player_tag = ?
-                ORDER BY battle_time DESC 
-                LIMIT ?
-            """, (player_tag, limit))
-            
-            for row in cursor.fetchall():
-                battles.append({
-                    'battle_time': row[0],
-                    'result': row[1],
-                    'opponent_name': row[2] or 'Desconhecido',
-                    'opponent_tag': row[3] or '',
-                    'crowns': row[4] or 0,
-                    'trophy_change': row[5] or 0,
-                    'deck_cards': row[6] or '',
-                    'arena_name': row[7] or 'Desconhecida'
-                })
-            
-            conn.close()
-        
-        # Se nao tem batalhas suficientes, tenta buscar do CSV
-        if len(battles) < limit:
-            csv_battles = self.get_recent_battles_from_csv(limit - len(battles))
-            # Combina, evitando duplicatas por battle_time
-            existing_times = {b['battle_time'] for b in battles}
-            for csv_battle in csv_battles:
-                if csv_battle.get('battle_time') not in existing_times:
-                    battles.append(csv_battle)
-                    existing_times.add(csv_battle.get('battle_time'))
-        
-        # Ordena por battle_time (mais recente primeiro) e limita
-        battles.sort(key=lambda x: x.get('battle_time', ''), reverse=True)
-        return battles[:limit]
-    
-    def get_recent_battles_from_csv(self, limit: int = 10) -> List[Dict]:
-        """Get recent battles from CSV files"""
-        import csv
-        import glob
-        from datetime import datetime
-        
-        csv_files = glob.glob("src/oponentes_dia_*.csv")
-        if not csv_files:
-            csv_files = glob.glob("oponentes_dia_*.csv")
-        
-        if not csv_files:
-            return []
-        
-        # Pega o CSV mais recente
-        latest_csv = max(csv_files, key=os.path.getmtime)
-        
-        battles = []
-        try:
-            with open(latest_csv, 'r', encoding='utf-8-sig') as f:
-                reader = csv.DictReader(f)
-                rows = list(reader)
-                
-                # Pega as ultimas batalhas (CSV esta ordenado por data)
-                for row in rows[-limit:]:
-                    # Converte resultado
-                    resultado = row.get('resultado', '').lower()
-                    if resultado in ['vitoria', 'victory']:
-                        result = 'victory'
-                    elif resultado in ['derrota', 'defeat']:
-                        result = 'defeat'
-                    else:
-                        result = 'draw'
-                    
-                    # Converte data para battle_time (formato ISO)
-                    data_str = row.get('data', '')
-                    battle_time = None
-                    try:
-                        # Tenta parsear data no formato DD/MM/YYYY HH:MM
-                        if ' ' in data_str:
-                            dt = datetime.strptime(data_str, '%d/%m/%Y %H:%M')
-                        else:
-                            dt = datetime.strptime(data_str, '%d/%m/%Y')
-                        battle_time = dt.strftime('%Y%m%dT%H%M%S.000Z')
-                    except:
-                        battle_time = data_str
-                    
-                    battles.append({
-                        'battle_time': battle_time or data_str,
-                        'result': result,
-                        'opponent_name': row.get('nome_oponente', 'Desconhecido'),
-                        'opponent_tag': row.get('tag_oponente', ''),
-                        'crowns': int(row.get('coroas_jogador', 0) or 0),
-                        'trophy_change': int(row.get('mudanca_trofes', 0) or 0),
-                        'deck_cards': row.get('deck_jogador', ''),
-                        'arena_name': row.get('arena', 'Desconhecida')
-                    })
-        except Exception as e:
-            print(f"Erro ao ler CSV: {e}")
-        
-        return list(reversed(battles))  # Mais recente primeiro
+        """Get recent battles from CSV cache"""
+        return self.battles_cache[:limit]
     
     def get_clan_members(self) -> List[Dict]:
-        """Get clan member data"""
-        # Memory DB initialized - continue
+        """Get clan member data from CSV cache"""
+        if not self.clan_members_cache:
+            return []
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT name, role, trophies, donations, donations_received, last_seen
-            FROM clan_members 
-            ORDER BY 
-                CASE role 
-                    WHEN 'leader' THEN 1 
-                    WHEN 'coLeader' THEN 2 
-                    WHEN 'elder' THEN 3 
-                    ELSE 4 
-                END,
-                trophies DESC
-        """)
-        
         members = []
-        for row in cursor.fetchall():
+        for m in self.clan_members_cache:
             members.append({
-                'name': row[0],
-                'role': row[1],
-                'trophies': row[2] or 0,
-                'donations': row[3] or 0,
-                'donations_received': row[4] or 0,
-                'last_seen': row[5]
+                'name': m.get('name', 'Desconhecido'),
+                'role': m.get('role', 'member'),
+                'trophies': int(m.get('trophies', 0) or 0),
+                'donations': int(m.get('donations', 0) or 0),
+                'donations_received': int(m.get('donations_received', 0) or 0),
+                'last_seen': m.get('last_seen', '')
             })
+            
+        # Ordenação: role priority, then trophies
+        role_priority = {'leader': 1, 'coLeader': 2, 'elder': 3, 'member': 4}
+        members.sort(key=lambda x: (role_priority.get(x['role'], 5), -x['trophies']))
         
-        conn.close()
         return members
     
     def get_daily_battle_stats(self, days_limit: int = 30, player_tag: str = None) -> List[Dict]:
-        """Get daily wins/losses aggregation for histogram, including days with no battles - ONLY user's battles"""
+        """Get daily wins/losses aggregation from CSV files"""
         if not player_tag:
-            return []
+            player_tag = '#2QR292P'
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
+        battles = self._load_all_battles_from_csv(player_tag)
         
-        # First, create a complete date range for the last N days
-        cursor.execute("""
-            WITH RECURSIVE date_range(date) AS (
-                SELECT DATE('now', '-' || ? || ' days')
-                UNION ALL
-                SELECT DATE(date, '+1 day')
-                FROM date_range
-                WHERE date < DATE('now')
-            )
-            SELECT 
-                dr.date as battle_date,
-                COALESCE(SUM(CASE WHEN b.result = 'victory' THEN 1 ELSE 0 END), 0) as wins,
-                COALESCE(SUM(CASE WHEN b.result = 'defeat' THEN 1 ELSE 0 END), 0) as losses,
-                COALESCE(SUM(CASE WHEN b.result = 'draw' THEN 1 ELSE 0 END), 0) as draws,
-                COALESCE(COUNT(b.id), 0) as total_battles
-            FROM date_range dr
-            LEFT JOIN battles b ON 
-                DATE(b.battle_time) = dr.date
-                AND b.battle_time IS NOT NULL
-                AND b.player_tag = ?
-            GROUP BY dr.date
-            ORDER BY dr.date ASC
-        """, (days_limit - 1, player_tag))  # -1 because we include today
+        # Aggregate by date
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_limit - 1)
         
+        daily_map = {}
+        curr = start_date
+        while curr <= end_date:
+            date_str = curr.strftime('%Y-%m-%d')
+            daily_map[date_str] = {'wins': 0, 'losses': 0, 'draws': 0, 'total_battles': 0}
+            curr += timedelta(days=1)
+            
+        for b in battles:
+            b_time = b['battle_time']
+            if not b_time: continue
+            
+            # Extract date part
+            b_date = b_time.split('T')[0] if 'T' in b_time else b_time.split(' ')[0]
+            
+            if b_date in daily_map:
+                res = b['result']
+                if res == 'victory':
+                    daily_map[b_date]['wins'] += 1
+                elif res == 'defeat':
+                    daily_map[b_date]['losses'] += 1
+                elif res == 'draw':
+                    daily_map[b_date]['draws'] += 1
+                daily_map[b_date]['total_battles'] += 1
+                
+        # Convert map to sorted list
         daily_stats = []
-        for row in cursor.fetchall():
+        for date_str in sorted(daily_map.keys()):
+            stats = daily_map[date_str]
             daily_stats.append({
-                'date': row[0],
-                'wins': row[1] or 0,
-                'losses': row[2] or 0,
-                'draws': row[3] or 0,
-                'total_battles': row[4] or 0
+                'date': date_str,
+                'wins': stats['wins'],
+                'losses': stats['losses'],
+                'draws': stats['draws'],
+                'total_battles': stats['total_battles']
             })
-        
-        conn.close()
+            
         return daily_stats
     
     def get_clan_rankings_data(self, days_limit: int = 7) -> List[Dict]:
-        """Get latest clan rankings with progression data"""
-        # Memory DB initialized - continue
-            
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
-        
-        # Check if table exists
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clan_rankings_history'")
-        if not cursor.fetchone():
-            conn.close()
+        """Get latest clan rankings with progression data using CSV caches"""
+        if not self.rankings_history_cache:
             return []
-        
-        # Get latest rankings
-        cursor.execute("""
-            SELECT 
-                crh.player_tag,
-                crh.name,
-                crh.clan_rank,
-                crh.trophies,
-                crh.donations,
-                crh.donations_received,
-                crh.trophy_change,
-                crh.donation_change,
-                crh.recorded_at,
-                cm.role,
-                cm.last_seen
-            FROM clan_rankings_history crh
-            LEFT JOIN clan_members cm ON crh.player_tag = cm.player_tag
-            WHERE crh.recorded_at = (
-                SELECT MAX(recorded_at) 
-                FROM clan_rankings_history 
-                WHERE player_tag = crh.player_tag
-            )
-            ORDER BY crh.clan_rank ASC
-        """)
+            
+        # Group by player_tag to get the latest entry
+        latest_rankings = {}
+        for row in self.rankings_history_cache:
+            p_tag = row['player_tag']
+            recorded_at = row['recorded_at']
+            if p_tag not in latest_rankings or recorded_at > latest_rankings[p_tag]['recorded_at']:
+                latest_rankings[p_tag] = row
+                
+        # Merge with clan_members for role and last_seen
+        members_map = {m['player_tag']: m for m in self.clan_members_cache}
         
         rankings = []
-        for row in cursor.fetchall():
+        for p_tag, data in latest_rankings.items():
+            member = members_map.get(p_tag, {})
             rankings.append({
-                'player_tag': row[0],
-                'name': row[1],
-                'clan_rank': row[2],
-                'trophies': row[3] or 0,
-                'donations': row[4] or 0,
-                'donations_received': row[5] or 0,
-                'trophy_change': row[6] or 0,
-                'donation_change': row[7] or 0,
-                'recorded_at': row[8],
-                'role': row[9] or 'member',
-                'last_seen': row[10]
+                'player_tag': p_tag,
+                'name': data.get('name'),
+                'clan_rank': int(data.get('clan_rank', 0) or 0),
+                'trophies': int(data.get('trophies', 0) or 0),
+                'donations': int(data.get('donations', 0) or 0),
+                'donations_received': int(data.get('donations_received', 0) or 0),
+                'trophy_change': int(data.get('trophy_change', 0) or 0),
+                'donation_change': int(data.get('donation_change', 0) or 0),
+                'recorded_at': data.get('recorded_at'),
+                'role': member.get('role', 'member'),
+                'last_seen': member.get('last_seen')
             })
-        
-        conn.close()
+            
+        # Sort by rank
+        rankings.sort(key=lambda x: x['clan_rank'])
         return rankings
     
     def get_player_clan_progression(self, player_tag: str, days_limit: int = 30) -> List[Dict]:
-        """Get specific player's clan ranking progression over time"""
-        # Memory DB initialized - continue
+        """Get specific player's clan ranking progression over time using CSV cache"""
+        if not self.rankings_history_cache:
+            return []
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
+        # Filter by player_tag
+        progression = [
+            {
+                'date': r.get('recorded_at', '').split('T')[0],
+                'clan_rank': int(r.get('clan_rank', 0) or 0),
+                'trophies': int(r.get('trophies', 0) or 0),
+                'trophy_change': int(r.get('trophy_change', 0) or 0),
+                'donations': int(r.get('donations', 0) or 0),
+                'donation_change': int(r.get('donation_change', 0) or 0)
+            }
+            for r in self.rankings_history_cache
+            if r.get('player_tag') == player_tag
+        ]
         
-        cursor.execute("""
-            SELECT 
-                DATE(recorded_at) as date,
-                clan_rank,
-                trophies,
-                trophy_change,
-                donations,
-                donation_change
-            FROM clan_rankings_history 
-            WHERE player_tag = ?
-                AND DATE(recorded_at) >= DATE('now', '-' || ? || ' days')
-            ORDER BY recorded_at DESC
-            LIMIT ?
-        """, (player_tag, days_limit, days_limit))
+        # Sort by date descending
+        progression.sort(key=lambda x: x.get('date', ''), reverse=True)
         
-        progression = []
-        for row in cursor.fetchall():
-            progression.append({
-                'date': row[0],
-                'clan_rank': row[1],
-                'trophies': row[2] or 0,
-                'trophy_change': row[3] or 0,
-                'donations': row[4] or 0,
-                'donation_change': row[5] or 0
-            })
-        
-        conn.close()
-        return progression
+        # Apply limit
+        return progression[:days_limit]
     
     def get_clan_deck_analytics(self) -> Dict:
-        """Get clan-wide deck and card analytics"""
-        # Memory DB initialized - continue
+        """Analyze clan deck usage and changes using CSV cache"""
+        analytics = {
+            'popular_decks': [],
+            'favorite_cards': [],
+            'deck_experimenters': []
+        }
+        
+        if not self.clan_decks_cache:
+            return analytics
             
-        conn = sqlite3.connect(self.db_path, uri=True)
-        cursor = conn.cursor()
+        # Get latest deck for each player
+        latest_decks = {}
+        for entry in self.clan_decks_cache:
+            p_tag = entry.get('player_tag')
+            # Assuming cache is sorted by recorded_at or sequential, last one wins
+            latest_decks[p_tag] = entry
+            
+        # Popular Decks
+        deck_counts = {}
+        for entry in latest_decks.values():
+            deck = entry.get('deck_cards')
+            if not deck: continue
+            if deck not in deck_counts:
+                deck_counts[deck] = {'usage_count': 0, 'users': []}
+            deck_counts[deck]['usage_count'] += 1
+            deck_counts[deck]['users'].append(entry.get('name', 'Unknown'))
+            
+        popular_decks = [
+            {'deck_cards': d, 'usage_count': s['usage_count'], 'users': ", ".join(s['users'])}
+            for d, s in deck_counts.items()
+        ]
+        popular_decks.sort(key=lambda x: x['usage_count'], reverse=True)
+        analytics['popular_decks'] = popular_decks[:10]
         
-        # Check if table exists
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clan_member_decks'")
-        if not cursor.fetchone():
-            conn.close()
-            return {}
+        # Favorite Cards
+        card_counts = {}
+        for entry in latest_decks.values():
+            card = entry.get('favorite_card')
+            if not card or card == '': continue
+            if card not in card_counts:
+                card_counts[card] = {'usage_count': 0, 'users': []}
+            card_counts[card]['usage_count'] += 1
+            card_counts[card]['users'].append(entry.get('name', 'Unknown'))
+            
+        favorite_cards = [
+            {'card_name': c, 'usage_count': s['usage_count'], 'users': ", ".join(s['users'])}
+            for c, s in card_counts.items()
+        ]
+        favorite_cards.sort(key=lambda x: x['usage_count'], reverse=True)
+        analytics['favorite_cards'] = favorite_cards[:10]
         
-        analytics = {}
-        
-        # Most popular current decks
-        cursor.execute("""
-            SELECT deck_cards, COUNT(*) as usage_count, 
-                   GROUP_CONCAT(name, ', ') as users
-            FROM (
-                SELECT DISTINCT player_tag, deck_cards, name
-                FROM clan_member_decks cmd1
-                WHERE cmd1.id = (
-                    SELECT MAX(cmd2.id) 
-                    FROM clan_member_decks cmd2 
-                    WHERE cmd2.player_tag = cmd1.player_tag
-                )
-            )
-            GROUP BY deck_cards
-            ORDER BY usage_count DESC, deck_cards
-            LIMIT 10
-        """)
-        
-        popular_decks = []
-        for row in cursor.fetchall():
-            popular_decks.append({
-                'deck_cards': row[0],
-                'usage_count': row[1],
-                'users': row[2]
-            })
-        analytics['popular_decks'] = popular_decks
-        
-        # Most popular favorite cards
-        cursor.execute("""
-            SELECT favorite_card, COUNT(*) as usage_count,
-                   GROUP_CONCAT(name, ', ') as users
-            FROM (
-                SELECT DISTINCT player_tag, favorite_card, name
-                FROM clan_member_decks cmd1
-                WHERE favorite_card != ''
-                  AND cmd1.id = (
-                    SELECT MAX(cmd2.id) 
-                    FROM clan_member_decks cmd2 
-                    WHERE cmd2.player_tag = cmd1.player_tag
-                )
-            )
-            GROUP BY favorite_card
-            ORDER BY usage_count DESC
-            LIMIT 10
-        """)
-        
-        favorite_cards = []
-        for row in cursor.fetchall():
-            favorite_cards.append({
-                'card_name': row[0],
-                'usage_count': row[1],
-                'users': row[2]
-            })
-        analytics['favorite_cards'] = favorite_cards
-        
-        # Deck change frequency by player (counting only actual deck composition changes)
-        cursor.execute("""
-            WITH DeckChanges AS (
-                SELECT 
-                    player_tag,
-                    name,
-                    deck_cards,
-                    MIN(first_seen) as first_seen,
-                    MAX(last_seen) as last_seen,
-                    ROW_NUMBER() OVER (PARTITION BY player_tag ORDER BY MIN(first_seen)) as deck_sequence
-                FROM clan_member_decks
-                GROUP BY player_tag, name, deck_cards
-            )
-            SELECT 
-                player_tag, 
-                name, 
-                COUNT(*) as deck_changes,
-                MIN(first_seen) as first_deck,
-                MAX(last_seen) as latest_deck
-            FROM DeckChanges
-            GROUP BY player_tag, name
-            ORDER BY deck_changes DESC
-        """)
-        
-        deck_experimenters = []
-        for row in cursor.fetchall():
-            deck_experimenters.append({
-                'player_tag': row[0],
-                'name': row[1],
-                'deck_changes': row[2],
-                'first_deck': row[3],
-                'latest_deck': row[4]
-            })
+        # Deck Experimenters (Counting unique deck combinations per player)
+        player_changes = {}
+        for entry in self.clan_decks_cache:
+            p_tag = entry.get('player_tag')
+            deck = entry.get('deck_cards')
+            if not p_tag or not deck: continue
+            
+            if p_tag not in player_changes:
+                player_changes[p_tag] = {
+                    'name': entry.get('name', 'Unknown'),
+                    'unique_decks': set(),
+                    'first_seen': entry.get('first_seen', ''),
+                    'last_seen': entry.get('last_seen', '')
+                }
+            player_changes[p_tag]['unique_decks'].add(deck)
+            # Update dates
+            if entry.get('first_seen', '') < player_changes[p_tag]['first_seen']:
+                player_changes[p_tag]['first_seen'] = entry.get('first_seen')
+            if entry.get('last_seen', '') > player_changes[p_tag]['last_seen']:
+                player_changes[p_tag]['last_seen'] = entry.get('last_seen')
+                
+        deck_experimenters = [
+            {
+                'player_tag': p_tag,
+                'name': info['name'],
+                'deck_changes': len(info['unique_decks']),
+                'first_deck': info['first_seen'],
+                'latest_deck': info['last_seen']
+            }
+            for p_tag, info in player_changes.items()
+        ]
+        deck_experimenters.sort(key=lambda x: x['deck_changes'], reverse=True)
         analytics['deck_experimenters'] = deck_experimenters
         
-        conn.close()
         return analytics
     
     def format_time_ago(self, timestamp: str) -> str:
@@ -1566,13 +1205,13 @@ class GitHubPagesHTMLGenerator:
             if total == 0:
                 win_height = 0
                 loss_height = 0
-                draw_height = 2  # Minimal height for empty days
+                draw_height = 3
             else:
                 # Scale based on max battles, with minimum heights for visibility
                 scale_factor = (total / max_battles) * 180  # 180px max height
-                win_height = max((wins / total) * scale_factor, 1 if wins > 0 else 0)
-                loss_height = max((losses / total) * scale_factor, 1 if losses > 0 else 0)
-                draw_height = max((draws / total) * scale_factor, 1 if draws > 0 else 0)
+                win_height = max((wins / total) * scale_factor, 3 if wins > 0 else 0)
+                loss_height = max((losses / total) * scale_factor, 3 if losses > 0 else 0)
+                draw_height = max((draws / total) * scale_factor, 3 if draws > 0 else 0)
             
             # Create tooltip
             tooltip = f"{date}: {wins}W/{losses}L/{draws}D" if total > 0 else f"{date}: No battles"
@@ -1583,11 +1222,11 @@ class GitHubPagesHTMLGenerator:
                     <div class="bar-stack">
             '''
             
-            # Add segments from bottom to top: losses, draws, wins
-            if loss_height > 0:
+            # Add segments from top to bottom: wins, draws, losses
+            if win_height > 0:
                 histogram_html += f'''
-                    <div class="bar-segment bar-losses" style="height: {loss_height}px;">
-                        {f'<span class="segment-value">{losses}</span>' if losses > 0 else ''}
+                    <div class="bar-segment bar-wins" style="height: {win_height}px;">
+                        {f'<span class="segment-value">{wins}</span>' if wins > 0 else ''}
                     </div>
                 '''
             
@@ -1598,10 +1237,10 @@ class GitHubPagesHTMLGenerator:
                     </div>
                 '''
             
-            if win_height > 0:
+            if loss_height > 0:
                 histogram_html += f'''
-                    <div class="bar-segment bar-wins" style="height: {win_height}px;">
-                        {f'<span class="segment-value">{wins}</span>' if wins > 0 else ''}
+                    <div class="bar-segment bar-losses" style="height: {loss_height}px;">
+                        {f'<span class="segment-value">{losses}</span>' if losses > 0 else ''}
                     </div>
                 '''
             
@@ -2040,72 +1679,23 @@ class GitHubPagesHTMLGenerator:
         {self.generate_dashboard_scripts()}
         """
     def load_all_data_rows(self) -> List[Dict]:
-        """Carrega e unifica dados de todas as fontes disponíveis via SQL (Banco em memória)."""
-        from datetime import datetime, timedelta
+        """Carrega e unifica dados de todas as fontes disponíveis via CSV diretamente."""
+        logger.info("Carregando dados das batalhas de todos os CSVs disponíveis")
+        
+        # Carrega todas as batalhas usando o helper
+        battles_list = self._load_all_battles_from_csv('#2QR292P')
         
         all_data = []
-        # Limite de 10 anos para abranger todo o histórico CSV
-        limit_date = datetime.now() - timedelta(days=3650)
-        # Formato ISO usado no banco
-        limit_date_str = limit_date.strftime('%Y-%m-%dT%H:%M:%S') 
-        
-        logger.info(f"Carregando dados das batalhas dos ultimos 10 anos (desde {limit_date.strftime('%d/%m/%Y')}) via SQL")
-        
-        try:
-            conn = sqlite3.connect(self.db_path, uri=True)
-            cursor = conn.cursor()
-            
-            # Busca todas as batalhas ordenadas por tempo - Filtramos por player_tag do usuario
-            cursor.execute("""
-                SELECT 
-                    battle_time,
-                    opponent_name,
-                    opponent_tag,
-                    result,
-                    deck_cards,
-                    opponent_deck_cards,
-                    opponent_clan_name
-                FROM battles
-                WHERE battle_time >= ? AND player_tag = '#2QR292P'
-                ORDER BY battle_time DESC
-            """, (limit_date_str,))
-            
-            for row in cursor.fetchall():
-                dt_str = row[0]
-                if not dt_str: continue
-                
-                dt = self._parse_dt(dt_str)
-                # Fallback para parsing se falhar
-                if not dt: continue
-                
-                # Normaliza o resultado para garantir contagem correta (vitoria/victory, derrota/defeat)
-                raw_result = (row[3] or '').lower()
-                if raw_result in ['victory', 'vitoria', 'vitória']:
-                    norm_result = 'victory'
-                elif raw_result in ['defeat', 'derrota']:
-                    norm_result = 'defeat'
-                elif raw_result in ['draw', 'empate']:
-                    norm_result = 'draw'
-                else:
-                    norm_result = raw_result
-
-                all_data.append({
-                    'dt': dt, 
-                    'battle_time': dt_str,
-                    'nome_oponente': row[1] or 'Desconhecido',
-                    'tag_oponente': row[2] or '',
-                    'resultado': norm_result,
-                    'deck_jogador': row[4] or '',
-                    'deck_oponente': row[5] or '',
-                    'clan_oponente': row[6] or ''
-                })
-            
-            conn.close()
-            logger.info(f"Total de batalhas carregadas via SQL: {len(all_data)}")
-            
-        except Exception as e:
-            logger.error(f"Erro ao carregar dados via SQL: {e}")
-            # Se falhar o SQL, all_data continua vazio
+        for b in battles_list:
+            all_data.append({
+                'battle_time': b['battle_time'],
+                'opponent_name': b.get('opponent_name', 'Oponente'),
+                'opponent_tag': b.get('opponent_tag', ''),
+                'result': b['result'],
+                'deck_cards': b.get('deck_cards', ''),
+                'opponent_deck_cards': b.get('opponent_deck_cards', ''),
+                'opponent_clan_name': b.get('opponent_clan_name', '')
+            })
             
         return all_data
 
@@ -3430,7 +3020,7 @@ class GitHubPagesHTMLGenerator:
         }
         
         .bar-draws {
-            background: linear-gradient(180deg, #ed8936, #dd6b20);
+            background: linear-gradient(180deg, #a0aec0, #718096);
         }
         
         .bar-empty {
