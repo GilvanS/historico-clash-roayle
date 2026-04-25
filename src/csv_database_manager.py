@@ -127,7 +127,7 @@ class CSVDatabaseManager:
         # Support for multiple battles files (e.g., battles_2024.csv, battles_2025.csv)
         official_patterns = {
             'players.csv': 'players',
-            'battles*.csv': 'battles',
+            # 'battles*.csv': 'battles', # Removido para evitar poluição com dados de #YVJR0JLY
             'clan_members.csv': 'clan_members',
             'clan_member_decks.csv': 'clan_member_decks'
         }
@@ -224,9 +224,12 @@ class CSVDatabaseManager:
                     # Filter row keys to match table columns
                     filtered_row = {k: v for k, v in mapped_row.items() if k in table_columns}
                     
-                    # Special case: default player_tag if missing in battles
-                    if table_name == 'battles' and 'player_tag' in table_columns and not filtered_row.get('player_tag'):
-                        filtered_row['player_tag'] = '#2QR292P' # Tag default do usuario
+                    # Atribuir tag do usuario apenas para arquivos de oponentes do proprio usuario
+                    if 'player_tag' in table_columns:
+                        tag_val = filtered_row.get('player_tag')
+                        is_oponentes_file = 'oponentes_' in os.path.basename(file_path)
+                        if (not tag_val or tag_val == '0') and is_oponentes_file:
+                            filtered_row['player_tag'] = '#2QR292P'
                     
                     # Ensure all table columns have a value (None if missing in CSV)
                     values = [filtered_row.get(col) for col in table_columns]
