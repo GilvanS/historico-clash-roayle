@@ -186,7 +186,6 @@ class CSVDatabaseManager:
 
     def _load_csv_to_table(self, file_path: str, table_name: str, column_mapping: Optional[dict] = None):
         """Generic CSV loader to SQLite table with optional column mapping"""
-        print(f"DEBUG: Carregando arquivo: {file_path}")
         logger.info(f"Carregando {file_path} para tabela {table_name}")
         
         try:
