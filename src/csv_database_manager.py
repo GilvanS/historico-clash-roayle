@@ -2,7 +2,9 @@ import sqlite3
 import csv
 import os
 import logging
-from typing import Optional
+import re
+from typing import Optional, List, Dict
+from datetime import datetime
 
 # Configuração de logging seguindo a regra de não usar acentos
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -210,7 +212,42 @@ class CSVDatabaseManager:
                 table_columns = [row[1] for row in self.cursor.fetchall() if row[1] != 'id']
                 
                 rows_to_insert = []
+                
+                # Helper to normalize date to ISO format for better SQLite sorting
+                def normalize_date(date_str):
+                    if not date_str:
+                        return None
+                    date_str = str(date_str).strip()
+                    if not date_str or date_str.startswith(';'):
+                        return None
+                        
+                    # Already in ISO format (YYYYMMDDTHHMMSS.000Z)
+                    if 'T' in date_str and date_str.endswith('Z'):
+                        # Convert to YYYY-MM-DD HH:MM:SS for SQLite consistency
+                        try:
+                            # 20251211T212654.000Z
+                            clean_date = date_str.split('.')[0].replace('T', ' ')
+                            # Clean potential non-numeric junk
+                            dt = datetime.strptime(clean_date, '%Y%m%d %H%M%S')
+                            return dt.strftime('%Y-%m-%d %H:%M:%S')
+                        except:
+                            return date_str
+                            
+                    # European/Brazilian format (DD/MM/YYYY HH:MM)
+                    try:
+                        if ' ' in date_str:
+                            dt = datetime.strptime(date_str, '%d/%m/%Y %H:%M')
+                        else:
+                            dt = datetime.strptime(date_str, '%d/%m/%Y')
+                        return dt.strftime('%Y-%m-%dT%H:%M:%S')
+                    except:
+                        return date_str
+
                 for row in reader:
+                    # Skip empty rows or rows that are just separators
+                    if not any(v.strip() for v in row.values() if v):
+                        continue
+                        
                     # Apply mapping if available
                     mapped_row = {}
                     if column_mapping:
@@ -230,6 +267,13 @@ class CSVDatabaseManager:
                         is_oponentes_file = 'oponentes_' in os.path.basename(file_path)
                         if (not tag_val or tag_val == '0') and is_oponentes_file:
                             filtered_row['player_tag'] = '#2QR292P'
+                    
+                    # Normalize battle_time if present
+                    if 'battle_time' in filtered_row:
+                        filtered_row['battle_time'] = normalize_date(filtered_row['battle_time'])
+                        # If battle_time is still None after normalization, skip row
+                        if not filtered_row['battle_time']:
+                            continue
                     
                     # Ensure all table columns have a value (None if missing in CSV)
                     values = [filtered_row.get(col) for col in table_columns]

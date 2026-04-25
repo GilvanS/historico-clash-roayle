@@ -112,6 +112,7 @@ class GitHubPagesHTMLGenerator:
             'Goblins': 'Gobs',
             'Spirit Empress': 'SpiritEmpress',
             'Suspicious Bush': 'SuspiciousBush',
+            'Tesla': 'Tesla',
             'Valkyrie': 'Valk',
             'Wall Breakers': 'WallBreakers',
             'Wizard': 'Wiz',
@@ -290,18 +291,19 @@ class GitHubPagesHTMLGenerator:
         # Try local files first
         cards_base = "../cards" if os.path.exists("../cards") else "cards"
         
-        # 1. Local Hero Check
-        if os.path.exists(f"{cards_base}/hero_cards/{filename}.png"):
-            return f"cards/hero_cards/{filename}.png"
+        # Priority search order for filenames
+        search_paths = [
+            f"{cards_base}/hero_cards/{filename}.png",
+            f"{cards_base}/evolution_cards/{filename}.png",
+            f"{cards_base}/normal_cards/{filename}.png"
+        ]
         
-        # 2. Local Evolution Check
-        if is_evolution or os.path.exists(f"{cards_base}/evolution_cards/{filename}.png"):
-            if os.path.exists(f"{cards_base}/evolution_cards/{filename}.png"):
-                return f"cards/evolution_cards/{filename}.png"
-        
-        # 3. Local Normal Check
-        if os.path.exists(f"{cards_base}/normal_cards/{filename}.png"):
-            return f"cards/normal_cards/{filename}.png"
+        for path in search_paths:
+            if os.path.exists(path):
+                # Return path relative to the generated index.html location (which is inside docs/ or root)
+                # If we are in src/, the path to cards is ../cards/
+                # If we are in docs/, the path to cards is cards/
+                return path.replace("../", "")
             
         # 4. CDN Fallback (RoyaleAPI)
         # Convert name to RoyaleAPI format (lowercase, no spaces, hyphens)
@@ -665,7 +667,7 @@ class GitHubPagesHTMLGenerator:
         now = datetime.now(UTC)
         days_since_monday = now.weekday()  # 0 = Monday, 6 = Sunday
         week_start = (now - timedelta(days=days_since_monday)).replace(hour=0, minute=0, second=0, microsecond=0)
-        week_start_str = week_start.strftime('%Y%m%dT%H%M%S.000Z')
+        week_start_str = week_start.strftime('%Y-%m-%dT%H:%M:%S')
         
         # First, get unique opponent tags from this week (limit 20 tags)
         cursor.execute("""
@@ -951,10 +953,10 @@ class GitHubPagesHTMLGenerator:
         year_start_brt = today_start_brt.replace(month=1, day=1)
         
         periods = {
-            'day': (today_start_brt - brt_offset).strftime('%Y%m%dT%H%M%S.000Z'),
-            'week': (week_start_brt - brt_offset).strftime('%Y%m%dT%H%M%S.000Z'),
-            'month': (month_start_brt - brt_offset).strftime('%Y%m%dT%H%M%S.000Z'),
-            'year': (year_start_brt - brt_offset).strftime('%Y%m%dT%H%M%S.000Z')
+            'day': (today_start_brt - brt_offset).strftime('%Y-%m-%dT%H:%M:%S'),
+            'week': (week_start_brt - brt_offset).strftime('%Y-%m-%dT%H:%M:%S'),
+            'month': (month_start_brt - brt_offset).strftime('%Y-%m-%dT%H:%M:%S'),
+            'year': (year_start_brt - brt_offset).strftime('%Y-%m-%dT%H:%M:%S')
         }
         
         stats = {}
@@ -2112,7 +2114,7 @@ class GitHubPagesHTMLGenerator:
         from datetime import datetime
         if not b_time_str: return None
         # Formatos comuns nos CSVs do projeto
-        for fmt in ['%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%Y%m%dT%H%M%S.000Z', '%Y-%m-%d %H:%M:%S']:
+        for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M:%S', '%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%Y%m%dT%H%M%S.000Z']:
             try:
                 return datetime.strptime(b_time_str, fmt)
             except ValueError: continue
