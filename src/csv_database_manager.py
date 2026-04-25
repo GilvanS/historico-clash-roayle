@@ -48,7 +48,7 @@ class CSVDatabaseManager:
         # Battles table
         self.cursor.execute("""
             CREATE TABLE battles (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 player_tag TEXT,
                 battle_time TEXT,
                 battle_type TEXT,
@@ -72,7 +72,8 @@ class CSVDatabaseManager:
                 player_level INTEGER,
                 opponent_level INTEGER,
                 battle_duration_seconds INTEGER,
-                trophy_change INTEGER
+                trophy_change INTEGER,
+                UNIQUE(player_tag, battle_time, opponent_tag)
             )
         """)
         
@@ -187,12 +188,14 @@ class CSVDatabaseManager:
         logger.info(f"Carregando {file_path} para tabela {table_name}")
         
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            # Usar utf-8-sig para lidar com possiveis BOM no inicio do arquivo
+            with open(file_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f)
                 
                 # Get columns from table to filter CSV fields
                 self.cursor.execute(f"PRAGMA table_info({table_name})")
-                table_columns = [row[1] for row in self.cursor.fetchall()]
+                # Excluir 'id' da insercao automatica para deixar o SQLite gerenciar
+                table_columns = [row[1] for row in self.cursor.fetchall() if row[1] != 'id']
                 
                 rows_to_insert = []
                 for row in reader:

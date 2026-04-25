@@ -318,17 +318,19 @@ class GitHubPagesHTMLGenerator:
             return None
             
         # Get battle stats - Get ALL battles from the database (consolidated history)
+        # Filtramos por player_tag para garantir que sao as SUAS batalhas
         cursor.execute("""
             SELECT 
                 COUNT(*) as total_battles,
-                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                SUM(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) as draws,
+                SUM(CASE WHEN LOWER(result) IN ('victory', 'vitoria', 'vitória') THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN LOWER(result) IN ('defeat', 'derrota') THEN 1 ELSE 0 END) as losses,
+                SUM(CASE WHEN LOWER(result) IN ('draw', 'empate') THEN 1 ELSE 0 END) as draws,
                 SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
                 MAX(battle_time) as last_battle,
                 MIN(battle_time) as first_battle
             FROM battles
-        """)
+            WHERE player_tag = ?
+        """, (player_row[0],))
         battle_stats = cursor.fetchone()
         
         # Get donations from clan_members table for this player
@@ -372,21 +374,22 @@ class GitHubPagesHTMLGenerator:
             SELECT 
                 deck_cards,
                 COUNT(*) as total_battles,
-                SUM(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN result = 'defeat' THEN 1 ELSE 0 END) as losses,
-                ROUND(AVG(CASE WHEN result = 'victory' THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
+                SUM(CASE WHEN LOWER(result) IN ('victory', 'vitoria', 'vitória') THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN LOWER(result) IN ('defeat', 'derrota') THEN 1 ELSE 0 END) as losses,
+                ROUND(AVG(CASE WHEN LOWER(result) IN ('victory', 'vitoria', 'vitória') THEN 1.0 ELSE 0.0 END) * 100, 2) as win_rate,
                 SUM(COALESCE(trophy_change, 0)) as total_trophy_change,
                 ROUND(AVG(COALESCE(trophy_change, 0)), 2) as avg_trophy_change,
                 ROUND(AVG(crowns), 2) as avg_crowns
             FROM battles 
             WHERE deck_cards IS NOT NULL 
                 AND deck_cards != ''
+                AND player_tag = ?
             GROUP BY deck_cards
             HAVING total_battles >= 1
             ORDER BY win_rate DESC, total_battles DESC
             LIMIT ?
         """
-        params = [limit]
+        params = [player_tag, limit]
         
         cursor.execute(query, params)
         
@@ -2088,7 +2091,7 @@ class GitHubPagesHTMLGenerator:
             conn = sqlite3.connect(self.db_path, uri=True)
             cursor = conn.cursor()
             
-            # Busca todas as batalhas ordenadas por tempo
+            # Busca todas as batalhas ordenadas por tempo - Filtramos por player_tag do usuario
             cursor.execute("""
                 SELECT 
                     battle_time,
@@ -2099,7 +2102,7 @@ class GitHubPagesHTMLGenerator:
                     opponent_deck_cards,
                     opponent_clan_name
                 FROM battles
-                WHERE battle_time >= ?
+                WHERE battle_time >= ? AND player_tag = '#2QR292P'
                 ORDER BY battle_time DESC
             """, (limit_date_str,))
             
@@ -2111,12 +2114,23 @@ class GitHubPagesHTMLGenerator:
                 # Fallback para parsing se falhar
                 if not dt: continue
                 
+                # Normaliza o resultado para garantir contagem correta (vitoria/victory, derrota/defeat)
+                raw_result = (row[3] or '').lower()
+                if raw_result in ['victory', 'vitoria', 'vitória']:
+                    norm_result = 'victory'
+                elif raw_result in ['defeat', 'derrota']:
+                    norm_result = 'defeat'
+                elif raw_result in ['draw', 'empate']:
+                    norm_result = 'draw'
+                else:
+                    norm_result = raw_result
+
                 all_data.append({
                     'dt': dt, 
                     'battle_time': dt_str,
                     'nome_oponente': row[1] or 'Desconhecido',
                     'tag_oponente': row[2] or '',
-                    'resultado': (row[3] or '').lower(),
+                    'resultado': norm_result,
                     'deck_jogador': row[4] or '',
                     'deck_oponente': row[5] or '',
                     'clan_oponente': row[6] or ''
@@ -2611,11 +2625,12 @@ class GitHubPagesHTMLGenerator:
             battles_table_html = ""
             battles_cards_html = ""
             for battle in battles[:10]:
-                result_class = battle['result']
-                result_text = battle['result'].upper()
-                trophy_color = "green" if battle['trophy_change'] >= 0 else "red"
-                result_display = 'Vitória' if result_text == 'VICTORY' else 'Derrota' if result_text == 'DEFEAT' else 'Empate'
-                if result_text == 'VICTORY' and stats.get('name'):
+                result_raw = battle.get('result') or 'UNKNOWN'
+                result_class = result_raw.lower()
+                result_text = result_raw.upper()
+                trophy_color = "green" if (battle.get('trophy_change') or 0) >= 0 else "red"
+                result_display = 'Vitória' if result_text in ['VICTORY', 'VITORIA', 'VITÓRIA'] else 'Derrota' if result_text in ['DEFEAT', 'DERROTA'] else 'Empate'
+                if result_text in ['VICTORY', 'VITORIA', 'VITÓRIA'] and stats.get('name'):
                     result_display = f"Vitória - {stats['name']}"
                 
                 battles_table_html += f"""
