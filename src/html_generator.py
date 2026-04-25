@@ -280,27 +280,51 @@ class GitHubPagesHTMLGenerator:
         return safe_name.lower()
     
     def get_card_image_path(self, card_name: str) -> str:
-        """Get the relative path to card image for GitHub Pages"""
+        """Get the relative path to card image or fallback to RoyaleAPI CDN"""
         filename = self.get_card_filename(card_name)
         
-        # Try hero cards first (newest), then evolution, then normal
-        hero_path = f"cards/hero_cards/{filename}.png"
-        normal_path = f"cards/normal_cards/{filename}.png"
-        evolution_path = f"cards/evolution_cards/{filename}.png"
+        # Check if it's an evolution (usually represented as 'Card Name (Evolution)' in some data sources)
+        is_evolution = "Evolution" in card_name
+        clean_name = card_name.replace(" (Evolution)", "") if is_evolution else card_name
         
-        # Check if files exist (look in parent directory when running from src/)
+        # Try local files first
         cards_base = "../cards" if os.path.exists("../cards") else "cards"
         
-        # Check for hero cards first (Hero Musketeer, etc.)
+        # 1. Local Hero Check
         if os.path.exists(f"{cards_base}/hero_cards/{filename}.png"):
-            return hero_path
-        elif os.path.exists(f"{cards_base}/normal_cards/{filename}.png"):
-            return normal_path
-        elif os.path.exists(f"{cards_base}/evolution_cards/{filename}.png"):
-            return evolution_path
-        else:
-            # Fallback to placeholder
-            return f"https://via.placeholder.com/100x120/7B68EE/FFFFFF?text={card_name.replace(' ', '+')}"
+            return f"cards/hero_cards/{filename}.png"
+        
+        # 2. Local Evolution Check
+        if is_evolution or os.path.exists(f"{cards_base}/evolution_cards/{filename}.png"):
+            if os.path.exists(f"{cards_base}/evolution_cards/{filename}.png"):
+                return f"cards/evolution_cards/{filename}.png"
+        
+        # 3. Local Normal Check
+        if os.path.exists(f"{cards_base}/normal_cards/{filename}.png"):
+            return f"cards/normal_cards/{filename}.png"
+            
+        # 4. CDN Fallback (RoyaleAPI)
+        # Convert name to RoyaleAPI format (lowercase, no spaces, hyphens)
+        cdn_name = card_name.lower().replace(" ", "-").replace(".", "").replace("'", "")
+        if is_evolution:
+            cdn_name = cdn_name.replace("-evolution", "")
+            return f"https://royaleapi.com/static/img/cards-150/{cdn_name}-ev1.png"
+        
+        # Special CDN mapping for some heroes or problematic names
+        cdn_mapping = {
+            'archer-queen': 'archer-queen',
+            'mighty-miner': 'mighty-miner',
+            'golden-knight': 'golden-knight',
+            'skeleton-king': 'skeleton-king',
+            'little-prince': 'little-prince',
+            'monk': 'monk',
+            'the-log': 'log',
+            'pe-kk-a': 'pekka',
+            'mini-pe-kk-a': 'mini-pekka'
+        }
+        cdn_name = cdn_mapping.get(cdn_name, cdn_name)
+        
+        return f"https://royaleapi.com/static/img/cards-150/{cdn_name}.png"
     
     def get_player_stats(self) -> Optional[Dict]:
         """Get player statistics from database"""

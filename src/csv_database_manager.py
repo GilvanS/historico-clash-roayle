@@ -71,6 +71,7 @@ class CSVDatabaseManager:
                 opponent_clan_name TEXT,
                 player_level INTEGER,
                 opponent_level INTEGER,
+                opponent_crowns INTEGER,
                 battle_duration_seconds INTEGER,
                 trophy_change INTEGER,
                 UNIQUE(player_tag, battle_time, opponent_tag)
@@ -166,6 +167,8 @@ class CSVDatabaseManager:
             'trophy_change': 'trophy_change',
             'modo_jogo': 'game_mode',
             'game_mode': 'game_mode',
+            'coroas_oponente': 'opponent_crowns',
+            'opponent_crowns': 'opponent_crowns',
             'tipo_batalha': 'battle_type',
             'battle_type': 'battle_type',
             'arena': 'arena_name',
@@ -178,19 +181,29 @@ class CSVDatabaseManager:
         
         for pattern in secondary_patterns:
             for file_path in glob.glob(pattern):
-                # Skip the main ones if they are in the same pattern
-                if os.path.basename(file_path) in loaded_files:
-                    continue
+                # Load all oponentes_*.csv files to ensure full history
                 self._load_csv_to_table(file_path, 'battles', column_mapping=battle_mapping)
 
     def _load_csv_to_table(self, file_path: str, table_name: str, column_mapping: Optional[dict] = None):
         """Generic CSV loader to SQLite table with optional column mapping"""
+        print(f"DEBUG: Carregando arquivo: {file_path}")
         logger.info(f"Carregando {file_path} para tabela {table_name}")
         
         try:
+            # Detect delimiter (comma or semicolon)
+            delimiter = ','
+            with open(file_path, 'r', encoding='utf-8-sig') as f:
+                first_line = f.readline()
+                if ';' in first_line and ',' not in first_line:
+                    delimiter = ';'
+                elif ';' in first_line and ',' in first_line:
+                    # More semicolon than comma likely means it's the delimiter
+                    if first_line.count(';') > first_line.count(','):
+                        delimiter = ';'
+            
             # Usar utf-8-sig para lidar com possiveis BOM no inicio do arquivo
             with open(file_path, 'r', encoding='utf-8-sig') as f:
-                reader = csv.DictReader(f)
+                reader = csv.DictReader(f, delimiter=delimiter)
                 
                 # Get columns from table to filter CSV fields
                 self.cursor.execute(f"PRAGMA table_info({table_name})")
