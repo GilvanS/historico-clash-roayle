@@ -47,6 +47,7 @@ class GitHubPagesHTMLGenerator:
         self.rankings_history_cache = self._load_csv_as_list('clan_rankings_history.csv')
         self.clan_decks_cache = self._load_csv_as_list('clan_member_decks.csv')
         self.players_cache = self._load_csv_as_list('players.csv')
+        self.card_name_mapping = self._get_card_name_mapping()
         
     def _load_csv_as_list(self, filename: str) -> List[Dict]:
         """Auxiliar para carregar qualquer CSV da pasta oficial como lista de dicts"""
@@ -102,7 +103,7 @@ class GitHubPagesHTMLGenerator:
                             continue
                             
                     # Normaliza resultado
-                    res = row.get('resultado', row.get('result', '')).lower()
+                    res = (row.get('resultado') or row.get('result') or '').strip().lower()
                     if any(x in res for x in ['vitoria', 'victory', 'vitória']):
                         norm_res = 'victory'
                     elif any(x in res for x in ['derrota', 'defeat']):
@@ -113,10 +114,11 @@ class GitHubPagesHTMLGenerator:
                         norm_res = 'draw' # fallback
                         
                     # Normaliza campos
-                    b_time = row.get('data', row.get('battle_time', ''))
+                    raw_battle_time = row.get('data') or row.get('battle_time') or ''
+                    b_time = self._normalize_battle_time(raw_battle_time)
                     opp_name = row.get('oponente', row.get('opponent_name', 'Oponente'))
                     opp_tag = row.get('tag_oponente', row.get('opponent_tag', ''))
-                    crowns = row.get('coroas', row.get('crowns', '0'))
+                    crowns = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
                     arena = row.get('arena', row.get('arena_name', 'Arena'))
                     deck_p = row.get('deck_jogador', row.get('deck_cards', ''))
                     deck_o = row.get('deck_oponente', row.get('opponent_deck_cards', ''))
@@ -143,10 +145,10 @@ class GitHubPagesHTMLGenerator:
                         'arena_name': arena,
                         'deck_cards': deck_p,
                         'deck_card_levels': levels_p,
-                        'player_level': int(p_level or 0),
+                        'player_level': self._safe_int(p_level, 0),
                         'opponent_deck_cards': deck_o,
                         'opponent_deck_card_levels': levels_o,
-                        'opponent_level': int(o_level or 0),
+                        'opponent_level': self._safe_int(o_level, 0),
                         'opponent_clan_name': clan_o,
                         'trophy_change': t_change
                     })
@@ -156,6 +158,33 @@ class GitHubPagesHTMLGenerator:
         # Ordena por tempo
         battles.sort(key=lambda x: x['battle_time'] or '', reverse=True)
         return battles
+
+    def _normalize_battle_time(self, battle_time: str) -> str:
+        """Normaliza datas de batalha para formato ISO para manter agregacoes consistentes."""
+        if not battle_time:
+            return ''
+
+        value = battle_time.strip()
+        for fmt in (
+            '%d/%m/%Y %H:%M',
+            '%d/%m/%Y %H:%M:%S',
+            '%Y%m%dT%H%M%S.%fZ',
+            '%Y%m%dT%H%M%SZ',
+            '%Y%m%dT%H%M%S.%f',
+            '%Y%m%dT%H%M%S',
+        ):
+            try:
+                return datetime.strptime(value, fmt).strftime('%Y-%m-%dT%H:%M:%S')
+            except ValueError:
+                continue
+        return value
+
+    def _safe_int(self, value, default: int = 0) -> int:
+        """Converte para inteiro com fallback para evitar quebra de leitura de CSV."""
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
 
     def _load_clan_members_csv(self) -> List[Dict]:
         """Lê clan_members.csv diretamente"""
@@ -171,9 +200,10 @@ class GitHubPagesHTMLGenerator:
         except Exception as e:
             logger.error(f"Erro ao ler clan_members.csv: {e}")
         return members
-        
-        # Card name mapping for file names (GitHub Pages uses relative paths)
-        self.card_name_mapping = {
+
+    def _get_card_name_mapping(self) -> Dict[str, str]:
+        """Retorna mapeamento de nomes de cartas para nomes de assets."""
+        return {
             'Three Musketeers': '3M',
             'Hero Musketeer': 'Musk',  # Hero version of Musketeer
             'Musketeer': 'Musk',  # Keep regular Musketeer mapping
