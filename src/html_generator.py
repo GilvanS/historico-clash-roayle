@@ -785,6 +785,43 @@ class GitHubPagesHTMLGenerator:
         results.sort(key=lambda x: (x['total_battles'], -x['user_win_rate']), reverse=True)
         return results
 
+    def get_lethal_opponent_decks(self, limit: int = 10) -> List[Dict]:
+        """Analisa quais decks de oponentes causam mais derrotas ao usuário."""
+        if not self.battles_cache: return []
+        
+        lethal_decks = {}
+        for b in self.battles_cache:
+            if b.get('result') != 'defeat': continue
+            
+            opp_deck = b.get('opp_deck')
+            if not opp_deck or opp_deck == 'N/D': continue
+            
+            if opp_deck not in lethal_decks:
+                lethal_decks[opp_deck] = {
+                    'deck': opp_deck,
+                    'losses_caused': 0,
+                    'opponents': set(),
+                    'last_encounter': b.get('battle_time'),
+                    'cards': [c.strip() for c in opp_deck.split('|')] if '|' in opp_deck else []
+                }
+            
+            lethal_decks[opp_deck]['losses_caused'] += 1
+            lethal_decks[opp_deck]['opponents'].add(b.get('opponent_name', 'Desconhecido'))
+            if b.get('battle_time') > lethal_decks[opp_deck]['last_encounter']:
+                lethal_decks[opp_deck]['last_encounter'] = b.get('battle_time')
+                
+        # Converte para lista e ordena
+        results = list(lethal_decks.values())
+        results.sort(key=lambda x: x['losses_caused'], reverse=True)
+        
+        # Formata para o template
+        for r in results:
+            r['opponents_list'] = ", ".join(list(r['opponents'])[:3])
+            if len(r['opponents']) > 3:
+                r['opponents_list'] += f" e outros {len(r['opponents'])-3}"
+        
+        return results[:limit]
+
     def _get_opponent_period_stats_from_cache(self, battles: List[Dict]) -> Dict:
         """Helper to calculate period stats from a list of battles"""
         from datetime import timedelta
@@ -1650,8 +1687,9 @@ class GitHubPagesHTMLGenerator:
 
     def generate_deck_performance_with_tabs(self, decks: List[Dict], decks_same_level: List[Dict],
                                             decks_defeated_by: List[Dict], repeated_opponents: List[Dict],
-                                            stats: Dict, player_tag: str = None) -> str:
-        """Generate HTML for deck performance section with 2 tabs: Meus Decks da Semana + Oponentes Repetidos"""
+                                            stats: Dict, player_tag: str = None, lethal_decks_html: str = "") -> str:
+        """Generate HTML for deck performance section with 3 tabs: 
+        Oponentes Repetidos + Meus Decks da Semana + Decks Inimigos Letais"""
 
         # Aba 1: Meus Decks da Semana - le CSVs diarios
         weekly_data = self.get_weekly_decks_from_csv()
@@ -1666,6 +1704,7 @@ class GitHubPagesHTMLGenerator:
             <div class="deck-tabs">
                 <button class="tab-button active" onclick="switchDeckTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
                 <button class="tab-button" onclick="switchDeckTab(event, 'weekly-decks')">Meus Decks da Semana</button>
+                <button class="tab-button" onclick="switchDeckTab(event, 'lethal-decks')">Decks Inimigos Letais</button>
             </div>
 
             <div id="tab-repeated-opponents" class="tab-content active">
@@ -1674,6 +1713,10 @@ class GitHubPagesHTMLGenerator:
 
             <div id="tab-weekly-decks" class="tab-content">
                 {weekly_decks_html}
+            </div>
+            
+            <div id="tab-lethal-decks" class="tab-content">
+                {lethal_decks_html if lethal_decks_html else '<p>Analise de decks letais pendente de mais derrotas.</p>'}
             </div>
         </div>
         {self.generate_dashboard_scripts()}
@@ -2071,6 +2114,51 @@ class GitHubPagesHTMLGenerator:
             
         return html + "</div>"
 
+    def generate_lethal_decks_html(self, lethal_decks: List[Dict]) -> str:
+        """Gera HTML para os decks que mais causam derrotas."""
+        if not lethal_decks: return '<div class="cr-empty-state">Dados insuficientes para mapear decks letais.</div>'
+        
+        html = '<div class="cr-decks-list">'
+        for i, ld in enumerate(lethal_decks, 1):
+            deck_str = ld['deck']
+            losses = ld['losses_caused']
+            opponents = ld['opponents_list']
+            last = ld['last_encounter'][:16].replace('T', ' ')
+            
+            c_list = ld['cards']
+            def c_h(n):
+                img = self.get_card_image_path(n)
+                return f'<div class="cr-card-wrap" title="{n}" style="width:50px;height:60px;"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
+            
+            html += f'''
+            <div class="cr-deck-card" style="padding:15px; border-left: 5px solid #e53e3e;">
+                <div class="cr-deck-header" style="background:#fff5f5;">
+                    <div class="cr-deck-meta">
+                        <span class="cr-deck-rank" style="background:#e53e3e;">#{i} MAIS LETAL</span>
+                        <span class="cr-deck-label" style="font-weight:700;">Causou {losses} derrotas</span>
+                    </div>
+                </div>
+                <div class="cr-deck-body" style="align-items:center;">
+                    <div class="cr-cards-grid">
+                        <div class="cr-cards-row">{ "".join(c_h(c) for c in c_list[:4]) }</div>
+                        <div class="cr-cards-row">{ "".join(c_h(c) for c in c_list[4:8]) }</div>
+                    </div>
+                    <div class="cr-stats-panel" style="margin-left:20px;">
+                        <div style="font-size:0.9em; color:#4a5568; margin-bottom:8px;">
+                            <strong>Usuários comuns:</strong> {opponents}
+                        </div>
+                        <div style="font-size:0.8em; color:#718096;">
+                            <strong>Última derrota:</strong> {last}
+                        </div>
+                        <div style="margin-top:10px; background:#fff5f5; color:#c53030; font-size:0.75em; padding:5px 10px; border-radius:5px; font-weight:700; text-transform:uppercase;">
+                            ALERTA: Deck com alta taxa de counter
+                        </div>
+                    </div>
+                </div>
+            </div>'''
+            
+        return html + "</div>"
+
 
     def generate_clan_member_activity_html(self, clan_members: List[Dict], deck_analytics: Dict, player_name: str) -> str:
         """Generate HTML for clan member activity section"""
@@ -2179,10 +2267,13 @@ class GitHubPagesHTMLGenerator:
             clan_members = self.get_clan_members()
             deck_analytics = self.get_clan_deck_analytics()
             
-            # Gera HTML das abas de decks (Meus Decks da Semana + Oponentes Repetidos)
-            # Os dados são lidos internamente via CSVs
+            # Aba 3: Decks Letais - Oponentes que mais batem
+            lethal_decks_data = self.get_lethal_opponent_decks()
+            lethal_decks_html = self.generate_lethal_decks_html(lethal_decks_data)
+            
+            # Gera HTML das abas de decks (Meus Decks da Semana + Oponentes Repetidos + Decks Letais)
             deck_performance_html = self.generate_deck_performance_with_tabs(
-                [], [], [], [], stats, player_tag
+                [], [], [], [], stats, player_tag, lethal_decks_html
             )
             
             # Batalhas Recentes
@@ -2238,7 +2329,7 @@ class GitHubPagesHTMLGenerator:
             
             return self.generate_full_html(stats, win_rate, deck_performance_html, 
                                          daily_histogram_html, clan_member_activity_html,
-                                         battles_table_html, battles_cards_html)
+                                         battles_table_html, battles_cards_html, lethal_decks_html)
         except Exception as e:
             print(f"Erro ao gerar relatorio HTML: {str(e)}")
             return self.generate_error_page()
@@ -3589,7 +3680,8 @@ class GitHubPagesHTMLGenerator:
     
     def generate_full_html(self, stats, win_rate, deck_performance_html, 
                           daily_histogram_html, clan_member_activity_html="",
-                          battles_table_html="", battles_cards_html="") -> str:
+                          battles_table_html="", battles_cards_html="",
+                          lethal_decks_html="") -> str:
         """Generate the complete HTML document"""
         
         css_styles = self.get_base_css_styles()
