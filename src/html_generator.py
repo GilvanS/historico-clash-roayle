@@ -24,6 +24,10 @@ logger = logging.getLogger(__name__)
 
 class GitHubPagesHTMLGenerator:
     def __init__(self, db_path: str = None):
+        self.src_dir = os.path.dirname(os.path.abspath(__file__))
+        self.project_root = os.path.dirname(self.src_dir)
+        self.data_csv_dir = os.path.join(self.src_dir, "data_csv_oficial")
+
         # Inicializa o gerenciador de CSV e carrega os dados para a memoria
         self.csv_manager = CSVDatabaseManager()
         self.csv_manager.load_all_csvs()
@@ -51,7 +55,7 @@ class GitHubPagesHTMLGenerator:
         
     def _load_csv_as_list(self, filename: str) -> List[Dict]:
         """Auxiliar para carregar qualquer CSV da pasta oficial como lista de dicts"""
-        path = os.path.join('src', 'data_csv_oficial', filename)
+        path = os.path.join(self.data_csv_dir, filename)
         if not os.path.exists(path):
             logger.warning(f"Aviso: {path} não encontrado")
             return []
@@ -69,11 +73,11 @@ class GitHubPagesHTMLGenerator:
     def _load_all_battles_from_csv(self, player_tag: str = '#2QR292P') -> List[Dict]:
         """Lê todos os CSVs de batalha e unifica em uma lista, sem usar SQL"""
         battles = []
-        pattern = os.path.join('src', 'data_csv_oficial', 'oponentes_*.csv')
+        pattern = os.path.join(self.data_csv_dir, 'oponentes_*.csv')
         files = glob.glob(pattern)
         
         # Também inclui battles.csv se existir
-        battles_csv = os.path.join('src', 'data_csv_oficial', 'battles.csv')
+        battles_csv = os.path.join(self.data_csv_dir, 'battles.csv')
         if os.path.exists(battles_csv):
             files.append(battles_csv)
             
@@ -189,7 +193,7 @@ class GitHubPagesHTMLGenerator:
     def _load_clan_members_csv(self) -> List[Dict]:
         """Lê clan_members.csv diretamente"""
         members = []
-        path = os.path.join('src', 'data_csv_oficial', 'clan_members.csv')
+        path = os.path.join(self.data_csv_dir, 'clan_members.csv')
         if not os.path.exists(path):
             return []
         try:
@@ -200,6 +204,16 @@ class GitHubPagesHTMLGenerator:
         except Exception as e:
             logger.error(f"Erro ao ler clan_members.csv: {e}")
         return members
+
+    def _load_players_csv(self, player_tag: str) -> Optional[Dict]:
+        """Busca jogador no cache de players carregado de CSV."""
+        if not self.players_cache:
+            return None
+
+        for row in self.players_cache:
+            if row.get('player_tag') == player_tag:
+                return row
+        return None
 
     def _get_card_name_mapping(self) -> Dict[str, str]:
         """Retorna mapeamento de nomes de cartas para nomes de assets."""
@@ -522,6 +536,7 @@ class GitHubPagesHTMLGenerator:
             'level': int(player_row.get('level', 0) or 0),
             'clan_tag': player_row.get('clan_tag', ''),
             'clan_name': player_row.get('clan_name', ''),
+            'last_updated': player_row.get('last_updated', datetime.now(UTC).isoformat()),
             'total_battles': total_battles,
             'wins': wins,
             'losses': losses,
