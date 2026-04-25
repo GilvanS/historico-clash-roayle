@@ -194,13 +194,16 @@ class CSVDatabaseManager:
             # Detect delimiter (comma or semicolon)
             delimiter = ','
             with open(file_path, 'r', encoding='utf-8-sig') as f:
-                first_line = f.readline()
-                if ';' in first_line and ',' not in first_line:
+                # Ler as primeiras 5 linhas para uma detecção mais robusta
+                sample_lines = [f.readline() for _ in range(5)]
+                combined_sample = "".join(sample_lines)
+                
+                # Conta ocorrências totais na amostra para decidir o delimitador
+                semicolons = combined_sample.count(';')
+                commas = combined_sample.count(',')
+                
+                if semicolons > commas:
                     delimiter = ';'
-                elif ';' in first_line and ',' in first_line:
-                    # More semicolon than comma likely means it's the delimiter
-                    if first_line.count(';') > first_line.count(','):
-                        delimiter = ';'
             
             # Usar utf-8-sig para lidar com possiveis BOM no inicio do arquivo
             with open(file_path, 'r', encoding='utf-8-sig') as f:
@@ -217,31 +220,43 @@ class CSVDatabaseManager:
                 def normalize_date(date_str):
                     if not date_str:
                         return None
-                    date_str = str(date_str).strip()
+                    
+                    # Limpar aspas e espaços extras que podem vir de parsing corrompido
+                    date_str = str(date_str).strip().strip('"').strip("'")
+                    
                     if not date_str or date_str.startswith(';'):
                         return None
-                        
-                    # Already in ISO format (YYYYMMDDTHHMMSS.000Z)
+                    
+                    # Fallback para registros corrompidos que contêm a linha inteira (delimitada por ;)
+                    if ';' in date_str:
+                        # Pega apenas a primeira parte que deve ser a data
+                        parts = date_str.split(';')
+                        if parts:
+                            date_str = parts[0].strip()
+
+                    # Se ja estiver no formato ISO YYYY-MM-DD
+                    if len(date_str) >= 10 and date_str[4] == '-' and date_str[7] == '-':
+                        return date_str.replace('T', ' ')
+
+                    # Formato API (YYYYMMDDTHHMMSS.000Z)
                     if 'T' in date_str and date_str.endswith('Z'):
-                        # Convert to YYYY-MM-DD HH:MM:SS for SQLite consistency
                         try:
-                            # 20251211T212654.000Z
                             clean_date = date_str.split('.')[0].replace('T', ' ')
-                            # Clean potential non-numeric junk
                             dt = datetime.strptime(clean_date, '%Y%m%d %H%M%S')
                             return dt.strftime('%Y-%m-%d %H:%M:%S')
                         except:
                             return date_str
                             
-                    # European/Brazilian format (DD/MM/YYYY HH:MM)
-                    try:
-                        if ' ' in date_str:
-                            dt = datetime.strptime(date_str, '%d/%m/%Y %H:%M')
-                        else:
-                            dt = datetime.strptime(date_str, '%d/%m/%Y')
-                        return dt.strftime('%Y-%m-%dT%H:%M:%S')
-                    except:
-                        return date_str
+                    # Formato Brasileiro (DD/MM/YYYY HH:MM)
+                    formats = ['%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y']
+                    for fmt in formats:
+                        try:
+                            dt = datetime.strptime(date_str, fmt)
+                            return dt.strftime('%Y-%m-%d %H:%M:%S')
+                        except:
+                            continue
+                    
+                    return date_str
 
                 for row in reader:
                     # Skip empty rows or rows that are just separators
@@ -252,11 +267,17 @@ class CSVDatabaseManager:
                     mapped_row = {}
                     if column_mapping:
                         for csv_col, val in row.items():
+                            if val is not None:
+                                # Limpar aspas que podem estar envolvendo o valor devido a falha de split no DictReader
+                                val = str(val).strip().strip('"').strip("'")
+                                
                             target_col = column_mapping.get(csv_col)
                             if target_col:
                                 mapped_row[target_col] = val
                     else:
-                        mapped_row = row
+                        # Se não houver mapeamento, limpamos os valores de qualquer forma
+                        mapped_row = {k: (str(v).strip().strip('"').strip("'") if v is not None else v) 
+                                     for k, v in row.items()}
                         
                     # Filter row keys to match table columns
                     filtered_row = {k: v for k, v in mapped_row.items() if k in table_columns}
