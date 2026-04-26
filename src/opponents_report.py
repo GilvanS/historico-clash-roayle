@@ -46,11 +46,51 @@ class OpponentsReporter:
         
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='oponentes_batalhas'")
         if not cursor.fetchone():
-            cursor.execute("CREATE TABLE oponentes_batalhas AS SELECT * FROM battles WHERE 0")
-            # Adiciona colunas extras que este script usa
+            # Cria a tabela com o schema correto esperado pelos métodos deste script
+            cursor.execute("""
+                CREATE TABLE oponentes_batalhas (
+                    player_tag TEXT,
+                    battle_time TEXT,
+                    data_formatada TEXT,
+                    nome_oponente TEXT,
+                    tag_oponente TEXT,
+                    nivel_oponente INTEGER,
+                    trofes_oponente INTEGER,
+                    clan_oponente TEXT,
+                    resultado TEXT,
+                    coroas_jogador INTEGER,
+                    coroas_oponente INTEGER,
+                    mudanca_trofes INTEGER,
+                    modo_jogo TEXT,
+                    tipo_batalha TEXT,
+                    arena TEXT,
+                    deck_jogador TEXT,
+                    deck_oponente TEXT,
+                    vezes_enfrentado INTEGER,
+                    UNIQUE(player_tag, battle_time, tag_oponente)
+                )
+            """)
+            
+            # Tenta popular a partir da tabela 'battles' se ela tiver dados (vinda do CSVManager)
             try:
-                cursor.execute("ALTER TABLE oponentes_batalhas ADD COLUMN data_formatada TEXT")
-            except: pass
+                # Alteração: 2024-04-26 - Adicionado strftime para gerar data_formatada a partir do battle_time ISO
+                cursor.execute("""
+                    INSERT OR IGNORE INTO oponentes_batalhas 
+                    (player_tag, battle_time, data_formatada, nome_oponente, tag_oponente, nivel_oponente, 
+                     trofes_oponente, clan_oponente, resultado, coroas_jogador, 
+                     coroas_oponente, mudanca_trofes, modo_jogo, tipo_batalha, arena, 
+                     deck_jogador, deck_oponente)
+                    SELECT 
+                        player_tag, battle_time, 
+                        strftime('%d/%m/%Y %H:%M', battle_time),
+                        opponent_name, opponent_tag, opponent_level,
+                        opponent_trophies, opponent_clan_name, result, crowns,
+                        opponent_crowns, trophy_change, game_mode, battle_type, arena_name,
+                        deck_cards, opponent_deck_cards
+                    FROM battles
+                """)
+            except Exception as e:
+                print(f"Aviso ao migrar dados de 'battles' para 'oponentes_batalhas': {e}")
         
         conn.commit()
         conn.close()
@@ -256,22 +296,24 @@ class OpponentsReporter:
         # Converte para dicionarios
         opponents_data = []
         for row in rows:
+            # Alteração: 2024-04-26 - Corrigido mapeamento de índices (estava deslocado por 1 e pegando campos errados)
+            # row[2] = data_formatada, row[3] = nome_oponente, etc.
             opponents_data.append({
-                'data': row[3],  # data_formatada
-                'nome_oponente': row[4],
-                'tag_oponente': row[5],
-                'nivel_oponente': row[6],
-                'trofes_oponente': row[7],
-                'clan_oponente': row[8],
-                'resultado': row[9],
-                'coroas_jogador': row[10],
-                'coroas_oponente': row[11],
-                'mudanca_trofes': row[12],
-                'modo_jogo': row[13],
-                'tipo_batalha': row[14],
-                'arena': row[15],
-                'deck_jogador': row[16],
-                'deck_oponente': row[17]
+                'data': row[2],  # data_formatada
+                'nome_oponente': row[3],
+                'tag_oponente': row[4],
+                'nivel_oponente': row[5],
+                'trofes_oponente': row[6],
+                'clan_oponente': row[7],
+                'resultado': row[8],
+                'coroas_jogador': row[9],
+                'coroas_oponente': row[10],
+                'mudanca_trofes': row[11],
+                'modo_jogo': row[12],
+                'tipo_batalha': row[13],
+                'arena': row[14],
+                'deck_jogador': row[15],
+                'deck_oponente': row[16]
             })
         
         # Conta repeticoes
@@ -317,6 +359,8 @@ class OpponentsReporter:
                 print(f"  - {opponent_name} ({tag}): {count} vezes")
         else:
             print("\nNenhum oponente foi enfrentado mais de uma vez no periodo.")
+        
+        return output_file
     
     def generate_period_csvs(self, player_tag: str):
         """Gera CSVs para dia, semana, mes e ano atual (acumulados do banco)"""
