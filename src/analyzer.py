@@ -469,15 +469,15 @@ class ClashRoyaleAnalyzer:
             if player_data:
                 self.save_clan_member_deck_if_changed(player_data, clan_tag, clan_name)
                 
-                # For members with >= 10K trophies (and not the main player), fetch their battles
-                if member_trophies >= 10000 and member_tag != main_player_tag:
-                    print(f"    Fetching battles for {member['name']} (>= 10K trophies)...")
-                    battles = self.get_battle_log(member_tag)
-                    if battles:
-                        self.save_battles(member_tag, battles)
-                        print(f"    Saved {len(battles)} battles")
-                    # Extra rate limiting for battle logs
-                    time.sleep(1)
+                # Desativado: Coleta de batalhas de outros membros estava poluindo o dashboard
+                # if member_trophies >= 10000 and member_tag != main_player_tag:
+                #     print(f"    Fetching battles for {member['name']} (>= 10K trophies)...")
+                #     battles = self.get_battle_log(member_tag)
+                #     if battles:
+                #         self.save_battles(member_tag, battles)
+                #         print(f"    Saved {len(battles)} battles")
+                #     # Extra rate limiting for battle logs
+                #     time.sleep(1)
             
             # Rate limiting - be nice to the API
             time.sleep(0.5)
