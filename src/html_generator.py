@@ -795,7 +795,18 @@ class GitHubPagesHTMLGenerator:
             if len(battles) < 2: continue
             
             latest_b = battles[0]
-            o_name = latest_b.get('opponent_name', 'Desconhecido')
+            o_name = latest_b.get('opponent_name') or latest_b.get('oponente')
+            if not o_name or o_name == 'Desconhecido' or o_name == 'Oponente':
+                # Tenta em outras batalhas do mesmo oponente
+                for b in battles:
+                    name = b.get('opponent_name') or b.get('oponente')
+                    if name and name not in ['Desconhecido', 'Oponente']:
+                        o_name = name
+                        break
+            
+            if not o_name:
+                o_name = o_tag
+                
             latest_o_trophies = latest_b.get('opponent_trophies', 0)
             
             period_stats = self._get_opponent_period_stats_from_cache(battles)
@@ -1933,9 +1944,30 @@ class GitHubPagesHTMLGenerator:
         return final_list[:10]
 
     def get_top_winning_decks_weekly(self) -> List[Dict]:
-        """Consolida os decks com maior taxa de vitória na semana usando dados de TODOS os jogadores."""
+        """Consolida os decks com maior taxa de vitória na semana priorizando dados mundiais do CSV."""
+        # 1. Tenta carregar do arquivo meta global separado
+        meta_global_path = os.path.join(self.data_csv_dir, 'decks_meta_global.csv')
+        if os.path.exists(meta_global_path):
+            try:
+                meta_list = []
+                with open(meta_global_path, mode='r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        meta_list.append({
+                            'deck_cards': row['deck_cards'],
+                            'total': int(row.get('total', 0)),
+                            'wins': int(row.get('wins', 0)),
+                            'losses': int(row.get('losses', 0)),
+                            'win_rate': float(row.get('win_rate', 0)),
+                            'source': row.get('source', 'Global Meta')
+                        })
+                if meta_list:
+                    return meta_list[:5]
+            except Exception as e:
+                logger.error(f"Erro ao ler decks_meta_global.csv: {e}")
+
+        # 2. Fallback para lógica de clã se o arquivo global não existir
         from datetime import datetime, timedelta
-        # Usa tag bypass para carregar dados de todos os jogadores
         global_battles = self._load_all_battles_from_csv(player_tag='#YVJR0JLY')
         if not global_battles: return []
             
@@ -2073,12 +2105,15 @@ class GitHubPagesHTMLGenerator:
             
             grid_h = f'<div class="cr-cards-grid"><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[:4])}</div><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[4:8])}</div></div>'
 
+            source_label = deck.get('source', 'Dados do Clã')
+            is_global = source_label == 'Global Meta'
+            
             wr_c = '#48bb78' if win_rate >= 55 else ('#4299e1' if win_rate >= 50 else '#718096')
             html += f'''
             <div class="cr-deck-card" style="border-top: 4px solid {wr_c};">
                 <div class="cr-deck-header">
                     <div class="cr-deck-meta">
-                        <span class="cr-deck-rank" style="background:{wr_c};">#{i} META</span>
+                        <span class="cr-deck-rank" style="background:{wr_c};">#{i} {source_label.upper()}</span>
                         <span class="cr-deck-label">Taxa de Vitoria: {win_rate}%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">{total} Partidas</span>
@@ -2089,7 +2124,7 @@ class GitHubPagesHTMLGenerator:
                         <div style="text-align:center; padding:10px; background:#f7fafc; border-radius:12px; width:100%;">
                             <div style="font-size:0.7em; color:#718096; font-weight:700; text-transform:uppercase; margin-bottom:5px;">Performance Global</div>
                             <div style="font-size:1.5em; font-weight:900; color:{wr_c};">{win_rate}%</div>
-                            <div style="font-size:0.6em; color:#a0aec0;">Baseado em dados de todos os jogadores do cla</div>
+                            <div style="font-size:0.6em; color:#a0aec0;">Baseado em dados {"mundiais" if is_global else "de todos os jogadores do cla"}</div>
                         </div>
                     </div>
                 </div>
