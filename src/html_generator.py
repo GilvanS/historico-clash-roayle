@@ -133,18 +133,19 @@ class GitHubPagesHTMLGenerator:
                     opp_tag = str(row.get('tag_oponente') or row.get('opponent_tag') or '').strip().upper()
                     
                     # Chave de deduplicação: (hora, oponente, resultado)
-                    opp_identifier = opp_tag if opp_tag else str(row.get('oponente') or row.get('opponent_name') or 'Unknown')
+                    opp_identifier = opp_tag if opp_tag else str(row.get('nome_oponente') or row.get('oponente') or row.get('opponent_name') or 'Unknown')
                     dedup_key = (b_time, opp_identifier, norm_res)
                     
                     if dedup_key in battles_dict:
                         continue
                         
-                    opp_name = row.get('oponente', row.get('opponent_name', 'Oponente'))
+                    opp_name = row.get('nome_oponente', row.get('oponente', row.get('opponent_name', 'Oponente')))
                     crowns = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
                     arena = row.get('arena', row.get('arena_name', 'Arena'))
                     deck_p = row.get('deck_jogador', row.get('deck_cards', ''))
                     deck_o = row.get('deck_oponente', row.get('opponent_deck_cards', ''))
-                    clan_o = row.get('cla_oponente', row.get('opponent_clan_name', ''))
+                    clan_o = row.get('clan_oponente', row.get('cla_oponente', row.get('opponent_clan_name', '')))
+                    opp_trophies = row.get('trofes_oponente', row.get('opponent_trophies', '0'))
                     
                     # Níveis de cartas (se houver)
                     levels_p = row.get('deck_card_levels', '')
@@ -172,6 +173,7 @@ class GitHubPagesHTMLGenerator:
                         'opponent_deck_card_levels': levels_o,
                         'opponent_level': self._safe_int(o_level, 0),
                         'opponent_clan_name': clan_o,
+                        'opponent_trophies': self._safe_int(opp_trophies, 0),
                         'trophy_change': t_change
                     }
                     
