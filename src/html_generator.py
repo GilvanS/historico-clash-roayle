@@ -186,12 +186,19 @@ class GitHubPagesHTMLGenerator:
         logger.info(f"Total de batalhas únicas carregadas: {len(final_battles)}")
         return final_battles
 
-    def _normalize_battle_time(self, battle_time: str) -> str:
+    def _get_canonical_deck(self, deck_str: str) -> str:
+        """Gera uma representação canônica do deck (cartas ordenadas alfabeticamente)."""
+        if not deck_str or deck_str == 'N/D':
+            return 'N/D'
+        cards = [c.strip() for c in deck_str.replace(' | ', '|').split('|')]
+        return " | ".join(sorted(cards))
+
+    def _normalize_battle_time(self, raw_time: str) -> str:
         """Normaliza datas de batalha para formato ISO para manter agregacoes consistentes."""
-        if not battle_time:
+        if not raw_time:
             return ''
 
-        value = battle_time.strip()
+        value = raw_time.strip()
         for fmt in (
             '%d/%m/%Y %H:%M',
             '%d/%m/%Y %H:%M:%S',
@@ -864,31 +871,34 @@ class GitHubPagesHTMLGenerator:
         return results
 
     def get_lethal_opponent_decks(self, limit: int = 10) -> List[Dict]:
-        """Analisa quais decks de oponentes causam mais derrotas ao usuário."""
+        """Analisa quais decks de oponentes causam mais derrotas ao usuário usando agrupamento canônico."""
         if not self.battles_cache: return []
         
         lethal_decks = {}
         for b in self.battles_cache:
             if b.get('result') != 'defeat': continue
             
-            opp_deck = b.get('opp_deck')
-            if not opp_deck or opp_deck == 'N/D': continue
+            opp_deck_raw = b.get('opp_deck')
+            if not opp_deck_raw or opp_deck_raw == 'N/D': continue
             
-            if opp_deck not in lethal_decks:
-                lethal_decks[opp_deck] = {
-                    'deck': opp_deck,
+            # Usa chave canônica para agrupar decks idênticos em ordens diferentes
+            deck_key = self._get_canonical_deck(opp_deck_raw)
+            
+            if deck_key not in lethal_decks:
+                lethal_decks[deck_key] = {
+                    'deck': deck_key,
                     'losses_caused': 0,
                     'opponents': set(),
                     'last_encounter': b.get('battle_time'),
-                    'cards': [c.strip() for c in opp_deck.split('|')] if '|' in opp_deck else []
+                    'cards': [c.strip() for c in deck_key.split(' | ')]
                 }
             
-            lethal_decks[opp_deck]['losses_caused'] += 1
-            lethal_decks[opp_deck]['opponents'].add(b.get('opponent_name', 'Desconhecido'))
-            if b.get('battle_time') > lethal_decks[opp_deck]['last_encounter']:
-                lethal_decks[opp_deck]['last_encounter'] = b.get('battle_time')
+            lethal_decks[deck_key]['losses_caused'] += 1
+            lethal_decks[deck_key]['opponents'].add(b.get('opponent_name', 'Desconhecido'))
+            if b.get('battle_time') > lethal_decks[deck_key]['last_encounter']:
+                lethal_decks[deck_key]['last_encounter'] = b.get('battle_time')
                 
-        # Converte para lista e ordena
+        # Converte para lista e ordena por impacto
         results = list(lethal_decks.values())
         results.sort(key=lambda x: x['losses_caused'], reverse=True)
         
@@ -1766,8 +1776,8 @@ class GitHubPagesHTMLGenerator:
     def generate_deck_performance_with_tabs(self, decks: List[Dict], decks_same_level: List[Dict],
                                             decks_defeated_by: List[Dict], repeated_opponents: List[Dict],
                                             stats: Dict, player_tag: str = None, lethal_decks_html: str = "") -> str:
-        """Generate HTML for deck performance section with 3 tabs: 
-        Oponentes Repetidos + Meus Decks da Semana + Decks Inimigos Letais"""
+        """Generate HTML for deck performance section with 4 tabs: 
+        Oponentes Repetidos + Meus Decks da Semana + Decks Inimigos Letais + Mais Vencedores"""
 
         # Aba 1: Meus Decks da Semana - le CSVs diarios
         weekly_data = self.get_weekly_decks_from_csv()
@@ -1776,6 +1786,10 @@ class GitHubPagesHTMLGenerator:
         # Aba 2: Oponentes Repetidos - usa estatisticas consolidadas do cache CSV
         csv_repeated = self.get_repeated_opponents_stats(player_tag=player_tag)
         repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated)
+        
+        # Aba 4: Decks Mais Vencedores (Global/Clã)
+        winning_data = self.get_top_winning_decks_weekly()
+        winning_decks_html = self.generate_winning_decks_html(winning_data)
 
         return f"""
         <div class="deck-tabs-container">
@@ -1783,6 +1797,7 @@ class GitHubPagesHTMLGenerator:
                 <button class="tab-button active" onclick="switchDeckTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
                 <button class="tab-button" onclick="switchDeckTab(event, 'weekly-decks')">Meus Decks da Semana</button>
                 <button class="tab-button" onclick="switchDeckTab(event, 'lethal-decks')">Decks Inimigos Letais</button>
+                <button class="tab-button" onclick="switchDeckTab(event, 'winning-decks')">Melhores Decks (Semana)</button>
             </div>
 
             <div id="tab-repeated-opponents" class="tab-content active">
@@ -1795,6 +1810,10 @@ class GitHubPagesHTMLGenerator:
             
             <div id="tab-lethal-decks" class="tab-content">
                 {lethal_decks_html if lethal_decks_html else '<p>Analise de decks letais pendente de mais derrotas.</p>'}
+            </div>
+            
+            <div id="tab-winning-decks" class="tab-content">
+                {winning_decks_html}
             </div>
         </div>
         {self.generate_dashboard_scripts()}
@@ -1859,8 +1878,11 @@ class GitHubPagesHTMLGenerator:
             if not dt:
                 continue
             is_recent = dt >= seven_days_ago
-            cards = row.get('deck_jogador') or row.get('deck_cards')
-            if not cards: continue
+            cards_raw = row.get('deck_jogador') or row.get('deck_cards')
+            if not cards_raw: continue
+            
+            # Normaliza o deck para garantir que a ordem não afete
+            cards = self._get_canonical_deck(cards_raw)
             
             if cards not in deck_stats:
                 deck_stats[cards] = {
@@ -1881,7 +1903,7 @@ class GitHubPagesHTMLGenerator:
                 deck_stats[cards]['last_played'] = dt
                 
             res = (row.get('resultado') or row.get('result') or '').strip().lower()
-            if res in ['vitoria', 'victory']: deck_stats[cards]['wins'] += 1
+            if res in ['vitoria', 'victory', 'vitória']: deck_stats[cards]['wins'] += 1
             elif res in ['derrota', 'defeat']: deck_stats[cards]['losses'] += 1
             
             if len(deck_stats[cards]['battles']) < 30:
@@ -1889,7 +1911,7 @@ class GitHubPagesHTMLGenerator:
                     'resultado': res, 
                     'data': dt.strftime('%d/%m %H:%M'),
                     'dt_obj': dt,
-                    'my_deck': row['deck_jogador'],
+                    'my_deck': cards_raw,
                     'opp_deck': row['deck_oponente']
                 })
 
@@ -1906,9 +1928,58 @@ class GitHubPagesHTMLGenerator:
             d['win_rate'] = round((d['wins'] / d['total'] * 100), 1) if d['total'] > 0 else 0
             final_list.append(d)
             
-        # ORDENAÇÃO CRÍTICA: Decks usados RECENTEMENTE e com maior volume na semana no topo
-        # (recent_total, win_rate, total)
+        # ORDENAÇÃO: Decks usados RECENTEMENTE e com maior volume na semana no topo
         final_list.sort(key=lambda x: (x['recent_total'], x['win_rate'], x['total']), reverse=True)
+        return final_list[:10]
+
+    def get_top_winning_decks_weekly(self) -> List[Dict]:
+        """Consolida os decks com maior taxa de vitória na semana usando dados de TODOS os jogadores."""
+        from datetime import datetime, timedelta
+        # Usa tag bypass para carregar dados de todos os jogadores
+        global_battles = self._load_all_battles_from_csv(player_tag='#YVJR0JLY')
+        if not global_battles: return []
+            
+        today = datetime.now()
+        seven_days_ago = today - timedelta(days=7)
+        deck_stats = {}
+
+        for b in global_battles:
+            battle_time = b.get('battle_time', '')
+            dt = self._parse_dt(battle_time)
+            if not dt or dt < seven_days_ago:
+                continue
+            
+            # Consideramos o deck do jogador da linha (player_deck)
+            cards_raw = b.get('deck_cards') or b.get('deck_jogador')
+            if not cards_raw or cards_raw == 'N/D': continue
+            
+            cards = self._get_canonical_deck(cards_raw)
+            
+            if cards not in deck_stats:
+                deck_stats[cards] = {
+                    'deck_cards': cards, 
+                    'wins': 0, 
+                    'losses': 0, 
+                    'total': 0,
+                    'win_rate': 0
+                }
+            
+            deck_stats[cards]['total'] += 1
+            res = str(b.get('result') or b.get('resultado') or '').strip().lower()
+            if res in ['vitoria', 'victory', 'vitória']: 
+                deck_stats[cards]['wins'] += 1
+            elif res in ['derrota', 'defeat']: 
+                deck_stats[cards]['losses'] += 1
+
+        final_list = []
+        for d in deck_stats.values():
+            # Filtro: mínimo de 3 batalhas para ser estatisticamente relevante
+            if d['total'] >= 3:
+                d['win_rate'] = round((d['wins'] / d['total'] * 100), 1)
+                final_list.append(d)
+            
+        # Ordena por Win Rate, depois por Total de partidas
+        final_list.sort(key=lambda x: (x['win_rate'], x['total']), reverse=True)
         return final_list[:10]
 
     def generate_weekly_decks_html(self, weekly_data: List[Dict]) -> str:
@@ -1982,6 +2053,44 @@ class GitHubPagesHTMLGenerator:
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>{get_preview_grid(opp_deck_init, 'opp-deck-side')}</div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-{deck_id}" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">{timeline_h}</div></div>
+                    </div>
+                </div>
+            </div>'''
+        return html + '</div>'
+
+    def generate_winning_decks_html(self, winning_data: List[Dict]) -> str:
+        """Gera HTML para a aba de melhores decks da semana (Meta/Global)."""
+        if not winning_data: return '<div class="cr-empty-state">Dados globais insuficientes para o Top Vencedores.</div>'
+        
+        html = '<div class="cr-decks-list">'
+        for i, deck in enumerate(winning_data, 1):
+            total = deck['total']
+            win_rate = deck['win_rate']
+            
+            cards_list = [c.strip() for c in deck['deck_cards'].split(' | ')]
+            def card_img(n):
+                return f'<div class="cr-card-wrap" title="{n}" style="width:40px;height:48px;"><img src="{self.get_card_image_path(n)}" class="cr-card-img" loading="lazy"></div>'
+            
+            grid_h = f'<div class="cr-cards-grid"><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[:4])}</div><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[4:8])}</div></div>'
+
+            wr_c = '#48bb78' if win_rate >= 55 else ('#4299e1' if win_rate >= 50 else '#718096')
+            html += f'''
+            <div class="cr-deck-card" style="border-top: 4px solid {wr_c};">
+                <div class="cr-deck-header">
+                    <div class="cr-deck-meta">
+                        <span class="cr-deck-rank" style="background:{wr_c};">#{i} META</span>
+                        <span class="cr-deck-label">Taxa de Vitoria: {win_rate}%</span>
+                    </div>
+                    <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">{total} Partidas</span>
+                </div>
+                <div class="cr-deck-body">
+                    {grid_h}
+                    <div class="cr-stats-panel" style="flex:1; display:flex; align-items:center; justify-content:center;">
+                        <div style="text-align:center; padding:10px; background:#f7fafc; border-radius:12px; width:100%;">
+                            <div style="font-size:0.7em; color:#718096; font-weight:700; text-transform:uppercase; margin-bottom:5px;">Performance Global</div>
+                            <div style="font-size:1.5em; font-weight:900; color:{wr_c};">{win_rate}%</div>
+                            <div style="font-size:0.6em; color:#a0aec0;">Baseado em dados de todos os jogadores do cla</div>
+                        </div>
                     </div>
                 </div>
             </div>'''
@@ -2814,6 +2923,7 @@ class GitHubPagesHTMLGenerator:
         
         .deck-tabs {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
             border-bottom: 2px solid #e2e8f0;
