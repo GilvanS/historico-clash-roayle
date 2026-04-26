@@ -155,11 +155,11 @@ def ensure_tables_oponentes(cursor):
 
 DATABASES = {
     'clash_royale.db': {
-        'tables': ['players', 'battles', 'clan_members', 'clan_rankings_history', 'clan_member_decks'],
+        'tables': ['players', 'clan_members'], # Removido battles, clan_member_decks e clan_rankings_history
         'ensure_func': ensure_tables_clash_royale
     },
     'oponentes.db': {
-        'tables': ['oponentes_batalhas'],
+        'tables': [], # Removido oponentes_batalhas
         'ensure_func': ensure_tables_oponentes
     }
 }

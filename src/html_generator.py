@@ -44,12 +44,13 @@ class GitHubPagesHTMLGenerator:
                 "Content-Type": "application/json"
             }
         
+        self.player_tag = os.getenv('CR_PLAYER_TAG', '#2QR292P')
         self.failed_tags = set()
         # Caches carregados diretamente do CSV (ignora SQL)
-        self.battles_cache = self._load_all_battles_from_csv('#2QR292P')
+        self.battles_cache = self._load_all_battles_from_csv(self.player_tag)
         self.clan_members_cache = self._load_clan_members_csv()
-        self.rankings_history_cache = self._load_csv_as_list('clan_rankings_history.csv')
-        self.clan_decks_cache = self._load_csv_as_list('clan_member_decks.csv')
+        self.rankings_history_cache = [] # Arquivo removido por redundancia
+        self.clan_decks_cache = []       # Arquivo removido por redundancia
         self.players_cache = self._load_csv_as_list('players.csv')
         self.card_name_mapping = self._get_card_name_mapping()
         
@@ -70,44 +71,56 @@ class GitHubPagesHTMLGenerator:
         """Lê clan_members.csv diretamente"""
         return self._load_csv_as_list('clan_members.csv')
 
-    def _load_all_battles_from_csv(self, player_tag: str = '#2QR292P') -> List[Dict]:
-        """Lê todos os CSVs de batalha e unifica em uma lista, sem usar SQL"""
-        battles = []
+    def _load_all_battles_from_csv(self, player_tag: str = None) -> List[Dict]:
+        """Loads all battles from the consolidated CSV file for a specific player tag"""
+        if not player_tag:
+            player_tag = self.player_tag
+        """Lê todos os CSVs de batalha e unifica em uma lista, com deduplicação rigorosa"""
+        battles_dict = {}
+        # Carrega apenas arquivos particionados (ano, mes, semana, dia)
+        # Ignora battles.csv, oponentes_todos.csv e oponentes_batalhas.csv que são redundantes
         pattern = os.path.join(self.data_csv_dir, 'oponentes_*.csv')
-        files = glob.glob(pattern)
+        all_files = glob.glob(pattern)
         
-        # Também inclui battles.csv se existir
-        battles_csv = os.path.join(self.data_csv_dir, 'battles.csv')
-        if os.path.exists(battles_csv):
-            files.append(battles_csv)
+        # Filtra para evitar arquivos que sabidamente contêm dados duplicados de forma massiva
+        files = []
+        ignored_files = ['oponentes_todos.csv', 'oponentes_batalhas.csv', 'battles.csv']
+        for f in all_files:
+            basename = os.path.basename(f)
+            if basename not in ignored_files:
+                files.append(f)
             
         logger.info(f"Lendo {len(files)} arquivos CSV de batalha para o player {player_tag}...")
         
         for file in files:
             try:
                 # Usa encoding latin1 para lidar com nomes com acento se utf-8 falhar
-                try:
-                    f = open(file, mode='r', encoding='utf-8')
-                    reader = csv.DictReader(f)
-                    data = list(reader)
-                    f.close()
-                except UnicodeDecodeError:
-                    f = open(file, mode='r', encoding='latin1')
-                    reader = csv.DictReader(f)
-                    data = list(reader)
-                    f.close()
+                data = []
+                for encoding in ['utf-8-sig', 'utf-8', 'latin1']:
+                    try:
+                        with open(file, mode='r', encoding=encoding) as f:
+                            reader = csv.DictReader(f)
+                            # Se o arquivo tiver delimitador diferente (ex: ;), tenta detectar
+                            if reader.fieldnames and len(reader.fieldnames) == 1 and ';' in reader.fieldnames[0]:
+                                f.seek(0)
+                                reader = csv.DictReader(f, delimiter=';')
+                            data = list(reader)
+                        if data: break
+                    except:
+                        continue
 
                 for row in data:
                     # Filtro de player_tag
-                    row_tag = row.get('player_tag')
-                    if row_tag and row_tag != player_tag and player_tag != '#YVJR0JLY':
-                        # Se estivermos buscando a tag antiga e o row for da tag nova, ignoramos (ou vice-versa)
-                        # Mas se o usuário quer unificado, podemos remover esse filtro ou torná-lo flexível
-                        if row_tag not in ['#2QR292P', '#YVJR0JLY']:
-                            continue
+                    row_tag = row.get('player_tag') or player_tag
+                    if row_tag and row_tag not in [player_tag, '#YVJR0JLY'] and player_tag != '#YVJR0JLY':
+                        continue
                             
+                    # Normaliza campos
+                    raw_battle_time = row.get('data') or row.get('battle_time') or ''
+                    b_time = self._normalize_battle_time(raw_battle_time)
+                    
                     # Normaliza resultado
-                    res = (row.get('resultado') or row.get('result') or '').strip().lower()
+                    res = str(row.get('resultado') or row.get('result') or '').strip().lower()
                     if any(x in res for x in ['vitoria', 'victory', 'vitória']):
                         norm_res = 'victory'
                     elif any(x in res for x in ['derrota', 'defeat']):
@@ -115,13 +128,18 @@ class GitHubPagesHTMLGenerator:
                     elif any(x in res for x in ['empate', 'draw']):
                         norm_res = 'draw'
                     else:
-                        norm_res = 'draw' # fallback
+                        norm_res = 'draw'
+
+                    opp_tag = str(row.get('tag_oponente') or row.get('opponent_tag') or '').strip().upper()
+                    
+                    # Chave de deduplicação: (hora, oponente, resultado)
+                    opp_identifier = opp_tag if opp_tag else str(row.get('oponente') or row.get('opponent_name') or 'Unknown')
+                    dedup_key = (b_time, opp_identifier, norm_res)
+                    
+                    if dedup_key in battles_dict:
+                        continue
                         
-                    # Normaliza campos
-                    raw_battle_time = row.get('data') or row.get('battle_time') or ''
-                    b_time = self._normalize_battle_time(raw_battle_time)
                     opp_name = row.get('oponente', row.get('opponent_name', 'Oponente'))
-                    opp_tag = row.get('tag_oponente', row.get('opponent_tag', ''))
                     crowns = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
                     arena = row.get('arena', row.get('arena_name', 'Arena'))
                     deck_p = row.get('deck_jogador', row.get('deck_cards', ''))
@@ -139,10 +157,10 @@ class GitHubPagesHTMLGenerator:
                     except:
                         t_change = 0
                         
-                    battles.append({
+                    battle_obj = {
                         'battle_time': b_time,
                         'result': norm_res,
-                        'player_tag': player_tag,
+                        'player_tag': row_tag,
                         'opponent_name': opp_name,
                         'opponent_tag': opp_tag,
                         'crowns': crowns,
@@ -155,13 +173,18 @@ class GitHubPagesHTMLGenerator:
                         'opponent_level': self._safe_int(o_level, 0),
                         'opponent_clan_name': clan_o,
                         'trophy_change': t_change
-                    })
+                    }
+                    
+                    battles_dict[dedup_key] = battle_obj
             except Exception as e:
                 logger.error(f"Erro ao processar {file}: {e}")
         
-        # Ordena por tempo
-        battles.sort(key=lambda x: x['battle_time'] or '', reverse=True)
-        return battles
+        # Converte o dicionário de volta para lista e ordena por tempo
+        final_battles = list(battles_dict.values())
+        final_battles.sort(key=lambda x: x['battle_time'] or '', reverse=True)
+        
+        logger.info(f"Total de batalhas únicas carregadas: {len(final_battles)}")
+        return final_battles
 
     def _normalize_battle_time(self, battle_time: str) -> str:
         """Normaliza datas de batalha para formato ISO para manter agregacoes consistentes."""
@@ -505,7 +528,7 @@ class GitHubPagesHTMLGenerator:
     
     def get_player_stats(self) -> Optional[Dict]:
         """Get player statistics from CSV files"""
-        player_row = self._load_players_csv('#2QR292P')
+        player_row = self._load_players_csv(self.player_tag)
         if not player_row:
             # Tenta com outra tag se falhar
             player_row = self._load_players_csv('#YVJR0JLY')
@@ -996,7 +1019,7 @@ class GitHubPagesHTMLGenerator:
     def get_daily_battle_stats(self, days_limit: int = 30, player_tag: str = None) -> List[Dict]:
         """Get daily wins/losses aggregation from CSV files"""
         if not player_tag:
-            player_tag = '#2QR292P'
+            player_tag = self.player_tag
             
         battles = self._load_all_battles_from_csv(player_tag)
         
@@ -1781,7 +1804,7 @@ class GitHubPagesHTMLGenerator:
         logger.info("Carregando dados das batalhas de todos os CSVs disponíveis")
         
         # Carrega todas as batalhas usando o helper
-        battles_list = self._load_all_battles_from_csv('#2QR292P')
+        battles_list = self._load_all_battles_from_csv(self.player_tag)
         
         all_data = []
         for b in battles_list:

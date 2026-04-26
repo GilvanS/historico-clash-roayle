@@ -186,12 +186,11 @@ class ClashRoyaleAnalyzer:
     def persist_to_csv(self):
         """Persist all in-memory tables back to official CSV files"""
         print("Persisting updated data back to CSV files...")
+        # Apenas exportamos os arquivos que ainda são necessários.
+        # battles, clan_member_decks e clan_rankings_history agora são mantidos em arquivos particionados
         tables_to_export = {
             'players': 'players.csv',
-            'battles': 'battles.csv',
-            'clan_members': 'clan_members.csv',
-            'clan_member_decks': 'clan_member_decks.csv',
-            'clan_rankings_history': 'clan_rankings_history.csv'
+            'clan_members': 'clan_members.csv'
         }
         
         for table, filename in tables_to_export.items():

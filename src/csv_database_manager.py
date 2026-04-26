@@ -305,7 +305,9 @@ class CSVDatabaseManager:
                         tag_val = filtered_row.get('player_tag')
                         is_oponentes_file = 'oponentes_' in os.path.basename(file_path)
                         if (not tag_val or tag_val == '0') and is_oponentes_file:
-                            filtered_row['player_tag'] = '#2QR292P'
+                            # Tenta pegar a tag do ambiente, se nao houver usa o fallback historico
+                            player_tag_env = os.getenv('CR_PLAYER_TAG', '#2QR292P')
+                            filtered_row['player_tag'] = player_tag_env
                     
                     # Normalize battle_time if present
                     if 'battle_time' in filtered_row:
