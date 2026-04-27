@@ -123,6 +123,17 @@ class OpponentsReporter:
             opponent_team = opponents[0] if opponents else None
             deck_oponente = self.format_deck(opponent_team.get('cards', [])) if opponent_team else ''
             
+            # Normaliza data para o banco (ISO format YYYY-MM-DD HH:MM:SS)
+            # Para manter consistência com o CSVDatabaseManager
+            raw_time = battle.get('battleTime', '')
+            iso_time = ''
+            if len(raw_time) >= 15:
+                try:
+                    dt_utc = datetime.strptime(raw_time[:15], '%Y%m%dT%H%M%S')
+                    iso_time = dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+                except:
+                    iso_time = raw_time
+            
             try:
                 cursor.execute("""
                     INSERT OR IGNORE INTO oponentes_batalhas 
@@ -133,7 +144,7 @@ class OpponentsReporter:
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     player_tag,
-                    battle.get('battleTime', ''),
+                    iso_time,
                     opponent_info['data'],
                     opponent_info['nome_oponente'],
                     opponent_info['tag_oponente'],
@@ -392,13 +403,14 @@ class OpponentsReporter:
         
         # Pasta de saida oficial
         output_dir = self.csv_manager.data_dir
-        
+        # Configura factory para acessar colunas por nome
         conn = sqlite3.connect(self.db_path, uri=True)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # Funcao auxiliar para formatar data para query SQL (formato: 20240115T123456)
+        # Funcao auxiliar para formatar data para query SQL (formato ISO: YYYY-MM-DD)
         def format_date_for_query(dt):
-            return dt.strftime('%Y%m%dT%H%M%S')
+            return dt.strftime('%Y-%m-%d %H:%M:%S')
         
         # Busca batalhas por periodo
         periodos = {
@@ -409,17 +421,17 @@ class OpponentsReporter:
             },
             'semana': {
                 'inicio': format_date_for_query(semana_inicio),
-                'fim': format_date_for_query(semana_fim),
-                'arquivo': os.path.join(output_dir, f"oponentes_semana_{now_brt.strftime('%Y%W')}.csv")
+                'fim': format_date_for_query(dia_fim),
+                'arquivo': os.path.join(output_dir, f"oponentes_semana_{now_brt.year}{now_brt.strftime('%V')}.csv")
             },
             'mes': {
                 'inicio': format_date_for_query(mes_inicio),
-                'fim': format_date_for_query(mes_fim),
-                'arquivo': os.path.join(output_dir, f"oponentes_mes_{now_brt.strftime('%Y%m')}.csv")
+                'fim': format_date_for_query(dia_fim),
+                'arquivo': os.path.join(output_dir, f"oponentes_mes_{now_brt.year}{now_brt.strftime('%m')}.csv")
             },
             'ano': {
                 'inicio': format_date_for_query(ano_inicio),
-                'fim': format_date_for_query(ano_fim),
+                'fim': format_date_for_query(dia_fim),
                 'arquivo': os.path.join(output_dir, f"oponentes_ano_{now_brt.year}.csv")
             }
         }
@@ -431,8 +443,8 @@ class OpponentsReporter:
             query = """
                 SELECT * FROM oponentes_batalhas 
                 WHERE player_tag = ? 
-                AND substr(battle_time, 1, 15) >= ? 
-                AND substr(battle_time, 1, 15) <= ?
+                AND battle_time >= ? 
+                AND battle_time <= ?
                 ORDER BY battle_time DESC
             """
             params = (player_tag, periodo_info['inicio'], periodo_info['fim'])
@@ -447,22 +459,32 @@ class OpponentsReporter:
             # Converte para dicionarios
             opponents_data = []
             for row in rows:
+                # Fallback para data formatada se estiver vazia
+                data_fmt = row['data_formatada']
+                if not data_fmt or data_fmt == '':
+                    try:
+                        # Tenta reconstruir a partir do battle_time ISO
+                        dt = datetime.strptime(row['battle_time'], '%Y-%m-%d %H:%M:%S')
+                        data_fmt = dt.strftime('%d/%m/%Y %H:%M')
+                    except:
+                        data_fmt = row['battle_time']
+
                 opponents_data.append({
-                    'data': row[3],
-                    'nome_oponente': row[4],
-                    'tag_oponente': row[5],
-                    'nivel_oponente': row[6],
-                    'trofes_oponente': row[7],
-                    'clan_oponente': row[8],
-                    'resultado': row[9],
-                    'coroas_jogador': row[10],
-                    'coroas_oponente': row[11],
-                    'mudanca_trofes': row[12],
-                    'modo_jogo': row[13],
-                    'tipo_batalha': row[14],
-                    'arena': row[15],
-                    'deck_jogador': row[16],
-                    'deck_oponente': row[17]
+                    'data': data_fmt,
+                    'nome_oponente': row['nome_oponente'],
+                    'tag_oponente': row['tag_oponente'],
+                    'nivel_oponente': row['nivel_oponente'],
+                    'trofes_oponente': row['trofes_oponente'],
+                    'clan_oponente': row['clan_oponente'],
+                    'resultado': row['resultado'],
+                    'coroas_jogador': row['coroas_jogador'],
+                    'coroas_oponente': row['coroas_oponente'],
+                    'mudanca_trofes': row['mudanca_trofes'],
+                    'modo_jogo': row['modo_jogo'],
+                    'tipo_batalha': row['tipo_batalha'],
+                    'arena': row['arena'],
+                    'deck_jogador': row['deck_jogador'],
+                    'deck_oponente': row['deck_oponente']
                 })
             
             # Conta repeticoes

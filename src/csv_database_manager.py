@@ -311,6 +311,8 @@ class CSVDatabaseManager:
                     
                     # Normalize battle_time if present
                     if 'battle_time' in filtered_row:
+                        if table_name == 'oponentes_batalhas':
+                            filtered_row['data_formatada'] = row.get('data', '')
                         filtered_row['battle_time'] = normalize_date(filtered_row['battle_time'])
                         # If battle_time is still None after normalization, skip row
                         if not filtered_row['battle_time']:
