@@ -112,7 +112,7 @@ class GitHubPagesHTMLGenerator:
                 for row in data:
                     # Filtro de player_tag
                     row_tag = row.get('player_tag') or player_tag
-                    if row_tag and row_tag not in [player_tag, '#YVJR0JLY'] and player_tag != '#YVJR0JLY':
+                    if row_tag and row_tag != player_tag:
                         continue
                             
                     # Normaliza campos
@@ -2223,13 +2223,13 @@ class GitHubPagesHTMLGenerator:
         }
         
         function getMiniGridJS(deckStr, sideClass) {
-            if (!deckStr) return '<div style="width:100px;height:60px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:0.7em;color:#999;">N/D</div>';
+            if (!deckStr) return '<div style="width:140px;height:100px;border:1px dashed #cbd5e0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8em;color:#a0aec0;">Deck N/D</div>';
             const cards = deckStr.replace(/ \| /g, '|').split('|');
             return `
                 <div class="${sideClass}">
                     <div class="cr-cards-grid" style="gap:2px;padding:0;">
-                        <div class="cr-cards-row" style="gap:2px;">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:22px;height:26px;" title="${c.trim()}"><img src="cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';"></div>`).join('')}</div>
-                        <div class="cr-cards-row" style="gap:2px;">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:22px;height:26px;" title="${c.trim()}"><img src="cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';"></div>`).join('')}</div>
+                        <div class="cr-cards-row" style="gap:2px;">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:38px;height:45px;" title="${c.trim()}"><img src="cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';"></div>`).join('')}</div>
+                        <div class="cr-cards-row" style="gap:2px;">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:38px;height:45px;" title="${c.trim()}"><img src="cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';"></div>`).join('')}</div>
                     </div>
                 </div>
             `;
