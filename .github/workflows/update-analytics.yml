@@ -1,23 +1,23 @@
 name: Update Clash Royale Analytics
 
 on:
-  # Run once a day at 5:00 UTC (2:00 BRT)
+  # Roda uma vez por dia as 05:00 UTC (02:00 BRT) para atualizacao completa
   schedule:
     - cron: '0 5 * * *'
   
-  # Allow manual triggering
+  # Permite execucao manual
   workflow_dispatch:
   
-  # Run on push to main or clan-tracking branch (for testing)
+  # Roda a cada push no main (exceto commits do proprio workflow de coleta)
   push:
-    branches: [ main, clan-tracking ]
+    branches: [ main ]
 
 permissions:
-  contents: write  # Need write to commit database changes
+  contents: write
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# Apenas uma execucao por vez para evitar conflitos de deploy
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -30,120 +30,101 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Fetch full history
+        fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        version: "latest"
-    
+        python-version: '3.11'
+
     - name: Install dependencies
-      run: uv sync
+      run: pip install requests
     
-    - name: Pull latest changes
+    - name: Pull latest changes (inclui dados coletados a cada 30min)
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        # Reset to clean state and pull latest
-        git reset --hard origin/main || true
-        git pull origin main --no-rebase || true
-    
-    - name: Update battle data
-      env:
-        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
-        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
-      run: |
-        cd src
-        uv run python db_rehydration.py --import-csv --db clash_royale.db
-        uv run python analyzer.py
-    
-    - name: Generate HTML reports
-      env:
-        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
-        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
-      run: |
-        cd src
-        uv run python html_generator.py
-        uv run python clan_generator.py
-        uv run python member_generator.py
-    
-    - name: Update README with deck statistics
-      env:
-        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
-      run: |
-        cd src
-        uv run python update_readme_from_analytics.py --player-tag "$CR_PLAYER_TAG" --db clash_royale.db --readme ../README.md
-        
-    - name: Export Database to CSV
-      run: |
-        cd src
-        uv run python db_rehydration.py --export --db clash_royale.db
+        git pull origin main --rebase -X theirs || true
 
+    # ── 1. Coleta de dados (100% CSV - sem banco de dados) ─────────────
+    - name: Fetch latest battles and save to CSV
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python collect_battles_csv.py
+
+    # ── 2. Limpeza de dados ────────────────────────────────────────────
     - name: Data Integrity Cleanup (Sanitize & Deduplicate)
       run: |
         cd src
         echo "Limpando conflitos de merge e duplicatas..."
-        uv run python sanitize_csvs.py
-        uv run python deduplicate_csvs.py
-        
-    - name: Commit and push changes
+        python sanitize_csvs.py
+        python deduplicate_csvs.py
+
+    # ── 3. Geracao da pagina web (le diretamente dos CSVs atualizados) ─
+    - name: Generate HTML reports (index, clan, members)
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python html_generator.py
+        python clan_generator.py
+        python member_generator.py
+
+    # ── 4. Atualiza README ─────────────────────────────────────────────
+    - name: Update README with battle statistics
+      env:
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        python src/update_readme_from_csv.py --csv-dir src --readme README.md
+
+    # ── 5. Commit e push ───────────────────────────────────────────────
+    - name: Commit and push all changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        
-        # Add files to staging FIRST to avoid unstaged conflicts during pull
-        git add src/data_csv_oficial/*.csv docs/index.html docs/clan.html docs/member_*.html README.md
-        
-        # Check if there are changes to commit
+
+        git add src/data_csv_oficial/ docs/index.html docs/clan.html docs/member_*.html README.md
+
         if ! git diff --staged --quiet; then
-          # Commit locally first
-          git commit -m "Update battle data and README stats - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-          
-          # Fetch and rebase to seamlessly integrate any remote changes
-          git pull --rebase -X theirs origin main || {
-            echo "Rebase failed. Aborting and trying a merge..."
-            git rebase --abort || true
-            git pull origin main --no-edit -X ours || true
-          }
-          
-          # Push changes with retry logic
+          git commit -m "update: relatorio diario completo $(date -u +'%Y-%m-%d %H:%M UTC')"
+
           for i in 1 2 3; do
             if git push origin HEAD:main; then
-              echo "Push successful"
+              echo "Push feito com sucesso"
               break
             else
-              echo "Push failed, attempt $i/3. Fetching and retrying..."
-              sleep 3
+              echo "Tentativa $i/3 falhou, aguardando..."
+              sleep 5
               git pull --rebase -X theirs origin main || true
             fi
           done
         else
           echo "Nenhuma mudanca para commitar"
         fi
-        
+
     - name: Copy assets to docs
       run: |
-        # Copy cards directory to docs for relative paths
         cp -r cards docs/
-        
-        # Copy any additional assets
         if [ -d "assets" ]; then
           cp -r assets/* docs/
         fi
-    
+
     - name: Upload artifacts for Pages
       uses: actions/upload-pages-artifact@v3
       with:
         path: 'docs'
-        
+
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: update-data
-    # Continue mesmo se o deploy falhar (caso GitHub Pages nao esteja habilitado)
     continue-on-error: true
     steps:
       - name: Deploy to GitHub Pages
@@ -154,7 +135,5 @@ jobs:
         if: failure()
         run: |
           echo "⚠️ GitHub Pages deployment failed. This is normal if GitHub Pages is not enabled."
-          echo "To enable GitHub Pages:"
-          echo "1. Go to https://github.com/${{ github.repository }}/settings/pages"
-          echo "2. Under 'Source', select 'GitHub Actions'"
-          echo "3. Save the settings"
+          echo "To enable: Go to https://github.com/${{ github.repository }}/settings/pages"
+          echo "Under 'Source', select 'GitHub Actions' and save."

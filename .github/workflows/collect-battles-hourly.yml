@@ -48,6 +48,14 @@ jobs:
         echo "Removendo duplicatas..."
         python deduplicate_csvs.py
 
+    - name: Generate HTML report (atualiza pagina web com batalhas novas)
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python html_generator.py
+
     - name: Verify Today's Data
       id: verify
       run: |
@@ -74,7 +82,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        git add src/data_csv_oficial/
+        git add src/data_csv_oficial/ docs/index.html
 
         if ! git diff --staged --quiet; then
           git commit -m "chore: coleta horaria de batalhas $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"

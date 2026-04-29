@@ -37,45 +37,49 @@ jobs:
     - name: Install dependencies
       run: pip install requests
 
-    # ── 1. Coleta de dados ──────────────────────────────────────────
-    - name: Import existing CSVs to DB
+    - name: Pull latest changes (inclui dados das coletas de 30min)
       run: |
-        cd src
-        python db_rehydration.py --import-csv --db oponentes.db
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git pull origin main --rebase -X theirs || true
 
-    - name: Fetch battles from API and save to DB
+    # ── 1. Coleta de dados (100% CSV - sem banco de dados) ─────────────
+    - name: Fetch latest battles and save to CSV
       env:
         CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
       run: |
         cd src
-        python opponents_report.py --salvar-banco --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
+        python collect_battles_csv.py
 
-    - name: Generate CSVs by period (day, week, month, year)
+    # ── 2. Limpeza de dados ────────────────────────────────────────────
+    - name: Data Integrity Cleanup (Sanitize & Deduplicate)
+      run: |
+        cd src
+        python sanitize_csvs.py
+        python deduplicate_csvs.py
+
+    # ── 3. Geracao do HTML (le os CSVs direto, sem banco) ─────────────
+    - name: Generate HTML report
       env:
         CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
       run: |
         cd src
-        python opponents_report.py --periodos --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
+        python html_generator.py
 
-    - name: Export DB to CSV
-      run: |
-        cd src
-        python db_rehydration.py --export --db oponentes.db
-
-    # ── 2. Atualizacao da pagina web / README ───────────────────────
+    # ── 4. Atualiza README ─────────────────────────────────────────────
     - name: Update README with deck statistics from latest CSV
       run: |
         python src/update_readme_from_csv.py --csv-dir src --readme README.md
 
-    # ── 3. Commit e push ────────────────────────────────────────────
+    # ── 5. Commit e push ────────────────────────────────────────────────
     - name: Commit and push all changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        git add src/oponentes_*.csv src/data_csv_oficial/ README.md
+        git add src/data_csv_oficial/ docs/index.html README.md
 
         if ! git diff --staged --quiet; then
           git commit -m "update: relatorio diario completo $(date -u +'%Y-%m-%d %H:%M UTC')"
@@ -94,13 +98,13 @@ jobs:
           echo "Nenhuma mudanca para commitar"
         fi
 
-    # ── 4. Resumo ───────────────────────────────────────────────────
+    # ── 6. Resumo ───────────────────────────────────────────────────────
     - name: Show summary
       run: |
         echo "## Relatorio Diario Atualizado" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- \`src/oponentes_dia_*.csv\` - Batalhas do dia" >> $GITHUB_STEP_SUMMARY
-        echo "- \`src/oponentes_semana_*.csv\` - Batalhas da semana" >> $GITHUB_STEP_SUMMARY
-        echo "- \`src/oponentes_mes_*.csv\` - Batalhas do mes" >> $GITHUB_STEP_SUMMARY
-        echo "- \`src/oponentes_ano_*.csv\` - Batalhas do ano" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/data_csv_oficial/oponentes_dia_*.csv\` - Batalhas do dia" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/data_csv_oficial/oponentes_mes_*.csv\` - Batalhas do mes" >> $GITHUB_STEP_SUMMARY
+        echo "- \`src/data_csv_oficial/oponentes_ano_*.csv\` - Batalhas do ano" >> $GITHUB_STEP_SUMMARY
+        echo "- \`docs/index.html\` - Pagina web atualizada" >> $GITHUB_STEP_SUMMARY
         echo "- \`README.md\` - Estatisticas atualizadas" >> $GITHUB_STEP_SUMMARY
