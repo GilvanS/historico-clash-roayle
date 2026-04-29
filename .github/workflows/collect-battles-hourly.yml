@@ -1,15 +1,14 @@
 name: Collect Battles (Every 30min)
 
-# Coleta batalhas da API a cada 30 minutos
+# Coleta batalhas da API a cada 30 minutos (100% CSV - sem banco de dados).
 # A API retorna apenas as ~25 batalhas mais recentes.
 # Coleta frequente evita perda de batalhas quando o jogador joga muitas partidas seguidas.
-# Commit usa [skip ci] para nao disparar o workflow diario de atualizacao
+# Commit usa [skip ci] para nao disparar o workflow diario de atualizacao.
 
 on:
   schedule:
-    # Executa a cada 30 minutos (UTC)
-    # Exemplos BRT (UTC-3): XX:00 e XX:30 de cada hora
     - cron: '*/30 * * * *'
+  workflow_dispatch: # Permite execucao manual para testes e depuracao
 
 permissions:
   contents: write
@@ -33,31 +32,13 @@ jobs:
     - name: Install dependencies
       run: pip install requests
 
-    - name: Import existing CSVs to DB
-      run: |
-        cd src
-        python db_rehydration.py --import-csv --db oponentes.db
-
-    - name: Fetch battles from API and save to DB
+    - name: Fetch battles and save to CSV
       env:
         CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
       run: |
         cd src
-        python opponents_report.py --salvar-banco --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
-
-    - name: Generate CSVs by period (day, week, month, year)
-      env:
-        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
-        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
-      run: |
-        cd src
-        python opponents_report.py --periodos --token "$CR_API_TOKEN" --tag "$CR_PLAYER_TAG"
-
-    - name: Export DB to CSV
-      run: |
-        cd src
-        python db_rehydration.py --export --db oponentes.db
+        python collect_battles_csv.py
 
     - name: Data Integrity Cleanup (Sanitize & Deduplicate)
       run: |
@@ -77,23 +58,23 @@ jobs:
           echo "STATUS=✅ Coletado: $COUNT batalhas encontradas para hoje." >> $GITHUB_OUTPUT
           echo "FOUND=true" >> $GITHUB_OUTPUT
         else
-          echo "STATUS=⚠️ Alerta: Arquivo de hoje não encontrado ainda." >> $GITHUB_OUTPUT
+          echo "STATUS=⚠️ Alerta: Arquivo de hoje nao encontrado ainda." >> $GITHUB_OUTPUT
           echo "FOUND=false" >> $GITHUB_OUTPUT
         fi
 
     - name: Post Job Summary
       run: |
-        echo "### 📊 Status da Coleta Automática" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Status da Coleta Automatica" >> $GITHUB_STEP_SUMMARY
         echo "${{ steps.verify.outputs.STATUS }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Hora da Coleta:** $(date -u +'%H:%M UTC')" >> $GITHUB_STEP_SUMMARY
-        echo "- **Integridade:** Sanitização e Deduplicação executadas ✅" >> $GITHUB_STEP_SUMMARY
+        echo "- **Integridade:** Sanitizacao e Deduplicacao executadas ✅" >> $GITHUB_STEP_SUMMARY
 
     - name: Commit collected data
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        git add src/oponentes_*.csv src/data_csv_oficial/
+        git add src/data_csv_oficial/
 
         if ! git diff --staged --quiet; then
           git commit -m "chore: coleta horaria de batalhas $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
