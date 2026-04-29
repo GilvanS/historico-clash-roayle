@@ -1,0 +1,106 @@
+def get_repeated_opponents_stats(self, player_tag: str = None) -> List[Dict]:
+        """Get statistics for opponents faced multiple times using CSV cache"""
+        if not self.battles_cache:
+            return []
+            
+        # Agrupar batalhas por oponente
+        opponents_battles = {}
+        for b in self.battles_cache:
+            o_tag = b.get('opponent_tag')
+            if not o_tag: continue
+            if o_tag not in opponents_battles:
+                opponents_battles[o_tag] = []
+            opponents_battles[o_tag].append(b)
+            
+        results = []
+        for o_tag, battles in opponents_battles.items():
+            if len(battles) < 2: continue
+            
+            latest_b = battles[0]
+            o_name = latest_b.get('opponent_name') or latest_b.get('oponente')
+            if not o_name or o_name == 'Desconhecido' or o_name == 'Oponente':
+                # Tenta em outras batalhas do mesmo oponente
+                for b in battles:
+                    name = b.get('opponent_name') or b.get('oponente')
+                    if name and name not in ['Desconhecido', 'Oponente']:
+                        o_name = name
+                        break
+            
+            if not o_name:
+                o_name = o_tag
+                
+            latest_o_trophies = latest_b.get('opponent_trophies', 0)
+            
+            period_stats = self._get_opponent_period_stats_from_cache(battles)
+            encounter_stats = []
+            for b in battles:
+                encounter_stats.append({
+                    'result': b.get('result', 'draw'),
+                    'battle_time': b.get('battle_time', ''),
+                    'my_deck': b.get('deck_cards', ''),
+                    'opp_deck': b.get('opponent_deck_cards', '')
+                })
+            encounter_stats.sort(key=lambda x: x.get('battle_time', ''), reverse=True)
+            
+            deck_stats = {}
+            for b in battles:
+                deck = b.get('opponent_deck_cards')
+                if not deck: continue
+                if deck not in deck_stats:
+                    deck_stats[deck] = {'total': 0, 'wins': 0}
+                deck_stats[deck]['total'] += 1
+                if b.get('result') == 'defeat': # Se o usuário foi derrotado, o deck do oponente "venceu"
+                    deck_stats[deck]['wins'] += 1
+            
+            best_deck = None
+            if deck_stats:
+                sorted_decks = sorted(deck_stats.items(), key=lambda x: (x[1]['wins']/x[1]['total'], x[1]['total']), reverse=True)
+                deck_id, d_s = sorted_decks[0]
+                best_deck = {
+                    'deck_cards': deck_id,
+                    'total_battles': d_s['total'],
+                    'wins': d_s['wins'],
+                    'losses': d_s['total'] - d_s['wins'],
+                    'win_rate': round(d_s['wins']/d_s['total']*100, 2)
+                }
+                
+            # Estatísticas do usuário contra este oponente
+            user_wins = sum(1 for b in battles if b.get('result') == 'victory')
+            user_losses = sum(1 for b in battles if b.get('result') == 'defeat')
+            user_draws = sum(1 for b in battles if b.get('result') == 'draw')
+            total_encounters = len(battles)
+            user_wr = (user_wins / total_encounters * 100) if total_encounters > 0 else 0
+            
+            # Categorização
+            if user_wr < 40:
+                category = "Nêmese"
+                category_class = "nemesis"
+            elif user_wr > 60:
+                category = "Freguês"
+                category_class = "customer"
+            else:
+                category = "Equilibrado"
+                category_class = "balanced"
+
+            results.append({
+                'opponent_tag': o_tag,
+                'opponent_name': o_name,
+                'latest_opponent_trophies': latest_o_trophies,
+                'total_battles': total_encounters,
+                'user_wins': user_wins,
+                'user_losses': user_losses,
+                'user_draws': user_draws,
+                'user_win_rate': round(user_wr, 2),
+                'category': category,
+                'category_class': category_class,
+                'last_encounter': latest_b.get('battle_time'),
+                'stats': encounter_stats,
+                'period_stats': period_stats,
+                'best_deck': best_deck
+            })
+            
+        # Ordena por total de batalhas desc, win rate do usuário asc (nemeses primeiro)
+        results.sort(key=lambda x: (x['total_battles'], -x['user_win_rate']), reverse=True)
+        return results
+
+    
