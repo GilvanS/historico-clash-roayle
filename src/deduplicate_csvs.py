@@ -2,7 +2,6 @@ import csv, os
 from datetime import datetime
 import glob
 
-DATA_DIR = r"a:\Workspace\historico-clash-roayle\src\data_csv_oficial"
 FIELDNAMES = [
     'data','nome_oponente','tag_oponente','nivel_oponente','trofes_oponente',
     'clan_oponente','resultado','coroas_jogador','coroas_oponente','mudanca_trofes',
@@ -10,7 +9,7 @@ FIELDNAMES = [
 ]
 
 def parse_date(date_str):
-    formats = ['%d/%m/%Y %H:%M', '%d/%m/%Y %H:%M:%S', '%Y-%m-%dT%H:%M:%S']
+    formats = ['%d/%m/%Y %H:%M', '%d/%m/%Y %H:%M:%S', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M']
     for fmt in formats:
         try:
             return datetime.strptime(date_str, fmt)
@@ -22,10 +21,12 @@ def get_row_score(row):
     """Calcula um score de 'qualidade' da linha para decidir qual manter em duplicatas."""
     score = 0
     # Nivel oponente 0 é sinal de dado incompleto do coletor antigo
-    if row.get('nivel_oponente') != '0' and row.get('nivel_oponente'):
+    nivel = str(row.get('nivel_oponente', '0'))
+    if nivel != '0' and nivel != '':
         score += 10
     # Troféus != 0
-    if row.get('trofes_oponente') != '0' and row.get('trofes_oponente'):
+    trofes = str(row.get('trofes_oponente', '0'))
+    if trofes != '0' and trofes != '':
         score += 5
     # Decks preenchidos
     if len(row.get('deck_jogador', '')) > 20:
@@ -52,7 +53,6 @@ def deduplicate_file(file_path):
         return
 
     # Chave de deduplicação: (Data normalizada, Tag Oponente)
-    # Ignoramos o resultado na chave para evitar que a mesma batalha com strings diferentes (victory vs vitoria) entre 2x
     unique_rows = {}
     removed_count = 0
     
@@ -61,7 +61,7 @@ def deduplicate_file(file_path):
         if not dt:
             continue
         
-        # Normaliza a data para minutos (ignora segundos para bater manual com auto)
+        # Normaliza a data para minutos
         dt_norm = dt.strftime('%Y-%m-%d %H:%M')
         tag = row.get('tag_oponente', '').strip().upper()
         
@@ -73,9 +73,7 @@ def deduplicate_file(file_path):
             existing_row, existing_score = unique_rows[key]
             if current_score > existing_score:
                 unique_rows[key] = (row, current_score)
-                removed_count += 1
-            else:
-                removed_count += 1
+            removed_count += 1
         else:
             unique_rows[key] = (row, current_score)
 
@@ -91,11 +89,15 @@ def deduplicate_file(file_path):
     print(f"  - Sucesso: {removed_count} duplicatas removidas. Total final: {len(final_rows)}")
 
 if __name__ == "__main__":
-    pattern = os.path.join(DATA_DIR, 'oponentes_*.csv')
+    # Usa o diretório do script como base (src/)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(base_dir, 'data_csv_oficial')
+    
+    pattern = os.path.join(data_dir, 'oponentes_*.csv')
     files = glob.glob(pattern)
     files.extend([
-        os.path.join(DATA_DIR, 'ano_2026.csv'),
-        os.path.join(DATA_DIR, 'mes_202604.csv')
+        os.path.join(data_dir, 'oponentes_ano_2026.csv'),
+        os.path.join(data_dir, 'oponentes_mes_202604.csv')
     ])
     
     for f in files:

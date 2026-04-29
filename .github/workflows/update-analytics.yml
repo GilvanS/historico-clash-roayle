@@ -79,6 +79,13 @@ jobs:
       run: |
         cd src
         uv run python db_rehydration.py --export --db clash_royale.db
+
+    - name: Data Integrity Cleanup (Sanitize & Deduplicate)
+      run: |
+        cd src
+        echo "Limpando conflitos de merge e duplicatas..."
+        uv run python sanitize_csvs.py
+        uv run python deduplicate_csvs.py
         
     - name: Commit and push changes
       run: |

@@ -59,6 +59,35 @@ jobs:
         cd src
         python db_rehydration.py --export --db oponentes.db
 
+    - name: Data Integrity Cleanup (Sanitize & Deduplicate)
+      run: |
+        cd src
+        echo "Limpando conflitos de merge..."
+        python sanitize_csvs.py
+        echo "Removendo duplicatas..."
+        python deduplicate_csvs.py
+
+    - name: Verify Today's Data
+      id: verify
+      run: |
+        DATA_HOJE=$(date +'%Y%m%d')
+        ARQUIVO="src/data_csv_oficial/oponentes_dia_$DATA_HOJE.csv"
+        if [ -f "$ARQUIVO" ]; then
+          COUNT=$(tail -n +2 "$ARQUIVO" | wc -l)
+          echo "STATUS=✅ Coletado: $COUNT batalhas encontradas para hoje." >> $GITHUB_OUTPUT
+          echo "FOUND=true" >> $GITHUB_OUTPUT
+        else
+          echo "STATUS=⚠️ Alerta: Arquivo de hoje não encontrado ainda." >> $GITHUB_OUTPUT
+          echo "FOUND=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Post Job Summary
+      run: |
+        echo "### 📊 Status da Coleta Automática" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.verify.outputs.STATUS }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Hora da Coleta:** $(date -u +'%H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Integridade:** Sanitização e Deduplicação executadas ✅" >> $GITHUB_STEP_SUMMARY
+
     - name: Commit collected data
       run: |
         git config --local user.email "action@github.com"

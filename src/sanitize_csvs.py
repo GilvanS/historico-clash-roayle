@@ -1,15 +1,16 @@
 import os
-import csv
 import glob
 
 def clean_csv_files(data_dir):
     pattern = os.path.join(data_dir, 'oponentes_*.csv')
     files = glob.glob(pattern)
     
-    # Adicionar outros arquivos principais
+    # Adicionar outros arquivos principais se existirem
     files.extend([
         os.path.join(data_dir, 'ano_2026.csv'),
-        os.path.join(data_dir, 'mes_202604.csv')
+        os.path.join(data_dir, 'mes_202604.csv'),
+        os.path.join(data_dir, 'oponentes_ano_2026.csv'),
+        os.path.join(data_dir, 'oponentes_mes_202604.csv')
     ])
     
     for file_path in files:
@@ -57,5 +58,7 @@ def clean_csv_files(data_dir):
             print(f"  - Erro ao processar {file_path}: {e}")
 
 if __name__ == "__main__":
-    data_dir = r"a:\Workspace\historico-clash-roayle\src\data_csv_oficial"
+    # Usa o diretório do script como base (src/)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(base_dir, 'data_csv_oficial')
     clean_csv_files(data_dir)
