@@ -4,7 +4,6 @@ Individual Member HTML Generator for GitHub Pages
 Generates detailed member pages with deck change tracking
 """
 
-import sqlite3
 import os
 import re
 from datetime import datetime
@@ -12,22 +11,19 @@ from typing import List, Dict, Optional
 from html_generator import GitHubPagesHTMLGenerator
 
 class MemberPageGenerator(GitHubPagesHTMLGenerator):
-    def __init__(self, db_path: str = "clash_royale.db"):
-        super().__init__(db_path)
+    def __init__(self, db_path: str = None):
+        super().__init__()
     
     def get_member_deck_history(self, player_tag: str) -> List[Dict]:
         """Get complete deck change history for a member, consolidating consecutive identical decks"""
-        # No memory DB, we don't check for file existence
-            
-        conn = sqlite3.connect(self.db_path)
+        conn = self.csv_manager.conn
         cursor = conn.cursor()
-        
+
         # Check if table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='clan_member_decks'")
         if not cursor.fetchone():
-            conn.close()
             return []
-        
+
         cursor.execute("""
             SELECT 
                 deck_cards,
@@ -43,7 +39,7 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
             WHERE player_tag = ?
             ORDER BY first_seen ASC
         """, (player_tag,))
-        
+
         raw_history = []
         for row in cursor.fetchall():
             raw_history.append({
@@ -57,9 +53,6 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
                 'first_seen': row[7],
                 'last_seen': row[8]
             })
-        
-        conn.close()
-        
         # Consolidate consecutive identical decks (same deck_cards)
         consolidated_history = []
         current_deck = None
@@ -119,22 +112,19 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
     
     def get_member_info(self, player_tag: str) -> Optional[Dict]:
         """Get member basic info"""
-        # No memory DB, we don't check for file existence
-            
-        conn = sqlite3.connect(self.db_path)
+        conn = self.csv_manager.conn
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             SELECT name, role, trophies, donations, donations_received, last_seen
             FROM clan_members 
             WHERE player_tag = ?
         """, (player_tag,))
-        
+
         row = cursor.fetchone()
         if not row:
-            conn.close()
             return None
-        
+
         member_info = {
             'player_tag': player_tag,
             'name': row[0],
@@ -144,8 +134,7 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
             'donations_received': row[4] or 0,
             'last_seen': row[5]
         }
-        
-        conn.close()
+
         return member_info
     
     def safe_filename(self, name: str) -> str:
