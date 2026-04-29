@@ -374,7 +374,12 @@ class OpponentsReporter:
         return output_file
     
     def generate_period_csvs(self, player_tag: str):
-        """Gera CSVs para dia, semana, mes e ano atual (acumulados do banco)"""
+        """Gera CSVs para dia, semana, mes e ano atual (acumulados do banco)
+        
+        PROTECAO: O arquivo diario de um dia anterior nao sera sobrescrito.
+        DETECCAO DE LACUNAS: Emite alertas quando houver intervalo suspeito entre batalhas.
+        Retorna: tuple(arquivos_gerados, alertas_gap)
+        """
         now_utc = datetime.utcnow()
         brt_offset = timedelta(hours=-3)
         now_brt = now_utc + brt_offset
@@ -417,29 +422,48 @@ class OpponentsReporter:
             'dia': {
                 'inicio': format_date_for_query(dia_inicio),
                 'fim': format_date_for_query(dia_fim),
-                'arquivo': os.path.join(output_dir, f"oponentes_dia_{now_brt.strftime('%Y%m%d')}.csv")
+                'arquivo': os.path.join(output_dir, f"oponentes_dia_{now_brt.strftime('%Y%m%d')}.csv"),
+                'proteger_passado': True  # Nao sobrescrever arquivos de dias anteriores
             },
             'semana': {
                 'inicio': format_date_for_query(semana_inicio),
                 'fim': format_date_for_query(dia_fim),
-                'arquivo': os.path.join(output_dir, f"oponentes_semana_{now_brt.year}{now_brt.strftime('%V')}.csv")
+                'arquivo': os.path.join(output_dir, f"oponentes_semana_{now_brt.year}{now_brt.strftime('%V')}.csv"),
+                'proteger_passado': False
             },
             'mes': {
                 'inicio': format_date_for_query(mes_inicio),
                 'fim': format_date_for_query(dia_fim),
-                'arquivo': os.path.join(output_dir, f"oponentes_mes_{now_brt.year}{now_brt.strftime('%m')}.csv")
+                'arquivo': os.path.join(output_dir, f"oponentes_mes_{now_brt.year}{now_brt.strftime('%m')}.csv"),
+                'proteger_passado': False
             },
             'ano': {
                 'inicio': format_date_for_query(ano_inicio),
                 'fim': format_date_for_query(dia_fim),
-                'arquivo': os.path.join(output_dir, f"oponentes_ano_{now_brt.year}.csv")
+                'arquivo': os.path.join(output_dir, f"oponentes_ano_{now_brt.year}.csv"),
+                'proteger_passado': False
             }
         }
         
         arquivos_gerados = []
+        alertas_gap = []
         
         for periodo_nome, periodo_info in periodos.items():
-            # Query usando comparacao de strings (battle_time formato: 20240115T123456.000Z)
+            output_file = periodo_info['arquivo']
+            
+            # PROTECAO: Nao sobrescrever arquivos de dias anteriores.
+            # O arquivo diario identifica o DIA no nome (ex: oponentes_dia_20260427.csv).
+            # Se ja existe E nao e o dia atual, esta finalizado — nao reescrever.
+            # Alteracao: 2026-04-29 - Protecao de arquivos de dias passados
+            if periodo_info.get('proteger_passado', False) and os.path.exists(output_file):
+                nome_arquivo = os.path.basename(output_file)
+                data_arquivo = nome_arquivo.replace('oponentes_dia_', '').replace('.csv', '')
+                data_hoje = now_brt.strftime('%Y%m%d')
+                if data_arquivo != data_hoje:
+                    print(f"[PROTEGIDO] {nome_arquivo} pertence a um dia anterior — nao sera sobrescrito.")
+                    continue
+            
+            # Query usando comparacao de strings (battle_time no formato ISO: YYYY-MM-DD HH:MM:SS)
             query = """
                 SELECT * FROM oponentes_batalhas 
                 WHERE player_tag = ? 
@@ -458,12 +482,12 @@ class OpponentsReporter:
             
             # Converte para dicionarios
             opponents_data = []
+            battle_times_iso = []  # Para deteccao de lacunas
             for row in rows:
                 # Fallback para data formatada se estiver vazia
                 data_fmt = row['data_formatada']
                 if not data_fmt or data_fmt == '':
                     try:
-                        # Tenta reconstruir a partir do battle_time ISO
                         dt = datetime.strptime(row['battle_time'], '%Y-%m-%d %H:%M:%S')
                         data_fmt = dt.strftime('%d/%m/%Y %H:%M')
                     except:
@@ -486,6 +510,31 @@ class OpponentsReporter:
                     'deck_jogador': row['deck_jogador'],
                     'deck_oponente': row['deck_oponente']
                 })
+                
+                if row['battle_time']:
+                    battle_times_iso.append(row['battle_time'])
+            
+            # DETECCAO DE LACUNAS: verifica intervalos suspeitos entre batalhas consecutivas.
+            # Limiar de 90 minutos: coleta a cada 30min deveria garantir sem perdas.
+            # Alteracao: 2026-04-29 - Adicionado detector de gaps para identificar falhas de coleta
+            if periodo_nome == 'dia' and len(battle_times_iso) >= 2:
+                GAP_LIMIAR_MINUTOS = 90
+                times_sorted = sorted(battle_times_iso)
+                for i in range(1, len(times_sorted)):
+                    try:
+                        t_anterior = datetime.strptime(times_sorted[i-1], '%Y-%m-%d %H:%M:%S')
+                        t_atual = datetime.strptime(times_sorted[i], '%Y-%m-%d %H:%M:%S')
+                        diff_minutos = (t_atual - t_anterior).total_seconds() / 60
+                        if diff_minutos > GAP_LIMIAR_MINUTOS:
+                            alerta = (
+                                f"[ALERTA-GAP] Lacuna de {int(diff_minutos)} min detectada: "
+                                f"entre {times_sorted[i-1]} e {times_sorted[i]} (UTC). "
+                                f"Possivel perda de batalhas neste intervalo."
+                            )
+                            print(alerta)
+                            alertas_gap.append(alerta)
+                    except (ValueError, TypeError):
+                        continue
             
             # Conta repeticoes
             opponent_tags = [op['tag_oponente'] for op in opponents_data if op['tag_oponente']]
@@ -497,18 +546,12 @@ class OpponentsReporter:
                 count = opponent_counts.get(tag, 0)
                 opponent_info['vezes_enfrentado'] = count
             
-            # Gera CSV (append mode para acumular)
             fieldnames = [
                 'data', 'nome_oponente', 'tag_oponente', 'nivel_oponente', 
                 'trofes_oponente', 'clan_oponente', 'resultado', 
                 'coroas_jogador', 'coroas_oponente', 'mudanca_trofes',
                 'modo_jogo', 'tipo_batalha', 'arena', 'deck_jogador', 'deck_oponente', 'vezes_enfrentado'
             ]
-            
-            output_file = periodo_info['arquivo']
-            
-            # Verifica se arquivo existe para determinar se deve append ou write
-            file_exists = os.path.exists(output_file)
             
             # Sempre reescreve o arquivo com dados atualizados do banco (acumulado)
             with open(output_file, 'w', newline='', encoding='utf-8-sig') as csvfile:
@@ -521,7 +564,8 @@ class OpponentsReporter:
         
         conn.close()
         
-        return arquivos_gerados
+        # Retorna tuple com arquivos gerados e alertas de lacuna para uso no workflow
+        return arquivos_gerados, alertas_gap
     
     def generate_csv_report(self, player_tag: str, year: int = None, output_file: str = None, all_battles: bool = False, save_to_db: bool = True):
         """Gera relatorio CSV dos oponentes enfrentados"""
@@ -929,10 +973,16 @@ def main():
         print("=" * 60)
         print("Gerando CSVs por periodo (dia, semana, mes, ano)")
         print("=" * 60)
-        arquivos = reporter.generate_period_csvs(PLAYER_TAG)
+        arquivos, alertas_gap = reporter.generate_period_csvs(PLAYER_TAG)
         print(f"\nTotal de arquivos gerados: {len(arquivos)}")
         for arquivo in arquivos:
             print(f"  - {arquivo}")
+        if alertas_gap:
+            print("\n" + "=" * 60)
+            print(f"ALERTAS DE LACUNA DETECTADOS ({len(alertas_gap)}):")
+            for alerta in alertas_gap:
+                print(f"  {alerta}")
+            print("=" * 60)
         
     # Se gerar do banco, usa dados acumulados
     elif args.do_banco:

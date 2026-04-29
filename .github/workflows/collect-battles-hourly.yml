@@ -1,14 +1,15 @@
-name: Collect Battles (Hourly)
+name: Collect Battles (Every 30min)
 
-# Coleta batalhas da API a cada 1 hora (no :30 de cada hora)
-# Nao atualiza a pagina web - apenas salva os dados nos CSVs
+# Coleta batalhas da API a cada 30 minutos
+# A API retorna apenas as ~25 batalhas mais recentes.
+# Coleta frequente evita perda de batalhas quando o jogador joga muitas partidas seguidas.
 # Commit usa [skip ci] para nao disparar o workflow diario de atualizacao
 
 on:
   schedule:
-    # Executa a cada hora no minuto :30 (UTC)
-    # Exemplos BRT (UTC-3): 00:30, 01:30, 02:30 ... 22:30, 23:30
-    - cron: '30 * * * *'
+    # Executa a cada 30 minutos (UTC)
+    # Exemplos BRT (UTC-3): XX:00 e XX:30 de cada hora
+    - cron: '*/30 * * * *'
 
 permissions:
   contents: write
