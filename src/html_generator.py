@@ -128,16 +128,21 @@ class GitHubPagesHTMLGenerator:
                         norm_res = 'defeat'
                     elif any(x in res for x in ['empate', 'draw']):
                         norm_res = 'draw'
-                    else:
-                        # Tenta inferir pelas coroas se o texto falhar
-                        try:
-                            cp = int(row.get('coroas_jogador', row.get('crowns', 0)) or 0)
-                            co = int(row.get('coroas_oponente', row.get('opponent_crowns', 0)) or 0)
-                            if cp > co: norm_res = 'victory'
-                            elif co > cp: norm_res = 'defeat'
-                            elif cp == co and (cp > 0 or co > 0): norm_res = 'draw'
-                        except:
-                            pass
+                    
+                    # Tenta inferir pelas coroas (sempre, para confirmar ou preencher unknown)
+                    try:
+                        cp = int(row.get('coroas_jogador', row.get('crowns', 0)) or 0)
+                        co = int(row.get('coroas_oponente', row.get('opponent_crowns', 0)) or 0)
+                        if cp > co: 
+                            norm_res = 'victory'
+                        elif co > cp: 
+                            norm_res = 'defeat'
+                        elif cp == co:
+                            # Se for 0-0 ou qualquer empate, e ainda for unknown ou ja for draw
+                            if norm_res == 'unknown' or norm_res == 'draw':
+                                norm_res = 'draw'
+                    except:
+                        pass
 
                     opp_tag = str(row.get('tag_oponente') or row.get('opponent_tag') or '').strip().upper()
                     
@@ -148,13 +153,20 @@ class GitHubPagesHTMLGenerator:
                         if not opp_name or opp_name in ['Oponente', 'Unknown', 'Desconhecido'] or opp_name.startswith('<<<'):
                             continue
                     
-                    # Chave de deduplicação: (hora, oponente, resultado)
+                    # Chave de deduplicação: (hora, oponente)
+                    # Ignoramos o resultado na chave para evitar duplicatas do mesmo jogo com labels diferentes
                     opp_identifier = opp_tag if opp_tag and not opp_tag.startswith('<<<') else str(row.get('nome_oponente') or row.get('oponente') or row.get('opponent_name') or 'Unknown')
-                    dedup_key = (b_time, opp_identifier, norm_res)
+                    dedup_key = (b_time, opp_identifier)
                     
                     if dedup_key in battles_dict:
-                        continue
-                        
+                        # Se já existe, mantém a que tem resultado conhecido (victory/defeat/draw) sobre 'unknown'
+                        existing_res = battles_dict[dedup_key].get('result')
+                        if existing_res == 'unknown' and norm_res != 'unknown':
+                            # Sobrescreve para atualizar o resultado unknown
+                            pass 
+                        else:
+                            continue # Mantém o que já está lá
+                    
                     opp_name = row.get('nome_oponente', row.get('oponente', row.get('opponent_name', 'Oponente')))
                     crowns = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
                     arena = row.get('arena', row.get('arena_name', 'Arena'))
@@ -2278,10 +2290,13 @@ class GitHubPagesHTMLGenerator:
             category = opp['category']
             cat_class = opp['category_class']
             
-            # Cálculo de porcentagens para a barra de progresso
+            # Cálculo de porcentagens para a barra de progresso (baseado em contagens reais)
             w_p = round((wins/total*100),1) if total > 0 else 0
             l_p = round((losses/total*100),1) if total > 0 else 0
-            d_p = round(max(0, 100 - w_p - l_p), 1)
+            d_p = round((draws/total*100),1) if total > 0 else 0
+            
+            # Ajuste visual para que a soma não exceda 100% se houver arredondamentos, 
+            # mas mantendo a proporção real de empates
             
             # Pega a batalha mais recente
             stats = opp['stats']

@@ -15,10 +15,15 @@ class CSVDatabaseManager:
     Manager to load Clash Royale CSV data into an in-memory SQLite database.
     This ensures the dashboard always has the most up-to-date data from CSV files.
     """
-    def __init__(self, data_dir: Optional[str] = None):
-        # Usando URI de memoria compartilhada para permitir multiplas conexoes ao mesmo banco em memoria
-        self.db_path = "file:clash_mem?mode=memory&cache=shared"
-        self.conn = sqlite3.connect(self.db_path, uri=True)
+    def __init__(self, db_path: Optional[str] = None, data_dir: Optional[str] = None):
+        # Se um caminho for fornecido, usa o banco em arquivo. Caso contrario, usa memoria compartilhada.
+        if db_path:
+            self.db_path = db_path
+            self.conn = sqlite3.connect(self.db_path)
+        else:
+            self.db_path = "file:clash_mem?mode=memory&cache=shared"
+            self.conn = sqlite3.connect(self.db_path, uri=True)
+            
         self.cursor = self.conn.cursor()
         
         if data_dir is None:
