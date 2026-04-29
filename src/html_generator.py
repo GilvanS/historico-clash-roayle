@@ -121,6 +121,7 @@ class GitHubPagesHTMLGenerator:
                     
                     # Normaliza resultado
                     res = str(row.get('resultado') or row.get('result') or '').strip().lower()
+                    norm_res = 'unknown'
                     if any(x in res for x in ['vitoria', 'victory', 'vitória']):
                         norm_res = 'victory'
                     elif any(x in res for x in ['derrota', 'defeat']):
@@ -128,12 +129,27 @@ class GitHubPagesHTMLGenerator:
                     elif any(x in res for x in ['empate', 'draw']):
                         norm_res = 'draw'
                     else:
-                        norm_res = 'draw'
+                        # Tenta inferir pelas coroas se o texto falhar
+                        try:
+                            cp = int(row.get('coroas_jogador', row.get('crowns', 0)) or 0)
+                            co = int(row.get('coroas_oponente', row.get('opponent_crowns', 0)) or 0)
+                            if cp > co: norm_res = 'victory'
+                            elif co > cp: norm_res = 'defeat'
+                            elif cp == co and (cp > 0 or co > 0): norm_res = 'draw'
+                        except:
+                            pass
 
                     opp_tag = str(row.get('tag_oponente') or row.get('opponent_tag') or '').strip().upper()
                     
+                    # Validação de Tag para evitar oponentes "fantasmas" (ex: marcadores de conflito git)
+                    if not opp_tag or len(opp_tag) < 3 or opp_tag.startswith('<<<') or ' ' in opp_tag:
+                        # Se não tem tag válida, tenta pelo nome, mas se o nome for suspeito, pula
+                        opp_name = row.get('nome_oponente', row.get('oponente', row.get('opponent_name', 'Oponente')))
+                        if not opp_name or opp_name in ['Oponente', 'Unknown', 'Desconhecido'] or opp_name.startswith('<<<'):
+                            continue
+                    
                     # Chave de deduplicação: (hora, oponente, resultado)
-                    opp_identifier = opp_tag if opp_tag else str(row.get('nome_oponente') or row.get('oponente') or row.get('opponent_name') or 'Unknown')
+                    opp_identifier = opp_tag if opp_tag and not opp_tag.startswith('<<<') else str(row.get('nome_oponente') or row.get('oponente') or row.get('opponent_name') or 'Unknown')
                     dedup_key = (b_time, opp_identifier, norm_res)
                     
                     if dedup_key in battles_dict:
