@@ -170,7 +170,7 @@ class GitHubPagesHTMLGenerator:
                         existing_time, existing_opp = existing_key
                         if existing_opp == opp_identifier:
                             time_diff = abs((b_time - existing_time).total_seconds()) / 60.0
-                            if time_diff <= 15:
+                            if time_diff <= 240:
                                 # Verifica se os dados principais batem
                                 if existing_battle.get('result') == norm_res and \
                                    str(existing_battle.get('crowns')) == str(crowns) and \
