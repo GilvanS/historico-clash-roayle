@@ -77,14 +77,14 @@ class GitHubPagesHTMLGenerator:
             player_tag = self.player_tag
         """Lê todos os CSVs de batalha e unifica em uma lista, com deduplicação rigorosa"""
         battles_dict = {}
-        # Carrega apenas arquivos particionados (ano, mes, semana, dia)
-        # Ignora battles.csv, oponentes_todos.csv e oponentes_batalhas.csv que são redundantes
-        pattern = os.path.join(self.data_csv_dir, 'oponentes_*.csv')
+        # Carrega apenas arquivos anuais
+        # Ignora arquivos de dias e meses para evitar duplicação, já que o ano é a fonte de verdade
+        pattern = os.path.join(self.data_csv_dir, 'oponentes_ano_*.csv')
         all_files = glob.glob(pattern)
         
         # Filtra para evitar arquivos que sabidamente contêm dados duplicados de forma massiva
         files = []
-        ignored_files = ['oponentes_todos.csv', 'oponentes_batalhas.csv', 'battles.csv']
+        ignored_files = []
         for f in all_files:
             basename = os.path.basename(f)
             if basename not in ignored_files:

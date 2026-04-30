@@ -150,7 +150,7 @@ class CSVDatabaseManager:
         # contem dados degradados (nivel_oponente=0, sem cartas evoluidas, horarios defasados).
         # Desde 2026-04-29, os dados canonicos estao exclusivamente em data_csv_oficial/.
         secondary_patterns = [
-            os.path.join(self.data_dir, 'oponentes_*.csv')
+            os.path.join(self.data_dir, 'oponentes_ano_*.csv')
         ]
         
         # Mapping for oponentes_*.csv to battles table
