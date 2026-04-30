@@ -145,10 +145,11 @@ class CSVDatabaseManager:
                 self._load_csv_to_table(file_path, table_name)
                 loaded_files.add(os.path.basename(file_path))
         
-        # 2. Secondary battle files (oponentes_*.csv) from parent directory and official dir
-        parent_dir = os.path.dirname(self.data_dir)
+        # 2. Battle files (oponentes_*.csv) ONLY from official directory
+        # NOTA: Anteriormente carregava tambem da raiz (parent_dir), mas esses arquivos
+        # contem dados degradados (nivel_oponente=0, sem cartas evoluidas, horarios defasados).
+        # Desde 2026-04-29, os dados canonicos estao exclusivamente em data_csv_oficial/.
         secondary_patterns = [
-            os.path.join(parent_dir, 'oponentes_*.csv'),
             os.path.join(self.data_dir, 'oponentes_*.csv')
         ]
         
