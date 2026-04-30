@@ -52,12 +52,13 @@ jobs:
         cd src
         python collect_battles_csv.py
 
-    # ── 2. Limpeza de dados ────────────────────────────────────────────
-    - name: Data Integrity Cleanup (Sanitize & Deduplicate)
+    # ── 2. Limpeza e Arquivamento de dados ─────────────────────────────
+    - name: Data Integrity Cleanup (Sanitize & Deduplicate & Archive)
       run: |
         cd src
         python sanitize_csvs.py
         python deduplicate_csvs.py
+        python archive_old_csvs.py
 
     # ── 3. Geracao do HTML (le os CSVs direto, sem banco) ─────────────
     - name: Generate HTML report

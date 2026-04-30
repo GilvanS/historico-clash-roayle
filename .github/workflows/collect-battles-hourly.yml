@@ -40,13 +40,15 @@ jobs:
         cd src
         python collect_battles_csv.py
 
-    - name: Data Integrity Cleanup (Sanitize & Deduplicate)
+    - name: Data Integrity Cleanup (Sanitize & Deduplicate & Archive)
       run: |
         cd src
         echo "Limpando conflitos de merge..."
         python sanitize_csvs.py
         echo "Removendo duplicatas..."
         python deduplicate_csvs.py
+        echo "Arquivando dados antigos..."
+        python archive_old_csvs.py
 
     - name: Generate HTML report (atualiza pagina web com batalhas novas)
       env:
