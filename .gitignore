@@ -23,7 +23,8 @@ node_modules/
 *.sw?
 # OS specific
 .DS_Store
-
+# MCP
+.mcp.json
 # Task files
 # tasks.json
 # tasks/ 

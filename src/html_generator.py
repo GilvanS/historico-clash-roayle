@@ -117,7 +117,12 @@ class GitHubPagesHTMLGenerator:
                             
                     # Normaliza campos
                     raw_battle_time = row.get('data') or row.get('battle_time') or ''
-                    b_time = self._normalize_battle_time(raw_battle_time)
+                    # Obtém datetime real para comparação fuzzy
+                    b_time_str = self._normalize_battle_time(raw_battle_time)
+                    try:
+                        b_time = datetime.strptime(b_time_str, '%Y-%m-%dT%H:%M:%S')
+                    except:
+                        b_time = datetime.min
                     
                     # Normaliza resultado
                     res = str(row.get('resultado') or row.get('result') or '').strip().lower()
@@ -146,26 +151,37 @@ class GitHubPagesHTMLGenerator:
 
                     opp_tag = str(row.get('tag_oponente') or row.get('opponent_tag') or '').strip().upper()
                     
-                    # Validação de Tag para evitar oponentes "fantasmas" (ex: marcadores de conflito git)
+                    # Extração e normalização básica de campos
+                    opp_name = row.get('nome_oponente', row.get('oponente', row.get('opponent_name', 'Oponente')))
+                    crowns = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
+                    opp_crowns = row.get('coroas_oponente', row.get('opponent_crowns', '0'))
+                    
+                    # Validação de Tag/Nome para evitar oponentes "fantasmas"
                     if not opp_tag or len(opp_tag) < 3 or opp_tag.startswith('<<<') or ' ' in opp_tag:
-                        # Se não tem tag válida, tenta pelo nome, mas se o nome for suspeito, pula
-                        opp_name = row.get('nome_oponente', row.get('oponente', row.get('opponent_name', 'Oponente')))
                         if not opp_name or opp_name in ['Oponente', 'Unknown', 'Desconhecido'] or opp_name.startswith('<<<'):
                             continue
                     
-                    # Chave de deduplicação: (hora, oponente)
-                    # Ignoramos o resultado na chave para evitar duplicatas do mesmo jogo com labels diferentes
-                    opp_identifier = opp_tag if opp_tag and not opp_tag.startswith('<<<') else str(row.get('nome_oponente') or row.get('oponente') or row.get('opponent_name') or 'Unknown')
-                    dedup_key = (b_time, opp_identifier)
+                    # Chave de deduplicação e Lógica Fuzzy
+                    opp_identifier = opp_tag if opp_tag and not opp_tag.startswith('<<<') else str(opp_name or 'Unknown')
                     
-                    if dedup_key in battles_dict:
-                        # Se já existe, mantém a que tem resultado conhecido (victory/defeat/draw) sobre 'unknown'
-                        existing_res = battles_dict[dedup_key].get('result')
-                        if existing_res == 'unknown' and norm_res != 'unknown':
-                            # Sobrescreve para atualizar o resultado unknown
-                            pass 
-                        else:
-                            continue # Mantém o que já está lá
+                    is_duplicate = False
+                    # Procura se já carregamos essa partida (fuzzy timing: 15 min)
+                    for existing_key, existing_battle in battles_dict.items():
+                        existing_time, existing_opp = existing_key
+                        if existing_opp == opp_identifier:
+                            time_diff = abs((b_time - existing_time).total_seconds()) / 60.0
+                            if time_diff <= 15:
+                                # Verifica se os dados principais batem
+                                if existing_battle.get('result') == norm_res and \
+                                   str(existing_battle.get('crowns')) == str(crowns) and \
+                                   str(existing_battle.get('opponent_crowns')) == str(opp_crowns):
+                                    is_duplicate = True
+                                    break
+                    
+                    if is_duplicate:
+                        continue
+                    
+                    dedup_key = (b_time, opp_identifier)
                     
                     opp_name = row.get('nome_oponente', row.get('oponente', row.get('opponent_name', 'Oponente')))
                     crowns = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
@@ -187,7 +203,8 @@ class GitHubPagesHTMLGenerator:
                         t_change = 0
                         
                     battle_obj = {
-                        'battle_time': b_time,
+                        'battle_time': b_time_str, # Mantém string para compatibilidade
+                        '_dt': b_time,             # Campo interno para ordenação
                         'result': norm_res,
                         'player_tag': row_tag,
                         'opponent_name': opp_name,
@@ -211,7 +228,7 @@ class GitHubPagesHTMLGenerator:
         
         # Converte o dicionário de volta para lista e ordena por tempo
         final_battles = list(battles_dict.values())
-        final_battles.sort(key=lambda x: x['battle_time'] or '', reverse=True)
+        final_battles.sort(key=lambda x: x.get('_dt', datetime.min), reverse=True)
         
         logger.info(f"Total de batalhas únicas carregadas: {len(final_battles)}")
         return final_battles
