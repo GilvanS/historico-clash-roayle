@@ -77,14 +77,14 @@ class GitHubPagesHTMLGenerator:
             player_tag = self.player_tag
         """Lê todos os CSVs de batalha e unifica em uma lista, com deduplicação rigorosa"""
         battles_dict = {}
-        # Carrega apenas arquivos anuais
-        # Ignora arquivos de dias e meses para evitar duplicação, já que o ano é a fonte de verdade
-        pattern = os.path.join(self.data_csv_dir, 'oponentes_ano_*.csv')
+        # Carrega apenas arquivos particionados (ano, mes, semana, dia)
+        # Ignora battles.csv, oponentes_todos.csv e oponentes_batalhas.csv que são redundantes
+        pattern = os.path.join(self.data_csv_dir, 'oponentes_*.csv')
         all_files = glob.glob(pattern)
         
         # Filtra para evitar arquivos que sabidamente contêm dados duplicados de forma massiva
         files = []
-        ignored_files = []
+        ignored_files = ['oponentes_todos.csv', 'oponentes_batalhas.csv', 'battles.csv']
         for f in all_files:
             basename = os.path.basename(f)
             if basename not in ignored_files:
@@ -108,6 +108,8 @@ class GitHubPagesHTMLGenerator:
                         if data: break
                     except:
                         continue
+                if not data:
+                    continue
 
                 for row in data:
                     # Filtro de player_tag
@@ -138,14 +140,10 @@ class GitHubPagesHTMLGenerator:
                     try:
                         cp = int(row.get('coroas_jogador', row.get('crowns', 0)) or 0)
                         co = int(row.get('coroas_oponente', row.get('opponent_crowns', 0)) or 0)
-                        if cp > co: 
-                            norm_res = 'victory'
-                        elif co > cp: 
-                            norm_res = 'defeat'
-                        elif cp == co:
-                            # Se for 0-0 ou qualquer empate, e ainda for unknown ou ja for draw
-                            if norm_res == 'unknown' or norm_res == 'draw':
-                                norm_res = 'draw'
+                        if norm_res == 'unknown':
+                            if cp > co: norm_res = 'victory'
+                            elif cp < co: norm_res = 'defeat'
+                            else: norm_res = 'draw'
                     except:
                         pass
 
@@ -165,12 +163,12 @@ class GitHubPagesHTMLGenerator:
                     opp_identifier = opp_tag if opp_tag and not opp_tag.startswith('<<<') else str(opp_name or 'Unknown')
                     
                     is_duplicate = False
-                    # Procura se já carregamos essa partida (fuzzy timing: 15 min)
+                    # Procura se já carregamos essa partida (fuzzy timing: 2 min)
                     for existing_key, existing_battle in battles_dict.items():
                         existing_time, existing_opp = existing_key
                         if existing_opp == opp_identifier:
                             time_diff = abs((b_time - existing_time).total_seconds()) / 60.0
-                            if time_diff <= 240:
+                            if time_diff <= 2:
                                 # Verifica se os dados principais batem
                                 if existing_battle.get('result') == norm_res and \
                                    str(existing_battle.get('crowns')) == str(crowns) and \
