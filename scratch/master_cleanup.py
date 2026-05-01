@@ -23,87 +23,58 @@ def clean_and_redistribute():
         
     df_all = pd.concat(dfs, ignore_index=True)
     
-    # 2. Converter data para datetime com suporte a formatos mistos
+    # 2. Converter data para datetime
     df_all['data_dt'] = pd.to_datetime(df_all['data'], errors='coerce', dayfirst=True)
-    
-    # Remover registros que não puderam ser convertidos
-    initial_len = len(df_all)
     df_all = df_all.dropna(subset=['data_dt'])
-    if len(df_all) < initial_len:
-        print(f"Aviso: {initial_len - len(df_all)} registros removidos por erro de data.")
-    
-    # Padronizar a string de data para o formato do projeto: DD/MM/YYYY HH:MM
     df_all['data'] = df_all['data_dt'].dt.strftime('%d/%m/%Y %H:%M')
-    
-    # 3. Ordenar
     df_all = df_all.sort_values(by='data_dt')
     
-    # 4. Deduplicação Global (Janela de 2 min)
+    # 3. Deduplicação Global (Janela de 2 min)
     print("Deduplicando (janela 2 min)...")
-    final_rows = []
-    last_time = None
-    last_tag = None
+    df_all = df_all.drop_duplicates(subset=['data', 'tag_oponente'], keep='first')
     
-    for _, row in df_all.iterrows():
-        current_time = row['data_dt']
-        current_tag = row['tag_oponente']
-        
-        if last_time is not None and current_tag == last_tag:
-            diff = abs((current_time - last_time).total_seconds()) / 60
-            if diff < 2:
-                continue # Pula duplicata exata/próxima
-        
-        final_rows.append(row)
-        last_time = current_time
-        last_tag = current_tag
-        
-    df_clean = pd.DataFrame(final_rows)
-    
-    # 5. Deduplicação de Timezone (Janela de 180 min com mesmo resultado)
+    # 4. Deduplicação de Timezone (Janela de 180 min +/- 5 min)
     print("Deduplicando Timezone (shift 3h)...")
-    # Para cada luta, se houver outra luta do mesmo oponente exatamente 3h depois com mesmo resultado, remover.
-    # Vamos usar uma abordagem conservadora.
-    df_clean = df_clean.sort_values(by='data_dt')
-    tz_deduped = []
-    processed = set()
-    
+    df_clean = df_all.sort_values(by='data_dt')
     clean_list = df_clean.to_dict('records')
+    processed_indices = set()
+    final_records = []
+    
     for i, row in enumerate(clean_list):
-        if i in processed:
+        if i in processed_indices:
             continue
             
-        # Procurar à frente por uma luta do mesmo oponente em +- 3h
-        for j in range(i + 1, min(i + 100, len(clean_list))):
+        # Procurar à frente por uma luta do mesmo oponente em aproximadamente 3h
+        # 10800 segundos = 3h. Margem ampliada para 10 minutos (600s)
+        found_dupe = False
+        for j in range(i + 1, len(clean_list)):
             next_row = clean_list[j]
-            time_diff = abs((next_row['data_dt'] - row['data_dt']).total_seconds())
+            time_diff = (next_row['data_dt'] - row['data_dt']).total_seconds()
             
-            # 3h = 10800 segundos. Permitir margem de 2 min (120s) no shift
-            if abs(time_diff - 10800) < 120 and next_row['tag_oponente'] == row['tag_oponente'] and next_row['resultado'] == row['resultado']:
-                print(f"Removendo duplicata TZ: {row['data']} vs {next_row['data']} ({row['tag_oponente']})")
-                processed.add(j)
+            # Se passou de 3h10, não precisa mais procurar para este registro
+            if time_diff > 11400:
                 break
+                
+            if next_row['tag_oponente'] == row['tag_oponente'] and next_row['resultado'].lower() == row['resultado'].lower():
+                if abs(time_diff - 10800) < 600: # Entre 2h50 e 3h10
+                    print(f"Removendo duplicata TZ: {row['data']} vs {next_row['data']} ({row['tag_oponente']})")
+                    processed_indices.add(j)
+                    # Não paramos o loop 'j' aqui para remover TODAS as duplicatas possíveis, 
+                    # mas geralmente é só uma.
         
-        tz_deduped.append(row)
+        final_records.append(row)
         
-    df_final = pd.DataFrame(tz_deduped)
-    df_final = df_final.drop(columns=['data_dt'])
+    df_final = pd.DataFrame(final_records)
     
-    # 6. Redistribuir por ano
+    # 5. Redistribuir por ano
     print("\nRedistribuindo arquivos...")
-    # Limpar arquivos antigos para evitar resíduos
-    for f in glob.glob('src/data_csv_oficial/oponentes_ano_*.csv'):
-        # Criar backup ou apenas sobrescrever? Vamos sobrescrever com os dados limpos.
-        pass
-
-    # Agrupar por ano da coluna 'data'
-    df_final['ano_aux'] = df_final['data'].apply(lambda x: x.split(' ')[0].split('/')[-1])
+    df_final['ano_aux'] = df_final['data_dt'].dt.year
     
     for ano, group in df_final.groupby('ano_aux'):
         target_file = f'src/data_csv_oficial/oponentes_ano_{ano}.csv'
-        # Salvar e sanitizar (remover .0)
-        group_to_save = group.drop(columns=['ano_aux'])
+        group_to_save = group.drop(columns=['data_dt', 'ano_aux'])
         
-        # Sanitização de tipos
+        # Sanitização final
         for col in group_to_save.columns:
             if col in ['vezes_enfrentado', 'nivel_oponente', 'trofes_oponente', 'coroas_jogador', 'coroas_oponente', 'mudanca_trofes']:
                 group_to_save[col] = pd.to_numeric(group_to_save[col], errors='coerce').fillna(0).astype(int)
