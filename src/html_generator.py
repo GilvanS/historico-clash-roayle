@@ -122,7 +122,10 @@ class GitHubPagesHTMLGenerator:
                     # Obtém datetime real para comparação fuzzy
                     b_time_str = self._normalize_battle_time(raw_battle_time)
                     try:
-                        b_time = datetime.strptime(b_time_str, '%Y-%m-%dT%H:%M:%S')
+                        if b_time_str.endswith('Z'):
+                            b_time = datetime.strptime(b_time_str, '%Y-%m-%dT%H:%M:%SZ')
+                        else:
+                            b_time = datetime.strptime(b_time_str, '%Y-%m-%dT%H:%M:%S')
                     except:
                         b_time = datetime.min
                     
@@ -253,7 +256,10 @@ class GitHubPagesHTMLGenerator:
             '%Y%m%dT%H%M%S',
         ):
             try:
-                return datetime.strptime(value, fmt).strftime('%Y-%m-%dT%H:%M:%S')
+                dt = datetime.strptime(value, fmt)
+                if fmt.endswith('Z'):
+                    return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+                return dt.strftime('%Y-%m-%dT%H:%M:%S')
             except ValueError:
                 continue
         return value
@@ -1300,19 +1306,27 @@ class GitHubPagesHTMLGenerator:
             if dt.tzinfo is None:
                 # Se não tem timezone (caso dos CSVs locais), assumimos que é horário do Brasil (UTC-3)
                 dt = dt.replace(tzinfo=timezone(timedelta(hours=-3)))
-                
-            time_diff = now - dt
             
-            if time_diff.days > 0:
-                return f"{time_diff.days} days ago"
-            elif time_diff.seconds > 3600:
-                hours = time_diff.seconds // 3600
-                return f"{hours} hours ago"
-            elif time_diff.seconds > 60:
-                minutes = time_diff.seconds // 60
-                return f"{minutes} minutes ago"
-            else:
+            # Garantir que dt esteja em UTC para comparação
+            dt_utc = dt.astimezone(timezone.utc)
+            time_diff = now - dt_utc
+            
+            # Se for negativo (por causa de relógios levemente dessincronizados), mostrar como "just now"
+            total_seconds = time_diff.total_seconds()
+            
+            if total_seconds < 0:
                 return "just now"
+            elif total_seconds < 60:
+                return "just now"
+            elif total_seconds < 3600:
+                minutes = int(total_seconds // 60)
+                return f"{minutes} minutes ago"
+            elif total_seconds < 86400:
+                hours = int(total_seconds // 3600)
+                return f"{hours} hours ago"
+            else:
+                days = int(total_seconds // 86400)
+                return f"{days} days ago"
         except:
             return "unknown"
     
@@ -2104,12 +2118,20 @@ class GitHubPagesHTMLGenerator:
             opp_deck_init = first_battle.get('opp_deck', '')
             
             def get_preview_grid(d_str, side_class):
-                if not d_str: return f'<div class="{side_class}" style="width:100px;height:60px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:0.7em;color:#999;">N/D</div>'
+                if not d_str: return f'<div class="{side_class} cr-empty-grid">N/D</div>'
                 cards = [c.strip() for c in d_str.replace(' | ','|').split('|')]
-                return f'''<div class="{side_class}"><div class="cr-cards-grid" style="gap:2px;padding:0;">
-                    <div class="cr-cards-row" style="gap:2px;">{"".join(f'<div class="cr-card-wrap" style="width:22px;height:26px;" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards[:4])}</div>
-                    <div class="cr-cards-row" style="gap:2px;">{"".join(f'<div class="cr-card-wrap" style="width:22px;height:26px;" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards[4:8])}</div>
-                </div></div>'''
+                tower_img = self.get_card_image_path("Princess")
+                return f'''
+                <div class="{side_class} cr-deck-layout">
+                    <div class="cr-cards-grid">
+                        <div class="cr-cards-row">{"".join(f'<div class="cr-card-wrap" style="width:75px;height:90px;" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards[:4])}</div>
+                        <div class="cr-cards-row">{"".join(f'<div class="cr-card-wrap" style="width:75px;height:90px;" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards[4:8])}</div>
+                    </div>
+                    <div class="cr-tower-slot" style="width:75px;height:90px;">
+                        <img src="{tower_img}" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
+                </div>'''
 
             wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
             html += f'''
@@ -2125,7 +2147,7 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-body">
                     {grid_h}
                     <div class="cr-stats-panel" style="flex:1;">
-                        <div id="preview-{deck_id}" class="cr-battle-preview" style="background:linear-gradient(to bottom, #f8fafc, #f1f5f9); padding:10px; border-radius:12px; margin-bottom:10px; display:flex; gap:8px; align-items:center; justify-content:center; border:1px solid #e2e8f0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                        <div id="preview-{deck_id}" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>{get_preview_grid(my_deck_init, 'my-deck-side')}</div>
                             <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>{get_preview_grid(opp_deck_init, 'opp-deck-side')}</div>
@@ -2147,9 +2169,20 @@ class GitHubPagesHTMLGenerator:
             
             cards_list = [c.strip() for c in deck['deck_cards'].split(' | ')]
             def card_img(n):
-                return f'<div class="cr-card-wrap" title="{n}" style="width:40px;height:48px;"><img src="{self.get_card_image_path(n)}" class="cr-card-img" loading="lazy"></div>'
+                return f'<div class="cr-card-wrap" title="{n}" style="width:90px;height:110px;"><img src="{self.get_card_image_path(n)}" class="cr-card-img" loading="lazy"></div>'
             
-            grid_h = f'<div class="cr-cards-grid"><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[:4])}</div><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[4:8])}</div></div>'
+            tower_img = self.get_card_image_path("Princess")
+            grid_h = f'''
+            <div class="cr-deck-layout">
+                <div class="cr-cards-grid">
+                    <div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[:4])}</div>
+                    <div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[4:8])}</div>
+                </div>
+                <div class="cr-tower-slot">
+                    <img src="{tower_img}" class="cr-card-img">
+                    <span class="cr-tower-label">Torre</span>
+                </div>
+            </div>'''
 
             source_label = deck.get('source', 'Dados do Clã')
             is_global = source_label == 'Global Meta'
@@ -2267,13 +2300,17 @@ class GitHubPagesHTMLGenerator:
         }
         
         function getMiniGridJS(deckStr, sideClass) {
-            if (!deckStr) return '<div style="width:140px;height:100px;border:1px dashed #cbd5e0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8em;color:#a0aec0;">Deck N/D</div>';
+            if (!deckStr) return '<div class="cr-empty-grid">Deck N/D</div>';
             const cards = deckStr.replace(/ \| /g, '|').split('|');
             return `
-                <div class="${sideClass}">
-                    <div class="cr-cards-grid" style="gap:2px;padding:0;">
-                        <div class="cr-cards-row" style="gap:2px;">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:38px;height:45px;" title="${c.trim()}"><img src="cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';"></div>`).join('')}</div>
-                        <div class="cr-cards-row" style="gap:2px;">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:38px;height:45px;" title="${c.trim()}"><img src="cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';"></div>`).join('')}</div>
+                <div class="${sideClass} cr-deck-layout">
+                    <div class="cr-cards-grid">
+                        <div class="cr-cards-row">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="cards/normal_cards/Princess.png" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';" class="cr-card-img"></div>`).join('')}</div>
+                        <div class="cr-cards-row">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="cards/normal_cards/Princess.png" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';" class="cr-card-img"></div>`).join('')}</div>
+                    </div>
+                    <div class="cr-tower-slot" style="width:75px;height:90px;">
+                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
                     </div>
                 </div>
             `;
@@ -2321,17 +2358,17 @@ class GitHubPagesHTMLGenerator:
             opp_deck_last = last_b.get('opp_deck', '')
             
             def get_deck_grid_html(deck_str, side_class):
-                if not deck_str: return f'<div class="{side_class}" style="width:140px;height:100px;border:1px dashed #cbd5e0;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#a0aec0;font-size:0.8em;">Deck N/D</div>'
+                if not deck_str: return f'<div class="{side_class} cr-empty-grid">Deck N/D</div>'
                 c_list = [c.strip() for c in deck_str.replace(' | ','|').split('|')]
                 def c_h(n):
                     img = self.get_card_image_path(n)
-                    return f'<div class="cr-card-wrap" title="{n}" style="width:38px;height:45px;"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
+                    return f'<div class="cr-card-wrap" title="{n}" style="width:64px;height:72px;"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
                 t_h = "".join(c_h(c) for c in c_list[:4])
                 b_h = "".join(c_h(c) for c in c_list[4:8])
-                return f'<div class="{side_class}"><div class="cr-cards-grid" style="gap:2px;padding:0;"><div class="cr-cards-row" style="gap:2px;">{t_h}</div><div class="cr-cards-row" style="gap:2px;">{b_h}</div></div></div>'
+                return f'<div class="{side_class}"><div class="cr-cards-grid"><div class="cr-cards-row">{t_h}</div><div class="cr-cards-row">{b_h}</div></div></div>'
 
             preview_html = f"""
-            <div id="preview-{tag_clean}" class="cr-battle-preview" style="display:flex; justify-content:space-around; align-items:center; gap:10px; padding:12px; background:linear-gradient(to bottom, #f8fafc, #f1f5f9); border-radius:12px; margin:10px 0; border:1px solid #e2e8f0; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.05);">
+            <div id="preview-{tag_clean}" class="cr-battle-preview">
                 <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small>{get_deck_grid_html(my_deck_last, 'my-deck-side')}</div>
                 <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
                 <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small>{get_deck_grid_html(opp_deck_last, 'opp-deck-side')}</div>
@@ -2566,9 +2603,14 @@ class GitHubPagesHTMLGenerator:
             lethal_decks_data = self.get_lethal_opponent_decks()
             lethal_decks_html = self.generate_lethal_decks_html(lethal_decks_data)
             
+            # Gera dados das abas de performance
+            weekly_decks = self.get_weekly_decks_from_csv()
+            repeated_opponents = self.get_repeated_opponents_from_csv()
+            winning_decks_global = self.get_top_winning_decks_weekly()
+            
             # Gera HTML das abas de decks (Meus Decks da Semana + Oponentes Repetidos + Decks Letais)
             deck_performance_html = self.generate_deck_performance_with_tabs(
-                [], [], [], [], stats, player_tag, lethal_decks_html
+                weekly_decks, repeated_opponents, winning_decks_global, [], stats, player_tag, lethal_decks_html
             )
             
             # Batalhas Recentes
@@ -2669,1308 +2711,489 @@ class GitHubPagesHTMLGenerator:
     def get_base_css_styles(self) -> str:
         """Get base CSS styles used across all pages"""
         return """
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
+
+        :root {
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: blur(12px);
+            --primary: #4299e1;
+            --primary-glow: rgba(66, 153, 225, 0.4);
+            --accent: #f6ad55;
+            --success: #48bb78;
+            --danger: #f56565;
+            --bg-dark: #0f172a;
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        @font-face {
-            font-family: 'Clash-Regular';
-            src: url('assets/fonts/Clash_Regular.otf') format('opentype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
-        @font-face {
-            font-family: 'Supercell-Magic';
-            src: url('assets/fonts/Supercell-Magic Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark) url('https://images2.alphacoders.com/112/thumb-1920-1124066.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #f8fafc;
             line-height: 1.6;
+            min-height: 100vh;
         }
-        
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Clash-Regular', 'Supercell-Magic', sans-serif;
+
+        h1, h2, h3, h4, .clash-font {
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        
+
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px;
+            animation: fadeIn 0.8s ease-out;
         }
-        
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-        
-        .header h1 {
-            color: #4a5568;
+            padding: 60px 40px;
+            margin-bottom: 40px;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 2.5em;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
         }
-        
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
         .player-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            margin-top: 20px;
+            width: 100%;
+            max-width: 1000px;
         }
-        
+
         .stat-card {
-            background: rgba(255, 255, 255, 0.8);
             padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+        }
+
         .stat-card h3 {
-            color: #2d3748;
-            margin-bottom: 10px;
-            white-space: normal;
-            word-break: keep-all;
-            line-height: 1.4;
+            font-size: 0.75em;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 700;
         }
-        
-        .stat-card h3 br {
-            display: block;
-        }
-        
+
         .stat-card .value {
             font-size: 1.8em;
-            font-weight: bold;
-            color: #4299e1;
+            font-weight: 800;
+            color: #fff;
         }
-        
+
         .section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 40px;
+            margin-bottom: 40px;
         }
-        
+
         .section h2 {
-            color: #2d3748;
-            margin-bottom: 25px;
-            border-bottom: 3px solid #4299e1;
-            padding-bottom: 10px;
-        }
-        
-        /* ============================================================
-           Clash Royale Top-Decks style – cr-deck-card components
-           ============================================================ */
-        .cr-decks-list {
+            font-size: 1.8em;
+            margin-bottom: 30px;
             display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 10px;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section h2::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            opacity: 0.2;
+        }
+
+        /* Tabs */
+        .deck-tabs-container {
+            margin-top: 20px;
+        }
+
+        .deck-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            width: fit-content;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tab-button:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .tab-button.active {
+            color: #fff;
+            background: var(--primary);
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        /* Deck Lists */
+        .cr-decks-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 30px;
         }
 
         .cr-deck-card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            transition: box-shadow 0.2s;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         .cr-deck-card:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
         }
 
         .cr-deck-header {
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.03);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 14px 8px 14px;
-            border-bottom: 1px solid #edf2f7;
-            background: #f7fafc;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .cr-deck-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+
         .cr-deck-rank {
-            background: #4299e1;
+            background: linear-gradient(135deg, var(--primary) 0%, #3182ce 100%);
             color: #fff;
-            font-weight: 700;
-            font-size: 0.82em;
-            padding: 2px 8px;
-            border-radius: 20px;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.7em;
+            box-shadow: 0 4px 10px rgba(66, 153, 225, 0.3);
         }
-        .cr-deck-label {
-            font-size: 0.85em;
-            color: #4a5568;
-            font-weight: 600;
-        }
+
         .cr-wr-badge {
-            color: #fff;
-            font-size: 0.82em;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            background: rgba(255,255,255,0.1);
         }
 
-        /* Barra de progresso W / D / L */
-        .cr-progress-bar {
-            display: flex;
-            height: 8px;
-            width: 100%;
-        }
-        .cr-bar-wins   { background: #48bb78; transition: width 0.4s; }
-        .cr-bar-draws  { background: #ed8936; transition: width 0.4s; }
-        .cr-bar-losses { background: #f56565; transition: width 0.4s; }
-
-        /* Corpo: cards (esq) + stats (dir) */
         .cr-deck-body {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            padding: 14px;
-        }
-
-        /* Grid 4+4 de cartas */
-        .cr-cards-grid {
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            flex-shrink: 0;
+            gap: 24px;
         }
-        .cr-cards-row {
-            display: flex;
-            gap: 5px;
+
+        .cr-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
         }
+
         .cr-card-wrap {
-            width: 64px;
-            height: 72px;
-            background: #1a202c;
-            border-radius: 8px;
+            aspect-ratio: 5/6;
+            background: #1e293b;
+            border-radius: 14px;
+            border: 2px solid rgba(255,255,255,0.05);
+            position: relative;
             overflow: hidden;
-            border: 2px solid #4a5568;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            transition: transform 0.15s;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            /* Zoom suave removido conforme pedido */
         }
-        .cr-card-wrap:hover { transform: scale(1.08); }
+
+        .cr-card-wrap:hover {
+            border-color: var(--primary);
+            box-shadow: 0 12px 24px rgba(66, 153, 225, 0.4);
+        }
+
         .cr-card-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* Painel de estatisticas */
         .cr-stats-panel {
-            flex: 1;
-            min-width: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .cr-stats-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.87em;
-            background: transparent;
-            border-radius: 0;
-            overflow: visible;
+            background: rgba(0,0,0,0.25);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.03);
         }
 
-        /* Estilos de Rivais */
-        .nemesis-badge { background: #e53e3e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
-        .customer-badge { background: #38a169; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
-        .balanced-badge { background: #718096; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
-        
-        .cr-h2h-panel {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: #fdf2f2;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border-left: 4px solid #e53e3e;
-            margin-bottom: 10px;
-        }
-        .cr-h2h-panel.customer { background: #f0fff4; border-left-color: #38a169; }
-        .cr-h2h-panel.balanced { background: #f7fafc; border-left-color: #718096; }
+        .cr-stats-table { width: 100%; border-collapse: collapse; }
         .cr-stats-table th {
-            background: #f7fafc;
-            color: #718096;
-            font-weight: 600;
-            font-size: 0.8em;
-            padding: 5px 8px;
-            border-bottom: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.7em;
+            padding: 8px;
             text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
         }
         .cr-stats-table td {
             text-align: center;
-            padding: 5px 8px;
-            border-bottom: none;
-            font-weight: 600;
-            color: #2d3748;
+            padding: 10px;
+            font-size: 1.2em;
+            font-weight: 800;
+            color: #f1f5f9;
         }
-        .cr-th-win, .cr-td-win { color: #48bb78 !important; }
-        .cr-th-draw,.cr-td-draw{ color: #ed8936 !important; }
-        .cr-th-loss,.cr-td-loss{ color: #f56565 !important; }
 
-        /* Timeline de batalhas */
+        .cr-th-win, .cr-td-win { color: var(--success) !important; }
+        .cr-th-loss, .cr-td-loss { color: var(--danger) !important; }
+
+        /* Timeline */
         .cr-battles-timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
         }
+
         .cr-timeline-label {
-            font-size: 0.75em;
-            color: #718096;
-            font-weight: 600;
+            font-size: 0.65em;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
         }
+
         .cr-timeline-badges {
             display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .cr-battle-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 22px;
-            height: 22px;
-            border-radius: 4px;
-            border: 1.5px solid transparent;
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.72em;
-            cursor: default;
-            padding: 0 3px;
-            gap: 3px;
-        }
-        .cr-badge-with-date {
-            min-width: 70px;
-            height: auto;
-            padding: 3px 6px;
-            border-radius: 6px;
-            flex-direction: column;
-            gap: 1px;
-            font-size: 0.78em;
-        }
-        .cr-badge-date {
-            font-size: 0.78em;
-            font-weight: 500;
-            opacity: 0.92;
-            white-space: nowrap;
-        }
-        .cr-no-deck {
-            font-size: 0.82em;
-            color: #a0aec0;
-            padding: 8px;
-            font-style: italic;
-        }
-        .cr-opp-deck-label {
-            font-size: 0.75em;
-            color: #718096;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            margin-bottom: 6px;
-        }
-
-        @media (max-width: 600px) {
-            .cr-deck-body { flex-direction: column; }
-            .cr-card-wrap { width: 52px; height: 60px; }
-        }
-        /* ============================================================ */
-
-        .deck-tabs-container {
-            margin-top: 20px;
-        }
-        
-        .deck-tabs {
-            display: flex;
-            flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
+            overflow-x: auto;
+            padding-bottom: 10px;
         }
-        
-        .tab-button {
-            background: transparent;
-            border: none;
-            padding: 12px 20px;
-            font-size: 1em;
-            font-weight: 600;
-            color: #718096;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .tab-button:hover {
-            color: #4299e1;
-            background: rgba(66, 153, 225, 0.1);
-        }
-        
-        .tab-button.active {
-            color: #4299e1;
-            border-bottom-color: #4299e1;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .deck-item {
-            background: rgba(247, 250, 252, 0.8);
+
+        .cr-battle-badge {
+            min-width: 36px;
+            height: 36px;
             border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .deck-header {
-            margin-bottom: 15px;
-        }
-        
-        .deck-header h3 {
-            color: #2d3748;
-            margin-bottom: 8px;
-        }
-        
-        .deck-stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .stat {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.9em;
-        }
-        
-        .deck-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .deck-cards-compact {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 8px;
-            margin-top: 15px;
-            justify-content: flex-start;
-        }
-        
-        @media (max-width: 768px) {
-            .deck-cards-compact {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-        
-        .deck-cards-compact .card-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            font-weight: 800;
+            font-size: 0.9em;
+            transition: transform 0.2s;
         }
-        
-        .deck-cards-compact .card-image {
-            width: 100%;
-            max-width: 100px;
-            height: auto;
-            object-fit: contain;
-            border-radius: 5px;
-        }
-        
-        .card-container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card-image {
-            width: 60px;
-            height: 72px;
-            object-fit: contain;
-            border-radius: 5px;
-        }
-        
-        .card-name {
-            font-size: 0.8em;
-            margin-top: 5px;
-            color: #4a5568;
-            font-weight: 500;
-        }
-        
+
+        .cr-battle-badge:hover { transform: scale(1.1); }
+
+        .battle-victory, .cr-badge-V { background: var(--success); box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3); }
+        .battle-defeat, .cr-badge-D { background: var(--danger); box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3); }
+        .battle-draw, .cr-badge-E { background: var(--accent); box-shadow: 0 4px 12px rgba(246, 173, 85, 0.3); }
+
+        /* Tables & Lists */
         table {
             width: 100%;
-            border-collapse: collapse;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            overflow: hidden;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: -8px;
         }
-        
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
+
         th {
-            background: #4299e1;
-            color: white;
-            font-weight: 600;
+            text-align: left;
+            padding: 16px 24px;
+            color: #94a3b8;
+            font-size: 0.8em;
+            font-weight: 700;
+            text-transform: uppercase;
         }
-        
-        .battle-victory {
-            background-color: rgba(72, 187, 120, 0.1);
+
+        tr {
+            transition: all 0.3s;
         }
-        
-        .battle-defeat {
-            background-color: rgba(245, 101, 101, 0.1);
+
+        tbody tr {
+            background: rgba(255,255,255,0.03);
         }
-        
-        .battle-draw {
-            background-color: rgba(237, 137, 54, 0.1);
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.08);
+            transform: scale(1.005);
         }
-        
-        .result-victory {
-            color: #38a169;
-            font-weight: bold;
+
+        td {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        
-        .result-defeat {
-            color: #e53e3e;
-            font-weight: bold;
-        }
-        
-        .result-draw {
-            color: #ed8936;
-            font-weight: bold;
-        }
-        
-        .current-player {
-            background-color: rgba(66, 153, 225, 0.2);
-            font-weight: bold;
-        }
-        
-        .role-leader {
-            color: #d69e2e;
-            font-weight: bold;
-        }
-        
-        .role-co-leader {
-            color: #3182ce;
-            font-weight: bold;
-        }
-        
-        .role-elder {
-            color: #38a169;
-            font-weight: bold;
-        }
-        
-        .role-member {
-            color: #718096;
-        }
-        
-        /* Mobile Battle Cards */
-        .battle-cards {
-            display: none;
-        }
-        
-        .battle-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #e2e8f0;
-        }
-        
-        .battle-card.battle-victory {
-            border-left-color: #38a169;
-            background-color: rgba(72, 187, 120, 0.05);
-        }
-        
-        .battle-card.battle-defeat {
-            border-left-color: #e53e3e;
-            background-color: rgba(245, 101, 101, 0.05);
-        }
-        
-        .battle-card.battle-draw {
-            border-left-color: #ed8936;
-            background-color: rgba(237, 137, 54, 0.05);
-        }
-        
-        .battle-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .battle-result {
-            font-size: 1.1em;
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-        }
-        
-        .battle-time {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        .battle-card-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .battle-info {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .battle-info span {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        .battle-stats {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 5px;
-        }
-        
-        .crown-count, .trophy-change {
-            padding: 3px 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-            font-size: 0.9em;
-        }
-        
-        /* Mobile Clan Member Cards */
-        .clan-member-cards {
-            display: none;
-        }
-        
-        .clan-member-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #e2e8f0;
-        }
-        
-        .current-player-card {
-            border-left-color: #4299e1;
-            background: rgba(66, 153, 225, 0.1);
-        }
-        
-        .member-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .member-name {
-            font-size: 1.1em;
-            color: #2d3748;
-        }
-        
-        .member-role {
-            padding: 3px 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-            font-size: 0.9em;
-            font-weight: bold;
-        }
-        
-        .member-card-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .member-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .trophy-count, .donation-stats {
-            padding: 3px 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-            font-size: 0.9em;
-        }
-        
-        .member-activity {
-            text-align: right;
-        }
-        
-        .last-seen {
-            color: #718096;
-            font-size: 0.9em;
-            padding: 3px 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-        }
-        
-        .footer {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 30px;
-            font-size: 0.9em;
-        }
-        
-        /* Custom Stacked Histogram Styles */
+
+        td:first-child { border-left: 1px solid rgba(255,255,255,0.05); border-radius: 16px 0 0 16px; }
+        td:last-child { border-right: 1px solid rgba(255,255,255,0.05); border-radius: 0 16px 16px 0; }
+
+        /* Charts */
         .chart-container {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 20px;
         }
-        
+
         .stacked-histogram {
             display: flex;
             align-items: flex-end;
-            justify-content: space-between;
-            height: 200px;
-            padding: 20px 10px 30px 10px;
-            position: relative;
+            gap: 12px;
+            height: 250px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        
+
         .histogram-bar {
             flex: 1;
-            max-width: 25px;
-            margin: 0 2px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 4px;
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
         }
-        
-        .bar-date {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.8em;
-            color: #4a5568;
-            font-weight: 500;
-        }
-        
-        .bar-stack {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-        
+
         .bar-segment {
             width: 100%;
+            border-radius: 6px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .bar-segment:hover { filter: brightness(1.2); transform: scaleX(1.1); }
+
+        .bar-wins { background: var(--success); }
+        .bar-losses { background: var(--danger); }
+        .bar-draws { background: var(--accent); }
+
+        .bar-date {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-45deg);
+            font-size: 0.7em;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 60px 0;
+            color: #64748b;
+            font-size: 0.9em;
+        }
+
+        .cr-deck-layout {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .cr-tower-slot {
+            width: 80px;
+            height: 90px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 14px;
+            border: 2px solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 8px 16px rgba(246, 173, 85, 0.2);
+        }
+
+        .cr-tower-label {
+            position: absolute;
+            bottom: -20px;
+            font-size: 0.6em;
+            color: var(--accent);
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .cr-empty-grid {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 2px;
-            position: relative;
-            font-size: 0.75em;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-        }
-        
-        .segment-value {
-            opacity: 0.9;
-        }
-        
-        .bar-wins {
-            background: linear-gradient(180deg, #48bb78, #38a169);
-            border-radius: 2px 2px 0 0;
-        }
-        
-        .bar-losses {
-            background: linear-gradient(180deg, #f56565, #e53e3e);
-        }
-        
-        .bar-draws {
-            background: linear-gradient(180deg, #a0aec0, #718096);
-        }
-        
-        .bar-empty {
-            background: linear-gradient(180deg, #cbd5e0, #a0aec0);
-            border: 1px dashed #718096;
-            border-radius: 2px;
-        }
-        
-        .histogram-legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9em;
-            color: #4a5568;
-        }
-        
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-        }
-        
-        .legend-wins {
-            background: linear-gradient(180deg, #48bb78, #38a169);
-        }
-        
-        .legend-losses {
-            background: linear-gradient(180deg, #f56565, #e53e3e);
-        }
-        
-        .legend-draws {
-            background: linear-gradient(180deg, #ed8936, #dd6b20);
-        }
-        
-        .legend-empty {
-            background: linear-gradient(180deg, #cbd5e0, #a0aec0);
-            border: 1px dashed #718096;
-        }
-        
-        /* Clan Rankings Styles */
-        .clan-rankings {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .ranking-item {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
-        }
-        
-        .ranking-item:hover {
-            transform: translateY(-2px);
-        }
-        
-        .current-player-ranking {
-            background: rgba(66, 153, 225, 0.15);
-            border-left: 4px solid #4299e1;
-            font-weight: bold;
-        }
-        
-        .ranking-position {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4299e1;
-            min-width: 50px;
-            text-align: center;
-        }
-        
-        .ranking-info {
-            flex: 1;
-            margin-left: 20px;
-        }
-        
-        .ranking-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .ranking-stats {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .stat-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .trophy-up {
-            color: #38a169;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .trophy-down {
-            color: #e53e3e;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .trophy-neutral {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        .donation-up {
-            color: #3182ce;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .donation-down {
-            color: #e53e3e;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .donation-neutral {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        .last-seen-info {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        /* Clan Deck Analytics Styles */
-        .analytics-section {
-            margin-bottom: 30px;
-        }
-        
-        .analytics-section h3 {
-            color: #2d3748;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-        }
-        
-        .popular-deck-item {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .deck-popularity {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .deck-rank {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4299e1;
-            min-width: 40px;
-        }
-        
-        .deck-info {
-            margin-left: 15px;
-        }
-        
-        .usage-count {
-            font-weight: bold;
-            color: #2d3748;
-        }
-        
-        .users-list {
-            color: #718096;
-            font-size: 0.9em;
-            display: block;
-        }
-        
-        .favorite-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-        }
-        
-        .favorite-card-item {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .favorite-card-image {
-            width: 50px;
-            height: 60px;
-            object-fit: contain;
-            margin-bottom: 8px;
-        }
-        
-        .favorite-card-info .card-name {
-            display: block;
-            font-weight: 500;
-            color: #2d3748;
-            font-size: 0.9em;
-        }
-        
-        .favorite-card-info .usage-count {
-            color: #4299e1;
+            color: #64748b;
             font-size: 0.8em;
         }
-        
-        .experimenters-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+
+        @media (max-width: 1024px) {
+            .cr-decks-list { grid-template-columns: 1fr; }
         }
-        
-        .experimenter-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 10px 15px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .experimenter-item .member-name {
-            font-weight: 500;
-            color: #2d3748;
-        }
-        
-        .experimenter-item .change-count {
-            color: #4299e1;
-            font-size: 0.9em;
-            font-weight: bold;
-        }
-        
-        /* Card Level Analytics Styles */
-        .level-comparison {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .level-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .level-label {
-            font-weight: 500;
-            color: #2d3748;
-        }
-        
-        .level-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4299e1;
-        }
-        
-        .level-win-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .win-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .win-label {
-            font-size: 0.9em;
-            color: #4a5568;
-        }
-        
-        .win-count {
-            font-weight: bold;
-            color: #38a169;
-        }
-        
-        .opponent-clans-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .opponent-clan-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .clan-name {
-            font-weight: 500;
-            color: #2d3748;
-            font-size: 1.1em;
-        }
-        
-        .clan-stats {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-        
-        .battles-count {
-            font-size: 0.9em;
-            color: #718096;
-        }
-        
-        .win-rate {
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .clan-analytics-link {
-            color: #4299e1;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-            padding: 12px 24px;
-            border: 2px solid #4299e1;
-            border-radius: 8px;
-            display: inline-block;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .clan-analytics-link:hover {
-            background: #4299e1;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
-        }
-        
-        @media (max-width: 768px) {
-            .deck-cards {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .deck-cards-compact {
-                gap: 6px;
-            }
-            
-            .deck-cards-compact .card-container {
-                padding: 3px;
-                min-width: 40px;
-            }
-            
-            .deck-cards-compact .card-image {
-                width: 40px;
-                height: 48px;
-            }
-            
-            .player-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .deck-stats {
-                flex-direction: column;
-            }
-            
-            /* Hide tables on mobile, show cards */
-            .desktop-table {
-                display: none;
-            }
-            
-            .battle-cards {
-                display: block;
-            }
-            
-            .clan-member-cards {
-                display: block;
-            }
-            
-            .container {
-                padding: 10px;
-            }
-            
-            .section {
-                padding: 20px;
-            }
-            
-            .header {
-                padding: 20px;
-            }
-            
-            .chart-container {
-                padding: 15px;
-            }
-            
-            .stacked-histogram {
-                height: 150px;
-                padding: 15px 5px 25px 5px;
-            }
-            
-            .histogram-bar {
-                max-width: 15px;
-                margin: 0 1px;
-            }
-            
-            .bar-date {
-                font-size: 0.7em;
-                bottom: -20px;
-            }
-            
-            .bar-segment {
-                font-size: 0.65em;
-            }
-            
-            .histogram-legend {
-                gap: 15px;
-            }
-            
-            .ranking-stats {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            
-            .ranking-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-            
-            .level-comparison, .level-win-stats {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .desktop-table {
-                display: block;
-            }
-            
-            .battle-cards {
-                display: none;
-            }
-            
-            .clan-member-cards {
-                display: none;
-            }
-        }
-        
-        /* Sortable table styles */
-        .sortable {
-            cursor: pointer;
-            user-select: none;
-            position: relative;
-            transition: background-color 0.2s ease;
-        }
-        
-        .sortable:hover {
-            background-color: #3182ce !important;
-        }
-        
-        .sort-indicator {
-            font-size: 0.8em;
-            margin-left: 5px;
-            opacity: 0.6;
-        }
-        
-        .sortable.sort-asc .sort-indicator:after {
-            content: " ↑";
-            color: #38a169;
-            font-weight: bold;
-        }
-        
-        .sortable.sort-desc .sort-indicator:after {
-            content: " ↓";
-            color: #e53e3e;
-            font-weight: bold;
-        }
-        
-        /* Responsive histogram styles */
-        .histogram-desktop {
-            display: block;
-        }
-        
-        .histogram-mobile {
-            display: none;
-        }
-        
-        @media (max-width: 768px) {
-            .histogram-desktop {
-                display: none;
-            }
-            
-            .histogram-mobile {
-                display: block;
-            }
-            
-            .histogram-mobile .stacked-histogram {
-                height: 180px;
-                padding: 20px 5px 30px 5px;
-            }
-            
-            .histogram-mobile .histogram-bar {
-                max-width: 20px;
-                margin: 0 2px;
-            }
+
+        @media (max-width: 640px) {
+            .header h1 { font-size: 2.2em; }
+            .section { padding: 24px; }
+            .container { padding: 10px; }
+            .desktop-table { display: none; }
+            .cr-deck-layout { flex-direction: column; }
         }
         """
     
