@@ -16,12 +16,25 @@ class ReadmeCSVUpdater:
         self.csv_dir = csv_dir
         self.readme_path = readme_path
     
-    def find_latest_csv(self, pattern: str = "oponentes_dia_*.csv") -> Optional[str]:
-        """Encontra o CSV mais recente do dia"""
+    def find_latest_csv(self, pattern: str = "oponentes_ano_*.csv") -> Optional[str]:
+        """Encontra o CSV mais recente (prioriza arquivos anuais)"""
+        # Primeiro tenta encontrar por ano (2026)
+        ano_atual = datetime.now().strftime('%Y')
+        csv_dir_oficial = os.path.join(self.csv_dir, 'data_csv_oficial')
+        
+        file_ano = os.path.join(csv_dir_oficial, f"oponentes_ano_{ano_atual}.csv")
+        if os.path.exists(file_ano):
+            return file_ano
+            
+        # Fallback para o padrão original no diretório src
         csv_files = glob.glob(os.path.join(self.csv_dir, pattern))
         if not csv_files:
+            # Tenta no diretório oficial
+            csv_files = glob.glob(os.path.join(csv_dir_oficial, pattern))
+            
+        if not csv_files:
             return None
-        # Retorna o mais recente (por nome ou data de modificacao)
+            
         return max(csv_files, key=os.path.getmtime)
     
     def read_csv_data(self, csv_file: str) -> List[Dict]:

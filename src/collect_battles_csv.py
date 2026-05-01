@@ -15,7 +15,8 @@ FIELDNAMES = [
     'data', 'nome_oponente', 'tag_oponente', 'nivel_oponente',
     'trofes_oponente', 'clan_oponente', 'resultado',
     'coroas_jogador', 'coroas_oponente', 'mudanca_trofes',
-    'modo_jogo', 'tipo_batalha', 'arena', 'deck_jogador', 'deck_oponente', 'vezes_enfrentado'
+    'modo_jogo', 'tipo_batalha', 'arena', 'deck_jogador', 'deck_oponente', 'vezes_enfrentado',
+    'elixir_vazado_jogador', 'elixir_vazado_oponente', 'nivel_torre_jogador'
 ]
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data_csv_oficial')
@@ -104,6 +105,9 @@ def extract_battle_row(battle: dict, player_tag: str):
         'deck_jogador': format_deck(player_team.get('cards', [])),
         'deck_oponente': format_deck(opponent_team.get('cards', [])),
         'vezes_enfrentado': 1,
+        'elixir_vazado_jogador': player_team.get('elixirLeaked', 0),
+        'elixir_vazado_oponente': opponent_team.get('elixirLeaked', 0),
+        'nivel_torre_jogador': player_team.get('expLevel', 0)
     }
 
 
@@ -234,23 +238,11 @@ def main():
 
     total_novos = 0
 
-    print("\n--- Arquivos Diarios ---")
-    for day_key, rows in sorted(by_day.items()):
-        file_path = os.path.join(DATA_DIR, f"oponentes_dia_{day_key}.csv")
-        novos = append_new_rows(file_path, rows)
-        total_novos += novos
-        print(f"  oponentes_dia_{day_key}.csv: +{novos} novas batalhas")
-
-    print("\n--- Arquivos Mensais ---")
-    for month_key, rows in sorted(by_month.items()):
-        file_path = os.path.join(DATA_DIR, f"oponentes_mes_{month_key}.csv")
-        novos = append_new_rows(file_path, rows)
-        print(f"  oponentes_mes_{month_key}.csv: +{novos} novas batalhas")
-
-    print("\n--- Arquivos Anuais ---")
+    print("\n--- Processando Arquivo Anual Consolidade ---")
     for year_key, rows in sorted(by_year.items()):
         file_path = os.path.join(DATA_DIR, f"oponentes_ano_{year_key}.csv")
         novos = append_new_rows(file_path, rows)
+        total_novos += novos
         print(f"  oponentes_ano_{year_key}.csv: +{novos} novas batalhas")
 
     print("\n" + "=" * 60)

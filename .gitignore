@@ -32,3 +32,11 @@ node_modules/
 # Task files
 # tasks.json
 # tasks/ 
+
+# AI Metadata
+.agent/
+.gemini/
+.taskmaster/
+debug_output.txt
+available_models.txt
+scratch/

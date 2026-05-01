@@ -1,0 +1,31 @@
+# Task ID: 1
+# Title: Interface Premium 'Elite'
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Implementação completa da interface Elite com Glassmorphism, cartas grandes e fundo épico.
+# Details:
+Inclui refatoração do CSS e do gerador de HTML.
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Configurar Background Épico [pending]
+### Dependencies: None
+### Description: Baixar a imagem de fundo e configurar no diretório assets.
+### Details:
+
+
+## 2. Desenvolver CSS Premium [pending]
+### Dependencies: None
+### Description: Refatorar index.css para implementar Glassmorphism e estilos de cartas grandes.
+### Details:
+
+
+## 3. Refatorar html_generator.py [pending]
+### Dependencies: None
+### Description: Atualizar lógica de geração de HTML para usar novos componentes e tamanhos.
+### Details:
+
+

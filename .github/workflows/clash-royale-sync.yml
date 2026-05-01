@@ -1,0 +1,84 @@
+name: Clash Royale Sync (30min)
+
+# Workflow unificado: Coleta -> Analytics (README) -> Dashboard (HTML)
+# Executa a cada 30 minutos para manter o histórico atualizado e a página web sincronizada.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: main
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: pip install requests
+
+    - name: 1. Coletar Batalhas (API -> CSV)
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python collect_battles_csv.py
+
+    - name: 2. Sanitizar Dados (Segurança)
+      run: |
+        cd src
+        python sanitize_csvs.py
+        python deduplicate_csvs.py
+
+    - name: 3. Atualizar README (Analytics)
+      run: |
+        cd src
+        python update_readme_from_csv.py
+
+    - name: 4. Gerar Dashboard HTML
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
+      run: |
+        cd src
+        python html_generator.py
+
+    - name: 5. Commit & Push
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        # Adiciona arquivos CSV oficiais, README e Dashboard
+        git add src/data_csv_oficial/ README.md docs/index.html
+
+        if ! git diff --staged --quiet; then
+          git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+          
+          # Retry logic para evitar falhas por concorrência
+          for i in 1 2 3; do
+            if git push origin HEAD; then
+              echo "✅ Push realizado com sucesso."
+              break
+            else
+              echo "⚠️ Tentativa $i/3 falhou, realizando rebase..."
+              sleep 5
+              git pull --rebase -X theirs origin main || true
+            fi
+          done
+        else
+          echo "✨ Nenhuma alteração detectada nesta rodada."
+        fi

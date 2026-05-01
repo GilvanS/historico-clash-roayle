@@ -1,0 +1,105 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Interface Premium 'Elite'",
+        "description": "Implementação completa da interface Elite com Glassmorphism, cartas grandes e fundo épico.",
+        "details": "Inclui refatoração do CSS e do gerador de HTML.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configurar Background Épico",
+            "description": "Baixar a imagem de fundo e configurar no diretório assets.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 2,
+            "title": "Desenvolver CSS Premium",
+            "description": "Refatorar index.css para implementar Glassmorphism e estilos de cartas grandes.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 3,
+            "title": "Refatorar html_generator.py",
+            "description": "Atualizar lógica de geração de HTML para usar novos componentes e tamanhos.",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Refatorar Layout VS Horizontal",
+        "description": "Refatorar o layout do preview de decks para o formato horizontal com a torre centralizada no topo e grade 4x2.",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Otimizar Headers de Estatísticas",
+        "description": "Ajustar o CSS para exibir 5 cards de estatísticas por linha no cabeçalho do dashboard.",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implementar Estética Premium e Modos de Jogo",
+        "description": "Implementar rotação de fundos premium e badges de identificação de modos de jogo com glassmorphism.",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Refinamento UI Elite Premium",
+        "description": "Aumentar cartas, reduzir torre, centralizar placar.",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Refatoração de Coleta e Consolidação 2026",
+        "description": "Refatorar lógica de coleta para 30 em 30 min e consolidar dados de 2026 em arquivo único.",
+        "details": "Unificar workflows do GitHub Actions e consolidar CSVs diários/mensais em oponentes_ano_2026.csv.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2026-05-01T14:32:17.276Z",
+      "description": "Default tasks context",
+      "updated": "2026-05-01T22:17:03.659Z"
+    }
+  }
+}
