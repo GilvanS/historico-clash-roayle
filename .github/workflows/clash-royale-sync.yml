@@ -30,34 +30,15 @@ jobs:
     - name: Install dependencies
       run: pip install requests
 
-    - name: 1. Coletar Batalhas (API -> CSV)
+    - name: 1. Rodar Pipeline de Sincronização (Coleta -> README -> HTML)
       env:
         CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
       run: |
         cd src
-        python collect_battles_csv.py
+        python main_sync.py
 
-    - name: 2. Sanitizar Dados (Segurança)
-      run: |
-        cd src
-        python sanitize_csvs.py
-        python deduplicate_csvs.py
-
-    - name: 3. Atualizar README (Analytics)
-      run: |
-        cd src
-        python update_readme_from_csv.py
-
-    - name: 4. Gerar Dashboard HTML
-      env:
-        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
-        CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
-      run: |
-        cd src
-        python html_generator.py
-
-    - name: 5. Commit & Push
+    - name: 2. Commit & Push
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
