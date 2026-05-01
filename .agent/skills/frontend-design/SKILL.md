@@ -393,4 +393,60 @@ For deeper guidance on specific areas:
 
 ---
 
+## Related Skills
+
+| Skill | When to Use |
+|-------|-------------|
+| **frontend-design** (this) | Before coding - Learn design principles (color, typography, UX psychology) |
+| **[web-design-guidelines](../web-design-guidelines/SKILL.md)** | After coding - Audit for accessibility, performance, and best practices |
+
+## Post-Design Workflow
+
+After implementing your design, run the audit:
+
+```
+1. DESIGN   → Read frontend-design principles ← YOU ARE HERE
+2. CODE     → Implement the design
+3. AUDIT    → Run web-design-guidelines review
+4. FIX      → Address findings from audit
+```
+
+> **Next Step:** After coding, use `web-design-guidelines` skill to audit your implementation for accessibility, focus states, animations, and performance issues.
+
+---
+
 > **Remember:** Design is THINKING, not copying. Every project deserves fresh consideration based on its unique context and users. **Avoid the Modern SaaS Safe Harbor!**
+
+---
+
+## 5. Next.js 16+ Modern Form Patterns
+
+> [!IMPORTANT]
+> For Next.js 16+ projects, use the native `next/form` component instead of standard HTML `<form>` for all GET-based search/filter operations.
+
+### The `<Form>` Component Advantage
+- **Automatic Client Navigation:** Performs client-side transitions on submit.
+- **Progressive Enhancement:** Works even without JavaScript.
+- **URL Sync:** Automatically encodes input values into search params.
+
+### Implementation Example (Search Bar)
+```tsx
+import Form from 'next/form'
+
+export default function SearchBar() {
+  return (
+    <Form action="/search" className="flex gap-2">
+      <input 
+        name="q" 
+        placeholder="Search products..." 
+        className="border p-2"
+      />
+      <button type="submit">Search</button>
+    </Form>
+  )
+}
+```
+
+### When to use `<Form>` vs. standard `<form>`:
+- **Use `next/form`** for: Search, Filtering, Sorting, Pagination (GET requests).
+- **Use standard `<form>`** for: Mutations, Login, Data Entry (POST requests via Server Actions).

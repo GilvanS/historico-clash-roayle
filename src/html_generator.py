@@ -11,6 +11,7 @@ import time
 import csv
 import glob
 import logging
+import json
 from datetime import datetime, timezone, timedelta
 try:
     from datetime import UTC
@@ -122,7 +123,10 @@ class GitHubPagesHTMLGenerator:
                     # Obtém datetime real para comparação fuzzy
                     b_time_str = self._normalize_battle_time(raw_battle_time)
                     try:
-                        b_time = datetime.strptime(b_time_str, '%Y-%m-%dT%H:%M:%S')
+                        if b_time_str.endswith('Z'):
+                            b_time = datetime.strptime(b_time_str, '%Y-%m-%dT%H:%M:%SZ')
+                        else:
+                            b_time = datetime.strptime(b_time_str, '%Y-%m-%dT%H:%M:%S')
                     except:
                         b_time = datetime.min
                     
@@ -200,6 +204,11 @@ class GitHubPagesHTMLGenerator:
                     except:
                         t_change = 0
                         
+                    # Extrai coroas do oponente (campo do CSV de batalha)
+                    opp_crowns_val = row.get('coroas_oponente', row.get('opponent_crowns', '0'))
+                    player_crowns_val = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
+                    game_mode_val = row.get('modo_jogo', row.get('game_mode', row.get('mode', 'Desconhecido')))
+                    
                     battle_obj = {
                         'battle_time': b_time_str, # Mantém string para compatibilidade
                         '_dt': b_time,             # Campo interno para ordenação
@@ -207,7 +216,8 @@ class GitHubPagesHTMLGenerator:
                         'player_tag': row_tag,
                         'opponent_name': opp_name,
                         'opponent_tag': opp_tag,
-                        'crowns': crowns,
+                        'crowns': player_crowns_val,
+                        'opponent_crowns': opp_crowns_val,
                         'arena_name': arena,
                         'deck_cards': deck_p,
                         'deck_card_levels': levels_p,
@@ -217,7 +227,8 @@ class GitHubPagesHTMLGenerator:
                         'opponent_level': self._safe_int(o_level, 0),
                         'opponent_clan_name': clan_o,
                         'opponent_trophies': self._safe_int(opp_trophies, 0),
-                        'trophy_change': t_change
+                        'trophy_change': t_change,
+                        'game_mode': game_mode_val
                     }
                     
                     battles_dict[dedup_key] = battle_obj
@@ -253,7 +264,10 @@ class GitHubPagesHTMLGenerator:
             '%Y%m%dT%H%M%S',
         ):
             try:
-                return datetime.strptime(value, fmt).strftime('%Y-%m-%dT%H:%M:%S')
+                dt = datetime.strptime(value, fmt)
+                if fmt.endswith('Z'):
+                    return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+                return dt.strftime('%Y-%m-%dT%H:%M:%S')
             except ValueError:
                 continue
         return value
@@ -290,9 +304,105 @@ class GitHubPagesHTMLGenerator:
                 return row
         return None
 
+    def get_card_filename(self, card_name: str) -> str:
+        """Convert card name to filename"""
+        card_mapping = {
+            'Three Musketeers': '3M',
+            'Musketeer': 'Musk',
+            'Archer Queen': 'ArcherQueen',
+            'Baby Dragon': 'BabyD',
+            'Barbarian Barrel': 'BarbBarrel',
+            'Barbarians': 'Barbs',
+            'Battle Healer': 'BattleHealer',
+            'Goblin Barrel': 'Barrel',
+            'Bomb Tower': 'BombTower',
+            'Boss Bandit': 'BossBandit',
+            'Cannon Cart': 'CannonCart',
+            'Dark Prince': 'DarkPrince',
+            'Dart Goblin': 'DartGob',
+            'Electro Giant': 'ElectroGiant',
+            'Electro Spirit': 'ElectroSpirit',
+            'Elixir Golem': 'ElixirGolem',
+            'Executioner': 'Exe',
+            'Fire Spirit': 'FireSpirit',
+            'Flying Machine': 'FlyingMachine',
+            'Goblin Gang': 'GobGang',
+            'Goblin Giant': 'GobGiant',
+            'Goblin Hut': 'GobHut',
+            'Goblin Cage': 'GoblinCage',
+            'Goblin Curse': 'GoblinCurse',
+            'Goblin Demolisher': 'GoblinDemolisher',
+            'Goblin Drill': 'GoblinDrill',
+            'Goblin Machine': 'GoblinMachine',
+            'Spear Goblins': 'Gobs',
+            'Goblins': 'Gobs',
+            'Golden Knight': 'GoldenKnight',
+            'Giant Skeleton': 'GiantSkelly',
+            'Heal Spirit': 'HealSpirit',
+            'Hog Rider': 'Hog',
+            'Minion Horde': 'Horde',
+            'Ice Golem': 'IceGolem',
+            'Ice Spirit': 'IceSpirit',
+            'Ice Wizard': 'IceWiz',
+            'Inferno Tower': 'Inferno',
+            'Inferno Dragon': 'InfernoD',
+            'Knight': 'Knight',
+            'Lava Hound': 'Lava',
+            'Lumberjack': 'Lumber',
+            'Magic Archer': 'MagicArcher',
+            'Mega Knight': 'MegaKnight',
+            'Mighty Miner': 'MightyMiner',
+            'Mini P.E.K.K.A': 'MP',
+            'Minions': 'Minions',
+            'Mortar': 'Mortar',
+            'Mother Witch': 'MotherWitch',
+            'Night Witch': 'NightWitch',
+            'P.E.K.K.A': 'PEKKA',
+            'Prince': 'Prince',
+            'Princess': 'Princess',
+            'Royal Giant': 'RG',
+            'Royal Ghost': 'RoyalGhost',
+            'Royal Hogs': 'RoyalHogs',
+            'Royal Recruits': 'RoyalRecruits',
+            'Skeleton Army': 'Skarmy',
+            'Skeleton Dragons': 'SkeletonDragons',
+            'Skeleton King': 'SkeletonKing',
+            'Skeletons': 'Skellies',
+            'Skeleton Barrel': 'SkellyBarrel',
+            'Sparky': 'Sparky',
+            'Tesla': 'Tesla',
+            'The Log': 'Log',
+            'Valkyrie': 'Valk',
+            'Wall Breakers': 'WallBreakers',
+            'Witch': 'Witch',
+            'Wizard': 'Wiz',
+            'X-Bow': 'XBow',
+            'Zap': 'Zap',
+            'Zappies': 'Zappies'
+        }
+        return card_mapping.get(card_name, card_name.replace(' ', '').replace('.', '').replace('-', ''))
+
+    def get_card_image_path(self, card_name: str) -> str:
+        """Get the path to card image (using relative paths from src/ directory)"""
+        filename = self.get_card_filename(card_name)
+        
+        # Try local assets first
+        local_cards_base = os.path.join(self.project_root, "cards")
+        
+        if os.path.exists(os.path.join(local_cards_base, "hero_cards", f"{filename}.png")):
+            return f"../cards/hero_cards/{filename}.png"
+        elif os.path.exists(os.path.join(local_cards_base, "normal_cards", f"{filename}.png")):
+            return f"../cards/normal_cards/{filename}.png"
+        elif os.path.exists(os.path.join(local_cards_base, "evolution_cards", f"{filename}.png")):
+            return f"../cards/evolution_cards/{filename}.png"
+        else:
+            # Fallback to RoyaleAPI
+            clean_name = card_name.strip().lower().replace(' ', '-').replace('.', '').replace('-', '-')
+            return f"https://royaleapi.github.io/cr-api-assets/cards/{clean_name}.png"
+
     def _get_card_name_mapping(self) -> Dict[str, str]:
         """Retorna mapeamento de nomes de cartas para nomes de assets."""
-        return {
+        mapping = {
             'Three Musketeers': '3M',
             'Hero Musketeer': 'Musk',  # Hero version of Musketeer
             'Musketeer': 'Musk',  # Keep regular Musketeer mapping
@@ -371,6 +481,61 @@ class GitHubPagesHTMLGenerator:
             'Electro Dragon': 'eDragon',
             'Electro Wizard': 'eWiz'
         }
+        
+        # Mapeamento de custo de elixir para calculos de deck
+        self.card_elixir_costs = {
+            'Skeletons': 1, 'Electro Spirit': 1, 'Fire Spirit': 1, 'Ice Spirit': 1, 'Heal Spirit': 1,
+            'Zap': 2, 'The Log': 2, 'Giant Snowball': 2, 'Rage': 2, 'Barbarian Barrel': 2,
+            'Goblins': 2, 'Spear Goblins': 2, 'Bats': 2, 'Wall Breakers': 2, 'Ice Golem': 2, 'Bomber': 2,
+            'Arrows': 3, 'Royal Delivery': 3, 'Tornado': 3, 'Clone': 3, 'Skeleton Army': 3,
+            'Guards': 3, 'Minions': 3, 'Archers': 3, 'Firecracker': 3, 'Knight': 3, 'Mega Minion': 3,
+            'Dart Goblin': 3, 'Princess': 3, 'Miner': 3, 'Bandit': 3, 'Royal Ghost': 3, 'Fisherman': 3,
+            'Skeleton Barrel': 3, 'Elixir Golem': 3, 'Ice Wizard': 3, 'Tombstone': 3, 'Goblin Gang': 3,
+            'Little Prince': 3, 'Cannon': 3, 'Phoenix': 4, 'Battle Healer': 4, 'Hunter': 4, 'Electro Wizard': 4,
+            'Mother Witch': 4, 'Magic Archer': 4, 'Lumberjack': 4, 'Night Witch': 4, 'Inferno Dragon': 4,
+            'Baby Dragon': 4, 'Dark Prince': 4, 'Battle Ram': 4, 'Hog Rider': 4, 'Mini P.E.K.K.A': 4,
+            'Valkyrie': 4, 'Musketeer': 4, 'Fireball': 4, 'Poison': 4, 'Freeze': 4, 'Goblin Cage': 4,
+            'Bomb Tower': 4, 'Tesla': 4, 'Furnace': 4, 'Zappies': 4, 'Flying Machine': 4, 'Skeleton Dragons': 4,
+            'Golden Knight': 4, 'Mighty Miner': 4, 'Skeleton King': 4, 'Giant': 5, 'Prince': 5, 'Witch': 5,
+            'Balloon': 5, 'Executioner': 5, 'Wizard': 5, 'Bowler': 5, 'Ram Rider': 5, 'Electro Dragon': 5,
+            'Inferno Tower': 5, 'Goblin Hut': 5, 'Barbarians': 5, 'Minion Horde': 5, 'Rascals': 5, 'Royal Hogs': 5,
+            'Monk': 5, 'Archer Queen': 5, 'Graveyard': 5, 'Giant Skeleton': 6, 'Royal Giant': 6, 'Goblin Giant': 6,
+            'Sparky': 6, 'X-Bow': 6, 'Elixir Collector': 6, 'Rocket': 6, 'Lightning': 6, 'Barbarian Hut': 6,
+            'Elite Barbarians': 6, 'P.E.K.K.A': 7, 'Mega Knight': 7, 'Lava Hound': 7, 'Electro Giant': 7,
+            'Royal Recruits': 7, 'Golem': 8, 'Three Musketeers': 9,
+            'Goblin Curse': 2, 'Goblin Demolisher': 4, 'Goblin Machine': 5, 'Suspicious Bush': 2, 'Spirit Empress': 3
+        }
+        return mapping
+    
+    def _get_tower_hp(self, level: int) -> int:
+        """Retorna o HP da Torre do Rei baseado no nivel."""
+        hp_map = {
+            1: 2400, 2: 2568, 3: 2736, 4: 2904, 5: 3096, 
+            6: 3312, 7: 3528, 8: 3816, 9: 4056, 10: 4416, 
+            11: 4824, 12: 5304, 13: 5832, 14: 6408, 15: 7032
+        }
+        return hp_map.get(int(level), 0)
+
+    def _get_deck_metrics(self, deck_str: str) -> Dict:
+        """Calcula media de elixir e ciclo de 4 cartas."""
+        if not deck_str or deck_str == 'N/D':
+            return {'avg': 0, 'cycle': 0}
+        
+        cards = [c.strip() for c in deck_str.replace(' | ', '|').split('|')]
+        costs = []
+        for c in cards:
+            # Tenta encontrar o custo no mapeamento
+            cost = self.card_elixir_costs.get(c, 3.5) # Fallback para media se nao encontrar
+            costs.append(cost)
+        
+        if not costs:
+            return {'avg': 0, 'cycle': 0}
+            
+        avg = sum(costs) / len(costs)
+        # Ciclo de 4 cartas: as 4 mais baratas
+        cycle = sum(sorted(costs)[:4])
+        
+        return {'avg': round(avg, 1), 'cycle': cycle}
     
     def fetch_opponent_data_from_api(self, opponent_tag: str) -> Optional[Dict]:
         """Fetch opponent data from API and save to database"""
@@ -861,7 +1026,11 @@ class GitHubPagesHTMLGenerator:
                     'result': b.get('result', 'draw'),
                     'battle_time': b.get('battle_time', ''),
                     'my_deck': b.get('deck_cards', ''),
-                    'opp_deck': b.get('opponent_deck_cards', '')
+                    'opp_deck': b.get('opponent_deck_cards', ''),
+                    'crowns': self._safe_int(b.get('crowns', 0), 0),
+                    'opponent_crowns': self._safe_int(b.get('opponent_crowns', 0), 0),
+                    'game_mode': b.get('game_mode', 'Desconhecido'),
+                    'trophy_change': self._safe_int(b.get('trophy_change', 0), 0)
                 })
             encounter_stats.sort(key=lambda x: x.get('battle_time', ''), reverse=True)
             
@@ -1300,19 +1469,27 @@ class GitHubPagesHTMLGenerator:
             if dt.tzinfo is None:
                 # Se não tem timezone (caso dos CSVs locais), assumimos que é horário do Brasil (UTC-3)
                 dt = dt.replace(tzinfo=timezone(timedelta(hours=-3)))
-                
-            time_diff = now - dt
             
-            if time_diff.days > 0:
-                return f"{time_diff.days} days ago"
-            elif time_diff.seconds > 3600:
-                hours = time_diff.seconds // 3600
-                return f"{hours} hours ago"
-            elif time_diff.seconds > 60:
-                minutes = time_diff.seconds // 60
-                return f"{minutes} minutes ago"
-            else:
+            # Garantir que dt esteja em UTC para comparação
+            dt_utc = dt.astimezone(timezone.utc)
+            time_diff = now - dt_utc
+            
+            # Se for negativo (por causa de relógios levemente dessincronizados), mostrar como "just now"
+            total_seconds = time_diff.total_seconds()
+            
+            if total_seconds < 0:
                 return "just now"
+            elif total_seconds < 60:
+                return "just now"
+            elif total_seconds < 3600:
+                minutes = int(total_seconds // 60)
+                return f"{minutes} minutes ago"
+            elif total_seconds < 86400:
+                hours = int(total_seconds // 3600)
+                return f"{hours} hours ago"
+            else:
+                days = int(total_seconds // 86400)
+                return f"{days} days ago"
         except:
             return "unknown"
     
@@ -2021,14 +2198,13 @@ class GitHubPagesHTMLGenerator:
         seven_days_ago = today - timedelta(days=7)
         deck_stats = {}
 
-        for b in global_battles:
-            battle_time = b.get('battle_time', '')
+        for row in global_battles:
+            battle_time = row.get('battle_time', '')
             dt = self._parse_dt(battle_time)
             if not dt or dt < seven_days_ago:
                 continue
             
-            # Consideramos o deck do jogador da linha (player_deck)
-            cards_raw = b.get('deck_cards') or b.get('deck_jogador')
+            cards_raw = row.get('deck_cards') or row.get('deck_jogador')
             if not cards_raw or cards_raw == 'N/D': continue
             
             cards = self._get_canonical_deck(cards_raw)
@@ -2038,25 +2214,37 @@ class GitHubPagesHTMLGenerator:
                     'deck_cards': cards, 
                     'wins': 0, 
                     'losses': 0, 
+                    'draws': 0,
                     'total': 0,
-                    'win_rate': 0
+                    'win_rate': 0,
+                    'battles': []
                 }
             
             deck_stats[cards]['total'] += 1
-            res = str(b.get('result') or b.get('resultado') or '').strip().lower()
+            res = str(row.get('resultado') or row.get('result') or '').strip().lower()
             if res in ['vitoria', 'victory', 'vitória']: 
                 deck_stats[cards]['wins'] += 1
             elif res in ['derrota', 'defeat']: 
                 deck_stats[cards]['losses'] += 1
+            else:
+                deck_stats[cards]['draws'] += 1
+            
+            deck_stats[cards]['battles'].append({
+                'result': res,
+                'my_deck': cards_raw,
+                'opp_deck': row.get('deck_oponente') or row.get('opponent_deck_cards', ''),
+                'battle_time': row.get('battle_time', ''),
+                'modo_jogo': row.get('modo_jogo', 'Batalha')
+            })
 
         final_list = []
         for d in deck_stats.values():
-            # Filtro: mínimo de 3 batalhas para ser estatisticamente relevante
-            if d['total'] >= 3:
+            if d['total'] >= 1:
                 d['win_rate'] = round((d['wins'] / d['total'] * 100), 1)
+                # Ordena batalhas por tempo
+                d['battles'].sort(key=lambda x: self._parse_dt(x['battle_time']) or datetime.min, reverse=True)
                 final_list.append(d)
             
-        # Ordena por Win Rate, depois por Total de partidas
         final_list.sort(key=lambda x: (x['win_rate'], x['total']), reverse=True)
         return final_list[:10]
 
@@ -2074,23 +2262,52 @@ class GitHubPagesHTMLGenerator:
             deck_id = f"deck-{i}"
             
             cards_list = [c.strip() for c in deck['deck_cards'].replace(' | ', '|').split('|')]
-            def card_img(n):
-                return f'<div class="cr-card-wrap" title="{n}"><img src="{self.get_card_image_path(n)}" class="cr-card-img" loading="lazy"></div>'
+            metrics = self._get_deck_metrics(deck['deck_cards'])
             
-            grid_h = f'<div class="cr-cards-grid"><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[:4])}</div><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[4:8])}</div></div>'
+            # Pega o primeiro combate para extrair o modo de jogo
+            first_battle = deck['battles'][0] if deck['battles'] else {}
+            game_mode = first_battle.get('modo_jogo', 'Batalha')
+            
+            grid_h = f'''
+            <div class="cr-deck-side" style="flex:1; width:100%;">
+                <div class="cr-game-mode-badge" style="margin-bottom:10px;">{game_mode}</div>
+                <div class="cr-grid-4x2">
+                    {"".join(f'<div class="cr-card-wrap" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in cards_list)}
+                </div>
+                <div class="cr-deck-metrics" style="margin-top:10px; justify-content:center;">
+                    <div class="cr-metric-item"><span class="cr-elixir-icon">💧</span> {metrics["avg"]}</div>
+                    <div class="cr-metric-item"><span class="cr-elixir-icon">🔄</span> {metrics["cycle"]}</div>
+                </div>
+            </div>'''
 
             # Timeline com data e hora
             timeline_h = ""
             for idx, b in enumerate(deck['battles'][:15]):
-                res = b['resultado'].lower()
-                cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
-                ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
-                b_json = urllib.parse.quote(json.dumps({'my_deck': b['my_deck'], 'opp_deck': b['opp_deck']}))
+                # Calcula métricas para o JSON
+                my_m = self._get_deck_metrics(b['my_deck'])
+                opp_m = self._get_deck_metrics(b['opp_deck'])
+                
+                b_json = urllib.parse.quote(json.dumps({
+                    'my_deck': b['my_deck'], 
+                    'opp_deck': b['opp_deck'],
+                    'player_name': self.players_cache[0].get('name', 'Jogador') if self.players_cache else 'Jogador',
+                    'opp_name': b.get('nome_oponente', 'Oponente'),
+                    'my_metrics': {**my_m, 'leaked': b.get('elixir_vazado_jogador', 0), 'level': b.get('nivel_torre_jogador', 14), 'hp': self._get_tower_hp(b.get('nivel_torre_jogador', 14))},
+                    'opp_metrics': {**opp_m, 'leaked': b.get('elixir_vazado_oponente', 0), 'level': b.get('nivel_oponente', 14), 'hp': self._get_tower_hp(b.get('nivel_oponente', 14))},
+                    'game_mode': b.get('modo_jogo', 'Batalha'),
+                    'crowns': b.get('coroas_jogador', 0),
+                    'opponent_crowns': b.get('coroas_oponente', 0),
+                    'trophy_change': b.get('trofeus', 0)
+                }))
                 active = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == 0 else ""
                 
                 # Formata data para a timeline usando o objeto datetime
                 d_short = b['dt_obj'].strftime('%d/%m')
                 h_short = b['dt_obj'].strftime('%H:%M')
+                
+                res = b['resultado'].lower()
+                cor = '#48bb78' if res in ['vitoria','victory', 'vitória'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
+                ic = 'V' if res in ['vitoria','victory', 'vitória'] else ('D' if res in ['derrota','defeat'] else 'E')
                 
                 timeline_h += f'''
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;" onclick="updateBattlePreview('{deck_id}', {idx}, '{b_json}')">
@@ -2099,17 +2316,48 @@ class GitHubPagesHTMLGenerator:
                 </div>'''
 
             # Preview VS aprimorado
-            first_battle = deck['battles'][0] if deck['battles'] else {}
             my_deck_init = first_battle.get('my_deck', deck['deck_cards'])
             opp_deck_init = first_battle.get('opp_deck', '')
             
-            def get_preview_grid(d_str, side_class):
-                if not d_str: return f'<div class="{side_class}" style="width:100px;height:60px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:0.7em;color:#999;">N/D</div>'
+            def get_preview_grid(d_str, side_class, p_name="Jogador", is_opponent=False):
+                if not d_str: return f'<div class="{side_class} cr-empty-grid">N/D</div>'
                 cards = [c.strip() for c in d_str.replace(' | ','|').split('|')]
-                return f'''<div class="{side_class}"><div class="cr-cards-grid" style="gap:2px;padding:0;">
-                    <div class="cr-cards-row" style="gap:2px;">{"".join(f'<div class="cr-card-wrap" style="width:22px;height:26px;" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards[:4])}</div>
-                    <div class="cr-cards-row" style="gap:2px;">{"".join(f'<div class="cr-card-wrap" style="width:22px;height:26px;" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards[4:8])}</div>
-                </div></div>'''
+                metrics = self._get_deck_metrics(d_str)
+                
+                # Torres locais
+                tower_img = "assets/images/towers/opp_tower.png" if is_opponent else "assets/images/towers/player_tower.png"
+                fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
+                
+                # Métricas extras
+                leaked = metrics.get('leaked', 0)
+                t_level = metrics.get('level', 14)
+                t_hp = metrics.get('hp', self._get_tower_hp(t_level))
+                
+                grid_html = f'''
+                    <div class="cr-grid-4x2-premium">
+                        {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards)}
+                    </div>'''
+                
+                metrics_html = f'''
+                    <div class="cr-deck-metrics-premium">
+                        <div class="cr-metric-item-p" title="Media Elixir"><span class="cr-metric-icon">💧</span> {metrics["avg"]}</div>
+                        <div class="cr-metric-item-p" title="Ciclo 4 Cartas"><span class="cr-metric-icon">🔄</span> {metrics["cycle"]}</div>
+                        <div class="cr-metric-item-p" title="Elixir Vazado" style="color: {'#f56565' if float(leaked) > 0 else '#48bb78'}"><span class="cr-metric-icon">🚫</span> {leaked}</div>
+                    </div>'''
+                
+                return f'''
+                    <div class="{side_class} cr-deck-side">
+                        <div class="cr-player-header-premium">
+                            <div class="cr-player-name-premium">{p_name}</div>
+                            <div class="cr-clan-name-premium">Analytics Squad</div>
+                        </div>
+                        <div class="cr-tower-container-premium">
+                            <img src="{tower_img}" class="cr-tower-img-premium" onerror="this.src='{fallback_tower}'">
+                            <div class="cr-tower-info-premium">HP {t_hp} (Lvl {t_level})</div>
+                        </div>
+                        {grid_html}
+                        {metrics_html}
+                    </div>'''
 
             wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
             html += f'''
@@ -2125,10 +2373,17 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-body">
                     {grid_h}
                     <div class="cr-stats-panel" style="flex:1;">
-                        <div id="preview-{deck_id}" class="cr-battle-preview" style="background:linear-gradient(to bottom, #f8fafc, #f1f5f9); padding:10px; border-radius:12px; margin-bottom:10px; display:flex; gap:8px; align-items:center; justify-content:center; border:1px solid #e2e8f0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
-                            <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>{get_preview_grid(my_deck_init, 'my-deck-side')}</div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
-                            <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>{get_preview_grid(opp_deck_init, 'opp-deck-side')}</div>
+                        <div id="preview-{deck_id}" class="cr-battle-preview">
+                            <div class="cr-battle-header-premium">
+                                <div class="cr-battle-result-label">VITÓRIA</div>
+                                <div class="cr-battle-score-premium">1 - 0</div>
+                                <div class="cr-battle-mode-label">{first_battle.get('game_mode', 'Batalha')}</div>
+                            </div>
+                            <div class="cr-vs-row-premium">
+                                {get_preview_grid(my_deck_init, 'my-deck-side', p_name=self.players_cache[0].get('name', 'Jogador') if self.players_cache else 'Jogador')}
+                                <div class="cr-vs-divider-vertical">vs</div>
+                                {get_preview_grid(opp_deck_init, 'opp-deck-side', p_name="Oponente", is_opponent=True)}
+                            </div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-{deck_id}" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">{timeline_h}</div></div>
                     </div>
@@ -2146,13 +2401,22 @@ class GitHubPagesHTMLGenerator:
             win_rate = deck['win_rate']
             
             cards_list = [c.strip() for c in deck['deck_cards'].split(' | ')]
-            def card_img(n):
-                return f'<div class="cr-card-wrap" title="{n}" style="width:40px;height:48px;"><img src="{self.get_card_image_path(n)}" class="cr-card-img" loading="lazy"></div>'
+            metrics = self._get_deck_metrics(deck['deck_cards'])
             
-            grid_h = f'<div class="cr-cards-grid"><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[:4])}</div><div class="cr-cards-row">{"".join(card_img(c) for c in cards_list[4:8])}</div></div>'
+            grid_h = f'''
+            <div class="cr-deck-side" style="flex:1; width:100%;">
+                <div class="cr-grid-4x2">
+                    {"".join(f'<div class="cr-card-wrap" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in cards_list)}
+                </div>
+                <div class="cr-deck-metrics" style="margin-top:10px; justify-content:center;">
+                    <div class="cr-metric-item"><span class="cr-elixir-icon">💧</span> {metrics["avg"]}</div>
+                    <div class="cr-metric-item"><span class="cr-elixir-icon">🔄</span> {metrics["cycle"]}</div>
+                </div>
+            </div>'''
 
             source_label = deck.get('source', 'Dados do Clã')
             is_global = source_label == 'Global Meta'
+            game_mode = "Ranked" if is_global else "Guerra/Desafio"
             
             wr_c = '#48bb78' if win_rate >= 55 else ('#4299e1' if win_rate >= 50 else '#718096')
             html += f'''
@@ -2165,6 +2429,7 @@ class GitHubPagesHTMLGenerator:
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">{total} Partidas</span>
                 </div>
                 <div class="cr-deck-body">
+                    <div class="cr-mode-badge" style="background:{wr_c};">{game_mode}</div>
                     {grid_h}
                     <div class="cr-stats-panel" style="flex:1; display:flex; align-items:center; justify-content:center;">
                         <div style="text-align:center; padding:10px; background:#f7fafc; border-radius:12px; width:100%;">
@@ -2242,13 +2507,30 @@ class GitHubPagesHTMLGenerator:
                 const previewContainer = document.getElementById('preview-' + deckId);
                 if (!previewContainer) return;
                 
-                const myDeckHtml = getMiniGridJS(data.my_deck, 'my-deck-side');
-                const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side');
+                const myDeckHtml = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.my_metrics);
+                const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_metrics);
                 
+                const score = `${data.crowns || 0} - ${data.opponent_crowns || 0}`;
+                const tropChange = data.trophy_change || 0;
+                const tropColor = tropChange > 0 ? '#48bb78' : (tropChange < 0 ? '#f56565' : '#718096');
+                const tropSign = tropChange > 0 ? '+' : '';
+                const tropText = tropChange !== 0 ? tropSign + tropChange : '';
+
                 previewContainer.innerHTML = `
-                    <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>${myDeckHtml}</div>
-                    <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
-                    <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>${oppDeckHtml}</div>
+                    <div class="cr-vs-row-premium-v2">
+                        <div class="cr-battle-score-header-premium">
+                            <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
+                            <div class="cr-score-display-premium">
+                                <span class="cr-score-val">${score}</span>
+                                <span class="cr-trophy-change-p" style="color: ${tropColor}">${tropText}</span>
+                            </div>
+                        </div>
+                        <div class="cr-vs-decks-row-premium">
+                            ${myDeckHtml}
+                            <div class="cr-vs-center-divider">VS</div>
+                            ${oppDeckHtml}
+                        </div>
+                    </div>
                 `;
                 
                 const timeline = document.querySelector('.timeline-' + deckId);
@@ -2256,9 +2538,6 @@ class GitHubPagesHTMLGenerator:
                     timeline.querySelectorAll('.cr-battle-badge').forEach((b, i) => {
                         if (i === battleIdx) {
                             b.style.boxShadow = '0 0 0 3px #4299e1';
-                            b.style.transform = 'scale(1.1)';
-                        } else {
-                            b.style.boxShadow = 'none';
                             b.style.transform = 'scale(1)';
                         }
                     });
@@ -2266,17 +2545,45 @@ class GitHubPagesHTMLGenerator:
             } catch(e) { console.error("Error updating preview:", e); }
         }
         
-        function getMiniGridJS(deckStr, sideClass) {
-            if (!deckStr) return '<div style="width:140px;height:100px;border:1px dashed #cbd5e0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8em;color:#a0aec0;">Deck N/D</div>';
+        function getMiniGridJS(deckStr, sideClass, playerName, metrics) {
+            if (!deckStr) return `<div class="${sideClass} cr-empty-grid">N/D</div>`;
             const cards = deckStr.replace(/ \| /g, '|').split('|');
+            const playerTower = "assets/images/towers/player_tower.png";
+            const oppTower = "assets/images/towers/opp_tower.png";
+            const towerImg = sideClass.includes('my') ? playerTower : oppTower;
+            
+            const cardsHtml = cards.map(c => {
+                const name = c.trim();
+                const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
+                return `<div class="cr-card-wrap-premium" title="${name}"><img src="https://royaleapi.github.io/cr-api-assets/cards/${slug}.png" class="cr-card-img" onerror="this.src='https://royaleapi.com/static/img/cards-150/${slug}.png'" loading="lazy"></div>`;
+            }).join('');
+            
+            const avg = metrics ? metrics.avg : '--';
+            const cycle = metrics ? metrics.cycle : '--';
+            const leaked = metrics ? (metrics.leaked || 0) : 0;
+            const tLevel = metrics ? (metrics.level || 14) : 14;
+            const tHP = metrics ? (metrics.hp || '--') : '--';
+            const leakedColor = leaked > 0 ? '#f56565' : '#48bb78';
+
             return `
-                <div class="${sideClass}">
-                    <div class="cr-cards-grid" style="gap:2px;padding:0;">
-                        <div class="cr-cards-row" style="gap:2px;">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:38px;height:45px;" title="${c.trim()}"><img src="cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';"></div>`).join('')}</div>
-                        <div class="cr-cards-row" style="gap:2px;">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:38px;height:45px;" title="${c.trim()}"><img src="cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';"></div>`).join('')}</div>
+                <div class="cr-deck-side ${sideClass}">
+                    <div class="cr-player-header-premium">
+                        <div class="cr-player-name-premium">${playerName}</div>
+                        <div class="cr-clan-name-premium">Analytics Squad</div>
                     </div>
-                </div>
-            `;
+                    <div class="cr-tower-container-premium">
+                        <img src="${towerImg}" class="cr-tower-img-premium" onerror="this.src='https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258'">
+                        <div class="cr-tower-info-premium">HP ${tHP} (Lvl ${tLevel})</div>
+                    </div>
+                    <div class="cr-grid-4x2-premium">
+                        ${cardsHtml}
+                    </div>
+                    <div class="cr-deck-metrics-premium">
+                        <div class="cr-metric-item-p" title="Media Elixir"><span class="cr-metric-icon">💧</span> ${avg}</div>
+                        <div class="cr-metric-item-p" title="Ciclo 4 Cartas"><span class="cr-metric-icon">🔄</span> ${cycle}</div>
+                        <div class="cr-metric-item-p" title="Elixir Vazado" style="color: ${leakedColor}"><span class="cr-metric-icon">🚫</span> ${leaked}</div>
+                    </div>
+                </div>`;
         }
 
         function switchDeckTab(event, tabName) {
@@ -2285,12 +2592,39 @@ class GitHubPagesHTMLGenerator:
             document.getElementById('tab-' + tabName).classList.add('active');
             if (event) event.currentTarget.classList.add('active');
         }
+
+        // Rotação diária de background
+        document.addEventListener('DOMContentLoaded', () => {
+            const bgs = [
+                "assets/backgrounds/bg1.jpg",
+                "assets/backgrounds/bg2.jpg",
+                "assets/backgrounds/bg3.jpg",
+                "https://images2.alphacoders.com/112/thumb-1920-1124066.jpg",
+                "https://wallpapers.com/images/featured/clash-royale-v0d8p9p3f2j7j0u0.jpg",
+                "https://images5.alphacoders.com/687/687588.jpg"
+            ];
+            const day = new Date().getDate();
+            const selectedBg = bgs[day % bgs.length];
+            document.body.style.backgroundImage = `url('${selectedBg}')`;
+            
+            // Fallback para imagem remota se a local falhar
+            if (selectedBg.startsWith('assets/')) {
+                const img = new Image();
+                img.onerror = () => {
+                    document.body.style.backgroundImage = "url('https://images2.alphacoders.com/112/thumb-1920-1124066.jpg')";
+                };
+                img.src = selectedBg;
+            }
+        });
         </script>
         """
 
     def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
         """Gera HTML para oponentes repetidos no estilo Premium com Preview de Batalha e Categorização de Rivalidade."""
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
+        
+        # Correção: Obtém o nome do jogador do cache para evitar erro de variável não definida
+        player_name = next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
         
         html = '<div class="cr-decks-list">'
         import json
@@ -2316,25 +2650,66 @@ class GitHubPagesHTMLGenerator:
             
             # Pega a batalha mais recente
             stats = opp['stats']
-            last_b = stats[0] if stats else {} # Usando o campo 'stats' que contem as batalhas individuais
+            last_b = stats[0] if stats else {}
             my_deck_last = last_b.get('my_deck', '')
             opp_deck_last = last_b.get('opp_deck', '')
+            last_game_mode = last_b.get('game_mode', 'Batalha')
+            last_score = f"{last_b.get('crowns', 0)} - {last_b.get('opponent_crowns', 0)}"
+            last_trophy = last_b.get('trophy_change', 0)
+            trophy_color = "#48bb78" if last_trophy > 0 else ("#f56565" if last_trophy < 0 else "#718096")
+            trophy_sign = "+" if last_trophy > 0 else ""
             
-            def get_deck_grid_html(deck_str, side_class):
-                if not deck_str: return f'<div class="{side_class}" style="width:140px;height:100px;border:1px dashed #cbd5e0;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#a0aec0;font-size:0.8em;">Deck N/D</div>'
-                c_list = [c.strip() for c in deck_str.replace(' | ','|').split('|')]
-                def c_h(n):
-                    img = self.get_card_image_path(n)
-                    return f'<div class="cr-card-wrap" title="{n}" style="width:38px;height:45px;"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
-                t_h = "".join(c_h(c) for c in c_list[:4])
-                b_h = "".join(c_h(c) for c in c_list[4:8])
-                return f'<div class="{side_class}"><div class="cr-cards-grid" style="gap:2px;padding:0;"><div class="cr-cards-row" style="gap:2px;">{t_h}</div><div class="cr-cards-row" style="gap:2px;">{b_h}</div></div></div>'
+            def get_deck_side_html(d_str, side_class, p_name, is_opponent=False):
+                if not d_str: return f'<div class="{side_class} cr-empty-grid">N/D</div>'
+                cards = [c.strip() for c in d_str.replace(' | ','|').split('|')]
+                metrics = self._get_deck_metrics(d_str)
+                
+                # Torres locais se existirem
+                tower_img = "assets/images/towers/opp_tower.png" if is_opponent else "assets/images/towers/player_tower.png"
+                fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
+                
+                tower_html = f'<img src="{tower_img}" class="cr-tower-img-premium" onerror="this.src=\'{fallback_tower}\'">'
+                
+                grid_html = f'''
+                    <div class="cr-grid-4x2-premium">
+                        {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">Nível 16</div></div>' for c in cards)}
+                    </div>'''
+                
+                metrics_html = f'''
+                    <div class="cr-deck-metrics-premium">
+                        <div class="cr-metric-item-p"><span class="cr-metric-icon">💧</span> {metrics["avg"]}</div>
+                        <div class="cr-metric-item-p"><span class="cr-metric-icon">🔄</span> {metrics["cycle"]}</div>
+                        <div class="cr-metric-item-p"><span class="cr-metric-icon">⚡</span> 1.8</div>
+                    </div>'''
+                
+                return f'''
+                <div class="cr-deck-side {side_class}">
+                    <div class="cr-player-header-premium" style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px;">
+                        {tower_html if not is_opponent else ""}
+                        <div>
+                            <div class="cr-player-name-premium">{p_name}</div>
+                            <div class="cr-clan-name-premium">Analytics Squad</div>
+                        </div>
+                        {tower_html if is_opponent else ""}
+                    </div>
+                    {grid_html}
+                    {metrics_html}
+                </div>'''
 
             preview_html = f"""
-            <div id="preview-{tag_clean}" class="cr-battle-preview" style="display:flex; justify-content:space-around; align-items:center; gap:10px; padding:12px; background:linear-gradient(to bottom, #f8fafc, #f1f5f9); border-radius:12px; margin:10px 0; border:1px solid #e2e8f0; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.05);">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small>{get_deck_grid_html(my_deck_last, 'my-deck-side')}</div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small>{get_deck_grid_html(opp_deck_last, 'opp-deck-side')}</div>
+            <div id="preview-{tag_clean}" class="cr-battle-preview">
+                <div class="cr-battle-score-header-premium" style="text-align: center; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                    <div class="cr-game-mode-badge" style="margin-bottom: 0;">{last_game_mode}</div>
+                    <div class="cr-score-display-premium" style="background: rgba(15, 23, 42, 0.8); padding: 12px 35px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <div class="cr-score-val" style="font-size: 2.5em; font-weight: 900; color: #fff; letter-spacing: 5px;">{last_score}</div>
+                        <div class="cr-trophy-change-vs" style="color: {trophy_color}; font-size: 1.3em; font-weight: 800;">{trophy_sign}{last_trophy if last_trophy != 0 else ''}</div>
+                    </div>
+                </div>
+                <div class="cr-vs-row" style="align-items: flex-start; gap: 20px;">
+                    {get_deck_side_html(my_deck_last, 'my-deck-side', player_name)}
+                    <div class="cr-vs-divider-vertical" style="align-self: center; opacity: 0.2; font-size: 2em; font-weight: 900;">VS</div>
+                    {get_deck_side_html(opp_deck_last, 'opp-deck-side', opp['opponent_name'], is_opponent=True)}
+                </div>
             </div>
             """
             
@@ -2353,9 +2728,21 @@ class GitHubPagesHTMLGenerator:
                 cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
                 ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
                 
+                # Dados completos para o JS
+                my_metrics = self._get_deck_metrics(b['my_deck'])
+                opp_metrics = self._get_deck_metrics(b['opp_deck'])
+                
                 b_data = urllib.parse.quote(json.dumps({
                     'my_deck': b['my_deck'],
-                    'opp_deck': b['opp_deck']
+                    'opp_deck': b['opp_deck'],
+                    'player_name': player_name,
+                    'opp_name': opp['opponent_name'],
+                    'game_mode': b.get('game_mode', 'Batalha'),
+                    'crowns': b.get('crowns', 0),
+                    'opponent_crowns': b.get('opponent_crowns', 0),
+                    'trophy_change': b.get('trophy_change', 0),
+                    'my_metrics': my_metrics,
+                    'opp_metrics': opp_metrics
                 }))
                 
                 active_style = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == 0 else ""
@@ -2363,45 +2750,49 @@ class GitHubPagesHTMLGenerator:
                 timeline += f'''
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all 0.2s;" onclick="updateBattlePreview('{tag_clean}', {idx}, '{b_data}')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                     <span class="cr-battle-badge" style="background:{cor};{active_style}">{ic}</span>
-                    <span style="font-size:0.65em;color:#4a5568;font-weight:700;">{d_f}</span>
-                    <span style="font-size:0.55em;color:#718096;">{h_f}</span>
+                    <span style="font-size:0.65em;color:#718096;font-weight:700;">{d_f}</span>
+                    <span style="font-size:0.55em;color:#a0aec0;">{h_f}</span>
                 </div>'''
 
             wr_c = '#48bb78' if wr >= 60 else ('#f56565' if wr <= 40 else '#718096')
             
             html += f'''
-            <div class="cr-deck-card" style="padding:15px;">
-                <div class="cr-deck-header" style="margin-bottom:12px;">
+            <div class="cr-deck-card">
+                <div class="cr-deck-header">
                     <div class="cr-deck-meta">
                         <span class="cr-deck-rank">#{i}</span>
-                        <span class="cr-deck-label" style="font-size:1.1em;">{opp['opponent_name']}</span>
+                        <span class="cr-deck-label" style="font-size:1.1em; color:#fff; font-weight:800;">{opp['opponent_name']}</span>
                         <span class="{cat_class}-badge">{category}</span>
                     </div>
                     <div style="text-align:right;">
-                        <span style="font-size:0.75em;color:#718096;font-family:monospace;display:block;margin-bottom:2px;">{opp['opponent_tag']}</span>
-                        <span class="cr-wr-badge" style="background:{wr_c}; font-size:0.9em; padding:4px 10px;">{wr}% WR</span>
+                        <span style="font-size:0.75em;color:#94a3b8;font-family:monospace;display:block;margin-bottom:2px;">{opp['opponent_tag']}</span>
+                        <span class="cr-wr-badge" style="background:{wr_c}; color:#fff; font-size:0.9em;">{wr}% WR</span>
                     </div>
                 </div>
 
-                <div class="cr-h2h-panel {cat_class}">
-                    <div style="font-size:0.8em; font-weight:700; color:#4a5568;">HEAD-TO-HEAD:</div>
-                    <div style="display:flex; gap:10px; font-size:0.9em; font-weight:800;">
-                        <span style="color:#38a169;">{wins}V</span>
-                        <span style="color:#718096;">{draws}E</span>
-                        <span style="color:#e53e3e;">{losses}D</span>
+                <div class="cr-deck-body">
+                    <div class="cr-h2h-panel {cat_class}" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="font-size:0.85em; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:1px;">Confronto Direto:</div>
+                        <div style="display:flex; gap:15px; font-size:1.1em; font-weight:900;">
+                            <span style="color:#48bb78;">{wins}V</span>
+                            <span style="color:#718096;">{draws}E</span>
+                            <span style="color:#f56565;">{losses}D</span>
+                        </div>
+                        <div style="margin-left:auto; font-size:0.75em; color:#64748b; font-weight:600;">VISTO PELA ÚLTIMA VEZ EM: {opp['last_encounter'][:16].replace('T', ' ')}</div>
                     </div>
-                    <div style="margin-left:auto; font-size:0.75em; color:#718096;">Último: {opp['last_encounter'][:16].replace('T', ' ')}</div>
-                </div>
-                
-                {preview_html}
-                
-                <div class="cr-progress-bar" style="height:8px; margin-bottom:15px;"><div class="cr-bar-wins" style="width:{w_p}%;"></div><div class="cr-bar-draws" style="width:{d_p}%;"></div><div class="cr-bar-losses" style="width:{l_p}%;"></div></div>
-                
-                <div class="cr-deck-body" style="padding-top:0;">
-                    <div class="cr-stats-panel" style="width:100%;">
-                        <div class="cr-battles-timeline" style="background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #edf2f7;">
-                            <div class="cr-timeline-label" style="font-size:0.75em; color:#718096; margin-bottom:8px; font-weight:600; text-transform:uppercase;">Histórico de Batalhas (Clique para ver os decks)</div>
-                            <div class="cr-timeline-badges timeline-{tag_clean}" style="display:flex;gap:10px;padding:5px 0;overflow-x:auto;">{timeline}</div>
+                    
+                    {preview_html}
+                    
+                    <div class="cr-progress-bar" style="height:6px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden;">
+                        <div class="cr-bar-wins" style="width:{w_p}%; background:#48bb78;"></div>
+                        <div class="cr-bar-draws" style="width:{d_p}%; background:#718096;"></div>
+                        <div class="cr-bar-losses" style="width:{l_p}%; background:#f56565;"></div>
+                    </div>
+                    
+                    <div class="cr-stats-panel" style="width:100%; margin-top:10px;">
+                        <div class="cr-battles-timeline" style="background:rgba(0,0,0,0.1); padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,0.03);">
+                            <div class="cr-timeline-label" style="font-size:0.7em; color:#64748b; margin-bottom:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px;">Histórico Recente (Selecione para analisar o deck)</div>
+                            <div class="cr-timeline-badges timeline-{tag_clean}" style="display:flex;gap:15px;padding:5px 0;overflow-x:auto;scrollbar-width: thin;">{timeline}</div>
                         </div>
                     </div>
                 </div>
@@ -2566,9 +2957,14 @@ class GitHubPagesHTMLGenerator:
             lethal_decks_data = self.get_lethal_opponent_decks()
             lethal_decks_html = self.generate_lethal_decks_html(lethal_decks_data)
             
+            # Gera dados das abas de performance
+            weekly_decks = self.get_weekly_decks_from_csv()
+            repeated_opponents = self.get_repeated_opponents_from_csv()
+            winning_decks_global = self.get_top_winning_decks_weekly()
+            
             # Gera HTML das abas de decks (Meus Decks da Semana + Oponentes Repetidos + Decks Letais)
             deck_performance_html = self.generate_deck_performance_with_tabs(
-                [], [], [], [], stats, player_tag, lethal_decks_html
+                weekly_decks, repeated_opponents, winning_decks_global, [], stats, player_tag, lethal_decks_html
             )
             
             # Batalhas Recentes
@@ -2669,1308 +3065,886 @@ class GitHubPagesHTMLGenerator:
     def get_base_css_styles(self) -> str:
         """Get base CSS styles used across all pages"""
         return """
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
+
+        :root {
+            --glass-bg: #111827;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: none;
+            --primary: #4299e1;
+            --primary-glow: rgba(66, 153, 225, 0.4);
+            --accent: #f6ad55;
+            --success: #48bb78;
+            --danger: #f56565;
+            --bg-dark: #0f172a;
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        @font-face {
-            font-family: 'Clash-Regular';
-            src: url('assets/fonts/Clash_Regular.otf') format('opentype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
-        @font-face {
-            font-family: 'Supercell-Magic';
-            src: url('assets/fonts/Supercell-Magic Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: #f8fafc;
             line-height: 1.6;
+            min-height: 100vh;
         }
-        
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Clash-Regular', 'Supercell-Magic', sans-serif;
+
+        h1, h2, h3, h4, .clash-font {
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        
+
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px;
+            animation: fadeIn 0.8s ease-out;
         }
-        
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-        
-        .header h1 {
-            color: #4a5568;
+            padding: 60px 40px;
+            margin-bottom: 40px;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-        }
-        
-        .player-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .stat-card {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-card h3 {
-            color: #2d3748;
-            margin-bottom: 10px;
-            white-space: normal;
-            word-break: keep-all;
-            line-height: 1.4;
-        }
-        
-        .stat-card h3 br {
-            display: block;
-        }
-        
-        .stat-card .value {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #4299e1;
-        }
-        
-        .section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-        
-        .section h2 {
-            color: #2d3748;
-            margin-bottom: 25px;
-            border-bottom: 3px solid #4299e1;
-            padding-bottom: 10px;
-        }
-        
-        /* ============================================================
-           Clash Royale Top-Decks style – cr-deck-card components
-           ============================================================ */
-        .cr-decks-list {
+            position: relative;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 20px;
-            margin-top: 10px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        .stat-card h3 {
+            font-size: 0.75em;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .section {
+            padding: 40px;
+            margin-bottom: 40px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .section h2 {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section h2::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            opacity: 0.2;
+        }
+
+        /* Tabs */
+        .deck-tabs-container {
+            margin-top: 20px;
+        }
+
+        .deck-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            width: fit-content;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tab-button:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .tab-button.active {
+            color: #fff;
+            background: var(--primary);
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+
+        /* Deck Lists */
+        .cr-decks-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            width: 100%;
+            justify-content: center;
         }
 
         .cr-deck-card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            transition: box-shadow 0.2s;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            width: 100%;
         }
+
         .cr-deck-card:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        /* Background image support for premium cards */
+        .cr-deck-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: var(--card-bg-image, none);
+            background-size: cover;
+            background-position: center;
+            opacity: 0.15;
+            z-index: -1;
+            pointer-events: none;
         }
 
         .cr-deck-header {
+            padding: 20px 24px;
+            background: rgba(255, 255, 255, 0.03);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 14px 8px 14px;
-            border-bottom: 1px solid #edf2f7;
-            background: #f7fafc;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .cr-deck-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+
         .cr-deck-rank {
-            background: #4299e1;
+            background: linear-gradient(135deg, var(--primary) 0%, #3182ce 100%);
             color: #fff;
-            font-weight: 700;
-            font-size: 0.82em;
-            padding: 2px 8px;
-            border-radius: 20px;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.7em;
+            box-shadow: 0 4px 10px rgba(66, 153, 225, 0.3);
         }
-        .cr-deck-label {
-            font-size: 0.85em;
-            color: #4a5568;
-            font-weight: 600;
-        }
+
         .cr-wr-badge {
-            color: #fff;
-            font-size: 0.82em;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            background: rgba(255,255,255,0.1);
         }
 
-        /* Barra de progresso W / D / L */
-        .cr-progress-bar {
-            display: flex;
-            height: 8px;
-            width: 100%;
-        }
-        .cr-bar-wins   { background: #48bb78; transition: width 0.4s; }
-        .cr-bar-draws  { background: #ed8936; transition: width 0.4s; }
-        .cr-bar-losses { background: #f56565; transition: width 0.4s; }
-
-        /* Corpo: cards (esq) + stats (dir) */
         .cr-deck-body {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            padding: 14px;
-        }
-
-        /* Grid 4+4 de cartas */
-        .cr-cards-grid {
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            flex-shrink: 0;
+            gap: 24px;
         }
-        .cr-cards-row {
-            display: flex;
-            gap: 5px;
-        }
+
         .cr-card-wrap {
-            width: 64px;
-            height: 72px;
-            background: #1a202c;
-            border-radius: 8px;
+            aspect-ratio: 5/6;
+            background: #1e293b;
+            border-radius: 14px;
+            border: 2px solid rgba(255,255,255,0.05);
+            position: relative;
             overflow: hidden;
-            border: 2px solid #4a5568;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            transition: transform 0.15s;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
         }
-        .cr-card-wrap:hover { transform: scale(1.08); }
+
+        .cr-card-wrap:hover {
+            transform: scale(1.05) translateY(-2px);
+            z-index: 10;
+            border-color: var(--primary);
+        }
+
         .cr-card-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* Painel de estatisticas */
-        .cr-stats-panel {
-            flex: 1;
-            min-width: 200px;
+        /* Layout VS Horizontal Premium */
+        .cr-battle-preview {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-        }
-        .cr-stats-table {
+            gap: 20px;
+            padding: 35px;
+            background: linear-gradient(145deg, rgba(30,41,59,0.4), rgba(15,23,42,0.6));
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
             width: 100%;
-            border-collapse: collapse;
-            font-size: 0.87em;
-            background: transparent;
-            border-radius: 0;
-            overflow: visible;
+            max-width: 2200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
 
-        /* Estilos de Rivais */
-        .nemesis-badge { background: #e53e3e; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
-        .customer-badge { background: #38a169; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
-        .balanced-badge { background: #718096; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; }
-        
-        .cr-h2h-panel {
+        .cr-battle-score-header-premium {
+            z-index: 2;
+            width: 100%;
+        }
+
+        .cr-vs-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 60px;
+            width: 100%;
+        }
+
+        .cr-deck-side {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+            max-width: 900px;
+        }
+
+        .cr-tower-side-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .cr-tower-img-premium {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.5));
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cr-tower-img-premium:hover {
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        .cr-player-name-vs {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2em;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+
+        .cr-trophy-change-vs {
+            font-size: 0.8em;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .cr-game-mode-badge {
+            font-size: 0.7em;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #94a3b8;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            margin-bottom: 10px;
+        }
+
+        .cr-grid-8x1 {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            width: 100%;
+        }
+
+        .cr-grid-4x2-premium {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px; /* Aumentado de 15px para 20px */
+            padding: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 900px; /* Aumentado de 750px para 900px */
+            margin: 0 auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .cr-card-wrap-premium {
+            aspect-ratio: 5/6;
+            background: #1e293b;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+
+        .cr-card-wrap-premium:hover {
+            transform: scale(1.1) translateY(-5px);
+            z-index: 10;
+            border-color: var(--primary);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+        }
+
+        .cr-card-level {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-size: 0.6em;
+            text-align: center;
+            padding: 2px 0;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .cr-battle-header-premium {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px 16px 0 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .cr-battle-result-label {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+        }
+
+        .cr-battle-score-premium {
+            font-size: 1.5em;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 4px;
+        }
+
+        .cr-battle-mode-label {
+            color: #94a3b8;
+            font-size: 0.8em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .cr-vs-row-premium-v2 {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 25px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.1) 100%);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .cr-battle-score-header-premium {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .cr-score-display-premium {
+            background: rgba(0,0,0,0.5);
+            padding: 10px 30px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
             gap: 15px;
-            background: #fdf2f2;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border-left: 4px solid #e53e3e;
-            margin-bottom: 10px;
         }
-        .cr-h2h-panel.customer { background: #f0fff4; border-left-color: #38a169; }
-        .cr-h2h-panel.balanced { background: #f7fafc; border-left-color: #718096; }
-        .cr-stats-table th {
-            background: #f7fafc;
-            color: #718096;
-            font-weight: 600;
-            font-size: 0.8em;
-            padding: 5px 8px;
-            border-bottom: 1px solid #e2e8f0;
+
+        .cr-score-val {
+            font-size: 2.2em;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 5px;
+        }
+
+        .cr-vs-decks-row-premium {
+            display: grid;
+            grid-template-columns: 1fr 60px 1fr;
+            align-items: center;
+            width: 100%;
+        }
+
+        .cr-vs-center-divider {
+            font-size: 1.5em;
+            font-weight: 900;
+            color: rgba(255,255,255,0.2);
             text-align: center;
+        }
+
+        .cr-vs-divider-vertical {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2em;
+            font-weight: 900;
+            color: rgba(255,255,255,0.1);
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .cr-player-header-premium {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .cr-player-name-premium {
+            font-size: 1.4em;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .cr-clan-name-premium {
+            font-size: 0.7em;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+
+        .cr-tower-img-premium {
+            height: 35px; /* Reduzido de 40px para 35px */
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+        }
+
+        .cr-tower-info-premium {
+            font-size: 0.7em;
+            color: #94a3b8;
+            font-weight: bold;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .cr-deck-metrics-premium {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+        }
+
+        .cr-metric-item-p {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 800;
+            font-size: 0.9em;
+            color: #f8fafc;
+        }
+
+        .cr-metric-icon {
+            opacity: 0.8;
+        }
+
+        .cr-deck-metrics {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .cr-metric-badge {
+            padding: 4px 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.65em;
+            font-weight: 700;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .vs-divider-premium {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5em;
+            font-weight: 900;
+            color: #fff;
+            opacity: 0.3;
+            letter-spacing: -1px;
+        }
+
+        .cr-mode-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px 14px;
+            background: rgba(var(--primary-rgb), 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 800;
+            color: #fff;
+            z-index: 20;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .cr-stats-panel {
+            background: rgba(0,0,0,0.25);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .cr-stats-table { width: 100%; border-collapse: collapse; }
+        .cr-stats-table th {
+            color: #64748b;
+            font-size: 0.7em;
+            padding: 8px;
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
         }
         .cr-stats-table td {
             text-align: center;
-            padding: 5px 8px;
-            border-bottom: none;
-            font-weight: 600;
-            color: #2d3748;
+            padding: 10px;
+            font-size: 1.2em;
+            font-weight: 800;
+            color: #f1f5f9;
         }
-        .cr-th-win, .cr-td-win { color: #48bb78 !important; }
-        .cr-th-draw,.cr-td-draw{ color: #ed8936 !important; }
-        .cr-th-loss,.cr-td-loss{ color: #f56565 !important; }
 
-        /* Timeline de batalhas */
+        .cr-th-win, .cr-td-win { color: var(--success) !important; }
+        .cr-th-loss, .cr-td-loss { color: var(--danger) !important; }
+
+        /* Timeline */
         .cr-battles-timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            margin-top: 10px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
         }
+
         .cr-timeline-label {
-            font-size: 0.75em;
-            color: #718096;
-            font-weight: 600;
+            font-size: 0.65em;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
         }
+
         .cr-timeline-badges {
             display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-        .cr-battle-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 22px;
-            height: 22px;
-            border-radius: 4px;
-            border: 1.5px solid transparent;
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.72em;
-            cursor: default;
-            padding: 0 3px;
-            gap: 3px;
-        }
-        .cr-badge-with-date {
-            min-width: 70px;
-            height: auto;
-            padding: 3px 6px;
-            border-radius: 6px;
-            flex-direction: column;
-            gap: 1px;
-            font-size: 0.78em;
-        }
-        .cr-badge-date {
-            font-size: 0.78em;
-            font-weight: 500;
-            opacity: 0.92;
-            white-space: nowrap;
-        }
-        .cr-no-deck {
-            font-size: 0.82em;
-            color: #a0aec0;
-            padding: 8px;
-            font-style: italic;
-        }
-        .cr-opp-deck-label {
-            font-size: 0.75em;
-            color: #718096;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            margin-bottom: 6px;
-        }
-
-        @media (max-width: 600px) {
-            .cr-deck-body { flex-direction: column; }
-            .cr-card-wrap { width: 52px; height: 60px; }
-        }
-        /* ============================================================ */
-
-        .deck-tabs-container {
-            margin-top: 20px;
-        }
-        
-        .deck-tabs {
-            display: flex;
-            flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
+            overflow-x: auto;
+            padding-bottom: 10px;
         }
-        
-        .tab-button {
-            background: transparent;
-            border: none;
-            padding: 12px 20px;
-            font-size: 1em;
-            font-weight: 600;
-            color: #718096;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .tab-button:hover {
-            color: #4299e1;
-            background: rgba(66, 153, 225, 0.1);
-        }
-        
-        .tab-button.active {
-            color: #4299e1;
-            border-bottom-color: #4299e1;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .deck-item {
-            background: rgba(247, 250, 252, 0.8);
+
+        .cr-battle-badge {
+            min-width: 36px;
+            height: 36px;
             border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .deck-header {
-            margin-bottom: 15px;
-        }
-        
-        .deck-header h3 {
-            color: #2d3748;
-            margin-bottom: 8px;
-        }
-        
-        .deck-stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .stat {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.9em;
-        }
-        
-        .deck-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .deck-cards-compact {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 8px;
-            margin-top: 15px;
-            justify-content: flex-start;
-        }
-        
-        @media (max-width: 768px) {
-            .deck-cards-compact {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-        
-        .deck-cards-compact .card-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            font-weight: 800;
+            font-size: 0.9em;
+            transition: transform 0.2s;
         }
-        
-        .deck-cards-compact .card-image {
-            width: 100%;
-            max-width: 100px;
-            height: auto;
-            object-fit: contain;
-            border-radius: 5px;
-        }
-        
-        .card-container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card-image {
-            width: 60px;
-            height: 72px;
-            object-fit: contain;
-            border-radius: 5px;
-        }
-        
-        .card-name {
-            font-size: 0.8em;
-            margin-top: 5px;
-            color: #4a5568;
-            font-weight: 500;
-        }
-        
+
+        .cr-battle-badge:hover { transform: scale(1.1); }
+
+        .battle-victory, .cr-badge-V { background: var(--success); box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3); }
+        .battle-defeat, .cr-badge-D { background: var(--danger); box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3); }
+        .battle-draw, .cr-badge-E { background: var(--accent); box-shadow: 0 4px 12px rgba(246, 173, 85, 0.3); }
+
+        /* Tables & Lists */
         table {
             width: 100%;
-            border-collapse: collapse;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            overflow: hidden;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: -8px;
         }
-        
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
+
         th {
-            background: #4299e1;
-            color: white;
-            font-weight: 600;
+            text-align: left;
+            padding: 16px 24px;
+            color: #94a3b8;
+            font-size: 0.8em;
+            font-weight: 700;
+            text-transform: uppercase;
         }
-        
-        .battle-victory {
-            background-color: rgba(72, 187, 120, 0.1);
+
+        tr {
+            transition: all 0.3s;
         }
-        
-        .battle-defeat {
-            background-color: rgba(245, 101, 101, 0.1);
+
+        tbody tr {
+            background: rgba(255,255,255,0.03);
         }
-        
-        .battle-draw {
-            background-color: rgba(237, 137, 54, 0.1);
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.08);
+            transform: scale(1.005);
         }
-        
-        .result-victory {
-            color: #38a169;
-            font-weight: bold;
+
+        td {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        
-        .result-defeat {
-            color: #e53e3e;
-            font-weight: bold;
-        }
-        
-        .result-draw {
-            color: #ed8936;
-            font-weight: bold;
-        }
-        
-        .current-player {
-            background-color: rgba(66, 153, 225, 0.2);
-            font-weight: bold;
-        }
-        
-        .role-leader {
-            color: #d69e2e;
-            font-weight: bold;
-        }
-        
-        .role-co-leader {
-            color: #3182ce;
-            font-weight: bold;
-        }
-        
-        .role-elder {
-            color: #38a169;
-            font-weight: bold;
-        }
-        
-        .role-member {
-            color: #718096;
-        }
-        
-        /* Mobile Battle Cards */
-        .battle-cards {
-            display: none;
-        }
-        
-        .battle-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #e2e8f0;
-        }
-        
-        .battle-card.battle-victory {
-            border-left-color: #38a169;
-            background-color: rgba(72, 187, 120, 0.05);
-        }
-        
-        .battle-card.battle-defeat {
-            border-left-color: #e53e3e;
-            background-color: rgba(245, 101, 101, 0.05);
-        }
-        
-        .battle-card.battle-draw {
-            border-left-color: #ed8936;
-            background-color: rgba(237, 137, 54, 0.05);
-        }
-        
-        .battle-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .battle-result {
-            font-size: 1.1em;
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-        }
-        
-        .battle-time {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        .battle-card-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .battle-info {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .battle-info span {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        .battle-stats {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 5px;
-        }
-        
-        .crown-count, .trophy-change {
-            padding: 3px 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-            font-size: 0.9em;
-        }
-        
-        /* Mobile Clan Member Cards */
-        .clan-member-cards {
-            display: none;
-        }
-        
-        .clan-member-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #e2e8f0;
-        }
-        
-        .current-player-card {
-            border-left-color: #4299e1;
-            background: rgba(66, 153, 225, 0.1);
-        }
-        
-        .member-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .member-name {
-            font-size: 1.1em;
-            color: #2d3748;
-        }
-        
-        .member-role {
-            padding: 3px 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-            font-size: 0.9em;
-            font-weight: bold;
-        }
-        
-        .member-card-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .member-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .trophy-count, .donation-stats {
-            padding: 3px 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-            font-size: 0.9em;
-        }
-        
-        .member-activity {
-            text-align: right;
-        }
-        
-        .last-seen {
-            color: #718096;
-            font-size: 0.9em;
-            padding: 3px 8px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.8);
-        }
-        
-        .footer {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 30px;
-            font-size: 0.9em;
-        }
-        
-        /* Custom Stacked Histogram Styles */
+
+        td:first-child { border-left: 1px solid rgba(255,255,255,0.05); border-radius: 16px 0 0 16px; }
+        td:last-child { border-right: 1px solid rgba(255,255,255,0.05); border-radius: 0 16px 16px 0; }
+
+        /* Charts */
         .chart-container {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 20px;
         }
-        
+
         .stacked-histogram {
             display: flex;
             align-items: flex-end;
-            justify-content: space-between;
-            height: 200px;
-            padding: 20px 10px 30px 10px;
-            position: relative;
+            gap: 12px;
+            height: 250px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        
+
         .histogram-bar {
             flex: 1;
-            max-width: 25px;
-            margin: 0 2px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 4px;
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
         }
-        
-        .bar-date {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.8em;
-            color: #4a5568;
-            font-weight: 500;
-        }
-        
-        .bar-stack {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-        
+
         .bar-segment {
             width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 2px;
+            border-radius: 6px;
+            transition: all 0.3s;
             position: relative;
-            font-size: 0.75em;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
-        
-        .segment-value {
-            opacity: 0.9;
+
+        .bar-segment:hover { filter: brightness(1.2); transform: scaleX(1.1); }
+
+        .bar-wins { background: var(--success); }
+        .bar-losses { background: var(--danger); }
+        .bar-draws { background: var(--accent); }
+
+        .bar-date {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-45deg);
+            font-size: 0.7em;
+            color: #64748b;
+            white-space: nowrap;
         }
-        
-        .bar-wins {
-            background: linear-gradient(180deg, #48bb78, #38a169);
-            border-radius: 2px 2px 0 0;
-        }
-        
-        .bar-losses {
-            background: linear-gradient(180deg, #f56565, #e53e3e);
-        }
-        
-        .bar-draws {
-            background: linear-gradient(180deg, #a0aec0, #718096);
-        }
-        
-        .bar-empty {
-            background: linear-gradient(180deg, #cbd5e0, #a0aec0);
-            border: 1px dashed #718096;
-            border-radius: 2px;
-        }
-        
-        .histogram-legend {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9em;
-            color: #4a5568;
-        }
-        
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-        }
-        
-        .legend-wins {
-            background: linear-gradient(180deg, #48bb78, #38a169);
-        }
-        
-        .legend-losses {
-            background: linear-gradient(180deg, #f56565, #e53e3e);
-        }
-        
-        .legend-draws {
-            background: linear-gradient(180deg, #ed8936, #dd6b20);
-        }
-        
-        .legend-empty {
-            background: linear-gradient(180deg, #cbd5e0, #a0aec0);
-            border: 1px dashed #718096;
-        }
-        
-        /* Clan Rankings Styles */
-        .clan-rankings {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .ranking-item {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
-        }
-        
-        .ranking-item:hover {
-            transform: translateY(-2px);
-        }
-        
-        .current-player-ranking {
-            background: rgba(66, 153, 225, 0.15);
-            border-left: 4px solid #4299e1;
-            font-weight: bold;
-        }
-        
-        .ranking-position {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4299e1;
-            min-width: 50px;
+
+        .footer {
             text-align: center;
+            padding: 60px 0;
+            color: #64748b;
+            font-size: 0.9em;
         }
-        
-        .ranking-info {
+
+        .cr-deck-layout {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            align-items: center;
+            padding: 5px;
+            background: transparent;
             flex: 1;
-            margin-left: 20px;
         }
-        
-        .ranking-header {
+
+        .cr-battle-preview {
             display: flex;
-            justify-content: space-between;
+            flex-direction: row;
             align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .ranking-stats {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .stat-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .trophy-up {
-            color: #38a169;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .trophy-down {
-            color: #e53e3e;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .trophy-neutral {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        .donation-up {
-            color: #3182ce;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .donation-down {
-            color: #e53e3e;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .donation-neutral {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        .last-seen-info {
-            color: #718096;
-            font-size: 0.9em;
-        }
-        
-        /* Clan Deck Analytics Styles */
-        .analytics-section {
-            margin-bottom: 30px;
-        }
-        
-        .analytics-section h3 {
-            color: #2d3748;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-        }
-        
-        .popular-deck-item {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .deck-popularity {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .deck-rank {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4299e1;
-            min-width: 40px;
-        }
-        
-        .deck-info {
-            margin-left: 15px;
-        }
-        
-        .usage-count {
-            font-weight: bold;
-            color: #2d3748;
-        }
-        
-        .users-list {
-            color: #718096;
-            font-size: 0.9em;
-            display: block;
-        }
-        
-        .favorite-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-        }
-        
-        .favorite-card-item {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .favorite-card-image {
-            width: 50px;
-            height: 60px;
-            object-fit: contain;
-            margin-bottom: 8px;
-        }
-        
-        .favorite-card-info .card-name {
-            display: block;
-            font-weight: 500;
-            color: #2d3748;
-            font-size: 0.9em;
-        }
-        
-        .favorite-card-info .usage-count {
-            color: #4299e1;
-            font-size: 0.8em;
-        }
-        
-        .experimenters-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .experimenter-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 10px 15px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .experimenter-item .member-name {
-            font-weight: 500;
-            color: #2d3748;
-        }
-        
-        .experimenter-item .change-count {
-            color: #4299e1;
-            font-size: 0.9em;
-            font-weight: bold;
-        }
-        
-        /* Card Level Analytics Styles */
-        .level-comparison {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
             margin-bottom: 20px;
         }
-        
-        .level-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+        .cr-battle-preview > div {
+            flex: 1;
         }
-        
-        .level-label {
-            font-weight: 500;
-            color: #2d3748;
-        }
-        
-        .level-value {
+
+        .cr-battle-preview .vs-divider {
+            flex: 0 0 auto;
             font-size: 1.5em;
-            font-weight: bold;
-            color: #4299e1;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent);
+            opacity: 0.8;
         }
-        
-        .level-win-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .win-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .win-label {
-            font-size: 0.9em;
-            color: #4a5568;
-        }
-        
-        .win-count {
-            font-weight: bold;
-            color: #38a169;
-        }
-        
-        .opponent-clans-list {
+
+        .cr-tower-slot {
+            width: 130px;
+            height: 130px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-        }
-        
-        .opponent-clan-item {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .clan-name {
-            font-weight: 500;
-            color: #2d3748;
-            font-size: 1.1em;
-        }
-        
-        .clan-stats {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-        
-        .battles-count {
-            font-size: 0.9em;
-            color: #718096;
-        }
-        
-        .win-rate {
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        
-        .clan-analytics-link {
-            color: #4299e1;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-            padding: 12px 24px;
-            border: 2px solid #4299e1;
-            border-radius: 8px;
-            display: inline-block;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .clan-analytics-link:hover {
-            background: #4299e1;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
-        }
-        
-        @media (max-width: 768px) {
-            .deck-cards {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .deck-cards-compact {
-                gap: 6px;
-            }
-            
-            .deck-cards-compact .card-container {
-                padding: 3px;
-                min-width: 40px;
-            }
-            
-            .deck-cards-compact .card-image {
-                width: 40px;
-                height: 48px;
-            }
-            
-            .player-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .deck-stats {
-                flex-direction: column;
-            }
-            
-            /* Hide tables on mobile, show cards */
-            .desktop-table {
-                display: none;
-            }
-            
-            .battle-cards {
-                display: block;
-            }
-            
-            .clan-member-cards {
-                display: block;
-            }
-            
-            .container {
-                padding: 10px;
-            }
-            
-            .section {
-                padding: 20px;
-            }
-            
-            .header {
-                padding: 20px;
-            }
-            
-            .chart-container {
-                padding: 15px;
-            }
-            
-            .stacked-histogram {
-                height: 150px;
-                padding: 15px 5px 25px 5px;
-            }
-            
-            .histogram-bar {
-                max-width: 15px;
-                margin: 0 1px;
-            }
-            
-            .bar-date {
-                font-size: 0.7em;
-                bottom: -20px;
-            }
-            
-            .bar-segment {
-                font-size: 0.65em;
-            }
-            
-            .histogram-legend {
-                gap: 15px;
-            }
-            
-            .ranking-stats {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            
-            .ranking-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-            
-            .level-comparison, .level-win-stats {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .desktop-table {
-                display: block;
-            }
-            
-            .battle-cards {
-                display: none;
-            }
-            
-            .clan-member-cards {
-                display: none;
-            }
-        }
-        
-        /* Sortable table styles */
-        .sortable {
-            cursor: pointer;
-            user-select: none;
+            justify-content: center;
             position: relative;
-            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+            z-index: 2;
+            margin-right: -25px; /* Efeito de profundidade horizontal */
         }
-        
-        .sortable:hover {
-            background-color: #3182ce !important;
+
+        .cr-tower-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
         }
-        
-        .sort-indicator {
-            font-size: 0.8em;
-            margin-left: 5px;
-            opacity: 0.6;
-        }
-        
-        .sortable.sort-asc .sort-indicator:after {
-            content: " ↑";
-            color: #38a169;
-            font-weight: bold;
-        }
-        
-        .sortable.sort-desc .sort-indicator:after {
-            content: " ↓";
-            color: #e53e3e;
-            font-weight: bold;
-        }
-        
-        /* Responsive histogram styles */
-        .histogram-desktop {
-            display: block;
-        }
-        
-        .histogram-mobile {
+
+        .cr-tower-label {
             display: none;
         }
-        
-        @media (max-width: 768px) {
-            .histogram-desktop {
-                display: none;
-            }
-            
-            .histogram-mobile {
-                display: block;
-            }
-            
-            .histogram-mobile .stacked-histogram {
-                height: 180px;
-                padding: 20px 5px 30px 5px;
-            }
-            
-            .histogram-mobile .histogram-bar {
-                max-width: 20px;
-                margin: 0 2px;
-            }
+
+        .cr-empty-grid {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.8em;
+        }
+
+        @media (max-width: 1024px) {
+            .cr-decks-list { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            .header h1 { font-size: 2.2em; }
+            .section { padding: 24px; }
+            .container { padding: 10px; }
+            .desktop-table { display: none; }
+            .cr-deck-layout { flex-direction: column; }
         }
         """
     
@@ -3980,6 +3954,33 @@ class GitHubPagesHTMLGenerator:
                           lethal_decks_html="") -> str:
         """Generate the complete HTML document"""
         
+        # Carregar dicas da IA se existirem
+        coach_html = ""
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        ai_tips_path = os.path.join(base_dir, "data_csv_oficial", "ai_coach_tips.json")
+        
+        if os.path.exists(ai_tips_path):
+            try:
+                with open(ai_tips_path, 'r', encoding='utf-8') as f:
+                    ai_data = json.load(f)
+                    tips_items = "".join([f'<div class="cr-coach-tip"><h4>Dica {i+1}</h4><p>{tip}</p></div>' for i, tip in enumerate(ai_data.get('tips', []))])
+                    coach_html = f"""
+                    <div class="cr-coach-card">
+                        <div class="cr-coach-header">
+                            <div class="cr-coach-icon">🧠</div>
+                            <div class="cr-coach-title">Insights do Treinador AI</div>
+                        </div>
+                        <div class="cr-coach-tips">
+                            {tips_items}
+                        </div>
+                        <div class="cr-coach-analysis">
+                            {ai_data.get('deck_analysis', '')}
+                        </div>
+                    </div>
+                    """
+            except Exception as e:
+                print(f"Erro ao carregar dicas da IA: {e}")
+
         css_styles = self.get_base_css_styles()
         
         return f"""
@@ -3997,6 +3998,7 @@ class GitHubPagesHTMLGenerator:
 </head>
 <body>
     <div class="container">
+        {coach_html}
         <div class="header">
             <h1>⚔️ Analytics de Batalhas Clash Royale</h1>
             <div class="player-info">
