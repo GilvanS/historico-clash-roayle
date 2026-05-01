@@ -4,9 +4,13 @@ import os
 import csv
 
 def clean_and_redistribute():
-    # 1. Carregar todos os dados de todos os CSVs oficiais
-    all_files = glob.glob('src/data_csv_oficial/oponentes_ano_*.csv')
+    # 1. Carregar todos os dados de todos os CSVs oficiais (Anual, Mensal, Diário)
+    all_files = glob.glob('src/data_csv_oficial/oponentes_*.csv')
     all_files.append('src/data_csv_oficial/dados_manuais_preservados.csv')
+    
+    # Lista de arquivos para ignorar (redundantes ou globais que causariam loop)
+    ignored_patterns = ['oponentes_todos.csv', 'oponentes_batalhas.csv']
+    all_files = [f for f in all_files if os.path.basename(f) not in ignored_patterns]
     
     dfs = []
     for f in all_files:

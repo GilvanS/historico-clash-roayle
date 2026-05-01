@@ -11,7 +11,7 @@ import time
 import csv
 import glob
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 try:
     from datetime import UTC
 except ImportError:
@@ -1298,7 +1298,8 @@ class GitHubPagesHTMLGenerator:
                 
             now = datetime.now(timezone.utc)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+                # Se não tem timezone (caso dos CSVs locais), assumimos que é horário do Brasil (UTC-3)
+                dt = dt.replace(tzinfo=timezone(timedelta(hours=-3)))
                 
             time_diff = now - dt
             
