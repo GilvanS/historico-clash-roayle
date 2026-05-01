@@ -2120,17 +2120,18 @@ class GitHubPagesHTMLGenerator:
             def get_preview_grid(d_str, side_class):
                 if not d_str: return f'<div class="{side_class} cr-empty-grid">N/D</div>'
                 cards = [c.strip() for c in d_str.replace(' | ','|').split('|')]
-                tower_img = self.get_card_image_path("Princess")
+                tower_img = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
                 return f'''
                 <div class="{side_class} cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="{tower_img}" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row">{"".join(f'<div class="cr-card-wrap" style="width:75px;height:90px;" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards[:4])}</div>
                         <div class="cr-cards-row">{"".join(f'<div class="cr-card-wrap" style="width:75px;height:90px;" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards[4:8])}</div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="{tower_img}" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div>'''
 
             wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
@@ -2149,7 +2150,7 @@ class GitHubPagesHTMLGenerator:
                     <div class="cr-stats-panel" style="flex:1;">
                         <div id="preview-{deck_id}" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>{get_preview_grid(my_deck_init, 'my-deck-side')}</div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>{get_preview_grid(opp_deck_init, 'opp-deck-side')}</div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-{deck_id}" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">{timeline_h}</div></div>
@@ -2279,9 +2280,9 @@ class GitHubPagesHTMLGenerator:
                 const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side');
                 
                 previewContainer.innerHTML = `
-                    <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>${myDeckHtml}</div>
-                    <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
-                    <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>${oppDeckHtml}</div>
+                    ${myDeckHtml}
+                    <div class="vs-divider">VS</div>
+                    ${oppDeckHtml}
                 `;
                 
                 const timeline = document.querySelector('.timeline-' + deckId);
@@ -2302,15 +2303,16 @@ class GitHubPagesHTMLGenerator:
         function getMiniGridJS(deckStr, sideClass) {
             if (!deckStr) return '<div class="cr-empty-grid">Deck N/D</div>';
             const cards = deckStr.replace(/ \| /g, '|').split('|');
+            const towerImg = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258";
             return `
                 <div class="${sideClass} cr-deck-layout">
-                    <div class="cr-cards-grid">
-                        <div class="cr-cards-row">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="cards/normal_cards/Princess.png" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';" class="cr-card-img"></div>`).join('')}</div>
-                        <div class="cr-cards-row">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="cards/normal_cards/Princess.png" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';" class="cr-card-img"></div>`).join('')}</div>
-                    </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
+                    <div class="cr-tower-slot">
+                        <img src="${towerImg}" class="cr-card-img">
                         <span class="cr-tower-label">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        <div class="cr-cards-row">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img"></div>`).join('')}</div>
+                        <div class="cr-cards-row">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img"></div>`).join('')}</div>
                     </div>
                 </div>
             `;
@@ -2322,6 +2324,19 @@ class GitHubPagesHTMLGenerator:
             document.getElementById('tab-' + tabName).classList.add('active');
             if (event) event.currentTarget.classList.add('active');
         }
+
+        // Rotação diária de background
+        document.addEventListener('DOMContentLoaded', () => {
+            const bgs = [
+                "https://images2.alphacoders.com/112/thumb-1920-1124066.jpg",
+                "https://wallpapers.com/images/featured/clash-royale-v0d8p9p3f2j7j0u0.jpg",
+                "https://images5.alphacoders.com/687/687588.jpg",
+                "https://wallpapercave.com/wp/wp1846571.jpg"
+            ];
+            const day = new Date().getDate();
+            const selectedBg = bgs[day % bgs.length];
+            document.body.style.backgroundImage = `url('${selectedBg}')`;
+        });
         </script>
         """
 
@@ -2360,18 +2375,33 @@ class GitHubPagesHTMLGenerator:
             def get_deck_grid_html(deck_str, side_class):
                 if not deck_str: return f'<div class="{side_class} cr-empty-grid">Deck N/D</div>'
                 c_list = [c.strip() for c in deck_str.replace(' | ','|').split('|')]
+                tower_img = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
                 def c_h(n):
                     img = self.get_card_image_path(n)
                     return f'<div class="cr-card-wrap" title="{n}" style="width:64px;height:72px;"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
-                t_h = "".join(c_h(c) for c in c_list[:4])
-                b_h = "".join(c_h(c) for c in c_list[4:8])
-                return f'<div class="{side_class}"><div class="cr-cards-grid"><div class="cr-cards-row">{t_h}</div><div class="cr-cards-row">{b_h}</div></div></div>'
+                
+                rows_html = f"""
+                <div class="cr-cards-row">{"".join(c_h(c) for c in c_list[:4])}</div>
+                <div class="cr-cards-row">{"".join(c_h(c) for c in c_list[4:8])}</div>
+                """
+                
+                return f"""
+                <div class="{side_class} cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="{tower_img}" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        {rows_html}
+                    </div>
+                </div>
+                """
 
             preview_html = f"""
             <div id="preview-{tag_clean}" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small>{get_deck_grid_html(my_deck_last, 'my-deck-side')}</div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small>{get_deck_grid_html(opp_deck_last, 'opp-deck-side')}</div>
+                {get_deck_grid_html(my_deck_last, 'my-deck-side')}
+                <div class="vs-divider">VS</div>
+                {get_deck_grid_html(opp_deck_last, 'opp-deck-side')}
             </div>
             """
             
@@ -2735,8 +2765,11 @@ class GitHubPagesHTMLGenerator:
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg-dark) url('https://images2.alphacoders.com/112/thumb-1920-1124066.jpg') no-repeat center center fixed;
+            background: var(--bg-dark);
             background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             color: #f8fafc;
             line-height: 1.6;
             min-height: 100vh;
@@ -3153,22 +3186,58 @@ class GitHubPagesHTMLGenerator:
 
         .cr-deck-layout {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             align-items: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            flex: 1;
+        }
+
+        .cr-battle-preview {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .cr-battle-preview > div {
+            flex: 1;
+        }
+
+        .cr-battle-preview .vs-divider {
+            flex: 0 0 auto;
+            font-size: 1.5em;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent);
+            opacity: 0.8;
         }
 
         .cr-tower-slot {
-            width: 80px;
-            height: 90px;
+            width: 110px;
+            height: 130px;
             background: rgba(255,255,255,0.05);
-            border-radius: 14px;
+            border-radius: 18px;
             border: 2px solid var(--accent);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 8px 16px rgba(246, 173, 85, 0.2);
+            box-shadow: 0 8px 24px rgba(246, 173, 85, 0.2);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .cr-tower-slot img {
+            width: 140%;
+            height: 140%;
+            object-fit: contain;
+            margin-top: -10px;
         }
 
         .cr-tower-label {

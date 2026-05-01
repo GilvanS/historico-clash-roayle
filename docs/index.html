@@ -34,8 +34,11 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg-dark) url('https://images2.alphacoders.com/112/thumb-1920-1124066.jpg') no-repeat center center fixed;
+            background: var(--bg-dark);
             background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             color: #f8fafc;
             line-height: 1.6;
             min-height: 100vh;
@@ -452,22 +455,58 @@
 
         .cr-deck-layout {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             align-items: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            flex: 1;
+        }
+
+        .cr-battle-preview {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .cr-battle-preview > div {
+            flex: 1;
+        }
+
+        .cr-battle-preview .vs-divider {
+            flex: 0 0 auto;
+            font-size: 1.5em;
+            font-weight: 900;
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent);
+            opacity: 0.8;
         }
 
         .cr-tower-slot {
-            width: 80px;
-            height: 90px;
+            width: 110px;
+            height: 130px;
             background: rgba(255,255,255,0.05);
-            border-radius: 14px;
+            border-radius: 18px;
             border: 2px solid var(--accent);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 8px 16px rgba(246, 173, 85, 0.2);
+            box-shadow: 0 8px 24px rgba(246, 173, 85, 0.2);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .cr-tower-slot img {
+            width: 140%;
+            height: 140%;
+            object-fit: contain;
+            margin-top: -10px;
         }
 
         .cr-tower-label {
@@ -1155,9 +1194,35 @@
                 
                 
             <div id="preview-2YUG0LGP8" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Earthquake" style="width:64px;height:72px;"><img src="cards/normal_cards/Earthquake.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Spirit" style="width:64px;height:72px;"><img src="cards/normal_cards/ElectroSpirit.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Firecracker" style="width:64px;height:72px;"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Mighty Miner" style="width:64px;height:72px;"><img src="cards/normal_cards/MightyMiner.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeletons" style="width:64px;height:72px;"><img src="cards/evolution_cards/Skellies.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tesla" style="width:64px;height:72px;"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="The Log" style="width:64px;height:72px;"><img src="cards/normal_cards/Log.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Berserker" style="width:64px;height:72px;"><img src="cards/normal_cards/Berserker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fireball" style="width:64px;height:72px;"><img src="cards/normal_cards/Fireball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Army" style="width:64px;height:72px;"><img src="cards/normal_cards/Skarmy.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Suspicious Bush" style="width:64px;height:72px;"><img src="cards/normal_cards/SuspiciousBush.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tesla" style="width:64px;height:72px;"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Wall Breakers" style="width:64px;height:72px;"><img src="cards/evolution_cards/WallBreakers.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Earthquake" style="width:64px;height:72px;"><img src="cards/normal_cards/Earthquake.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Spirit" style="width:64px;height:72px;"><img src="cards/normal_cards/ElectroSpirit.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Firecracker" style="width:64px;height:72px;"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Mighty Miner" style="width:64px;height:72px;"><img src="cards/normal_cards/MightyMiner.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeletons" style="width:64px;height:72px;"><img src="cards/evolution_cards/Skellies.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tesla" style="width:64px;height:72px;"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="The Log" style="width:64px;height:72px;"><img src="cards/normal_cards/Log.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Berserker" style="width:64px;height:72px;"><img src="cards/normal_cards/Berserker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fireball" style="width:64px;height:72px;"><img src="cards/normal_cards/Fireball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Army" style="width:64px;height:72px;"><img src="cards/normal_cards/Skarmy.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Suspicious Bush" style="width:64px;height:72px;"><img src="cards/normal_cards/SuspiciousBush.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tesla" style="width:64px;height:72px;"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Wall Breakers" style="width:64px;height:72px;"><img src="cards/evolution_cards/WallBreakers.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1212,9 +1277,35 @@
                 
                 
             <div id="preview-YRUULYQV9" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Bowler" style="width:64px;height:72px;"><img src="cards/normal_cards/Bowler.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Cannon" style="width:64px;height:72px;"><img src="cards/evolution_cards/Cannon.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Magic Archer" style="width:64px;height:72px;"><img src="cards/normal_cards/MagicArcher.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Spirit Empress" style="width:64px;height:72px;"><img src="cards/normal_cards/SpiritEmpress.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tornado" style="width:64px;height:72px;"><img src="cards/normal_cards/Tornado.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Bats" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bats.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Firecracker" style="width:64px;height:72px;"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Freeze" style="width:64px;height:72px;"><img src="cards/normal_cards/Freeze.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Inferno Dragon" style="width:64px;height:72px;"><img src="cards/evolution_cards/InfernoD.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mini P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/normal_cards/MP.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Army" style="width:64px;height:72px;"><img src="cards/normal_cards/Skarmy.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Bowler" style="width:64px;height:72px;"><img src="cards/normal_cards/Bowler.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Cannon" style="width:64px;height:72px;"><img src="cards/evolution_cards/Cannon.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Magic Archer" style="width:64px;height:72px;"><img src="cards/normal_cards/MagicArcher.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Spirit Empress" style="width:64px;height:72px;"><img src="cards/normal_cards/SpiritEmpress.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tornado" style="width:64px;height:72px;"><img src="cards/normal_cards/Tornado.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Bats" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bats.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Firecracker" style="width:64px;height:72px;"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Freeze" style="width:64px;height:72px;"><img src="cards/normal_cards/Freeze.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Inferno Dragon" style="width:64px;height:72px;"><img src="cards/evolution_cards/InfernoD.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mini P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/normal_cards/MP.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Army" style="width:64px;height:72px;"><img src="cards/normal_cards/Skarmy.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1264,9 +1355,35 @@
                 
                 
             <div id="preview-YPQP2VYRV" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Goblin Drill" style="width:64px;height:72px;"><img src="cards/evolution_cards/GoblinDrill.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Hut" style="width:64px;height:72px;"><img src="cards/normal_cards/GobHut.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Golem" style="width:64px;height:72px;"><img src="cards/normal_cards/Golem.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mother Witch" style="width:64px;height:72px;"><img src="cards/normal_cards/MotherWitch.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Night Witch" style="width:64px;height:72px;"><img src="cards/normal_cards/NightWitch.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Rocket" style="width:64px;height:72px;"><img src="cards/normal_cards/Rocket.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tombstone" style="width:64px;height:72px;"><img src="cards/normal_cards/Tombstone.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Witch" style="width:64px;height:72px;"><img src="cards/evolution_cards/Witch.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Hut" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/barbarian-hut.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Wizard" style="width:64px;height:72px;"><img src="cards/normal_cards/eWiz.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Giant" style="width:64px;height:72px;"><img src="cards/normal_cards/Giant.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Demolisher" style="width:64px;height:72px;"><img src="cards/normal_cards/GoblinDemolisher.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/Knight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Musketeer" style="width:64px;height:72px;"><img src="cards/evolution_cards/Musk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Poison" style="width:64px;height:72px;"><img src="cards/normal_cards/Poison.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Vines" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/vines.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Goblin Drill" style="width:64px;height:72px;"><img src="cards/evolution_cards/GoblinDrill.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Hut" style="width:64px;height:72px;"><img src="cards/normal_cards/GobHut.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Golem" style="width:64px;height:72px;"><img src="cards/normal_cards/Golem.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mother Witch" style="width:64px;height:72px;"><img src="cards/normal_cards/MotherWitch.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Night Witch" style="width:64px;height:72px;"><img src="cards/normal_cards/NightWitch.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Rocket" style="width:64px;height:72px;"><img src="cards/normal_cards/Rocket.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tombstone" style="width:64px;height:72px;"><img src="cards/normal_cards/Tombstone.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Witch" style="width:64px;height:72px;"><img src="cards/evolution_cards/Witch.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Hut" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/barbarian-hut.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Wizard" style="width:64px;height:72px;"><img src="cards/normal_cards/eWiz.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Giant" style="width:64px;height:72px;"><img src="cards/normal_cards/Giant.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Demolisher" style="width:64px;height:72px;"><img src="cards/normal_cards/GoblinDemolisher.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/Knight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Musketeer" style="width:64px;height:72px;"><img src="cards/evolution_cards/Musk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Poison" style="width:64px;height:72px;"><img src="cards/normal_cards/Poison.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Vines" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/vines.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1316,9 +1433,35 @@
                 
                 
             <div id="preview-UURJRQQ2J" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Battle Ram" style="width:64px;height:72px;"><img src="cards/evolution_cards/Ram.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dark Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Firecracker" style="width:64px;height:72px;"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Furnace" style="width:64px;height:72px;"><img src="cards/normal_cards/Furnace.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mini P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/normal_cards/MP.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Minions" style="width:64px;height:72px;"><img src="cards/normal_cards/Minions.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Bomber" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bomber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Giant Snowball" style="width:64px;height:72px;"><img src="cards/evolution_cards/Snowball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Golden Knight" style="width:64px;height:72px;"><img src="cards/normal_cards/GoldenKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/evolution_cards/PEKKA.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Ghost" style="width:64px;height:72px;"><img src="cards/normal_cards/RoyalGhost.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Sparky" style="width:64px;height:72px;"><img src="cards/normal_cards/Sparky.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tombstone" style="width:64px;height:72px;"><img src="cards/normal_cards/Tombstone.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Battle Ram" style="width:64px;height:72px;"><img src="cards/evolution_cards/Ram.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dark Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Firecracker" style="width:64px;height:72px;"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Furnace" style="width:64px;height:72px;"><img src="cards/normal_cards/Furnace.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mini P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/normal_cards/MP.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Minions" style="width:64px;height:72px;"><img src="cards/normal_cards/Minions.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Bomber" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bomber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Giant Snowball" style="width:64px;height:72px;"><img src="cards/evolution_cards/Snowball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Golden Knight" style="width:64px;height:72px;"><img src="cards/normal_cards/GoldenKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/evolution_cards/PEKKA.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Ghost" style="width:64px;height:72px;"><img src="cards/normal_cards/RoyalGhost.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Sparky" style="width:64px;height:72px;"><img src="cards/normal_cards/Sparky.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tombstone" style="width:64px;height:72px;"><img src="cards/normal_cards/Tombstone.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1368,9 +1511,35 @@
                 
                 
             <div id="preview-2GUR0UC8Y" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Electro Spirit" style="width:64px;height:72px;"><img src="cards/normal_cards/ElectroSpirit.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fisherman" style="width:64px;height:72px;"><img src="cards/normal_cards/Fisherman.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Hunter" style="width:64px;height:72px;"><img src="cards/evolution_cards/Hunter.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mighty Miner" style="width:64px;height:72px;"><img src="cards/normal_cards/MightyMiner.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Monk" style="width:64px;height:72px;"><img src="cards/normal_cards/Monk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Ghost" style="width:64px;height:72px;"><img src="cards/normal_cards/RoyalGhost.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Giant" style="width:64px;height:72px;"><img src="cards/evolution_cards/RG.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Zappies" style="width:64px;height:72px;"><img src="cards/normal_cards/Zappies.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Dark Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Wizard" style="width:64px;height:72px;"><img src="cards/normal_cards/eWiz.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fireball" style="width:64px;height:72px;"><img src="cards/normal_cards/Fireball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/Prince.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tesla" style="width:64px;height:72px;"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="The Log" style="width:64px;height:72px;"><img src="cards/normal_cards/Log.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Wizard" style="width:64px;height:72px;"><img src="cards/evolution_cards/Wiz.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Electro Spirit" style="width:64px;height:72px;"><img src="cards/normal_cards/ElectroSpirit.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fisherman" style="width:64px;height:72px;"><img src="cards/normal_cards/Fisherman.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Hunter" style="width:64px;height:72px;"><img src="cards/evolution_cards/Hunter.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mighty Miner" style="width:64px;height:72px;"><img src="cards/normal_cards/MightyMiner.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Monk" style="width:64px;height:72px;"><img src="cards/normal_cards/Monk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Ghost" style="width:64px;height:72px;"><img src="cards/normal_cards/RoyalGhost.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Giant" style="width:64px;height:72px;"><img src="cards/evolution_cards/RG.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Zappies" style="width:64px;height:72px;"><img src="cards/normal_cards/Zappies.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Dark Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Wizard" style="width:64px;height:72px;"><img src="cards/normal_cards/eWiz.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fireball" style="width:64px;height:72px;"><img src="cards/normal_cards/Fireball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/Prince.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tesla" style="width:64px;height:72px;"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="The Log" style="width:64px;height:72px;"><img src="cards/normal_cards/Log.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Wizard" style="width:64px;height:72px;"><img src="cards/evolution_cards/Wiz.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1420,9 +1589,35 @@
                 
                 
             <div id="preview-YJCCQURV" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Ice Spirit" style="width:64px;height:72px;"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Lightning" style="width:64px;height:72px;"><img src="cards/normal_cards/Lightning.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Musketeer" style="width:64px;height:72px;"><img src="cards/evolution_cards/Musk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Bats" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bats.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Inferno Dragon" style="width:64px;height:72px;"><img src="cards/evolution_cards/InfernoD.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Miner" style="width:64px;height:72px;"><img src="cards/normal_cards/Miner.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/Prince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Zap" style="width:64px;height:72px;"><img src="cards/evolution_cards/Zap.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Ice Spirit" style="width:64px;height:72px;"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Lightning" style="width:64px;height:72px;"><img src="cards/normal_cards/Lightning.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Musketeer" style="width:64px;height:72px;"><img src="cards/evolution_cards/Musk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Bats" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bats.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Inferno Dragon" style="width:64px;height:72px;"><img src="cards/evolution_cards/InfernoD.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Miner" style="width:64px;height:72px;"><img src="cards/normal_cards/Miner.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/Prince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Zap" style="width:64px;height:72px;"><img src="cards/evolution_cards/Zap.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1472,9 +1667,35 @@
                 
                 
             <div id="preview-8VPRRPJV2" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Lightning" style="width:64px;height:72px;"><img src="cards/normal_cards/Lightning.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Lumberjack" style="width:64px;height:72px;"><img src="cards/evolution_cards/Lumber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Musketeer" style="width:64px;height:72px;"><img src="cards/evolution_cards/Musk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Baby Dragon" style="width:64px;height:72px;"><img src="cards/normal_cards/BabyD.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Battle Healer" style="width:64px;height:72px;"><img src="cards/normal_cards/BattleHealer.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Dragon" style="width:64px;height:72px;"><img src="cards/evolution_cards/eDragon.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Elixir Collector" style="width:64px;height:72px;"><img src="cards/normal_cards/Pump.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Elixir Golem" style="width:64px;height:72px;"><img src="cards/normal_cards/ElixirGolem.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mini P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/normal_cards/MP.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tornado" style="width:64px;height:72px;"><img src="cards/normal_cards/Tornado.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Lightning" style="width:64px;height:72px;"><img src="cards/normal_cards/Lightning.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Lumberjack" style="width:64px;height:72px;"><img src="cards/evolution_cards/Lumber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Musketeer" style="width:64px;height:72px;"><img src="cards/evolution_cards/Musk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Baby Dragon" style="width:64px;height:72px;"><img src="cards/normal_cards/BabyD.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Battle Healer" style="width:64px;height:72px;"><img src="cards/normal_cards/BattleHealer.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Dragon" style="width:64px;height:72px;"><img src="cards/evolution_cards/eDragon.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Elixir Collector" style="width:64px;height:72px;"><img src="cards/normal_cards/Pump.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Elixir Golem" style="width:64px;height:72px;"><img src="cards/normal_cards/ElixirGolem.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mini P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/normal_cards/MP.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tornado" style="width:64px;height:72px;"><img src="cards/normal_cards/Tornado.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1524,9 +1745,35 @@
                 
                 
             <div id="preview-LGV920LC0" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Battle Ram" style="width:64px;height:72px;"><img src="cards/evolution_cards/Ram.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dark Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Firecracker" style="width:64px;height:72px;"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Furnace" style="width:64px;height:72px;"><img src="cards/normal_cards/Furnace.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mini P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/normal_cards/MP.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Minions" style="width:64px;height:72px;"><img src="cards/normal_cards/Minions.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/Barrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblins" style="width:64px;height:72px;"><img src="cards/normal_cards/Gobs.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Minion Horde" style="width:64px;height:72px;"><img src="cards/normal_cards/Horde.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Rascals" style="width:64px;height:72px;"><img src="cards/normal_cards/Rascals.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton King" style="width:64px;height:72px;"><img src="cards/normal_cards/SkeletonKing.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Valkyrie" style="width:64px;height:72px;"><img src="cards/evolution_cards/Valk.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Battle Ram" style="width:64px;height:72px;"><img src="cards/evolution_cards/Ram.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dark Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Firecracker" style="width:64px;height:72px;"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Furnace" style="width:64px;height:72px;"><img src="cards/normal_cards/Furnace.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mega Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mini P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/normal_cards/MP.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Minions" style="width:64px;height:72px;"><img src="cards/normal_cards/Minions.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/Barrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblins" style="width:64px;height:72px;"><img src="cards/normal_cards/Gobs.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Minion Horde" style="width:64px;height:72px;"><img src="cards/normal_cards/Horde.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Rascals" style="width:64px;height:72px;"><img src="cards/normal_cards/Rascals.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton King" style="width:64px;height:72px;"><img src="cards/normal_cards/SkeletonKing.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Valkyrie" style="width:64px;height:72px;"><img src="cards/evolution_cards/Valk.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1576,9 +1823,35 @@
                 
                 
             <div id="preview-89U2YVLY" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Evolved Goblin Giant" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/evolved-goblin-giant.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Archer Queen" style="width:64px;height:72px;"><img src="cards/normal_cards/ArcherQueen.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Evolved Skeletons" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/evolved-skeletons.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Hogs" style="width:64px;height:72px;"><img src="cards/normal_cards/RoyalHogs.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Electro Giant" style="width:64px;height:72px;"><img src="cards/normal_cards/ElectroGiant.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Poison" style="width:64px;height:72px;"><img src="cards/normal_cards/Poison.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Graveyard" style="width:64px;height:72px;"><img src="cards/normal_cards/Graveyard.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Evolved Firecracker" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/evolved-firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="The Log" style="width:64px;height:72px;"><img src="cards/normal_cards/Log.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Evolved P.E.K.K.A" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/evolved-pekka.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tesla" style="width:64px;height:72px;"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fireball" style="width:64px;height:72px;"><img src="cards/normal_cards/Fireball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Ice Spirit" style="width:64px;height:72px;"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Ice Golem" style="width:64px;height:72px;"><img src="cards/normal_cards/IceGolem.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Evolved Goblin Giant" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/evolved-goblin-giant.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Archer Queen" style="width:64px;height:72px;"><img src="cards/normal_cards/ArcherQueen.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Evolved Skeletons" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/evolved-skeletons.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Hogs" style="width:64px;height:72px;"><img src="cards/normal_cards/RoyalHogs.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Electro Giant" style="width:64px;height:72px;"><img src="cards/normal_cards/ElectroGiant.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Poison" style="width:64px;height:72px;"><img src="cards/normal_cards/Poison.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Graveyard" style="width:64px;height:72px;"><img src="cards/normal_cards/Graveyard.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Evolved Firecracker" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/evolved-firecracker.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="The Log" style="width:64px;height:72px;"><img src="cards/normal_cards/Log.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Evolved P.E.K.K.A" style="width:64px;height:72px;"><img src="https://royaleapi.com/static/img/cards-150/evolved-pekka.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tesla" style="width:64px;height:72px;"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Hog Rider" style="width:64px;height:72px;"><img src="cards/normal_cards/Hog.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fireball" style="width:64px;height:72px;"><img src="cards/normal_cards/Fireball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Ice Spirit" style="width:64px;height:72px;"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Ice Golem" style="width:64px;height:72px;"><img src="cards/normal_cards/IceGolem.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1628,9 +1901,35 @@
                 
                 
             <div id="preview-JGPR0PG8P" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Bomber" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bomber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Bowler" style="width:64px;height:72px;"><img src="cards/normal_cards/Bowler.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Cannon" style="width:64px;height:72px;"><img src="cards/evolution_cards/Cannon.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Electro Giant" style="width:64px;height:72px;"><img src="cards/normal_cards/ElectroGiant.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Spirit Empress" style="width:64px;height:72px;"><img src="cards/normal_cards/SpiritEmpress.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tornado" style="width:64px;height:72px;"><img src="cards/normal_cards/Tornado.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Bomber" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bomber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dark Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fireball" style="width:64px;height:72px;"><img src="cards/normal_cards/Fireball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Giant" style="width:64px;height:72px;"><img src="cards/normal_cards/Giant.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Mega Minion" style="width:64px;height:72px;"><img src="cards/normal_cards/MM.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/Prince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Rage" style="width:64px;height:72px;"><img src="cards/normal_cards/Rage.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Zap" style="width:64px;height:72px;"><img src="cards/evolution_cards/Zap.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Bomber" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bomber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Bowler" style="width:64px;height:72px;"><img src="cards/normal_cards/Bowler.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Cannon" style="width:64px;height:72px;"><img src="cards/evolution_cards/Cannon.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Electro Giant" style="width:64px;height:72px;"><img src="cards/normal_cards/ElectroGiant.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Spirit Empress" style="width:64px;height:72px;"><img src="cards/normal_cards/SpiritEmpress.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Tornado" style="width:64px;height:72px;"><img src="cards/normal_cards/Tornado.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Bomber" style="width:64px;height:72px;"><img src="cards/evolution_cards/Bomber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dark Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Fireball" style="width:64px;height:72px;"><img src="cards/normal_cards/Fireball.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Giant" style="width:64px;height:72px;"><img src="cards/normal_cards/Giant.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Mega Minion" style="width:64px;height:72px;"><img src="cards/normal_cards/MM.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Prince" style="width:64px;height:72px;"><img src="cards/normal_cards/Prince.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Rage" style="width:64px;height:72px;"><img src="cards/normal_cards/Rage.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Zap" style="width:64px;height:72px;"><img src="cards/evolution_cards/Zap.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1680,9 +1979,35 @@
                 
                 
             <div id="preview-Q2Y0RQ0V2" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblins" style="width:64px;height:72px;"><img src="cards/normal_cards/Gobs.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Lightning" style="width:64px;height:72px;"><img src="cards/normal_cards/Lightning.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Spear Goblins" style="width:64px;height:72px;"><img src="cards/normal_cards/SpearGobs.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Wall Breakers" style="width:64px;height:72px;"><img src="cards/evolution_cards/WallBreakers.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Hunter" style="width:64px;height:72px;"><img src="cards/evolution_cards/Hunter.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Ice Spirit" style="width:64px;height:72px;"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mighty Miner" style="width:64px;height:72px;"><img src="cards/normal_cards/MightyMiner.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Hogs" style="width:64px;height:72px;"><img src="cards/normal_cards/RoyalHogs.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="The Log" style="width:64px;height:72px;"><img src="cards/normal_cards/Log.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Valkyrie" style="width:64px;height:72px;"><img src="cards/evolution_cards/Valk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Wall Breakers" style="width:64px;height:72px;"><img src="cards/evolution_cards/WallBreakers.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Zap" style="width:64px;height:72px;"><img src="cards/evolution_cards/Zap.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblins" style="width:64px;height:72px;"><img src="cards/normal_cards/Gobs.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Lightning" style="width:64px;height:72px;"><img src="cards/normal_cards/Lightning.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Spear Goblins" style="width:64px;height:72px;"><img src="cards/normal_cards/SpearGobs.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Wall Breakers" style="width:64px;height:72px;"><img src="cards/evolution_cards/WallBreakers.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Hunter" style="width:64px;height:72px;"><img src="cards/evolution_cards/Hunter.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Ice Spirit" style="width:64px;height:72px;"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Mighty Miner" style="width:64px;height:72px;"><img src="cards/normal_cards/MightyMiner.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Hogs" style="width:64px;height:72px;"><img src="cards/normal_cards/RoyalHogs.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="The Log" style="width:64px;height:72px;"><img src="cards/normal_cards/Log.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Valkyrie" style="width:64px;height:72px;"><img src="cards/evolution_cards/Valk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Wall Breakers" style="width:64px;height:72px;"><img src="cards/evolution_cards/WallBreakers.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Zap" style="width:64px;height:72px;"><img src="cards/evolution_cards/Zap.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1732,9 +2057,35 @@
                 
                 
             <div id="preview-QLRP08RV" class="cr-battle-preview">
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Meu Deck</small><div class="my-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Lightning" style="width:64px;height:72px;"><img src="cards/normal_cards/Lightning.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Lumberjack" style="width:64px;height:72px;"><img src="cards/evolution_cards/Lumber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Musketeer" style="width:64px;height:72px;"><img src="cards/evolution_cards/Musk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
-                <div style="font-weight:900; color:#cbd5e0; font-size:1.2em; text-shadow: 1px 1px 0 #fff;">VS</div>
-                <div style="text-align:center;"><small style="color:#718096;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Oponente</small><div class="opp-deck-side"><div class="cr-cards-grid"><div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Dragon" style="width:64px;height:72px;"><img src="cards/evolution_cards/eDragon.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div></div><div class="cr-cards-row"><div class="cr-card-wrap" title="Guards" style="width:64px;height:72px;"><img src="cards/normal_cards/Guards.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/Knight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Lumberjack" style="width:64px;height:72px;"><img src="cards/evolution_cards/Lumber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/evolution_cards/PEKKA.png" class="cr-card-img" loading="lazy"></div></div></div></div></div>
+                
+                <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Barbarian Barrel" style="width:64px;height:72px;"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Lightning" style="width:64px;height:72px;"><img src="cards/normal_cards/Lightning.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Lumberjack" style="width:64px;height:72px;"><img src="cards/evolution_cards/Lumber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Musketeer" style="width:64px;height:72px;"><img src="cards/evolution_cards/Musk.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Royal Recruits" style="width:64px;height:72px;"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Skeleton Barrel" style="width:64px;height:72px;"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot" style="width:64px;height:72px;">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label" style="font-size:0.55em;">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Arrows" style="width:64px;height:72px;"><img src="cards/normal_cards/Arrows.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Dart Goblin" style="width:64px;height:72px;"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Electro Dragon" style="width:64px;height:72px;"><img src="cards/evolution_cards/eDragon.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Goblin Gang" style="width:64px;height:72px;"><img src="cards/normal_cards/GobGang.png" class="cr-card-img" loading="lazy"></div></div>
+                <div class="cr-cards-row"><div class="cr-card-wrap" title="Guards" style="width:64px;height:72px;"><img src="cards/normal_cards/Guards.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Knight" style="width:64px;height:72px;"><img src="cards/evolution_cards/Knight.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="Lumberjack" style="width:64px;height:72px;"><img src="cards/evolution_cards/Lumber.png" class="cr-card-img" loading="lazy"></div><div class="cr-card-wrap" title="P.E.K.K.A" style="width:64px;height:72px;"><img src="cards/evolution_cards/PEKKA.png" class="cr-card-img" loading="lazy"></div></div>
+                
+                    </div>
+                </div>
+                
             </div>
             
                 
@@ -1778,26 +2129,28 @@
                         <div id="preview-deck-1" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Barbarian Barrel"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Dart Goblin"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Goblin Gang"><img src="cards/normal_cards/GobGang.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Goblins"><img src="cards/normal_cards/Gobs.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Lightning"><img src="cards/normal_cards/Lightning.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Minions"><img src="cards/normal_cards/Minions.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Recruits"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Wall Breakers"><img src="cards/evolution_cards/WallBreakers.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Bats"><img src="cards/evolution_cards/Bats.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Dart Goblin"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Goblin Gang"><img src="cards/normal_cards/GobGang.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Mega Knight"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Miner"><img src="cards/normal_cards/Miner.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Musketeer"><img src="cards/evolution_cards/Musk.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeleton Barrel"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Zap"><img src="cards/evolution_cards/Zap.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-1" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -1879,26 +2232,28 @@
                         <div id="preview-deck-2" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Barbarian Barrel"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Dart Goblin"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Goblin Gang"><img src="cards/normal_cards/GobGang.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Lightning"><img src="cards/normal_cards/Lightning.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Miner"><img src="cards/normal_cards/Miner.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Minions"><img src="cards/normal_cards/Minions.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Recruits"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeleton Barrel"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Cannon"><img src="cards/evolution_cards/Cannon.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Fireball"><img src="cards/normal_cards/Fireball.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Hog Rider"><img src="cards/normal_cards/Hog.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Ice Golem"><img src="cards/normal_cards/IceGolem.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Ice Spirit"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Musketeer"><img src="cards/evolution_cards/Musk.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeletons"><img src="cards/evolution_cards/Skellies.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="The Log"><img src="cards/normal_cards/Log.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-2" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -1960,26 +2315,28 @@
                         <div id="preview-deck-3" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Dart Goblin"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Goblin Gang"><img src="cards/normal_cards/GobGang.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Lumberjack"><img src="cards/evolution_cards/Lumber.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Magic Archer"><img src="cards/normal_cards/MagicArcher.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Mega Knight"><img src="cards/evolution_cards/MegaKnight.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Minions"><img src="cards/normal_cards/Minions.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Recruits"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeleton Barrel"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Cannon"><img src="cards/evolution_cards/Cannon.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Fireball"><img src="cards/normal_cards/Fireball.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Hog Rider"><img src="cards/normal_cards/Hog.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Ice Golem"><img src="cards/normal_cards/IceGolem.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Ice Spirit"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Musketeer"><img src="cards/evolution_cards/Musk.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeletons"><img src="cards/evolution_cards/Skellies.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="The Log"><img src="cards/normal_cards/Log.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-3" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -2061,26 +2418,28 @@
                         <div id="preview-deck-4" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Dark Prince"><img src="cards/normal_cards/DarkPrince.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Electro Spirit"><img src="cards/normal_cards/ElectroSpirit.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Lightning"><img src="cards/normal_cards/Lightning.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Magic Archer"><img src="cards/normal_cards/MagicArcher.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Hogs"><img src="cards/normal_cards/RoyalHogs.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeletons"><img src="cards/evolution_cards/Skellies.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Tesla"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="The Log"><img src="cards/normal_cards/Log.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Barbarian Barrel"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Fireball"><img src="cards/normal_cards/Fireball.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Knight"><img src="cards/evolution_cards/Knight.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Minions"><img src="cards/normal_cards/Minions.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Mortar"><img src="cards/evolution_cards/Mortar.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Musketeer"><img src="cards/evolution_cards/Musk.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeleton Barrel"><img src="cards/evolution_cards/SkellyBarrel.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeletons"><img src="cards/evolution_cards/Skellies.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-4" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -2110,26 +2469,28 @@
                         <div id="preview-deck-5" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Balloon"><img src="cards/normal_cards/Balloon.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Fireball"><img src="cards/normal_cards/Fireball.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Miner"><img src="cards/normal_cards/Miner.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="P.E.K.K.A"><img src="cards/evolution_cards/PEKKA.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Rage"><img src="cards/normal_cards/Rage.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeleton King"><img src="cards/normal_cards/SkeletonKing.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Witch"><img src="cards/evolution_cards/Witch.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Wizard"><img src="cards/evolution_cards/Wiz.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Cannon"><img src="cards/evolution_cards/Cannon.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Dart Goblin"><img src="cards/evolution_cards/DartGob.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Earthquake"><img src="cards/normal_cards/Earthquake.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Hog Rider"><img src="cards/normal_cards/Hog.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Mini P.E.K.K.A"><img src="cards/normal_cards/MP.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Musketeer"><img src="cards/evolution_cards/Musk.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Rage"><img src="cards/normal_cards/Rage.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Giant"><img src="cards/evolution_cards/RG.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-5" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -2159,26 +2520,28 @@
                         <div id="preview-deck-6" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Inferno Dragon"><img src="cards/evolution_cards/InfernoD.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Lava Hound"><img src="cards/normal_cards/Lava.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Minion Horde"><img src="cards/normal_cards/Horde.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Minions"><img src="cards/normal_cards/Minions.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Phoenix"><img src="cards/normal_cards/Phoenix.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Rocket"><img src="cards/normal_cards/Rocket.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeleton Dragons"><img src="cards/normal_cards/SkeletonDragons.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Void"><img src="cards/normal_cards/Void.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Arrows"><img src="cards/normal_cards/Arrows.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Baby Dragon"><img src="cards/normal_cards/BabyD.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Balloon"><img src="cards/normal_cards/Balloon.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Bats"><img src="cards/evolution_cards/Bats.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Electro Dragon"><img src="cards/evolution_cards/eDragon.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Flying Machine"><img src="cards/normal_cards/FlyingMachine.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Lightning"><img src="cards/normal_cards/Lightning.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Mega Minion"><img src="cards/normal_cards/MM.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-6" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -2204,26 +2567,28 @@
                         <div id="preview-deck-7" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Arrows"><img src="cards/normal_cards/Arrows.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Flying Machine"><img src="cards/normal_cards/FlyingMachine.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Lava Hound"><img src="cards/normal_cards/Lava.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Lightning"><img src="cards/normal_cards/Lightning.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Minion Horde"><img src="cards/normal_cards/Horde.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Minions"><img src="cards/normal_cards/Minions.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Phoenix"><img src="cards/normal_cards/Phoenix.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeleton Dragons"><img src="cards/normal_cards/SkeletonDragons.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Baby Dragon"><img src="cards/normal_cards/BabyD.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Balloon"><img src="cards/normal_cards/Balloon.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Bats"><img src="cards/evolution_cards/Bats.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Electro Dragon"><img src="cards/evolution_cards/eDragon.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Inferno Dragon"><img src="cards/evolution_cards/InfernoD.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Mega Minion"><img src="cards/normal_cards/MM.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Rocket"><img src="cards/normal_cards/Rocket.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Void"><img src="cards/normal_cards/Void.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-7" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -2249,26 +2614,28 @@
                         <div id="preview-deck-8" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Evolved Goblin Giant"><img src="https://royaleapi.com/static/img/cards-150/evolved-goblin-giant.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Archer Queen"><img src="cards/normal_cards/ArcherQueen.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Evolved Skeletons"><img src="https://royaleapi.com/static/img/cards-150/evolved-skeletons.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Hogs"><img src="cards/normal_cards/RoyalHogs.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Electro Giant"><img src="cards/normal_cards/ElectroGiant.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Barbarian Barrel"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Poison"><img src="cards/normal_cards/Poison.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Graveyard"><img src="cards/normal_cards/Graveyard.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Evolved Firecracker"><img src="https://royaleapi.com/static/img/cards-150/evolved-firecracker.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="The Log"><img src="cards/normal_cards/Log.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Evolved P.E.K.K.A"><img src="https://royaleapi.com/static/img/cards-150/evolved-pekka.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Tesla"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Hog Rider"><img src="cards/normal_cards/Hog.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Fireball"><img src="cards/normal_cards/Fireball.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Ice Spirit"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Ice Golem"><img src="cards/normal_cards/IceGolem.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-8" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -2294,26 +2661,28 @@
                         <div id="preview-deck-9" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Archer Queen"><img src="cards/normal_cards/ArcherQueen.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Barbarian Barrel"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Electro Giant"><img src="cards/normal_cards/ElectroGiant.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Goblin Cage"><img src="cards/evolution_cards/GoblinCage.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Graveyard"><img src="cards/normal_cards/Graveyard.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Poison"><img src="cards/normal_cards/Poison.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Hogs"><img src="cards/normal_cards/RoyalHogs.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Skeletons"><img src="cards/evolution_cards/Skellies.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Fireball"><img src="cards/normal_cards/Fireball.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Firecracker"><img src="cards/evolution_cards/Firecracker.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Hog Rider"><img src="cards/normal_cards/Hog.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Ice Golem"><img src="cards/normal_cards/IceGolem.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Ice Spirit"><img src="cards/evolution_cards/IceSpirit.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="P.E.K.K.A"><img src="cards/evolution_cards/PEKKA.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Tesla"><img src="cards/evolution_cards/Tesla.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="The Log"><img src="cards/normal_cards/Log.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-9" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -2367,26 +2736,28 @@
                         <div id="preview-deck-10" class="cr-battle-preview">
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>
                 <div class="my-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Electro Spirit"><img src="cards/normal_cards/ElectroSpirit.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Executioner"><img src="cards/evolution_cards/Exe.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Fisherman"><img src="cards/normal_cards/Fisherman.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Hunter"><img src="cards/evolution_cards/Hunter.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Monk"><img src="cards/normal_cards/Monk.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Ghost"><img src="cards/normal_cards/RoyalGhost.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Giant"><img src="cards/evolution_cards/RG.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Zappies"><img src="cards/normal_cards/Zappies.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
-                            <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
+                            <div class="vs-divider">VS</div>
                             <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>
                 <div class="opp-deck-side cr-deck-layout">
+                    <div class="cr-tower-slot">
+                        <img src="https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258" class="cr-card-img">
+                        <span class="cr-tower-label">Torre</span>
+                    </div>
                     <div class="cr-cards-grid">
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Barbarian Barrel"><img src="cards/normal_cards/BarbBarrel.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Electro Dragon"><img src="cards/evolution_cards/eDragon.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Electro Giant"><img src="cards/normal_cards/ElectroGiant.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Fireball"><img src="cards/normal_cards/Fireball.png" class="cr-card-img"></div></div>
                         <div class="cr-cards-row"><div class="cr-card-wrap" style="width:75px;height:90px;" title="Knight"><img src="cards/evolution_cards/Knight.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Mini P.E.K.K.A"><img src="cards/normal_cards/MP.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Royal Recruits"><img src="cards/evolution_cards/RoyalRecruits.png" class="cr-card-img"></div><div class="cr-card-wrap" style="width:75px;height:90px;" title="Witch"><img src="cards/evolution_cards/Witch.png" class="cr-card-img"></div></div>
                     </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
-                        <span class="cr-tower-label">Torre</span>
-                    </div>
+
                 </div></div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-deck-10" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">
@@ -2580,9 +2951,9 @@
                 const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side');
                 
                 previewContainer.innerHTML = `
-                    <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">MEU DECK</small>${myDeckHtml}</div>
-                    <div style="font-weight:bold;color:#cbd5e0;font-size:0.8em;">VS</div>
-                    <div style="text-align:center;"><small style="font-size:0.5em;color:#718096;font-weight:bold;">OPONENTE</small>${oppDeckHtml}</div>
+                    ${myDeckHtml}
+                    <div class="vs-divider">VS</div>
+                    ${oppDeckHtml}
                 `;
                 
                 const timeline = document.querySelector('.timeline-' + deckId);
@@ -2603,15 +2974,16 @@
         function getMiniGridJS(deckStr, sideClass) {
             if (!deckStr) return '<div class="cr-empty-grid">Deck N/D</div>';
             const cards = deckStr.replace(/ \| /g, '|').split('|');
+            const towerImg = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258";
             return `
                 <div class="${sideClass} cr-deck-layout">
-                    <div class="cr-cards-grid">
-                        <div class="cr-cards-row">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="cards/normal_cards/Princess.png" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';" class="cr-card-img"></div>`).join('')}</div>
-                        <div class="cr-cards-row">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="cards/normal_cards/Princess.png" onerror="this.src='https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png';" class="cr-card-img"></div>`).join('')}</div>
-                    </div>
-                    <div class="cr-tower-slot" style="width:75px;height:90px;">
-                        <img src="cards/normal_cards/Princess.png" class="cr-card-img">
+                    <div class="cr-tower-slot">
+                        <img src="${towerImg}" class="cr-card-img">
                         <span class="cr-tower-label">Torre</span>
+                    </div>
+                    <div class="cr-cards-grid">
+                        <div class="cr-cards-row">${cards.slice(0,4).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img"></div>`).join('')}</div>
+                        <div class="cr-cards-row">${cards.slice(4,8).map(c => `<div class="cr-card-wrap" style="width:75px;height:90px;" title="${c.trim()}"><img src="https://royaleapi.github.io/cr-api-assets/cards/${c.trim().toLowerCase().replace(/\s+/g, '-').replace(/\./g, '')}.png" class="cr-card-img"></div>`).join('')}</div>
                     </div>
                 </div>
             `;
@@ -2623,6 +2995,19 @@
             document.getElementById('tab-' + tabName).classList.add('active');
             if (event) event.currentTarget.classList.add('active');
         }
+
+        // Rotação diária de background
+        document.addEventListener('DOMContentLoaded', () => {
+            const bgs = [
+                "https://images2.alphacoders.com/112/thumb-1920-1124066.jpg",
+                "https://wallpapers.com/images/featured/clash-royale-v0d8p9p3f2j7j0u0.jpg",
+                "https://images5.alphacoders.com/687/687588.jpg",
+                "https://wallpapercave.com/wp/wp1846571.jpg"
+            ];
+            const day = new Date().getDate();
+            const selectedBg = bgs[day % bgs.length];
+            document.body.style.backgroundImage = `url('${selectedBg}')`;
+        });
         </script>
         
         
@@ -3466,7 +3851,7 @@
         
 
         <div class="footer">
-            <p>Report generated on 2026-05-01 15:23:18</p>
+            <p>Report generated on 2026-05-01 15:44:39</p>
             <p>Data last updated: 6 days ago</p>
             <p>Automatically updated via GitHub Actions</p>
         </div>
