@@ -14,15 +14,21 @@ def update_sub_csvs():
     
     df['dt'] = pd.to_datetime(df['data'], format='%d/%m/%Y %H:%M', dayfirst=True)
     
-    # Atualizar Mensais
+    # Atualizar Mensais (apenas para o ano de 2026)
+    df_2026 = df[df['dt'].dt.year == 2026].copy()
     for month in range(1, 13):
         month_str = f"{month:02d}"
         month_file = f"src/data_csv_oficial/oponentes_mes_{month_str}_2026.csv"
-        df_month = df[df['dt'].dt.month == month].copy()
+        df_month = df_2026[df_2026['dt'].dt.month == month].copy()
+        
+        # Sempre sobrescrever para limpar poluição antiga, mesmo se vazio
+        df_month = df_month.drop(columns=['dt'])
+        df_month.to_csv(month_file, index=False)
         if not df_month.empty:
-            df_month = df_month.drop(columns=['dt'])
-            df_month.to_csv(month_file, index=False)
             print(f"Atualizado: {month_file} ({len(df_month)} registros)")
+        else:
+            # Se estiver vazio, pelo menos o arquivo agora está limpo (apenas header)
+            pass
 
     # Atualizar Semanais
     today = datetime.now()
