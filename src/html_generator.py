@@ -2714,9 +2714,9 @@ class GitHubPagesHTMLGenerator:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
 
         :root {
-            --glass-bg: rgba(15, 23, 42, 0.98);
+            --glass-bg: #111827;
             --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-blur: blur(12px);
+            --glass-blur: none;
             --primary: #4299e1;
             --primary-glow: rgba(66, 153, 225, 0.4);
             --accent: #f6ad55;
@@ -2779,6 +2779,10 @@ class GitHubPagesHTMLGenerator:
             flex-direction: column;
             align-items: center;
             gap: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
         }
 
         .header::before {
@@ -2808,10 +2812,10 @@ class GitHubPagesHTMLGenerator:
 
         .stat-card {
             padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .stat-card:hover {
@@ -2836,6 +2840,10 @@ class GitHubPagesHTMLGenerator:
         .section {
             padding: 40px;
             margin-bottom: 40px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
         }
 
         .section h2 {
