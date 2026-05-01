@@ -4,6 +4,8 @@ name: Clash Royale Sync (30min)
 # Executa a cada 30 minutos para manter o histórico atualizado e a página web sincronizada.
 
 on:
+  push:
+    branches: [ main ]
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
