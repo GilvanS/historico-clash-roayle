@@ -2714,7 +2714,7 @@ class GitHubPagesHTMLGenerator:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
 
         :root {
-            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-bg: rgba(15, 23, 42, 0.98);
             --glass-border: rgba(255, 255, 255, 0.1);
             --glass-blur: blur(12px);
             --primary: #4299e1;
