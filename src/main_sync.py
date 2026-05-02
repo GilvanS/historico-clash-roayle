@@ -32,6 +32,20 @@ def main():
     except Exception as e:
         logger.error(f"Erro na FASE 1 (Coleta): {e}")
         # Prossegue para atualizar com os dados que já existem
+
+    # 1.5 Coletar Decks de Guerra (Quinta a Domingo)
+    try:
+        # Quinta=3, Sexta=4, Sabado=5, Domingo=6
+        hoje = datetime.now()
+        if hoje.weekday() in [3, 4, 5, 6]:
+            logger.info("FASE 1.5: Dia de Guerra detectado! Coletando decks dos melhores jogadores...")
+            from collect_war_top_decks import collect_top_decks
+            collect_top_decks()
+        else:
+            logger.info("FASE 1.5: Fora do periodo de guerra (Segunda a Quarta). Pulando coleta de decks.")
+    except Exception as e:
+        logger.error(f"Erro na FASE 1.5 (Guerra): {e}")
+
         
     # 2. Atualizar README (Histograma e Estatísticas)
     try:
