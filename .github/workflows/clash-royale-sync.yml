@@ -59,7 +59,7 @@ jobs:
 
 
         if ! git diff --staged --quiet; then
-          git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+          git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC')"
           
           # Retry logic para evitar falhas por concorrência
           for i in 1 2 3; do
