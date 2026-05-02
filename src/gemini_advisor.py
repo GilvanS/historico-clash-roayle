@@ -21,7 +21,9 @@ class GeminiDeckCoach:
             self.client = None
         else:
             print(f"API Key encontrada: {self.api_key[:5]}...")
-            self.client = genai.Client(api_key=self.api_key)
+            # Força o uso da versão v1beta e ignora variáveis de ambiente automáticas do SDK
+            from google.genai import Client
+            self.client = Client(api_key=self.api_key, http_options={'api_version': 'v1beta'})
             
     def get_recent_battles_summary(self) -> str:
         # Pega o arquivo de batalhas mais recente
@@ -74,14 +76,20 @@ class GeminiDeckCoach:
         
         print("Enviando requisição ao Gemini...")
         try:
+            # Usando gemini-flash-latest que é estável localmente
             response = self.client.models.generate_content(
-                model="gemini-3-flash-preview",
+                model="gemini-flash-latest",
                 contents=prompt
             )
             print("Resposta recebida do Gemini.")
-            # Limpa possíveis blocos de código markdown
-            text = response.text.replace('```json', '').replace('```', '').strip()
-            return json.loads(text)
+            # Limpa possíveis blocos de código markdown e trata thought_signature
+            text = response.text
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0]
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0]
+            
+            return json.loads(text.strip())
         except Exception as e:
             print(f"Erro ao chamar Gemini: {e}")
             if hasattr(e, 'response'):
