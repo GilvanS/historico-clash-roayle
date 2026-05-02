@@ -1,8 +1,8 @@
 {
     "tips": [
-        "Mantenha a disciplina no Elixir: evite jogar cartas reativamente no limite da barra para não ser punido em contra-ataques.",
-        "Aprenda o ciclo de cartas do oponente para saber exatamente quando ele está sem o counter específico para sua condição de vitória.",
-        "Domine o posicionamento defensivo na 'kill zone' central para maximizar o dano das suas duas torres da coroa simultaneamente."
+        "Domine o micro-posicionamento para ativar a Torre do Rei usando unidades de baixo custo contra atacantes específicos.",
+        "Monitore o ciclo do oponente para punir imediatamente quando a principal carta defensiva dele estiver fora da mão.",
+        "Priorize a conversão de unidades defensivas sobreviventes em um contra-ataque estruturado em vez de ataques isolados na ponte."
     ],
-    "deck_analysis": "Dados insuficientes para analisar um deck específico. Recomendo definir uma condição de vitória clara e equilibrar o deck com pelo menos dois feitiços e uma unidade de dano em área."
+    "deck_analysis": "Dados de deck não detectados. Recomendo a construção de um deck equilibrado com uma condição de vitória clara (Win Condition), duas magias e pelo menos uma unidade de dano em área."
 }
