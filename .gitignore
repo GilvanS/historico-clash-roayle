@@ -29,10 +29,6 @@ node_modules/
 
 .mcp.json
 
-# Task files
-# tasks.json
-# tasks/ 
-
 # AI Metadata
 .agent/
 .gemini/
@@ -40,3 +36,7 @@ node_modules/
 debug_output.txt
 available_models.txt
 scratch/
+
+# Task files
+# tasks.json
+# tasks/ 

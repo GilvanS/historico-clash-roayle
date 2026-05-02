@@ -12,7 +12,10 @@ import csv
 import glob
 import logging
 import json
-import sqlite3
+import csv
+import glob
+import logging
+import json
 from datetime import datetime, timezone, timedelta
 try:
     from datetime import UTC
@@ -20,7 +23,7 @@ except ImportError:
     # Python < 3.11 compatibility
     UTC = timezone.utc
 from typing import List, Dict, Optional
-from csv_database_manager import CSVDatabaseManager
+from csv_database_manager import CSVManager
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +33,10 @@ class GitHubPagesHTMLGenerator:
         self.project_root = os.path.dirname(self.src_dir)
         self.data_csv_dir = os.path.join(self.src_dir, "data_csv_oficial")
 
-        # Inicializa o gerenciador de CSV e carrega os dados para a memoria
-        self.csv_manager = CSVDatabaseManager()
-        self.csv_manager.load_all_csvs()
+        # Inicializa o gerenciador de CSV (Sem SQL)
+        self.csv_manager = CSVManager()
         
-        # Define o path como a URI de memoria compartilhada
-        self.db_path = self.csv_manager.db_path
-        logger.info(f"DEBUG: Banco de dados em memoria (CSV-First) configurado")
+        logger.info(f"Dashboard configurado em modo 100% CSV")
         self.base_url = "https://proxy.royaleapi.dev/v1"
         self.api_token = os.getenv("CR_API_TOKEN")
         self.headers = None
@@ -91,25 +91,21 @@ class GitHubPagesHTMLGenerator:
         return master
 
     def _load_all_battles_from_csv(self, player_tag: str = None) -> List[Dict]:
-        """Loads all battles from the consolidated CSV file for a specific player tag"""
+        """Loads all battles from the consolidated CSV file (oponentes_ano_2026.csv)"""
         if not player_tag:
             player_tag = self.player_tag
-        """Lê todos os CSVs de batalha e unifica em uma lista, com deduplicação rigorosa"""
-        battles_dict = {}
-        # Carrega apenas arquivos particionados (ano, mes, semana, dia)
-        # Ignora battles.csv, oponentes_todos.csv e oponentes_batalhas.csv que são redundantes
-        pattern = os.path.join(self.data_csv_dir, 'oponentes_*.csv')
-        all_files = glob.glob(pattern)
         
-        # Filtra para evitar arquivos que sabidamente contêm dados duplicados de forma massiva
-        files = []
-        ignored_files = ['oponentes_todos.csv', 'oponentes_batalhas.csv', 'battles.csv']
-        for f in all_files:
-            basename = os.path.basename(f)
-            if basename not in ignored_files:
-                files.append(f)
+        battles_dict = {}
+        # Carrega EXCLUSIVAMENTE o arquivo anual consolidado pelo usuario
+        official_file = os.path.join(self.data_csv_dir, 'oponentes_ano_2026.csv')
+        
+        if not os.path.exists(official_file):
+            logger.error(f"ERRO CRITICO: Arquivo oficial {official_file} nao encontrado!")
+            return []
             
-        logger.info(f"Lendo {len(files)} arquivos CSV de batalha para o player {player_tag}...")
+        logger.info(f"Lendo fonte unica de verdade: {official_file}...")
+        
+        files = [official_file]
         
         for file in files:
             try:

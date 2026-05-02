@@ -23,12 +23,10 @@ class GeminiDeckCoach:
         # Pega o arquivo de batalhas mais recente
         base_dir = os.path.dirname(os.path.abspath(__file__))
         base_path = os.path.join(base_dir, "data_csv_oficial")
-        # Tenta o arquivo semanal se existir, senão o oficial
-        csv_file = os.path.join(base_path, "oponentes_semana_atual.csv")
-        if not os.path.exists(csv_file):
-             csv_file = os.path.join(base_path, "batalhas_detalhadas.csv")
+        # Tenta o arquivo consolidado de 2026
+        csv_file = os.path.join(base_path, "oponentes_ano_2026.csv")
         
-        print(f"Lendo arquivo: {csv_file}")
+        print(f"Lendo arquivo para IA: {csv_file}")
             
         summary = []
         try:

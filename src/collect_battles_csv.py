@@ -270,24 +270,10 @@ def main():
         day_key = dt_brt.strftime('%Y%m%d')
         month_key = dt_brt.strftime('%Y%m')
         year_key = dt_brt.strftime('%Y')
-        by_day.setdefault(day_key, []).append(row)
-        by_month.setdefault(month_key, []).append(row)
         by_year.setdefault(year_key, []).append(row)
 
+    # Processa apenas o arquivo anual consolidado (Ano atual)
     total_novos = 0
-
-    print("\n--- Processando Arquivos Diarios ---")
-    for day_key, rows in sorted(by_day.items()):
-        file_path = os.path.join(DATA_DIR, f"oponentes_dia_{day_key}.csv")
-        novos = append_new_rows(file_path, rows)
-        print(f"  oponentes_dia_{day_key}.csv: +{novos} novas batalhas")
-
-    print("\n--- Processando Arquivos Mensais ---")
-    for month_key, rows in sorted(by_month.items()):
-        file_path = os.path.join(DATA_DIR, f"oponentes_mes_{month_key}.csv")
-        novos = append_new_rows(file_path, rows)
-        print(f"  oponentes_mes_{month_key}.csv: +{novos} novas batalhas")
-
     print("\n--- Processando Arquivo Anual Consolidado ---")
     for year_key, rows in sorted(by_year.items()):
         file_path = os.path.join(DATA_DIR, f"oponentes_ano_{year_key}.csv")

@@ -1,4 +1,3 @@
-import sqlite3
 import csv
 import os
 import logging
@@ -10,379 +9,75 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class CSVDatabaseManager:
+class CSVManager:
     """
-    Manager to load Clash Royale CSV data into an in-memory SQLite database.
-    This ensures the dashboard always has the most up-to-date data from CSV files.
+    Manager to handle Clash Royale CSV data processing without SQL.
+    This ensures the dashboard and sync scripts always have accurate data from CSV files.
     """
-    def __init__(self, db_path: Optional[str] = None, data_dir: Optional[str] = None):
-        # Se um caminho for fornecido, usa o banco em arquivo. Caso contrario, usa memoria compartilhada.
-        if db_path:
-            self.db_path = db_path
-            self.conn = sqlite3.connect(self.db_path)
-        else:
-            self.db_path = "file:clash_mem?mode=memory&cache=shared"
-            self.conn = sqlite3.connect(self.db_path, uri=True)
-            
-        self.cursor = self.conn.cursor()
-        
+    def __init__(self, data_dir: Optional[str] = None):
         if data_dir is None:
-            # Default path relative to this script
             self.data_dir = os.path.join(os.path.dirname(__file__), 'data_csv_oficial')
         else:
             self.data_dir = data_dir
             
-        self._init_database()
-        
-    def _init_database(self):
-        """Initialize SQLite schema in memory"""
-        logger.info("Inicializando banco de dados em memoria")
-        
-        # Players table
-        self.cursor.execute("""
-            CREATE TABLE players (
-                player_tag TEXT PRIMARY KEY,
-                name TEXT,
-                trophies INTEGER,
-                best_trophies INTEGER,
-                level INTEGER,
-                clan_tag TEXT,
-                clan_name TEXT,
-                last_updated TEXT
-            )
-        """)
-        
-        # Battles table
-        self.cursor.execute("""
-            CREATE TABLE battles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_tag TEXT,
-                battle_time TEXT,
-                battle_type TEXT,
-                game_mode TEXT,
-                is_ladder_tournament BOOLEAN,
-                arena_id INTEGER,
-                arena_name TEXT,
-                result TEXT,
-                crowns INTEGER,
-                king_tower_hit_points INTEGER,
-                princess_towers_hit_points TEXT,
-                deck_cards TEXT,
-                deck_card_levels TEXT,
-                opponent_tag TEXT,
-                opponent_name TEXT,
-                opponent_trophies INTEGER,
-                opponent_deck_cards TEXT,
-                opponent_deck_card_levels TEXT,
-                opponent_clan_tag TEXT,
-                opponent_clan_name TEXT,
-                player_level INTEGER,
-                opponent_level INTEGER,
-                opponent_crowns INTEGER,
-                battle_duration_seconds INTEGER,
-                trophy_change INTEGER,
-                UNIQUE(player_tag, battle_time, opponent_tag)
-            )
-        """)
-        
-        # Clan members table
-        self.cursor.execute("""
-            CREATE TABLE clan_members (
-                player_tag TEXT PRIMARY KEY,
-                name TEXT,
-                role TEXT,
-                level INTEGER,
-                trophies INTEGER,
-                donations INTEGER,
-                donations_received INTEGER,
-                clan_tag TEXT,
-                clan_name TEXT,
-                last_seen TEXT,
-                last_updated TEXT
-            )
-        """)
-        
-        # Clan member decks table
-        self.cursor.execute("""
-            CREATE TABLE clan_member_decks (
-                id INTEGER PRIMARY KEY,
-                player_tag TEXT,
-                name TEXT,
-                deck_cards TEXT,
-                favorite_card TEXT,
-                arena_id INTEGER,
-                arena_name TEXT,
-                league_id INTEGER,
-                league_name TEXT,
-                exp_level INTEGER,
-                trophies INTEGER,
-                best_trophies INTEGER,
-                first_seen TEXT,
-                last_seen TEXT,
-                clan_tag TEXT,
-                clan_name TEXT
-            )
-        """)
-        
-        self.conn.commit()
-
-    def load_all_csvs(self):
-        """Load all relevant CSVs from the data directory and parent directory"""
-        import glob
-        
-        # 1. Main official files
-        # Support for multiple battles files (e.g., battles_2024.csv, battles_2025.csv)
-        official_patterns = {
-            'players.csv': 'players',
-            # 'battles*.csv': 'battles', # Removido para evitar poluição com dados de #YVJR0JLY
-            'clan_members.csv': 'clan_members',
-            'clan_member_decks.csv': 'clan_member_decks'
-        }
-        
-        loaded_files = set()
-        for pattern, table_name in official_patterns.items():
-            for file_path in glob.glob(os.path.join(self.data_dir, pattern)):
-                self._load_csv_to_table(file_path, table_name)
-                loaded_files.add(os.path.basename(file_path))
-        
-        # 2. Battle files (oponentes_*.csv) ONLY from official directory
-        # NOTA: Anteriormente carregava tambem da raiz (parent_dir), mas esses arquivos
-        # contem dados degradados (nivel_oponente=0, sem cartas evoluidas, horarios defasados).
-        # Desde 2026-04-29, os dados canonicos estao exclusivamente em data_csv_oficial/.
-        secondary_patterns = [
-            os.path.join(self.data_dir, 'oponentes_*.csv')
-        ]
-        
-        # Mapping for oponentes_*.csv to battles table
-        battle_mapping = {
-            'data': 'battle_time',
-            'battleTime': 'battle_time',
-            'nome_oponente': 'opponent_name',
-            'opponent_name': 'opponent_name',
-            'tag_oponente': 'opponent_tag',
-            'opponent_tag': 'opponent_tag',
-            'nivel_oponente': 'opponent_level',
-            'opponent_level': 'opponent_level',
-            'trofes_oponente': 'opponent_trophies',
-            'opponent_trophies': 'opponent_trophies',
-            'clan_oponente': 'opponent_clan_name',
-            'opponent_clan_name': 'opponent_clan_name',
-            'resultado': 'result',
-            'result': 'result',
-            'coroas_jogador': 'crowns',
-            'crowns': 'crowns',
-            'mudanca_trofes': 'trophy_change',
-            'trophy_change': 'trophy_change',
-            'modo_jogo': 'game_mode',
-            'game_mode': 'game_mode',
-            'coroas_oponente': 'opponent_crowns',
-            'opponent_crowns': 'opponent_crowns',
-            'tipo_batalha': 'battle_type',
-            'battle_type': 'battle_type',
-            'arena': 'arena_name',
-            'arena_name': 'arena_name',
-            'deck_jogador': 'deck_cards',
-            'deck_cards': 'deck_cards',
-            'deck_oponente': 'opponent_deck_cards',
-            'opponent_deck_cards': 'opponent_deck_cards'
-        }
-        
-        for pattern in secondary_patterns:
-            for file_path in glob.glob(pattern):
-                # Load all oponentes_*.csv files to ensure full history
-                self._load_csv_to_table(file_path, 'battles', column_mapping=battle_mapping)
-
-    def _load_csv_to_table(self, file_path: str, table_name: str, column_mapping: Optional[dict] = None):
-        """Generic CSV loader to SQLite table with optional column mapping"""
-        logger.info(f"Carregando {file_path} para tabela {table_name}")
-        
-        try:
-            # Detect delimiter (comma or semicolon)
-            delimiter = ','
-            with open(file_path, 'r', encoding='utf-8-sig') as f:
-                # Ler as primeiras 5 linhas para uma detecção mais robusta
-                sample_lines = [f.readline() for _ in range(5)]
-                combined_sample = "".join(sample_lines)
-                
-                # Conta ocorrências totais na amostra para decidir o delimitador
-                semicolons = combined_sample.count(';')
-                commas = combined_sample.count(',')
-                
-                if semicolons > commas:
-                    delimiter = ';'
+    def load_battles(self, file_name: str = 'oponentes_ano_2026.csv') -> List[Dict]:
+        """
+        Loads battles from a specific CSV file.
+        Returns a list of battle dictionaries.
+        """
+        file_path = os.path.join(self.data_dir, file_name)
+        if not os.path.exists(file_path):
+            logger.warning(f"Arquivo nao encontrado: {file_path}")
+            return []
             
-            # Usar utf-8-sig para lidar com possiveis BOM no inicio do arquivo
+        logger.info(f"Carregando batalhas de: {file_path}")
+        return self._read_csv(file_path)
+
+    def _read_csv(self, file_path: str) -> List[Dict]:
+        """Generic CSV reader with delimiter detection"""
+        data = []
+        try:
+            delimiter = ';' # Default para o projeto oficial
+            with open(file_path, 'r', encoding='utf-8-sig') as f:
+                sample = f.read(2048)
+                if sample.count(',') > sample.count(';'):
+                    delimiter = ','
+            
             with open(file_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f, delimiter=delimiter)
-                
-                # Get columns from table to filter CSV fields
-                self.cursor.execute(f"PRAGMA table_info({table_name})")
-                # Excluir 'id' da insercao automatica para deixar o SQLite gerenciar
-                table_columns = [row[1] for row in self.cursor.fetchall() if row[1] != 'id']
-                
-                rows_to_insert = []
-                
-                # Helper to normalize date to ISO format for better SQLite sorting
-                def normalize_date(date_str):
-                    if not date_str:
-                        return None
-                    
-                    # Limpar aspas e espaços extras que podem vir de parsing corrompido
-                    date_str = str(date_str).strip().strip('"').strip("'")
-                    
-                    if not date_str or date_str.startswith(';'):
-                        return None
-                    
-                    # Fallback para registros corrompidos que contêm a linha inteira (delimitada por ;)
-                    if ';' in date_str:
-                        # Pega apenas a primeira parte que deve ser a data
-                        parts = date_str.split(';')
-                        if parts:
-                            date_str = parts[0].strip()
-
-                    # Se ja estiver no formato ISO YYYY-MM-DD
-                    if len(date_str) >= 10 and date_str[4] == '-' and date_str[7] == '-':
-                        return date_str.replace('T', ' ')
-
-                    # Formato API (YYYYMMDDTHHMMSS.000Z)
-                    if 'T' in date_str and date_str.endswith('Z'):
-                        try:
-                            clean_date = date_str.split('.')[0].replace('T', ' ')
-                            dt = datetime.strptime(clean_date, '%Y%m%d %H%M%S')
-                            return dt.strftime('%Y-%m-%d %H:%M:%S')
-                        except:
-                            return date_str
-                            
-                    # Formato Brasileiro (DD/MM/YYYY HH:MM)
-                    formats = ['%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y']
-                    for fmt in formats:
-                        try:
-                            dt = datetime.strptime(date_str, fmt)
-                            return dt.strftime('%Y-%m-%d %H:%M:%S')
-                        except:
-                            continue
-                    
-                    return date_str
-
-                # Helper to normalize battle result to standard English keys
-                def normalize_result(res):
-                    if not res:
-                        return 'unknown'
-                    res = str(res).strip().lower().strip('"').strip("'")
-                    
-                    # Mapping victory
-                    if res in ['vitoria', 'vitória', 'victory', 'win']:
-                        return 'victory'
-                    # Mapping defeat
-                    if res in ['derrota', 'defeat', 'loss']:
-                        return 'defeat'
-                    # Mapping draw
-                    if res in ['empate', 'draw']:
-                        return 'draw'
-                        
-                    return res
-
                 for row in reader:
-                    # Skip empty rows or rows that are just separators
-                    if not any(v.strip() for v in row.values() if v):
+                    # Filtra linhas vazias
+                    if not any(row.values()):
                         continue
-                        
-                    # Apply mapping if available
-                    mapped_row = {}
-                    if column_mapping:
-                        for csv_col, val in row.items():
-                            if val is not None:
-                                # Limpar aspas que podem estar envolvendo o valor devido a falha de split no DictReader
-                                val = str(val).strip().strip('"').strip("'")
-                                
-                            target_col = column_mapping.get(csv_col)
-                            if target_col:
-                                mapped_row[target_col] = val
-                    else:
-                        # Se não houver mapeamento, limpamos os valores de qualquer forma
-                        mapped_row = {k: (str(v).strip().strip('"').strip("'") if v is not None else v) 
-                                     for k, v in row.items()}
-                        
-                    # Filter row keys to match table columns
-                    filtered_row = {k: v for k, v in mapped_row.items() if k in table_columns}
-                    
-                    # Atribuir tag do usuario apenas para arquivos de oponentes do proprio usuario
-                    if 'player_tag' in table_columns:
-                        tag_val = filtered_row.get('player_tag')
-                        is_oponentes_file = 'oponentes_' in os.path.basename(file_path)
-                        if (not tag_val or tag_val == '0') and is_oponentes_file:
-                            # Tenta pegar a tag do ambiente, se nao houver usa o fallback historico
-                            player_tag_env = os.getenv('CR_PLAYER_TAG', '#2QR292P')
-                            filtered_row['player_tag'] = player_tag_env
-                    
-                    # Normalize battle_time if present
-                    if 'battle_time' in filtered_row:
-                        if table_name == 'oponentes_batalhas':
-                            filtered_row['data_formatada'] = row.get('data', '')
-                        filtered_row['battle_time'] = normalize_date(filtered_row['battle_time'])
-                        # If battle_time is still None after normalization, skip row
-                        if not filtered_row['battle_time']:
-                            continue
-                    
-                    # Normalize result if present
-                    if 'result' in filtered_row:
-                        filtered_row['result'] = normalize_result(filtered_row['result'])
-                    
-                    # Ensure all table columns have a value (None if missing in CSV)
-                    values = [filtered_row.get(col) for col in table_columns]
-                    rows_to_insert.append(values)
-                
-                if rows_to_insert:
-                    placeholders = ', '.join(['?' for _ in table_columns])
-                    insert_sql = f"INSERT OR REPLACE INTO {table_name} ({', '.join(table_columns)}) VALUES ({placeholders})"
-                    self.cursor.executemany(insert_sql, rows_to_insert)
-                    self.conn.commit()
-                    logger.info(f"Inseridos {len(rows_to_insert)} registros em {table_name}")
-                
+                    data.append(row)
         except Exception as e:
-            logger.error(f"Erro ao carregar {file_path}: {str(e)}")
+            logger.error(f"Erro ao ler CSV {file_path}: {e}")
+        return data
 
-
-    def get_connection(self):
-        return self.conn
-
-    def save_to_csv(self, table_name: str, csv_path: str):
-        """Export a table from the in-memory database to a CSV file"""
-        try:
-            self.cursor.execute(f"SELECT * FROM {table_name}")
-            columns = [description[0] for description in self.cursor.description]
-            rows = self.cursor.fetchall()
+    @staticmethod
+    def normalize_date(date_str: str) -> Optional[str]:
+        """Standardizes date format for comparison"""
+        if not date_str: return None
+        date_str = str(date_str).strip().strip('"').strip("'")
+        
+        # Formato ISO
+        if len(date_str) >= 10 and date_str[4] == '-' and date_str[7] == '-':
+            return date_str.replace('T', ' ')
             
-            # Ensure directory exists
-            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-            
-            with open(csv_path, 'w', encoding='utf-8', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(columns)
-                writer.writerows(rows)
-            
-            logger.info(f"Tabela {table_name} exportada com sucesso para {csv_path} ({len(rows)} registros)")
-        except Exception as e:
-            logger.error(f"Erro ao exportar {table_name} para CSV: {str(e)}")
-
-    def close(self):
-        self.conn.close()
+        # Formato Brasileiro (DD/MM/YYYY HH:MM)
+        formats = ['%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y']
+        for fmt in formats:
+            try:
+                dt = datetime.strptime(date_str, fmt)
+                return dt.strftime('%Y-%m-%d %H:%M:%S')
+            except:
+                continue
+        return date_str
 
 if __name__ == "__main__":
-    # Test loading
-    manager = CSVDatabaseManager()
-    manager.load_all_csvs()
-    
-    # Simple check
-    cursor = manager.get_connection().cursor()
-    cursor.execute("SELECT COUNT(*) FROM battles")
-    count = cursor.fetchone()[0]
-    print(f"Total de batalhas carregadas: {count}")
-    
-    cursor.execute("SELECT player_tag, COUNT(*) FROM battles GROUP BY player_tag")
-    tags = cursor.fetchall()
-    print(f"Distribuicao por player_tag: {tags}")
-    
-    cursor.execute("SELECT MAX(battle_time) FROM battles")
-    last_battle = cursor.fetchone()[0]
-    print(f"Ultima batalha registrada: {last_battle}")
+    # Teste de carregamento
+    manager = CSVManager()
+    battles = manager.load_battles()
+    print(f"Total de batalhas carregadas via CSV: {len(battles)}")
+    if battles:
+        print(f"Exemplo de registro: {battles[0].get('data')} - {battles[0].get('nome_oponente')}")

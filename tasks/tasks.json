@@ -94,12 +94,45 @@
         "dependencies": [],
         "priority": "high",
         "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Validacao Local do Dashboard",
+        "description": "Validar se o arquivo docs/index.html gerado localmente reflete o novo historico consolidado de 2309 batalhas.",
+        "details": "Abrir o arquivo local, verificar histogramas e contagem de batalhas de Abril.",
+        "testStrategy": "Inspecao visual e contagem de tags de batalha.",
+        "status": "in-progress",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Comparativo Local vs Web",
+        "description": "Comparar o estado do Dashboard local com a versao publicada no GitHub Pages.",
+        "details": "Verificar se a URL publica ja reflete os dados ou se precisa de sincronizacao manual.",
+        "testStrategy": "Acesso a URL publica e comparacao de stats.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Push e Sincronizacao Web",
+        "description": "Subir as alteracoes consolidadas para o GitHub (Push) e monitorar Deploy.",
+        "details": "Executar git add, commit e push. Verificar se o GitHub Actions de deploy do Pages completa sem erros.",
+        "testStrategy": "Log do GitHub Actions e refresh da pagina web.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2026-05-01T14:32:17.276Z",
       "description": "Default tasks context",
-      "updated": "2026-05-01T22:17:03.659Z"
+      "updated": "2026-05-02T16:30:12.239Z"
     }
   }
 }
