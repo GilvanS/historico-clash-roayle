@@ -2,46 +2,39 @@ import os
 import csv
 import glob
 
-DATA_DIR = 'src/data_csv_oficial'
+DATA_DIR = 'a:/Workspace/historico-clash-roayle/src/data_csv_oficial'
 
-def clean_file(file_path):
-    if not os.path.exists(file_path):
-        return
+def clean_csvs():
+    pattern = os.path.join(DATA_DIR, 'oponentes_*.csv')
+    files = glob.glob(pattern)
     
-    print(f"Limpando {file_path}...")
-    
-    rows = []
-    header = None
-    try:
-        with open(file_path, 'r', encoding='utf-8-sig') as f:
-            reader = csv.reader(f, delimiter=';')
-            header = next(reader)
-            for row in reader:
-                # Se a primeira coluna (data) for '0' ou a linha estiver cheia de zeros, ignora
-                if not row or row[0] == '0' or all(cell == '0' for cell in row[:10]):
-                    continue
-                rows.append(row)
+    for file in files:
+        print(f"Limpando {os.path.basename(file)}...")
+        cleaned_rows = []
+        original_count = 0
         
-        with open(file_path, 'w', newline='', encoding='utf-8-sig') as f:
-            writer = csv.writer(f, delimiter=';')
-            writer.writerow(header)
-            writer.writerows(rows)
+        try:
+            # Tenta ler com delimitador ;
+            with open(file, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                fieldnames = reader.fieldnames
+                for row in reader:
+                    original_count += 1
+                    # So mantem se tiver DATA e NOME_OPONENTE
+                    if row.get('data') and row.get('nome_oponente'):
+                        cleaned_rows.append(row)
             
-        print(f"  {len(rows)} linhas validas preservadas.")
-    except Exception as e:
-        print(f"  Erro ao processar {file_path}: {e}")
-
-def main():
-    # Limpa arquivos diarios, mensais e anuais
-    patterns = [
-        os.path.join(DATA_DIR, "oponentes_dia_*.csv"),
-        os.path.join(DATA_DIR, "oponentes_mes_*.csv"),
-        os.path.join(DATA_DIR, "oponentes_ano_*.csv")
-    ]
-    
-    for pattern in patterns:
-        for file_path in glob.glob(pattern):
-            clean_file(file_path)
+            if len(cleaned_rows) < original_count:
+                print(f"  Removidas {original_count - len(cleaned_rows)} linhas corrompidas.")
+                with open(file, 'w', newline='', encoding='utf-8-sig') as f:
+                    writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+                    writer.writeheader()
+                    writer.writerows(cleaned_rows)
+            else:
+                print("  Arquivo ja estava limpo.")
+                
+        except Exception as e:
+            print(f"  Erro ao processar {file}: {e}")
 
 if __name__ == "__main__":
-    main()
+    clean_csvs()

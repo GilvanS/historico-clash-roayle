@@ -65,7 +65,7 @@ class GitHubPagesHTMLGenerator:
             return []
         try:
             with open(path, mode='r', encoding='utf-8') as f:
-                return list(csv.DictReader(f))
+                return list(csv.DictReader(f, delimiter=';'))
         except Exception as e:
             logger.error(f"Erro ao ler {filename}: {e}")
             return []
@@ -2904,7 +2904,7 @@ class GitHubPagesHTMLGenerator:
 
     def get_war_decks_from_csv(self):
         """Busca os 5 melhores jogadores (Clã e Global) do arquivo de guerra."""
-        war_decks_path = os.path.join(self.base_dir, "data_csv_oficial", "war_top_decks.csv")
+        war_decks_path = os.path.join(self.src_dir, "data_csv_oficial", "war_top_decks.csv")
         players = {'clan': [], 'global': []}
         
         if not os.path.exists(war_decks_path):

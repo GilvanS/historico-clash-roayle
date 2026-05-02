@@ -137,15 +137,22 @@ def extract_battle_row(battle: dict, player_tag: str):
 
 
 def read_csv(file_path: str) -> list:
-    """Le um CSV existente e retorna lista de dicts."""
+    """Le um CSV existente e retorna lista de dicts validos."""
     if not os.path.exists(file_path):
         return []
     try:
+        rows = []
         with open(file_path, 'r', encoding='utf-8-sig') as f:
-            return list(csv.DictReader(f, delimiter=';'))
+            reader = csv.DictReader(f, delimiter=';')
+            for row in reader:
+                # Valida se a linha tem o minimo de dados (Data e Oponente)
+                if row.get('data') and row.get('tag_oponente'):
+                    rows.append(row)
+        return rows
     except Exception as e:
-        print(f"[AVISO] Erro ao ler {file_path}: {e}")
-        return []
+        print(f"[ERRO CRITICO] Falha ao ler {file_path}: {e}")
+        # Retorna None para sinalizar falha na leitura e evitar sobrescrita
+        return None
 
 
 def write_csv(file_path: str, rows: list):
@@ -190,6 +197,12 @@ def append_new_rows(file_path: str, new_rows: list) -> int:
     Retorna o numero de registros novos inseridos.
     """
     existing = read_csv(file_path)
+    
+    # Se existing for None, houve erro na leitura. Nao podemos prosseguir para nao apagar dados.
+    if existing is None:
+        print(f"[ERRO] Abortando atualizacao de {file_path} para preservar dados existentes.")
+        return 0
+        
     existing_keys = {make_dedup_key(r) for r in existing}
 
     added = []

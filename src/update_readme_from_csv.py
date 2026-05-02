@@ -44,7 +44,7 @@ class ReadmeCSVUpdater:
         
         data = []
         with open(csv_file, 'r', encoding='utf-8-sig') as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(f, delimiter=';')
             for row in reader:
                 data.append(row)
         
