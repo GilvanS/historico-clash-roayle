@@ -11,7 +11,11 @@ except ImportError:
 
 class GeminiDeckCoach:
     def __init__(self):
-        self.api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        self.api_key = os.environ.get("GEMINI_API_KEY")
+        if not self.api_key:
+            print("AVISO: GEMINI_API_KEY não encontrada, tentando GOOGLE_API_KEY...")
+            self.api_key = os.environ.get("GOOGLE_API_KEY")
+            
         if not self.api_key:
             print("ERRO: Nenhuma API Key encontrada.")
             self.client = None
@@ -71,7 +75,7 @@ class GeminiDeckCoach:
         print("Enviando requisição ao Gemini...")
         try:
             response = self.client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-3-flash-preview",
                 contents=prompt
             )
             print("Resposta recebida do Gemini.")
@@ -80,6 +84,8 @@ class GeminiDeckCoach:
             return json.loads(text)
         except Exception as e:
             print(f"Erro ao chamar Gemini: {e}")
+            if hasattr(e, 'response'):
+                print(f"Response error: {e.response}")
             return None
 
 def main():
