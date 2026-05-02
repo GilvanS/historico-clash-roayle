@@ -10,13 +10,20 @@ import csv
 import requests
 from datetime import datetime, timedelta
 from collections import Counter
+from dotenv import load_dotenv
+
+load_dotenv()
 
 FIELDNAMES = [
     'data', 'nome_oponente', 'tag_oponente', 'nivel_oponente',
     'trofes_oponente', 'clan_oponente', 'resultado',
     'coroas_jogador', 'coroas_oponente', 'mudanca_trofes',
     'modo_jogo', 'tipo_batalha', 'arena', 'deck_jogador', 'deck_oponente', 'vezes_enfrentado',
-    'elixir_vazado_jogador', 'elixir_vazado_oponente', 'nivel_torre_jogador'
+    'elixir_vazado_jogador', 'elixir_vazado_oponente', 'nivel_torre_jogador',
+    'vida_torre_rei_jogador', 'vida_torre_rei_oponente', 
+    'vida_torres_princesa_jogador', 'vida_torres_princesa_oponente',
+    'trofes_iniciais_jogador', 'trofes_finais_jogador',
+    'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente'
 ]
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data_csv_oficial')
@@ -87,6 +94,15 @@ def extract_battle_row(battle: dict, player_tag: str):
     if not dt_utc:
         return None
 
+    # Formata vida das torres como string (ex: "4000 | 4000" ou apenas "4000")
+    def format_hp(hp_list):
+        if hp_list is None: return "0"
+        if isinstance(hp_list, int): return str(hp_list)
+        return " | ".join(map(str, hp_list))
+
+    trophy_change = player_team.get('trophyChange', 0)
+    starting_trophies = player_team.get('startingTrophies', 0)
+
     return {
         '_dt_utc': dt_utc,  # campo interno, removido antes de salvar
         'data': format_date_brt(dt_utc),
@@ -98,16 +114,25 @@ def extract_battle_row(battle: dict, player_tag: str):
         'resultado': resultado,
         'coroas_jogador': player_crowns,
         'coroas_oponente': opponent_crowns,
-        'mudanca_trofes': player_team.get('trophyChange', 0),
+        'mudanca_trofes': trophy_change,
         'modo_jogo': battle.get('gameMode', {}).get('name', 'Desconhecido'),
         'tipo_batalha': battle.get('type', 'Desconhecido'),
         'arena': battle.get('arena', {}).get('name', 'Desconhecido'),
         'deck_jogador': format_deck(player_team.get('cards', [])),
         'deck_oponente': format_deck(opponent_team.get('cards', [])),
         'vezes_enfrentado': 1,
-        'elixir_vazado_jogador': player_team.get('elixirLeaked', 0),
-        'elixir_vazado_oponente': opponent_team.get('elixirLeaked', 0),
-        'nivel_torre_jogador': player_team.get('expLevel', 0)
+        'elixir_vazado_jogador': round(player_team.get('elixirLeaked', 0), 2),
+        'elixir_vazado_oponente': round(opponent_team.get('elixirLeaked', 0), 2),
+        'nivel_torre_jogador': player_team.get('expLevel', 0),
+        'vida_torre_rei_jogador': player_team.get('kingTowerHitPoints', 0),
+        'vida_torre_rei_oponente': opponent_team.get('kingTowerHitPoints', 0),
+        'vida_torres_princesa_jogador': format_hp(player_team.get('princessTowersHitPoints')),
+        'vida_torres_princesa_oponente': format_hp(opponent_team.get('princessTowersHitPoints')),
+        'trofes_iniciais_jogador': starting_trophies,
+        'trofes_finais_jogador': starting_trophies + trophy_change,
+        'posicao_global_jogador': player_team.get('globalRank', 'N/A') or 'N/A',
+        'posicao_global_oponente': opponent_team.get('globalRank', 'N/A') or 'N/A',
+        'nivel_torre_oponente': opponent_team.get('expLevel', 0)
     }
 
 
@@ -117,7 +142,7 @@ def read_csv(file_path: str) -> list:
         return []
     try:
         with open(file_path, 'r', encoding='utf-8-sig') as f:
-            return list(csv.DictReader(f))
+            return list(csv.DictReader(f, delimiter=';'))
     except Exception as e:
         print(f"[AVISO] Erro ao ler {file_path}: {e}")
         return []
@@ -127,7 +152,7 @@ def write_csv(file_path: str, rows: list):
     """Escreve lista de dicts em CSV oficial."""
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'w', newline='', encoding='utf-8-sig') as f:
-        writer = csv.DictWriter(f, fieldnames=FIELDNAMES, extrasaction='ignore')
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES, delimiter=';', extrasaction='ignore')
         writer.writeheader()
         writer.writerows(rows)
 
