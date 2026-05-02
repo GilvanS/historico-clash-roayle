@@ -30,7 +30,7 @@ jobs:
         python-version: '3.11'
 
     - name: Install dependencies
-      run: pip install requests python-dotenv
+      run: pip install requests python-dotenv google-genai
 
     - name: 🔍 Debug Segredos (Teste de Variáveis)
       env:
