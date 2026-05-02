@@ -263,7 +263,19 @@ def main():
 
     total_novos = 0
 
-    print("\n--- Processando Arquivo Anual Consolidade ---")
+    print("\n--- Processando Arquivos Diarios ---")
+    for day_key, rows in sorted(by_day.items()):
+        file_path = os.path.join(DATA_DIR, f"oponentes_dia_{day_key}.csv")
+        novos = append_new_rows(file_path, rows)
+        print(f"  oponentes_dia_{day_key}.csv: +{novos} novas batalhas")
+
+    print("\n--- Processando Arquivos Mensais ---")
+    for month_key, rows in sorted(by_month.items()):
+        file_path = os.path.join(DATA_DIR, f"oponentes_mes_{month_key}.csv")
+        novos = append_new_rows(file_path, rows)
+        print(f"  oponentes_mes_{month_key}.csv: +{novos} novas batalhas")
+
+    print("\n--- Processando Arquivo Anual Consolidado ---")
     for year_key, rows in sorted(by_year.items()):
         file_path = os.path.join(DATA_DIR, f"oponentes_ano_{year_key}.csv")
         novos = append_new_rows(file_path, rows)

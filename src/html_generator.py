@@ -12,6 +12,7 @@ import csv
 import glob
 import logging
 import json
+import sqlite3
 from datetime import datetime, timezone, timedelta
 try:
     from datetime import UTC
@@ -54,6 +55,7 @@ class GitHubPagesHTMLGenerator:
         self.clan_decks_cache = []       # Arquivo removido por redundancia
         self.players_cache = self._load_csv_as_list('players.csv')
         self.card_name_mapping = self._get_card_name_mapping()
+        self.cards_master = self._load_cards_master_csv()
         
     def _load_csv_as_list(self, filename: str) -> List[Dict]:
         """Auxiliar para carregar qualquer CSV da pasta oficial como lista de dicts"""
@@ -71,6 +73,22 @@ class GitHubPagesHTMLGenerator:
     def _load_clan_members_csv(self) -> List[Dict]:
         """Lê clan_members.csv diretamente"""
         return self._load_csv_as_list('clan_members.csv')
+
+    def _load_cards_master_csv(self) -> Dict[str, Dict]:
+        """Lê cards_master_icons.csv e retorna um dicionario indexado pelo nome da carta"""
+        path = os.path.join(self.data_csv_dir, 'cards_master_icons.csv')
+        master = {}
+        if not os.path.exists(path):
+            return master
+        try:
+            with open(path, mode='r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                for row in reader:
+                    master[row['card_name']] = row
+            logger.info(f"Mestre de {len(master)} icones carregado com sucesso.")
+        except Exception as e:
+            logger.error(f"Erro ao ler cards_master_icons.csv: {e}")
+        return master
 
     def _load_all_battles_from_csv(self, player_tag: str = None) -> List[Dict]:
         """Loads all battles from the consolidated CSV file for a specific player tag"""
@@ -228,7 +246,14 @@ class GitHubPagesHTMLGenerator:
                         'opponent_clan_name': clan_o,
                         'opponent_trophies': self._safe_int(opp_trophies, 0),
                         'trophy_change': t_change,
-                        'game_mode': game_mode_val
+                        'game_mode': game_mode_val,
+                        # Novos campos premium
+                        'elixir_vazado_jogador': row.get('elixir_vazado_jogador', '0'),
+                        'elixir_vazado_oponente': row.get('elixir_vazado_oponente', '0'),
+                        'vida_torre_rei_jogador': row.get('vida_torre_rei_jogador', '0'),
+                        'vida_torre_rei_oponente': row.get('vida_torre_rei_oponente', '0'),
+                        'vida_torres_princesa_jogador': row.get('vida_torres_princesa_jogador', '0'),
+                        'vida_torres_princesa_oponente': row.get('vida_torres_princesa_oponente', '0')
                     }
                     
                     battles_dict[dedup_key] = battle_obj
@@ -279,20 +304,6 @@ class GitHubPagesHTMLGenerator:
         except (TypeError, ValueError):
             return default
 
-    def _load_clan_members_csv(self) -> List[Dict]:
-        """Lê clan_members.csv diretamente"""
-        members = []
-        path = os.path.join(self.data_csv_dir, 'clan_members.csv')
-        if not os.path.exists(path):
-            return []
-        try:
-            with open(path, mode='r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    members.append(row)
-        except Exception as e:
-            logger.error(f"Erro ao ler clan_members.csv: {e}")
-        return members
 
     def _load_players_csv(self, player_tag: str) -> Optional[Dict]:
         """Busca jogador no cache de players carregado de CSV."""
@@ -383,22 +394,26 @@ class GitHubPagesHTMLGenerator:
         return card_mapping.get(card_name, card_name.replace(' ', '').replace('.', '').replace('-', ''))
 
     def get_card_image_path(self, card_name: str) -> str:
-        """Get the path to card image (using relative paths from src/ directory)"""
-        filename = self.get_card_filename(card_name)
+        """Retorna a URL da imagem da carta usando o cards_master_icons.csv"""
+        if not card_name or card_name == 'N/D':
+            return "https://royaleapi.github.io/cr-api-assets/cards/unknown.png"
+
+        is_evolution = "Evolution" in card_name
+        clean_name = card_name.replace(" (Evolution)", "").strip()
         
-        # Try local assets first
-        local_cards_base = os.path.join(self.project_root, "cards")
+        # Tenta buscar no mestre de icones
+        card_data = self.cards_master.get(clean_name)
+        if card_data:
+            if is_evolution and card_data.get('url_evolution') and card_data['url_evolution'] != 'N/A':
+                return card_data['url_evolution']
+            if card_data.get('url_hero') and card_data['url_hero'] != 'N/A':
+                return card_data['url_hero']
+            if card_data.get('url_icon') and card_data['url_icon'] != 'N/A':
+                return card_data['url_icon']
         
-        if os.path.exists(os.path.join(local_cards_base, "hero_cards", f"{filename}.png")):
-            return f"../cards/hero_cards/{filename}.png"
-        elif os.path.exists(os.path.join(local_cards_base, "normal_cards", f"{filename}.png")):
-            return f"../cards/normal_cards/{filename}.png"
-        elif os.path.exists(os.path.join(local_cards_base, "evolution_cards", f"{filename}.png")):
-            return f"../cards/evolution_cards/{filename}.png"
-        else:
-            # Fallback to RoyaleAPI
-            clean_name = card_name.strip().lower().replace(' ', '-').replace('.', '').replace('-', '-')
-            return f"https://royaleapi.github.io/cr-api-assets/cards/{clean_name}.png"
+        # Fallback para RoyaleAPI se não encontrar
+        filename = clean_name.lower().replace(' ', '-').replace('.', '').replace('-', '-')
+        return f"https://royaleapi.github.io/cr-api-assets/cards/{filename}.png"
 
     def _get_card_name_mapping(self) -> Dict[str, str]:
         """Retorna mapeamento de nomes de cartas para nomes de assets."""
@@ -684,9 +699,6 @@ class GitHubPagesHTMLGenerator:
             print(f"Error fetching opponent battles for {opponent_tag}: {e}")
             return None
     
-    def get_card_filename(self, card_name: str) -> str:
-        """Convert card name to filename"""
-        return self.card_name_mapping.get(card_name, card_name.replace(' ', '').replace('.', '').replace('-', ''))
     
     def safe_filename(self, name: str) -> str:
         """Convert member name to safe filename"""
@@ -695,53 +707,6 @@ class GitHubPagesHTMLGenerator:
         safe_name = re.sub(r'\s+', '_', safe_name)
         return safe_name.lower()
     
-    def get_card_image_path(self, card_name: str) -> str:
-        """Get the relative path to card image or fallback to RoyaleAPI CDN"""
-        filename = self.get_card_filename(card_name)
-        
-        # Check if it's an evolution (usually represented as 'Card Name (Evolution)' in some data sources)
-        is_evolution = "Evolution" in card_name
-        clean_name = card_name.replace(" (Evolution)", "") if is_evolution else card_name
-        
-        # Try local files first
-        cards_base = "../cards" if os.path.exists("../cards") else "cards"
-        
-        # Priority search order for filenames
-        search_paths = [
-            f"{cards_base}/hero_cards/{filename}.png",
-            f"{cards_base}/evolution_cards/{filename}.png",
-            f"{cards_base}/normal_cards/{filename}.png"
-        ]
-        
-        for path in search_paths:
-            if os.path.exists(path):
-                # Return path relative to the generated index.html location (which is inside docs/ or root)
-                # If we are in src/, the path to cards is ../cards/
-                # If we are in docs/, the path to cards is cards/
-                return path.replace("../", "")
-            
-        # 4. CDN Fallback (RoyaleAPI)
-        # Convert name to RoyaleAPI format (lowercase, no spaces, hyphens)
-        cdn_name = card_name.lower().replace(" ", "-").replace(".", "").replace("'", "")
-        if is_evolution:
-            cdn_name = cdn_name.replace("-evolution", "")
-            return f"https://royaleapi.com/static/img/cards-150/{cdn_name}-ev1.png"
-        
-        # Special CDN mapping for some heroes or problematic names
-        cdn_mapping = {
-            'archer-queen': 'archer-queen',
-            'mighty-miner': 'mighty-miner',
-            'golden-knight': 'golden-knight',
-            'skeleton-king': 'skeleton-king',
-            'little-prince': 'little-prince',
-            'monk': 'monk',
-            'the-log': 'log',
-            'pe-kk-a': 'pekka',
-            'mini-pe-kk-a': 'mini-pekka'
-        }
-        cdn_name = cdn_mapping.get(cdn_name, cdn_name)
-        
-        return f"https://royaleapi.com/static/img/cards-150/{cdn_name}.png"
     
     def get_player_stats(self) -> Optional[Dict]:
         """Get player statistics from CSV files"""
@@ -2936,6 +2901,114 @@ class GitHubPagesHTMLGenerator:
             <div class="clan-member-cards">{clan_cards_html}</div>
         </div>
         """
+
+    def get_war_decks_from_csv(self):
+        """Busca os 5 melhores jogadores (Clã e Global) do arquivo de guerra."""
+        war_decks_path = os.path.join(self.base_dir, "data_csv_oficial", "war_top_decks.csv")
+        players = {'clan': [], 'global': []}
+        
+        if not os.path.exists(war_decks_path):
+            return players
+            
+        try:
+            with open(war_decks_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    player_data = {
+                        'name': row.get('player_name', 'Unknown'),
+                        'tag': row.get('player_tag', ''),
+                        'win_rate': float(row.get('win_rate', 0)),
+                        'total_battles': int(row.get('total_battles', 0)),
+                        'deck': row.get('cards', '').split(',')[:8],
+                        'type': row.get('type', 'global') # 'clan' ou 'global'
+                    }
+                    if player_data['type'] == 'clan':
+                        players['clan'].append(player_data)
+                    else:
+                        players['global'].append(player_data)
+        except Exception as e:
+            print(f"Erro ao carregar decks de guerra: {e}")
+            
+        return players
+
+    def generate_war_decks_html(self, war_players):
+        """Gera o HTML para a seção de Decks de Elite (Guerra)."""
+        if not war_players['clan'] and not war_players['global']:
+            return ""
+
+        html = """
+        <div class="section elite-spy-section">
+            <div class="elite-header">
+                <div class="elite-badge">TOP SECRET</div>
+                <h2>🕵️ Elite Spy: Decks de Guerra</h2>
+                <p>Os decks mais eficientes utilizados pelos melhores jogadores do clã e do ranking global.</p>
+            </div>
+            
+            <div class="deck-tabs">
+                <button class="tab-button active" onclick="showWarTab('clan-war')">Nossos Heróis</button>
+                <button class="tab-button" onclick="showWarTab('global-war')">Meta Global</button>
+            </div>
+
+            <div id="clan-war" class="tab-content active">
+                <div class="cr-decks-list">
+        """
+
+        for player in war_players['clan']:
+            cards_html = "".join([f'<div class="cr-card-wrap"><img src="{self.get_card_image_path(card)}" class="cr-card-img" title="{card}"></div>' for card in player['deck']])
+            html += f"""
+                <div class="cr-deck-card">
+                    <div class="cr-deck-header">
+                        <div class="player-info">
+                            <span class="cr-player-name">{player['name']}</span>
+                            <span class="cr-wr-badge">{player['win_rate']:.1f}% Win Rate</span>
+                        </div>
+                        <span class="cr-deck-rank">#{player['total_battles']} Lutas</span>
+                    </div>
+                    <div class="cr-deck-body">
+                        <div class="cr-grid-8x1">{cards_html}</div>
+                    </div>
+                </div>
+            """
+
+        html += """
+                </div>
+            </div>
+
+            <div id="global-war" class="tab-content">
+                <div class="cr-decks-list">
+        """
+
+        for player in war_players['global']:
+            cards_html = "".join([f'<div class="cr-card-wrap"><img src="{self.get_card_image_path(card)}" class="cr-card-img" title="{card}"></div>' for card in player['deck']])
+            html += f"""
+                <div class="cr-deck-card">
+                    <div class="cr-deck-header">
+                        <div class="player-info">
+                            <span class="cr-player-name">{player['name']}</span>
+                            <span class="cr-wr-badge">{player['win_rate']:.1f}% Win Rate</span>
+                        </div>
+                        <span class="cr-deck-rank">RANK GLOBAL</span>
+                    </div>
+                    <div class="cr-deck-body">
+                        <div class="cr-grid-8x1">{cards_html}</div>
+                    </div>
+                </div>
+            """
+
+        html += """
+                </div>
+            </div>
+        </div>
+        <script>
+            function showWarTab(tabId) {
+                document.querySelectorAll('.elite-spy-section .tab-content').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.elite-spy-section .tab-button').forEach(b => b.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                event.currentTarget.classList.add('active');
+            }
+        </script>
+        """
+        return html
     
     def generate_html_report(self) -> str:
         """Gera o relatório HTML completo consolidando todas as seções."""
@@ -2956,6 +3029,10 @@ class GitHubPagesHTMLGenerator:
             # Aba 3: Decks Letais - Oponentes que mais batem
             lethal_decks_data = self.get_lethal_opponent_decks()
             lethal_decks_html = self.generate_lethal_decks_html(lethal_decks_data)
+            
+            # Nova Seção: Decks de Elite (Guerra)
+            war_players = self.get_war_decks_from_csv()
+            war_decks_html = self.generate_war_decks_html(war_players)
             
             # Gera dados das abas de performance
             weekly_decks = self.get_weekly_decks_from_csv()
@@ -2979,6 +3056,12 @@ class GitHubPagesHTMLGenerator:
                 if result_text in ['VICTORY', 'VITORIA', 'VITÓRIA'] and stats.get('name'):
                     result_display = f"Vitória - {stats['name']}"
                 
+                # Detalhes técnicos (Elixir e HP)
+                elixir_p = battle.get('elixir_vazado_jogador', '0')
+                elixir_o = battle.get('elixir_vazado_oponente', '0')
+                hp_p = battle.get('vida_torre_rei_jogador', '0')
+                hp_o = battle.get('vida_torre_rei_oponente', '0')
+                
                 battles_table_html += f"""
                     <tr class="battle-{result_class}">
                         <td>{self.format_time_ago(battle['battle_time'])}</td>
@@ -2986,6 +3069,8 @@ class GitHubPagesHTMLGenerator:
                         <td>{battle['opponent_name']}</td>
                         <td>{battle['crowns']}</td>
                         <td style="color: {trophy_color}">{int(battle['trophy_change']):+d}</td>
+                        <td class="tech-metric">💧 {elixir_p} | {elixir_o}</td>
+                        <td class="tech-metric">🏰 {hp_p} | {hp_o}</td>
                         <td>{battle['arena_name']}</td>
                     </tr>
                 """
@@ -3020,7 +3105,7 @@ class GitHubPagesHTMLGenerator:
             
             return self.generate_full_html(stats, win_rate, deck_performance_html, 
                                          daily_histogram_html, clan_member_activity_html,
-                                         battles_table_html, battles_cards_html, lethal_decks_html)
+                                         battles_table_html, battles_cards_html, lethal_decks_html, war_decks_html)
         except Exception as e:
             print(f"Erro ao gerar relatorio HTML: {str(e)}")
             return self.generate_error_page()
@@ -3827,6 +3912,54 @@ class GitHubPagesHTMLGenerator:
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
+        /* Elite Spy Custom Styles */
+        .elite-spy-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            border: 1px solid #334155 !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .elite-spy-section::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .elite-header {
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .elite-badge {
+            display: inline-block;
+            background: #ef4444;
+            color: #fff;
+            font-size: 0.6em;
+            font-weight: 900;
+            padding: 4px 12px;
+            border-radius: 4px;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .elite-spy-section .cr-player-name {
+            font-weight: 800;
+            color: #f1f5f9;
+        }
+
+        .tech-metric {
+            font-family: 'Inter', monospace;
+            font-size: 0.85em;
+            color: #94a3b8;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
         .histogram-bar {
             flex: 1;
             display: flex;
@@ -3951,7 +4084,7 @@ class GitHubPagesHTMLGenerator:
     def generate_full_html(self, stats, win_rate, deck_performance_html, 
                           daily_histogram_html, clan_member_activity_html="",
                           battles_table_html="", battles_cards_html="",
-                          lethal_decks_html="") -> str:
+                          lethal_decks_html="", war_decks_html="") -> str:
         """Generate the complete HTML document"""
         
         # Carregar dicas da IA se existirem
@@ -4051,11 +4184,13 @@ class GitHubPagesHTMLGenerator:
             {deck_performance_html}
         </div>
 
+        {war_decks_html}
+
         <div class="section">
             <h2>⚔️ Últimas Batalhas</h2>
             <div class="desktop-table">
                 <table>
-                    <thead><tr><th>Horário</th><th>Resultado</th><th>Oponente</th><th>Coroas</th><th>Trofeus Δ</th><th>Arena</th></tr></thead>
+                    <thead><tr><th>Horário</th><th>Resultado</th><th>Oponente</th><th>Coroas</th><th>Trofeus Δ</th><th>💧 Elixir</th><th>🏰 HP Torre</th><th>Arena</th></tr></thead>
                     <tbody>{battles_table_html}</tbody>
                 </table>
             </div>

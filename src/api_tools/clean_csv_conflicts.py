@@ -1,0 +1,31 @@
+import os
+import glob
+
+def clean_csv_conflicts():
+    csv_dir = r'a:\Workspace\historico-clash-roayle\src\data_csv_oficial'
+    files = glob.glob(os.path.join(csv_dir, "*.csv"))
+    
+    markers = ["<<<<<<<", "=======", ">>>>>>>"]
+    
+    for file_path in files:
+        print(f"Limpando conflitos em: {file_path}")
+        with open(file_path, 'r', encoding='utf-8-sig', errors='ignore') as f:
+            lines = f.readlines()
+        
+        new_lines = []
+        conflicts_found = False
+        for line in lines:
+            if any(marker in line for marker in markers):
+                conflicts_found = True
+                continue
+            new_lines.append(line)
+        
+        if conflicts_found:
+            with open(file_path, 'w', encoding='utf-8-sig') as f:
+                f.writelines(new_lines)
+            print(f"  -> Conflitos removidos.")
+        else:
+            print(f"  -> Nenhum conflito encontrado.")
+
+if __name__ == "__main__":
+    clean_csv_conflicts()
