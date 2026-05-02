@@ -15,6 +15,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from collect_battles_csv import main as collect_main
 from update_readme_from_csv import ReadmeCSVUpdater
 from html_generator import GitHubPagesHTMLGenerator
+from gemini_advisor import main as gemini_main
 
 def main():
     # Setup logging
@@ -47,6 +48,16 @@ def main():
             logger.info("FASE 1.5: Fora do periodo de guerra (Segunda a Quarta). Pulando coleta de decks.")
     except Exception as e:
         logger.error(f"Erro na FASE 1.5 (Guerra): {e}")
+
+    # 1.6 Gerar Dicas da IA (Gemini)
+    try:
+        if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+            logger.info("FASE 1.6: Gerando novas dicas com Gemini AI...")
+            gemini_main()
+        else:
+            logger.info("FASE 1.6: GEMINI_API_KEY não configurada. Pulando dicas da IA.")
+    except Exception as e:
+        logger.error(f"Erro na FASE 1.6 (Gemini): {e}")
 
         
     # 2. Atualizar README (Histograma e Estatísticas)
