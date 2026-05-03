@@ -719,7 +719,7 @@ class GitHubPagesHTMLGenerator:
         
         return {
             'player_tag': player_tag,
-            'name': player_row.get('name', 'Unknown'),
+            'name': self.player_name_override if self.player_name_override else player_row.get('name', 'Unknown'),
             'trophies': int(player_row.get('trophies', 0) or 0),
             'best_trophies': int(player_row.get('best_trophies', 0) or 0),
             'level': int(player_row.get('level', 0) or 0),
@@ -4228,7 +4228,7 @@ class GitHubPagesHTMLGenerator:
                     <small>Melhor: {stats['best_trophies']:,}</small>
                 </div>
                 <div class="stat-card">
-                    <h3>Taxa de Vitória{(' -<br>' + stats['name']) if stats.get('name') else ''}</h3>
+                    <h3>Taxa de Vitória</h3>
                     <div class="value">{win_rate:.1f}%</div>
                     <small>{stats['wins']}V / {stats['losses']}D</small>
                 </div>

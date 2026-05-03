@@ -22,6 +22,7 @@ def collect_meta_br():
         return
 
     # Endpoint: /locations/{locationId}/rankings/players
+    # Nota: rankings/pathoflegend regional retornou 404, usando ladder regional.
     url = f"https://proxy.royaleapi.dev/v1/locations/{location_id}/rankings/players?limit=100"
     headers = {'Authorization': f'Bearer {token}'}
     
@@ -34,6 +35,9 @@ def collect_meta_br():
         
         # Adiciona timestamp da coleta
         data['collected_at'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        print(f"DEBUG: Chaves no JSON: {list(data.keys())}")
+        if 'items' not in data or not data['items']:
+            print(f"DEBUG: Conteudo de data: {json.dumps(data, indent=2)[:500]}")
         
         # Define diretório de saída
         root_dir = os.path.dirname(os.path.abspath(__file__))
