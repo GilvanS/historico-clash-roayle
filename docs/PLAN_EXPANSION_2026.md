@@ -6,13 +6,13 @@ Transformar o histórico de batalhas em uma central completa de inteligência co
 ## 🚀 Sprint Especial: 5 Dias (Prioridade Máxima)
 Vamos focar nos itens que trazem retorno imediato e resolvem os problemas de sincronização.
 
-| Dia | Foco | Entregável |
-| :--- | :--- | :--- |
-| **Dia 1** | **Ciclo de Baús** | Coleta de `/upcomingchests` e card visual no Dashboard. |
-| **Dia 2** | **Meta Brasil** | Ranking Top 100 Local e estatística de cartas mais usadas. |
-| **Dia 3** | **Otimização de Sync** | Fim dos conflitos de Git e garantia de atualização Web/Local. |
-| **Dia 4** | **Guerra de Clãs** | Inteligência sobre o clã oponente e previsão de dificuldade. |
-| **Dia 5** | **Copiador de Decks** | Botão para copiar decks Pro e polimento final do design. |
+| Dia | Foco | Entregável | Status |
+| :--- | :--- | :--- | :--- |
+| **Dia 1** | **Ciclo de Baús** | Coleta de `/upcomingchests` e card visual no Dashboard. | **CONCLUÍDO ✅** |
+| **Dia 2** | **Meta Brasil** | Ranking Top 100 Local e estatística de cartas mais usadas. | ⏳ Pendente |
+| **Dia 3** | **Otimização de Sync** | Migração para Raiz e Workflow unificado (Fim de conflitos). | **CONCLUÍDO ✅** |
+| **Dia 4** | **Guerra de Clãs** | Inteligência sobre o clã oponente e previsão de dificuldade. | ⏳ Pendente |
+| **Dia 5** | **Copiador de Decks** | Botão para copiar decks Pro e polimento final do design. | ⏳ Pendente |
 
 ---
 
@@ -48,4 +48,4 @@ Vamos focar nos itens que trazem retorno imediato e resolvem os problemas de sin
 - **VBA**: Integrar novos CSVs de Baús e Meta no Excel.
 
 ---
-**Status atual**: 🟡 Executando Sprint 5 Dias | ⚪ Concluído
+**Status atual**: 🔵 Executando Dia 2 (Meta Brasil) | ✅ Dias 1 e 3 Concluídos

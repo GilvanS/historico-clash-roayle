@@ -47,6 +47,7 @@ class GitHubPagesHTMLGenerator:
             }
         
         self.player_tag = os.getenv('CR_PLAYER_TAG', '#2QR292P')
+        self.player_name_override = os.getenv('CR_PLAYER_NAME')
         self.failed_tags = set()
         # Caches carregados diretamente do CSV (ignora SQL)
         self.battles_cache = self._load_all_battles_from_csv(self.player_tag)
@@ -2571,8 +2572,8 @@ class GitHubPagesHTMLGenerator:
         """Gera HTML para oponentes repetidos no estilo Premium com Preview de Batalha e Categorização de Rivalidade."""
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
         
-        # Correção: Obtém o nome do jogador do cache para evitar erro de variável não definida
-        player_name = next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
+        # Obtém o nome do jogador (prioriza override do .env)
+        player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
         
         html = '<div class="cr-decks-list">'
         import json
