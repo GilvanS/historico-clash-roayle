@@ -54,8 +54,8 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        # Adiciona arquivos CSV oficiais, README e Dashboard
-        git add src/data_csv_oficial/ README.md index.html
+        # Adiciona arquivos CSV oficiais, README e Dashboard (index, clan e membros)
+        git add src/data_csv_oficial/ README.md index.html clan.html member_*.html
 
 
         if ! git diff --staged --quiet; then
