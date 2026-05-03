@@ -36,8 +36,8 @@ class GeminiDeckCoach:
             
         summary = []
         try:
-            with open(csv_file, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
+            with open(csv_file, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
                 rows = list(reader)
                 # Pega as últimas 10 batalhas
                 recent = rows[-10:] if len(rows) > 10 else rows

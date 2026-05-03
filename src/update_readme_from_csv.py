@@ -268,7 +268,7 @@ class ReadmeCSVUpdater:
             section += "### ⚔️ Últimas Batalhas\n\n"
             for i, battle in enumerate(recent_battles[:5], 1):
                 resultado = battle.get('resultado', '').upper()
-                resultado_emoji = "✅" if resultado == "VICTORY" else "❌" if resultado == "DEFEAT" else "⚖️"
+                resultado_emoji = "✅" if resultado in ["VICTORY", "VITORIA"] else "❌" if resultado in ["DEFEAT", "DERROTA"] else "⚖️"
                 oponente = battle.get('nome_oponente', 'Desconhecido')
                 coroas_jogador = battle.get('coroas_jogador', '0')
                 coroas_oponente = battle.get('coroas_oponente', '0')

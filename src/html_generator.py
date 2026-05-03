@@ -88,53 +88,62 @@ class GitHubPagesHTMLGenerator:
             logger.info(f"Mestre de {len(master)} icones carregado com sucesso.")
         except Exception as e:
             logger.error(f"Erro ao ler cards_master_icons.csv: {e}")
-        return master
-
-    def _load_all_battles_from_csv(self, player_tag: str = None) -> List[Dict]:
-        """Loads all battles from the consolidated CSV file (oponentes_ano_2026.csv)"""
+        return master    def _load_all_battles_from_csv(self, player_tag: str = None) -> List[Dict]:
+        """Loads all battles from the consolidated CSV files with robust detection."""
         if not player_tag:
             player_tag = self.player_tag
         
         battles_dict = {}
-        # Carrega EXCLUSIVAMENTE o arquivo anual consolidado pelo usuario
         official_file = os.path.join(self.data_csv_dir, 'oponentes_ano_2026.csv')
+        legacy_file = os.path.join(self.data_csv_dir, 'historico_completo_2023_2025.csv')
         
-        if not os.path.exists(official_file):
-            logger.error(f"ERRO CRITICO: Arquivo oficial {official_file} nao encontrado!")
+        files = []
+        if os.path.exists(official_file): files.append(official_file)
+        if os.path.exists(legacy_file): files.append(legacy_file)
+        
+        if not files:
+            logger.error(f"Nenhum arquivo de dados encontrado em {self.data_csv_dir}")
             return []
-            
-        logger.info(f"Lendo fonte unica de verdade: {official_file}...")
+
+        logger.info(f"Lendo fontes de dados: {[os.path.basename(f) for f in files]}...")
         
-        files = [official_file]
-        
-        for file in files:
+        for file_path in files:
+            file_battles_count = 0
             try:
-                # Usa encoding latin1 para lidar com nomes com acento se utf-8 falhar
+                # Tenta encodings em ordem de probabilidade
                 data = []
-                for encoding in ['utf-8-sig', 'utf-8', 'latin1']:
+                for encoding in ['utf-8-sig', 'utf-8', 'latin1', 'utf-16']:
                     try:
-                        with open(file, mode='r', encoding=encoding) as f:
-                            reader = csv.DictReader(f)
-                            # Se o arquivo tiver delimitador diferente (ex: ;), tenta detectar
-                            if reader.fieldnames and len(reader.fieldnames) == 1 and ';' in reader.fieldnames[0]:
-                                f.seek(0)
-                                reader = csv.DictReader(f, delimiter=';')
+                        with open(file_path, mode='r', encoding=encoding) as f:
+                            first_line = f.readline()
+                            f.seek(0)
+                            if not first_line: continue
+                            
+                            # Detecta delimitador
+                            delimiter = ';' if ';' in first_line else ','
+                            reader = csv.DictReader(f, delimiter=delimiter)
                             data = list(reader)
-                        if data: break
-                    except:
+                            
+                        if data and len(data[0]) > 1: # Garante que leu mais de uma coluna
+                            logger.info(f"Arquivo {os.path.basename(file_path)} lido com sucesso ({encoding}, '{delimiter}').")
+                            break
+                    except Exception as e:
                         continue
+                
                 if not data:
+                    logger.warning(f"Aviso: {file_path} est vazio ou ilegvel.")
                     continue
 
                 for row in data:
-                    # Filtro de player_tag
-                    row_tag = row.get('player_tag') or player_tag
-                    if row_tag and row_tag != player_tag:
+                    if not row: continue
+                    
+                    # Filtro de player_tag (resiliente a nomes de colunas e espaos)
+                    row_tag = (row.get('player_tag') or row.get('tag_jogador') or '').strip()
+                    if player_tag and row_tag and row_tag != player_tag:
                         continue
                             
-                    # Normaliza campos
+                    # Normaliza data e hora
                     raw_battle_time = row.get('data') or row.get('battle_time') or ''
-                    # Obtém datetime real para comparação fuzzy
                     b_time_str = self._normalize_battle_time(raw_battle_time)
                     try:
                         if b_time_str.endswith('Z'):
@@ -154,119 +163,78 @@ class GitHubPagesHTMLGenerator:
                     elif any(x in res for x in ['empate', 'draw']):
                         norm_res = 'draw'
                     
-                    # Tenta inferir pelas coroas (sempre, para confirmar ou preencher unknown)
+                    # Tenta inferir pelas coroas se unknown
                     try:
-                        cp = int(row.get('coroas_jogador', row.get('crowns', 0)) or 0)
-                        co = int(row.get('coroas_oponente', row.get('opponent_crowns', 0)) or 0)
+                        cp = int(row.get('coroas_jogador') or row.get('coroa_jogador') or row.get('crowns') or 0)
+                        co = int(row.get('coroas_oponente') or row.get('coroa_oponente') or row.get('opponent_crowns') or 0)
                         if norm_res == 'unknown':
                             if cp > co: norm_res = 'victory'
                             elif cp < co: norm_res = 'defeat'
                             else: norm_res = 'draw'
                     except:
-                        pass
+                        cp, co = 0, 0
 
-                    opp_tag = str(row.get('tag_oponente') or row.get('opponent_tag') or '').strip().upper()
+                    opp_tag = str(row.get('tag_oponente') or row.get('oponente_tag') or row.get('opponent_tag') or '').strip().upper()
+                    opp_name = row.get('nome_oponente') or row.get('oponente_nome') or row.get('oponente') or 'Oponente'
                     
-                    # Extração e normalização básica de campos
-                    opp_name = row.get('nome_oponente', row.get('oponente', row.get('opponent_name', 'Oponente')))
-                    crowns = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
-                    opp_crowns = row.get('coroas_oponente', row.get('opponent_crowns', '0'))
-                    
-                    # Validação de Tag/Nome para evitar oponentes "fantasmas"
-                    if not opp_tag or len(opp_tag) < 3 or opp_tag.startswith('<<<') or ' ' in opp_tag:
-                        if not opp_name or opp_name in ['Oponente', 'Unknown', 'Desconhecido'] or opp_name.startswith('<<<'):
-                            continue
-                    
-                    # Chave de deduplicação e Lógica Fuzzy
-                    opp_identifier = opp_tag if opp_tag and not opp_tag.startswith('<<<') else str(opp_name or 'Unknown')
-                    
-                    is_duplicate = False
-                    # Procura se já carregamos essa partida (fuzzy timing: 2 min)
-                    for existing_key, existing_battle in battles_dict.items():
-                        existing_time, existing_opp = existing_key
-                        if existing_opp == opp_identifier:
-                            time_diff = abs((b_time - existing_time).total_seconds()) / 60.0
-                            if time_diff <= 2:
-                                # Verifica se os dados principais batem
-                                if existing_battle.get('result') == norm_res and \
-                                   str(existing_battle.get('crowns')) == str(crowns) and \
-                                   str(existing_battle.get('opponent_crowns')) == str(opp_crowns):
-                                    is_duplicate = True
-                                    break
-                    
-                    if is_duplicate:
+                    # Evita oponentes fantasmas
+                    if not opp_tag and (not opp_name or opp_name == 'Oponente'):
                         continue
                     
-                    dedup_key = (b_time, opp_identifier)
+                    # Chave de deduplicao
+                    opp_id = opp_tag if opp_tag else str(opp_name)
+                    dedup_key = (b_time, opp_id)
                     
-                    opp_name = row.get('nome_oponente', row.get('oponente', row.get('opponent_name', 'Oponente')))
-                    crowns = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
-                    arena = row.get('arena', row.get('arena_name', 'Arena'))
-                    deck_p = row.get('deck_jogador', row.get('deck_cards', ''))
-                    deck_o = row.get('deck_oponente', row.get('opponent_deck_cards', ''))
-                    clan_o = row.get('clan_oponente', row.get('cla_oponente', row.get('opponent_clan_name', '')))
-                    opp_trophies = row.get('trofes_oponente', row.get('opponent_trophies', '0'))
+                    if dedup_key in battles_dict:
+                        continue
                     
-                    # Níveis de cartas (se houver)
-                    levels_p = row.get('deck_card_levels', '')
-                    levels_o = row.get('opponent_deck_card_levels', '')
-                    p_level = row.get('player_level', row.get('nivel_jogador', '0'))
-                    o_level = row.get('opponent_level', row.get('nivel_oponente', '0'))
-                    
-                    try:
-                        t_change = int(row.get('mudanca_trofes', row.get('trophy_change', 0)) or 0)
-                    except:
-                        t_change = 0
-                        
-                    # Extrai coroas do oponente (campo do CSV de batalha)
-                    opp_crowns_val = row.get('coroas_oponente', row.get('opponent_crowns', '0'))
-                    player_crowns_val = row.get('coroas_jogador', row.get('coroas', row.get('crowns', '0')))
-                    game_mode_val = row.get('modo_jogo', row.get('game_mode', row.get('mode', 'Desconhecido')))
-                    
+                    # Extrai dados premium
                     battle_obj = {
-                        'battle_time': b_time_str, # Mantém string para compatibilidade
-                        '_dt': b_time,             # Campo interno para ordenação
+                        'battle_time': b_time_str,
+                        '_dt': b_time,
                         'result': norm_res,
-                        'player_tag': row_tag,
+                        'player_tag': player_tag,
                         'opponent_name': opp_name,
                         'opponent_tag': opp_tag,
-                        'crowns': player_crowns_val,
-                        'opponent_crowns': opp_crowns_val,
-                        'arena_name': arena,
-                        'deck_cards': deck_p,
-                        'deck_card_levels': levels_p,
-                        'player_level': self._safe_int(p_level, 0),
-                        'opponent_deck_cards': deck_o,
-                        'opponent_deck_card_levels': levels_o,
-                        'opponent_level': self._safe_int(o_level, 0),
-                        'opponent_clan_name': clan_o,
-                        'opponent_trophies': self._safe_int(opp_trophies, 0),
-                        'trophy_change': t_change,
-                        'game_mode': game_mode_val,
-                        # Novos campos premium
-                        'elixir_vazado_jogador': row.get('elixir_vazado_jogador', '0'),
-                        'elixir_vazado_oponente': row.get('elixir_vazado_oponente', '0'),
-                        'vida_torre_rei_jogador': row.get('vida_torre_rei_jogador', '0'),
-                        'vida_torre_rei_oponente': row.get('vida_torre_rei_oponente', '0'),
-                        'vida_torres_princesa_jogador': row.get('vida_torres_princesa_jogador', '0'),
-                        'vida_torres_princesa_oponente': row.get('vida_torres_princesa_oponente', '0'),
-                        'trofes_iniciais_jogador': row.get('trofes_iniciais_jogador', '0'),
-                        'trofes_finais_jogador': row.get('trofes_finais_jogador', '0'),
-                        'posicao_global_jogador': row.get('posicao_global_jogador', 'N/A'),
-                        'posicao_global_oponente': row.get('posicao_global_oponente', 'N/A'),
-                        'nivel_torre_oponente': row.get('nivel_torre_oponente', '0')
+                        'crowns': cp,
+                        'opponent_crowns': co,
+                        'arena_name': row.get('arena') or row.get('arena_name') or 'Arena',
+                        'deck_cards': row.get('deck_jogador') or row.get('meu_deck') or row.get('deck_cards') or '',
+                        'opponent_deck_cards': row.get('deck_oponente') or row.get('opponent_deck_cards') or '',
+                        'player_level': self._safe_int(row.get('player_level') or row.get('nivel_jogador'), 0),
+                        'opponent_level': self._safe_int(row.get('opponent_level') or row.get('nivel_oponente'), 0),
+                        'opponent_clan_name': row.get('clan_oponente') or row.get('oponente_cla') or row.get('opponent_clan_name') or '',
+                        'opponent_trophies': self._safe_int(row.get('trofes_oponente') or row.get('opponent_trophies'), 0),
+                        'trophy_change': self._safe_int(row.get('mudanca_trofes') or row.get('trophy_change'), 0),
+                        'game_mode': row.get('modo_jogo') or row.get('game_mode') or 'Desconhecido',
+                        # Premium fields
+                        'elixir_vazado_jogador': row.get('elixir_vazado_jogador') or '0',
+                        'elixir_vazado_oponente': row.get('elixir_vazado_oponente') or '0',
+                        'vida_torre_rei_jogador': row.get('vida_torre_rei_jogador') or '0',
+                        'vida_torre_rei_oponente': row.get('vida_torre_rei_oponente') or '0',
+                        'vida_torres_princesa_jogador': row.get('vida_torres_princesa_jogador') or '0',
+                        'vida_torres_princesa_oponente': row.get('vida_torres_princesa_oponente') or '0',
+                        'trofes_iniciais_jogador': row.get('trofes_iniciais_jogador') or '0',
+                        'trofes_finais_jogador': row.get('trofes_finais_jogador') or '0',
+                        'posicao_global_jogador': row.get('posicao_global_jogador') or 'N/A',
+                        'posicao_global_oponente': row.get('posicao_global_oponente') or 'N/A',
+                        'nivel_torre_oponente': row.get('nivel_torre_oponente') or '0'
                     }
                     
                     battles_dict[dedup_key] = battle_obj
+                    file_battles_count += 1
+                
+                logger.info(f"Arquivo {os.path.basename(file_path)}: {file_battles_count} batalhas carregadas.")
+                
             except Exception as e:
-                logger.error(f"Erro ao processar {file}: {e}")
+                logger.error(f"Erro fatal ao processar {file_path}: {e}")
         
-        # Converte o dicionário de volta para lista e ordena por tempo
         final_battles = list(battles_dict.values())
         final_battles.sort(key=lambda x: x.get('_dt', datetime.min), reverse=True)
         
-        logger.info(f"Total de batalhas únicas carregadas: {len(final_battles)}")
+        logger.info(f"Total FINAL de batalhas carregadas: {len(final_battles)}")
         return final_battles
+
 
     def _get_canonical_deck(self, deck_str: str) -> str:
         """Gera uma representação canônica do deck (cartas ordenadas alfabeticamente)."""

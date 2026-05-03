@@ -1,15 +1,13 @@
 import os
 import requests
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def fetch_premium_data():
-    # Carrega variáveis do ambiente se disponíveis
     player_tag = os.getenv('CR_PLAYER_TAG', '#2QR292P').replace('#', '%23')
     api_token = os.getenv('CR_API_TOKEN')
     
     if not api_token:
-        # Tenta pegar de um arquivo .env se existir (opcional)
         print("Erro: CR_API_TOKEN não configurado no ambiente.")
         return
 
@@ -30,8 +28,9 @@ def fetch_premium_data():
     print(f"Recebidas {len(battles)} batalhas da API.")
 
     # Mapeamento de arquivos para atualizar
-    dates_to_update = ['20260430', '20260501', '20260502']
     csv_dir = "src/data_csv_oficial"
+    dates_to_update = [f.split('_')[-1].split('.')[0] for f in os.listdir(csv_dir) if f.startswith("oponentes_dia_") and f.endswith(".csv")]
+    dates_to_update.sort(reverse=True)
     
     for date_str in dates_to_update:
         file_path = os.path.join(csv_dir, f"oponentes_dia_{date_str}.csv")
@@ -40,14 +39,10 @@ def fetch_premium_data():
             
         print(f"Verificando {file_path}...")
         
-        # Ler arquivo atual
         rows = []
         try:
             with open(file_path, 'r', encoding='utf-8-sig') as f:
-                content_sample = f.read(100)
-                delim = ';' if ';' in content_sample else ','
-                f.seek(0)
-                reader = csv.DictReader(f, delimiter=delim)
+                reader = csv.DictReader(f, delimiter=';')
                 rows = list(reader)
                 fieldnames = reader.fieldnames
         except Exception as e:
@@ -56,40 +51,52 @@ def fetch_premium_data():
 
         updated_count = 0
         for row in rows:
-            row_time_raw = row.get('data')
-            if not row_time_raw: continue
+            row_opp_tag = row.get('tag_oponente', '').strip().replace('#', '')
+            row_date_raw = row.get('data', '').split(' ')[0] # DD/MM/YYYY
             
-            try:
-                dt_obj = datetime.strptime(row_time_raw, "%d/%m/%Y %H:%M")
-                row_time_comp = dt_obj.strftime("%Y%m%dT%H%M")
-            except:
-                continue
-
             for b in battles:
-                b_time_api = b.get('battleTime', '').replace('.000Z', '')
-                if b_time_api.startswith(row_time_comp):
+                b_opp_tag = b.get('opponent', [{}])[0].get('tag', '').replace('#', '')
+                b_time_api = b.get('battleTime', '') # YYYYMMDDTHHMMSS.000Z
+                
+                # Converter data da API para DD/MM/YYYY (UTC-3 aproximado)
+                try:
+                    b_dt_utc = datetime.strptime(b_time_api[:15], "%Y%m%dT%H%M%S")
+                    b_dt_brt = b_dt_utc - timedelta(hours=3)
+                    b_date_brt = b_dt_brt.strftime("%d/%m/%Y")
+                except:
+                    continue
+
+                # Se a tag bater e a data bater (ou for dia anterior/próximo devido a fuso)
+                if b_opp_tag == row_opp_tag and (b_date_brt == row_date_raw):
                     updated_count += 1
+                    team = b.get('team', [{}])[0]
+                    opponent = b.get('opponent', [{}])[0]
                     
-                    # Elixir
-                    row['elixir_vazado_jogador'] = b.get('team', [{}])[0].get('elixirLeaked', row.get('elixir_vazado_jogador', '0'))
-                    row['elixir_vazado_oponente'] = b.get('opponent', [{}])[0].get('elixirLeaked', row.get('elixir_vazado_oponente', '0'))
+                    row['elixir_vazado_jogador'] = team.get('elixirLeaked', row.get('elixir_vazado_jogador', '0'))
+                    row['elixir_vazado_oponente'] = opponent.get('elixirLeaked', row.get('elixir_vazado_oponente', '0'))
+                    row['nivel_torre_jogador'] = team.get('level', row.get('nivel_torre_jogador', '0'))
+                    row['nivel_torre_oponente'] = opponent.get('level', row.get('nivel_torre_oponente', '0'))
                     
-                    # Nível Torre
-                    row['nivel_torre_jogador'] = b.get('team', [{}])[0].get('level', row.get('nivel_torre_jogador', '0'))
-                    row['nivel_torre_oponente'] = b.get('opponent', [{}])[0].get('level', row.get('nivel_torre_oponente', '0'))
+                    # HP das Torres
+                    row['vida_torre_rei_jogador'] = team.get('kingTowerHitPoints', row.get('vida_torre_rei_jogador', '0'))
+                    row['vida_torre_rei_oponente'] = opponent.get('kingTowerHitPoints', row.get('vida_torre_rei_oponente', '0'))
                     
+                    p_hps_j = team.get('princessTowersHitPoints', [])
+                    p_hps_o = opponent.get('princessTowersHitPoints', [])
+                    if p_hps_j: row['vida_torres_princesa_jogador'] = " | ".join(map(str, p_hps_j))
+                    if p_hps_o: row['vida_torres_princesa_oponente'] = " | ".join(map(str, p_hps_o))
+
                     # Troféus
-                    start_t = b.get('team', [{}])[0].get('startingTrophies')
-                    change_t = b.get('team', [{}])[0].get('trophyChange')
-                    
+                    start_t = team.get('startingTrophies')
+                    change_t = team.get('trophyChange')
                     if start_t is not None:
                         row['trofes_iniciais_jogador'] = start_t
                         if change_t is not None:
                             row['trofes_finais_jogador'] = start_t + change_t
                     
                     # Posição Global
-                    row['posicao_global_jogador'] = b.get('team', [{}])[0].get('globalRank', row.get('posicao_global_jogador', 'N/A'))
-                    row['posicao_global_oponente'] = b.get('opponent', [{}])[0].get('globalRank', row.get('posicao_global_oponente', 'N/A'))
+                    row['posicao_global_jogador'] = team.get('globalRank', row.get('posicao_global_jogador', 'N/A'))
+                    row['posicao_global_oponente'] = opponent.get('globalRank', row.get('posicao_global_oponente', 'N/A'))
                     break
         
         if updated_count > 0:

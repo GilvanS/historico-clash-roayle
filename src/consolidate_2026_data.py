@@ -53,8 +53,8 @@ def consolidate():
 
     # 2. Localizar arquivos diários e mensais de 2026
     patterns = [
-        os.path.join(DATA_DIR, "oponentes_dia_*2026.csv"),
-        os.path.join(DATA_DIR, "oponentes_mes_*2026.csv")
+        os.path.join(DATA_DIR, "oponentes_dia_2026*.csv"),
+        os.path.join(DATA_DIR, "oponentes_mes_2026*.csv")
     ]
     
     files_to_process = []
