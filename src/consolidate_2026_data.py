@@ -11,7 +11,10 @@ FIELDNAMES = [
     'data', 'nome_oponente', 'tag_oponente', 'nivel_oponente', 'trofes_oponente',
     'clan_oponente', 'resultado', 'coroas_jogador', 'coroas_oponente', 'mudanca_trofes',
     'modo_jogo', 'tipo_batalha', 'arena', 'deck_jogador', 'deck_oponente', 'vezes_enfrentado',
-    'elixir_vazado_jogador', 'elixir_vazado_oponente', 'nivel_torre_jogador'
+    'elixir_vazado_jogador', 'elixir_vazado_oponente', 'nivel_torre_jogador', 
+    'vida_torre_rei_jogador', 'vida_torre_rei_oponente', 'vida_torres_princesa_jogador', 
+    'vida_torres_princesa_oponente', 'trofes_iniciais_jogador', 'trofes_finais_jogador', 
+    'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente'
 ]
 
 def parse_date(date_str):
@@ -39,7 +42,11 @@ def consolidate():
     if os.path.exists(YEAR_FILE):
         print(f"Lendo arquivo anual existente: {os.path.basename(YEAR_FILE)}")
         with open(YEAR_FILE, 'r', encoding='utf-8-sig') as f:
-            reader = csv.DictReader(f)
+            # Detectar delimitador
+            first_line = f.readline()
+            f.seek(0)
+            delim = ';' if ';' in first_line else ','
+            reader = csv.DictReader(f, delimiter=delim)
             for row in reader:
                 key = make_dedup_key(row)
                 all_battles[key] = row
@@ -64,7 +71,11 @@ def consolidate():
         print(f"  Processando {os.path.basename(filepath)}...")
         try:
             with open(filepath, 'r', encoding='utf-8-sig') as f:
-                reader = csv.DictReader(f)
+                # Detectar delimitador
+                first_line = f.readline()
+                f.seek(0)
+                delim = ';' if ';' in first_line else ','
+                reader = csv.DictReader(f, delimiter=delim)
                 for row in reader:
                     key = make_dedup_key(row)
                     if key not in all_battles:
