@@ -34,6 +34,14 @@ def main():
         logger.error(f"Erro na FASE 1 (Coleta): {e}")
         # Prossegue para atualizar com os dados que já existem
 
+    # 1.2 Coletar Ciclo de Baús (Fase 1 do Plano)
+    try:
+        logger.info("FASE 1.2: Coletando ciclo de baús...")
+        from collect_chests import collect_chests
+        collect_chests()
+    except Exception as e:
+        logger.error(f"Erro na FASE 1.2 (Baús): {e}")
+
     # 1.5 Coletar Decks de Guerra (Quinta a Domingo)
     try:
         # Quinta=3, Sexta=4, Sabado=5, Domingo=6

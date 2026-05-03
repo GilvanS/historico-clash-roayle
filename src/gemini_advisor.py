@@ -84,12 +84,18 @@ class GeminiDeckCoach:
             print("Resposta recebida do Gemini.")
             # Limpa possíveis blocos de código markdown e trata thought_signature
             text = response.text
+            # Limpeza robusta de blocos de codigo e espacos
             if "```json" in text:
                 text = text.split("```json")[1].split("```")[0]
             elif "```" in text:
                 text = text.split("```")[1].split("```")[0]
             
-            return json.loads(text.strip())
+            text = text.strip()
+            # Remover possivel virgula final antes de fechar array ou objeto
+            import re
+            text = re.sub(r',\s*([\]}])', r'\1', text)
+            
+            return json.loads(text)
         except Exception as e:
             print(f"Erro ao chamar Gemini: {e}")
             if hasattr(e, 'response'):

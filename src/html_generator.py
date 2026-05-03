@@ -56,7 +56,21 @@ class GitHubPagesHTMLGenerator:
         self.players_cache = self._load_csv_as_list('players.csv')
         self.card_name_mapping = self._get_card_name_mapping()
         self.cards_master = self._load_cards_master_csv()
+        self.upcoming_chests = self._load_upcoming_chests_json()
         
+    def _load_upcoming_chests_json(self) -> List[Dict]:
+        """Carrega o ciclo de baús do JSON oficial"""
+        path = os.path.join(self.data_csv_dir, 'upcoming_chests.json')
+        if not os.path.exists(path):
+            return []
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('items', [])
+        except Exception as e:
+            logger.error(f"Erro ao ler upcoming_chests.json: {e}")
+            return []
+
     def _load_csv_as_list(self, filename: str) -> List[Dict]:
         """Auxiliar para carregar qualquer CSV da pasta oficial como lista de dicts"""
         path = os.path.join(self.data_csv_dir, filename)
@@ -2979,6 +2993,74 @@ class GitHubPagesHTMLGenerator:
         """
         return html
     
+    def generate_chests_html(self) -> str:
+        """Gera o HTML para a seção de próximos baús."""
+        if not self.upcoming_chests:
+            return ""
+        
+        chests_items = ""
+        # Mapeamento de icones para baus
+        chest_icons = {
+            'Silver Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png',
+            'Gold Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-gold.png',
+            'Magical Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-magical.png',
+            'Giant Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-giant.png',
+            'Mega Lightning Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-megalightning.png',
+            'Epic Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-epic.png',
+            'Legendary Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-legendary.png',
+            'Lightning Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-lightning.png',
+            'Fortune Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-fortune.png',
+            'Wild Chest': 'https://royaleapi.github.io/cr-api-assets/chests/chest-wild.png',
+            'Gold Crate': 'https://royaleapi.github.io/cr-api-assets/chests/chest-goldcrate.png',
+            'Overflowing Gold Crate': 'https://royaleapi.github.io/cr-api-assets/chests/chest-goldcrate-overflowing.png',
+            'Plentiful Gold Crate': 'https://royaleapi.github.io/cr-api-assets/chests/chest-goldcrate-plentiful.png'
+        }
+
+        for chest in self.upcoming_chests[:12]:
+            name = chest.get('name', 'Unknown')
+            index = chest.get('index', 0)
+            icon = chest_icons.get(name, 'https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png')
+            
+            # Formatação do texto da posição
+            pos_text = f"+{index}" if index > 0 else "Próximo"
+            
+            chests_items += f"""
+                <div class="chest-card">
+                    <img src="{icon}" alt="{name}" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">{name.replace('Chest', '').replace('Crate', '').strip()}</div>
+                    <div class="chest-index">{pos_text}</div>
+                </div>
+            """
+            
+        return f"""
+        <div class="section">
+            <h2>🎁 Próximos Baús</h2>
+            <div class="chests-container">
+                {chests_items}
+            </div>
+        </div>
+        <style>
+            .chests-container {{
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 15px;
+                margin-top: 15px;
+            }}
+            .chest-card {{
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 15px;
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                transition: transform 0.2s;
+            }}
+            .chest-card:hover {{ transform: translateY(-5px); background: rgba(255, 255, 255, 0.1); }}
+            .chest-card img {{ width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; }}
+            .chest-name {{ font-size: 0.8em; color: #94a3b8; margin-bottom: 4px; }}
+            .chest-index {{ font-weight: bold; color: #fff; }}
+        </style>
+        """
+
     def generate_html_report(self) -> str:
         """Gera o relatório HTML completo consolidando todas as seções."""
         try:
@@ -3094,9 +3176,13 @@ class GitHubPagesHTMLGenerator:
             # Atividade do Clã
             clan_member_activity_html = self.generate_clan_member_activity_html(clan_members, deck_analytics, stats.get('name', ''))
             
+            # Próximos Baús (Fase 1)
+            chests_html = self.generate_chests_html()
+            
             return self.generate_full_html(stats, win_rate, deck_performance_html, 
                                          daily_histogram_html, clan_member_activity_html,
-                                         battles_table_html, battles_cards_html, lethal_decks_html, war_decks_html)
+                                         battles_table_html, battles_cards_html, lethal_decks_html, war_decks_html,
+                                         chests_html)
         except Exception as e:
             print(f"Erro ao gerar relatorio HTML: {str(e)}")
             return self.generate_error_page()
@@ -4075,7 +4161,8 @@ class GitHubPagesHTMLGenerator:
     def generate_full_html(self, stats, win_rate, deck_performance_html, 
                           daily_histogram_html, clan_member_activity_html="",
                           battles_table_html="", battles_cards_html="",
-                          lethal_decks_html="", war_decks_html="") -> str:
+                          lethal_decks_html="", war_decks_html="",
+                          chests_html="") -> str:
         """Generate the complete HTML document"""
         
         # Carregar dicas da IA se existirem
@@ -4161,6 +4248,8 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
         </div>
+
+        {chests_html}
 
         <div class="section">
             <h2>📊 Registro de Atividade Diária de Batalhas</h2>
