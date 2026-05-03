@@ -4423,8 +4423,8 @@ def main():
     docs_dir = os.path.join(root_dir, 'docs')
     os.makedirs(docs_dir, exist_ok=True)
     
-    # Save as index.html for GitHub Pages in docs directory
-    index_path = os.path.join(docs_dir, 'index.html')
+    # Save as index.html for GitHub Pages in root directory
+    index_path = os.path.join(root_dir, 'index.html')
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
     

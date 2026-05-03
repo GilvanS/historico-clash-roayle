@@ -500,18 +500,17 @@ def main():
     # Ensure docs directory exists
     os.makedirs('../docs', exist_ok=True)
     
-    generated_pages = []
-    
+    # Save in root directory
     for player_tag, name in members:
         html_content = generator.generate_member_page(player_tag)
         filename = f"member_{generator.safe_filename(name)}.html"
-        filepath = f"../docs/{filename}"
+        filepath = f"../{filename}"
         
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(html_content)
         
         generated_pages.append((name, filename))
-        print(f"Generated: ../docs/{filename}")
+        print(f"Generated: ../{filename}")
     
     print(f"Generated {len(generated_pages)} member pages")
     return generated_pages

@@ -15,6 +15,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from collect_battles_csv import main as collect_main
 from update_readme_from_csv import ReadmeCSVUpdater
 from html_generator import GitHubPagesHTMLGenerator
+from clan_generator import ClanAnalyticsGenerator
+from member_generator import MemberPageGenerator
 from gemini_advisor import main as gemini_main
 
 def main():
@@ -78,19 +80,29 @@ def main():
 
     # 3. Gerar Dashboard HTML Premium
     try:
-        logger.info("FASE 3: Gerando Dashboard HTML Premium (docs/index.html)...")
+        logger.info("FASE 3: Gerando Dashboard HTML Premium (index.html na raiz)...")
         generator = GitHubPagesHTMLGenerator()
         html_content = generator.generate_html_report()
         
         # Define diretório de saída
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        docs_dir = os.path.join(root_dir, 'docs')
-        os.makedirs(docs_dir, exist_ok=True)
-        
-        index_path = os.path.join(docs_dir, 'index.html')
+        index_path = os.path.join(root_dir, 'index.html')
         with open(index_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        logger.info(f"Dashboard gerado com sucesso em: {index_path}")
+        # 3.2 Gerar Página do Clã (clan.html)
+        logger.info("FASE 3.2: Gerando página do Clã (clan.html na raiz)...")
+        clan_gen = ClanAnalyticsGenerator()
+        clan_html = clan_gen.generate_clan_html_report()
+        clan_path = os.path.join(root_dir, 'clan.html')
+        with open(clan_path, 'w', encoding='utf-8') as f:
+            f.write(clan_html)
+        
+        # 3.3 Gerar Páginas de Membros (member_*.html)
+        logger.info("FASE 3.3: Gerando páginas individuais de membros (member_*.html na raiz)...")
+        from member_generator import main as members_main
+        members_main()
+        
+        logger.info("Dashboard e relatórios gerados com sucesso na raiz.")
     except Exception as e:
         logger.error(f"Erro na FASE 3 (HTML): {e}")
 

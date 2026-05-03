@@ -561,11 +561,11 @@ def main():
     # Ensure docs directory exists
     os.makedirs('../docs', exist_ok=True)
     
-    # Save as clan.html for GitHub Pages in docs directory
-    with open('../docs/clan.html', 'w', encoding='utf-8') as f:
+    # Save as clan.html for GitHub Pages in root directory
+    with open('../clan.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print("Clan analytics HTML report generated: ../docs/clan.html")
+    print("Clan analytics HTML report generated: ../clan.html")
 
 if __name__ == "__main__":
     main()

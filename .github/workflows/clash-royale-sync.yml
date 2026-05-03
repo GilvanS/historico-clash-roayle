@@ -55,7 +55,7 @@ jobs:
         git config --local user.name "GitHub Action"
 
         # Adiciona arquivos CSV oficiais, README e Dashboard
-        git add src/data_csv_oficial/ README.md docs/index.html
+        git add src/data_csv_oficial/ README.md index.html
 
 
         if ! git diff --staged --quiet; then
