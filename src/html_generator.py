@@ -1986,8 +1986,8 @@ class GitHubPagesHTMLGenerator:
         weekly_data = self.get_weekly_decks_from_csv()
         weekly_decks_html = self.generate_weekly_decks_html(weekly_data)
 
-        # Aba 2: Oponentes Repetidos - usa estatisticas consolidadas do cache CSV
-        csv_repeated = self.get_repeated_opponents_stats(player_tag=player_tag)
+        # Aba 2: Oponentes Repetidos - usa estatisticas consolidadas do cache CSV com deduplicacao
+        csv_repeated = self.get_repeated_opponents_from_csv()
         repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated)
         
         # Aba 4: Decks Mais Vencedores (Global/Clã)
@@ -2412,59 +2412,96 @@ class GitHubPagesHTMLGenerator:
         return html + '</div>'
 
     def get_repeated_opponents_from_csv(self) -> List[Dict]:
-        """Agrupa oponentes repetidos usando todas as fontes de dados disponíveis."""
+        """Agrupa oponentes repetidos com deduplicação rigorosa e sincronização de chaves para o HTML."""
         all_rows = self.load_all_data_rows()
         if not all_rows: return []
             
         opp_stats = {}
+        processed_battle_ids = set() # Para evitar duplicidade de registros
+        
         for b in all_rows:
+            # 1. Deduplicação de Batalha (Evita o erro de duplicidade relatado)
+            # Tenta compor um ID único se não houver um 'id' explícito
+            battle_id = b.get('id') or f"{b.get('dt')}_{b.get('tag_oponente')}_{b.get('deck_jogador')}"
+            if battle_id in processed_battle_ids:
+                continue
+            processed_battle_ids.add(battle_id)
+
             tag = b.get('tag_oponente') or b.get('opponent_tag')
             if not tag: continue
             
+            # Normaliza a Tag
+            if not tag.startswith('#'): tag = '#' + tag
+            
             if tag not in opp_stats:
                 opp_stats[tag] = {
-                    'tag': tag, 
-                    'nome': b.get('nome_oponente') or b.get('opponent_name', 'Oponente'), 
-                    'total': 0, 
-                    'wins': 0, 
-                    'losses': 0, 
-                    'battles': [], 
+                    'opponent_tag': tag, 
+                    'opponent_name': b.get('nome_oponente') or b.get('opponent_name', 'Oponente'), 
+                    'total_battles': 0, 
+                    'user_wins': 0, 
+                    'user_losses': 0, 
+                    'user_draws': 0,
+                    'stats': [], # Renomeado de 'battles' para 'stats' conforme esperado pelo HTML
                     'last_deck': b.get('deck_oponente') or b.get('opponent_deck_cards', '')
                 }
             
-            opp_stats[tag]['total'] += 1
+            # 2. Priorização de Nome Real (Resolve o problema de nomes vazios)
+            current_name = b.get('nome_oponente') or b.get('opponent_name', 'Oponente')
+            if opp_stats[tag]['opponent_name'] == 'Oponente' and current_name != 'Oponente':
+                opp_stats[tag]['opponent_name'] = current_name
+            
+            opp_stats[tag]['total_battles'] += 1
             res = (b.get('resultado') or b.get('result') or '').strip().lower()
-            if res in ['vitoria', 'victory']: opp_stats[tag]['wins'] += 1
-            elif res in ['derrota', 'defeat']: opp_stats[tag]['losses'] += 1
+            if res in ['vitoria', 'victory']: opp_stats[tag]['user_wins'] += 1
+            elif res in ['derrota', 'defeat']: opp_stats[tag]['user_losses'] += 1
+            else: opp_stats[tag]['user_draws'] += 1
             
             dt = b.get('dt') or self._parse_dt(b.get('battle_time', ''))
-            if not dt:
-                continue
+            if not dt: continue
             d_display = dt.strftime('%d/%m %H:%M')
                 
-            opp_stats[tag]['battles'].append({
+            opp_stats[tag]['stats'].append({
                 'resultado': res, 
+                'result': res, # Compatibilidade
                 'data_str': d_display,
+                'battle_time': d_display, # Compatibilidade
                 'my_deck': b.get('deck_jogador') or b.get('deck_cards', ''),
+                'deck_cards': b.get('deck_jogador') or b.get('deck_cards', ''), # Compatibilidade
                 'opp_deck': b.get('deck_oponente') or b.get('opponent_deck_cards', ''),
-                'dt_obj': dt # Para ordenação posterior
+                'opponent_deck_cards': b.get('deck_oponente') or b.get('opponent_deck_cards', ''), # Compatibilidade
+                'crowns': b.get('coroas_jogador') or b.get('crowns', 0),
+                'opponent_crowns': b.get('coroas_oponente') or b.get('opponent_crowns', 0),
+                'trophy_change': b.get('trofes_ganhos') or b.get('trophy_change', 0),
+                'game_mode': b.get('modo_jogo') or b.get('arena_name', 'Batalha'),
+                'dt_obj': dt 
             })
+            
             if b.get('deck_oponente') or b.get('opponent_deck_cards'):
                 opp_stats[tag]['last_deck'] = b.get('deck_oponente') or b.get('opponent_deck_cards')
 
-        # Filtra quem apareceu > 1 vez
+        # 3. Categorização e Ordenação
         repeated = []
         for o in opp_stats.values():
-            if o['total'] > 1:
+            if o['total_battles'] > 1:
+                # Calcula Win Rate
+                o['user_win_rate'] = round((o['user_wins'] / o['total_battles']) * 100, 1)
+                
+                # Define Categoria de Rivalidade
+                wr = o['user_win_rate']
+                if wr >= 80: o['category'], o['category_class'] = "Freguês de Carteirinha", "fregues"
+                elif wr >= 60: o['category'], o['category_class'] = "Vantagem Sua", "vantagem"
+                elif wr <= 20: o['category'], o['category_class'] = "Seu Carrasco", "carrasco"
+                elif wr <= 40: o['category'], o['category_class'] = "Oponente Difícil", "dificil"
+                else: o['category'], o['category_class'] = "Equilibrado", "equilibrado"
+
                 # Ordena as batalhas por data (mais recente primeiro)
-                o['battles'].sort(key=lambda x: x['dt_obj'], reverse=True)
-                # Define a data da última batalha para ordenação global
-                o['last_battle_dt'] = o['battles'][0]['dt_obj']
+                o['stats'].sort(key=lambda x: x['dt_obj'], reverse=True)
+                o['last_battle_dt'] = o['stats'][0]['dt_obj']
                 repeated.append(o)
 
-        # ORDENAÇÃO: Oponentes enfrentados RECENTEMENTE no topo
         repeated.sort(key=lambda x: x['last_battle_dt'], reverse=True)
         return repeated[:20]
+
 
     def generate_dashboard_scripts(self) -> str:
         """Gera os scripts globais necessários para a interatividade do dashboard."""
@@ -2589,10 +2626,9 @@ class GitHubPagesHTMLGenerator:
         """
 
     def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
-        """Gera HTML para oponentes repetidos no estilo Premium com Preview de Batalha e Categorização de Rivalidade."""
+        """Gera HTML para oponentes repetidos no estilo Premium Spy Mode."""
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
         
-        # Obtém o nome do jogador (prioriza override do .env)
         player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
         
         html = '<div class="cr-decks-list">'
@@ -2609,17 +2645,13 @@ class GitHubPagesHTMLGenerator:
             category = opp['category']
             cat_class = opp['category_class']
             
-            # Cálculo de porcentagens para a barra de progresso (baseado em contagens reais)
             w_p = round((wins/total*100),1) if total > 0 else 0
             l_p = round((losses/total*100),1) if total > 0 else 0
             d_p = round((draws/total*100),1) if total > 0 else 0
             
-            # Ajuste visual para que a soma não exceda 100% se houver arredondamentos, 
-            # mas mantendo a proporção real de empates
-            
-            # Pega a batalha mais recente
-            stats = opp['stats']
-            last_b = stats[0] if stats else {}
+            # Pega a batalha mais recente para o preview inicial
+            stats_list = opp['stats']
+            last_b = stats_list[0] if stats_list else {}
             my_deck_last = last_b.get('my_deck', '')
             opp_deck_last = last_b.get('opp_deck', '')
             last_game_mode = last_b.get('game_mode', 'Batalha')
@@ -2633,7 +2665,6 @@ class GitHubPagesHTMLGenerator:
                 cards = [c.strip() for c in d_str.replace(' | ','|').split('|')]
                 metrics = self._get_deck_metrics(d_str)
                 
-                # Torres locais se existirem
                 tower_img = "assets/images/towers/opp_tower.png" if is_opponent else "assets/images/towers/player_tower.png"
                 fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
                 
@@ -2641,14 +2672,13 @@ class GitHubPagesHTMLGenerator:
                 
                 grid_html = f'''
                     <div class="cr-grid-4x2-premium">
-                        {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">Nível 16</div></div>' for c in cards)}
+                        {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">Nível 15</div></div>' for c in cards)}
                     </div>'''
                 
                 metrics_html = f'''
                     <div class="cr-deck-metrics-premium">
                         <div class="cr-metric-item-p"><span class="cr-metric-icon">💧</span> {metrics["avg"]}</div>
                         <div class="cr-metric-item-p"><span class="cr-metric-icon">🔄</span> {metrics["cycle"]}</div>
-                        <div class="cr-metric-item-p"><span class="cr-metric-icon">⚡</span> 1.8</div>
                     </div>'''
                 
                 return f'''
@@ -2657,7 +2687,7 @@ class GitHubPagesHTMLGenerator:
                         {tower_html if not is_opponent else ""}
                         <div>
                             <div class="cr-player-name-premium">{p_name}</div>
-                            <div class="cr-clan-name-premium">Analytics Squad</div>
+                            <div class="cr-clan-name-premium">TAG: {opp['opponent_tag'] if is_opponent else self.player_tag}</div>
                         </div>
                         {tower_html if is_opponent else ""}
                     </div>
@@ -2682,22 +2712,14 @@ class GitHubPagesHTMLGenerator:
             </div>
             """
             
-            timeline = ""
-            for idx, b in enumerate(stats[:15]):
-                res = b['result'].lower()
-                bt = b.get('battle_time', '')
-                dt_obj = self._parse_dt(bt)
-                if dt_obj:
-                    d_f = dt_obj.strftime('%d/%m')
-                    h_f = dt_obj.strftime('%H:%M')
-                else:
-                    d_f = '--/--'
-                    h_f = '--:--'
+            timeline_html = ""
+            for idx, b in enumerate(stats_list[:15]):
+                res = b['resultado'].lower()
+                d_str = b.get('data_str', '--/--')
                 
                 cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
                 ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
                 
-                # Dados completos para o JS
                 my_metrics = self._get_deck_metrics(b['my_deck'])
                 opp_metrics = self._get_deck_metrics(b['opp_deck'])
                 
@@ -2716,11 +2738,10 @@ class GitHubPagesHTMLGenerator:
                 
                 active_style = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == 0 else ""
                 
-                timeline += f'''
+                timeline_html += f'''
                 <div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:all 0.2s;" onclick="updateBattlePreview('{tag_clean}', {idx}, '{b_data}')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                     <span class="cr-battle-badge" style="background:{cor};{active_style}">{ic}</span>
-                    <span style="font-size:0.65em;color:#718096;font-weight:700;">{d_f}</span>
-                    <span style="font-size:0.55em;color:#a0aec0;">{h_f}</span>
+                    <span style="font-size:0.65em;color:#718096;font-weight:700;">{d_str}</span>
                 </div>'''
 
             wr_c = '#48bb78' if wr >= 60 else ('#f56565' if wr <= 40 else '#718096')
@@ -2731,7 +2752,7 @@ class GitHubPagesHTMLGenerator:
                     <div class="cr-deck-meta">
                         <span class="cr-deck-rank">#{i}</span>
                         <span class="cr-deck-label" style="font-size:1.1em; color:#fff; font-weight:800;">{opp['opponent_name']}</span>
-                        <span class="{cat_class}-badge">{category}</span>
+                        <span class="rival-badge {cat_class}-badge">{category}</span>
                     </div>
                     <div style="text-align:right;">
                         <span style="font-size:0.75em;color:#94a3b8;font-family:monospace;display:block;margin-bottom:2px;">{opp['opponent_tag']}</span>
@@ -2740,19 +2761,24 @@ class GitHubPagesHTMLGenerator:
                 </div>
 
                 <div class="cr-deck-body">
-                    <div class="cr-h2h-panel {cat_class}" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                        <div style="font-size:0.85em; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:1px;">Confronto Direto:</div>
-                        <div style="display:flex; gap:15px; font-size:1.1em; font-weight:900;">
-                            <span style="color:#48bb78;">{wins}V</span>
-                            <span style="color:#718096;">{draws}E</span>
-                            <span style="color:#f56565;">{losses}D</span>
+                    <div class="cr-h2h-panel {cat_class}" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; width: 100%;">
+                        <div>
+                            <div style="font-size:0.85em; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:1px;">Confronto Direto:</div>
+                            <div style="display:flex; gap:15px; font-size:1.1em; font-weight:900;">
+                                <span style="color:#48bb78;">{wins}V</span>
+                                <span style="color:#718096;">{draws}E</span>
+                                <span style="color:#f56565;">{losses}D</span>
+                            </div>
                         </div>
-                        <div style="margin-left:auto; font-size:0.75em; color:#64748b; font-weight:600;">VISTO PELA ÚLTIMA VEZ EM: {opp['last_encounter'][:16].replace('T', ' ')}</div>
+                        <div style="margin-left:auto; text-align: right;">
+                            <div style="font-size:0.75em; color:#64748b; font-weight:600;">ÚLTIMA BATALHA:</div>
+                            <div style="font-size:0.85em; color:#f1f5f9; font-weight:800;">{opp['last_battle_dt'].strftime('%d/%m/%Y %H:%M')}</div>
+                        </div>
                     </div>
                     
                     {preview_html}
                     
-                    <div class="cr-progress-bar" style="height:6px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden;">
+                    <div class="cr-progress-bar" style="height:8px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden; margin: 15px 0;">
                         <div class="cr-bar-wins" style="width:{w_p}%; background:#48bb78;"></div>
                         <div class="cr-bar-draws" style="width:{d_p}%; background:#718096;"></div>
                         <div class="cr-bar-losses" style="width:{l_p}%; background:#f56565;"></div>
@@ -2760,14 +2786,15 @@ class GitHubPagesHTMLGenerator:
                     
                     <div class="cr-stats-panel" style="width:100%; margin-top:10px;">
                         <div class="cr-battles-timeline" style="background:rgba(0,0,0,0.1); padding:15px; border-radius:16px; border:1px solid rgba(255,255,255,0.03);">
-                            <div class="cr-timeline-label" style="font-size:0.7em; color:#64748b; margin-bottom:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px;">Histórico Recente (Selecione para analisar o deck)</div>
-                            <div class="cr-timeline-badges timeline-{tag_clean}" style="display:flex;gap:15px;padding:5px 0;overflow-x:auto;scrollbar-width: thin;">{timeline}</div>
+                            <div class="cr-timeline-label" style="font-size:0.7em; color:#64748b; margin-bottom:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px;">Histórico Recente (Selecione para analisar)</div>
+                            <div class="cr-timeline-badges timeline-{tag_clean}" style="display:flex;gap:15px;padding:5px 0;overflow-x:auto;scrollbar-width: thin;">{timeline_html}</div>
                         </div>
                     </div>
                 </div>
             </div>'''
             
         return html + "</div>"
+
 
     def generate_lethal_decks_html(self, lethal_decks: List[Dict]) -> str:
         """Gera HTML para os decks que mais causam derrotas."""
@@ -4513,6 +4540,21 @@ class GitHubPagesHTMLGenerator:
             color: #64748b;
             white-space: nowrap;
         }
+
+        .rival-badge {
+            font-size: 0.65em;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 10px;
+        }
+        .fregues-badge { background: rgba(72, 187, 120, 0.2); color: #48bb78; border: 1px solid rgba(72, 187, 120, 0.3); }
+        .vantagem-badge { background: rgba(66, 153, 225, 0.2); color: #4299e1; border: 1px solid rgba(66, 153, 225, 0.3); }
+        .equilibrado-badge { background: rgba(113, 128, 150, 0.2); color: #718096; border: 1px solid rgba(113, 128, 150, 0.3); }
+        .dificil-badge { background: rgba(237, 137, 54, 0.2); color: #ed8936; border: 1px solid rgba(237, 137, 54, 0.3); }
+        .carrasco-badge { background: rgba(245, 101, 101, 0.2); color: #f56565; border: 1px solid rgba(245, 101, 101, 0.3); box-shadow: 0 0 15px rgba(245, 101, 101, 0.2); }
 
         .footer {
             text-align: center;
