@@ -3135,7 +3135,16 @@ class GitHubPagesHTMLGenerator:
                 except: pass
                 break
         
+        # Detecção de Reset da Temporada (Primeira segunda-feira do mês)
+        is_reset_day = False
+        today_dt = datetime.now()
+        if today_dt.weekday() == 0 and today_dt.day <= 7:
+            is_reset_day = True
+
         intel_alerts = ""
+        if is_reset_day:
+            intel_alerts += f"<div class='intel-alert' style='background: #fef3c7; border-left: 4px solid #d97706; color: #92400e;'><strong>📅 DIA DE RESET:</strong> Temporada nova iniciada! Foco em subir troféus e garantir as primeiras vitórias na guerra.</div>"
+
         for b in data['boats']:
             if b.get('Nome_Cla') != data.get('my_clan', 'Desconhecido'):
                 try:
