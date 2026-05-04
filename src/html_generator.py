@@ -59,6 +59,19 @@ class GitHubPagesHTMLGenerator:
         self.cards_master = self._load_cards_master_csv()
         self.upcoming_chests = self._load_upcoming_chests_json()
         
+    def get_copy_deck_link(self, deck_list: List[str]) -> str:
+        """Gera um link para copiar o deck para o jogo usando os IDs das cartas."""
+        ids = []
+        for card_name in deck_list:
+            card_info = self.cards_master.get(card_name)
+            if card_info and card_info.get('card_id'):
+                ids.append(card_info['card_id'])
+        
+        if len(ids) < 8:
+            return "#"
+            
+        return f"clashroyale://copyDeck?deck={';'.join(ids)}"
+
     def _load_upcoming_chests_json(self) -> List[Dict]:
         """Carrega o ciclo de baús do JSON oficial"""
         path = os.path.join(self.data_csv_dir, 'upcoming_chests.json')
@@ -235,6 +248,13 @@ class GitHubPagesHTMLGenerator:
                         'posicao_global_oponente': row.get('posicao_global_oponente') or 'N/A',
                         'nivel_torre_oponente': row.get('nivel_torre_oponente') or '0'
                     }
+                    
+                    # SANITIZAÇÃO DE DADOS (RESET/CORRUPÇÃO)
+                    # Se trofes_iniciais_jogador contiver '#', é um ID vazado por corrupção do CSV
+                    if '#' in str(battle_obj['trofes_iniciais_jogador']):
+                        battle_obj['trofes_iniciais_jogador'] = '0'
+                    if '#' in str(battle_obj['trofes_finais_jogador']):
+                        battle_obj['trofes_finais_jogador'] = '0'
                     
                     battles_dict[dedup_key] = battle_obj
                     file_battles_count += 1
@@ -2887,69 +2907,415 @@ class GitHubPagesHTMLGenerator:
         """
 
     def get_war_decks_from_csv(self):
-        """Busca os 5 melhores jogadores (Clã e Global) do arquivo de guerra."""
-        war_decks_path = os.path.join(self.src_dir, "data_csv_oficial", "war_top_decks.csv")
+        """Busca os melhores jogadores (Clã e Global) do arquivo de guerra, exibindo todos os decks."""
+        war_decks_path = os.path.join(self.src_dir, "data_csv_oficial", "war_decks_top_players.csv")
         players = {'clan': [], 'global': []}
         
         if not os.path.exists(war_decks_path):
             return players
             
         try:
-            with open(war_decks_path, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
+            temp_players = []
+            with open(war_decks_path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                all_rows = list(reader)
+                
+                if not all_rows: return players
+                
+                # Encontra a data mais recente
+                dates = [row['data_coleta'] for row in all_rows if row.get('data_coleta')]
+                if not dates: return players
+                max_date = max(dates, key=lambda d: datetime.strptime(d, "%d/%m/%Y"))
+                
+                for row in all_rows:
+                    if row.get('data_coleta') != max_date:
+                        continue
+                        
+                    # Pega os 4 decks
+                    player_decks = []
+                    for i in range(1, 5):
+                        deck_str = row.get(f'deck_{i}', '')
+                        if deck_str and deck_str != "N/A":
+                            cards = [c.strip() for c in deck_str.split('|')]
+                            if len(cards) == 8:
+                                player_decks.append(cards)
+                    
+                    if not player_decks: continue
+                    
+                    # Tenta extrair win rate do campo resultado_dia (ex: "3V 1D")
+                    res = row.get('resultado_dia', '0V 0D')
+                    v = 0
+                    d = 0
+                    wr = 0.0
+                    try:
+                        res_parts = res.split(' ')
+                        v_str = res_parts[0].replace('V', '').strip()
+                        v = int(v_str) if v_str.isdigit() else 0
+                        if len(res_parts) > 1:
+                            d_str = res_parts[1].replace('D', '').strip()
+                            d = int(d_str) if d_str.isdigit() else 0
+                        
+                        if (v + d) > 0:
+                            wr = (v / (v + d)) * 100
+                    except: pass
+
                     player_data = {
-                        'name': row.get('player_name', 'Unknown'),
-                        'tag': row.get('player_tag', ''),
-                        'win_rate': float(row.get('win_rate', 0)),
-                        'total_battles': int(row.get('total_battles', 0)),
-                        'deck': row.get('cards', '').split(',')[:8],
-                        'type': row.get('type', 'global') # 'clan' ou 'global'
+                        'name': row.get('nome_jogador', 'Unknown'),
+                        'tag': row.get('tag_jogador', ''),
+                        'win_rate': wr,
+                        'total_battles': v + d,
+                        'decks': player_decks,
+                        'type': 'clan' if 'Cla' in row.get('categoria_top', '') else 'global',
+                        'pos': int(row.get('posicao_no_top', 99))
                     }
-                    if player_data['type'] == 'clan':
-                        players['clan'].append(player_data)
-                    else:
-                        players['global'].append(player_data)
+                    temp_players.append(player_data)
+            
+            # Ordena por posição
+            temp_players.sort(key=lambda x: x['pos'])
+            
+            for p in temp_players:
+                if p['type'] == 'clan':
+                    players['clan'].append(p)
+                else:
+                    players['global'].append(p)
+                    
         except Exception as e:
             print(f"Erro ao carregar decks de guerra: {e}")
             
+        # Aumenta o limite para mostrar mais jogadores do clã
+        players['clan'] = players['clan'][:15]
+        players['global'] = players['global'][:10]
         return players
 
+    def get_meta_brasil_data(self):
+        """Lê os dados do ranking Top 100 Brasil do JSON com filtro de reset."""
+        file_path = os.path.join(self.src_dir, "data_csv_oficial", "meta_brasil_top100.json")
+        if not os.path.exists(file_path):
+            return []
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                items = data.get('items', [])
+                collected_at_str = data.get('collected_at', '')
+                
+                # Regra de Reset de Temporada:
+                # Se hoje é a 1ª segunda do mês (dia <= 7) e coletado antes das 12h BRT, ignorar
+                if collected_at_str:
+                    try:
+                        coll_dt = datetime.strptime(collected_at_str, '%Y-%m-%dT%H:%M:%S')
+                        # Se collected_at for antes das 12h no dia do reset, retornamos vazio
+                        # para evitar exibir ranking instável
+                        if coll_dt.weekday() == 0 and coll_dt.day <= 7 and coll_dt.hour < 12:
+                            logger.info(f"Dados do Meta Brasil de {collected_at_str} ignorados por estarem antes do reset (12h).")
+                            return []
+                    except: pass
+                
+                return items
+        except Exception as e:
+            print(f"Erro ao ler meta_brasil_top100.json: {e}")
+            return []
+
+    def get_war_intelligence_data(self):
+        """Coleta dados de inteligência de guerra (Dia 4)."""
+        data = {
+            'boats': [],
+            'rivals': {},
+            'difficulty': 'Indeterminada',
+            'summary': '',
+            'my_clan': 'Desconhecido'
+        }
+        
+        # 1. Busca status dos barcos (mais recente)
+        import glob
+        boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
+        if boat_files:
+            latest_boat = max(boat_files)
+            try:
+                with open(latest_boat, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    data['boats'] = list(reader)
+            except: pass
+            
+        # 2. Busca inteligência de oponentes
+        intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+        if intel_files:
+            latest_intel = max(intel_files)
+            try:
+                with open(latest_intel, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    for row in reader:
+                        cla = row.get('Cla', 'Unknown')
+                        if cla not in data['rivals']:
+                            data['rivals'][cla] = []
+                        if len(data['rivals'][cla]) < 3: # Top 3 jogadores por clã
+                            data['rivals'][cla].append(row)
+            except: pass
+            
+        # 3. Identifica clã do jogador via players.csv
+        my_clan = "Tropa Do Bruxo" # Default seguro
+        try:
+            players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+            if os.path.exists(players_file):
+                with open(players_file, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    for row in reader:
+                        if row.get('player_tag'): # Pega o primeiro jogador válido (o dono do dashboard)
+                            my_clan = row.get('clan_name', my_clan)
+                            break
+        except: pass
+
+        # 4. Cálculo de Dificuldade
+        my_fame = 0
+        leader_fame = 0
+        for boat in data['boats']:
+            fame_val = boat.get('Fama_Atual', '0')
+            try:
+                # Remove separadores de milhar se houver
+                fame = int(fame_val.replace(',', '').replace('.', '')) if fame_val else 0
+            except:
+                fame = 0
+                
+            if boat.get('Nome_Cla') == my_clan:
+                my_fame = fame
+            if fame > leader_fame:
+                leader_fame = fame
+        
+        data['my_clan'] = my_clan
+        diff = leader_fame - my_fame
+        if diff > 20000: data['difficulty'] = 'Extrema 🔴'
+        elif diff > 10000: data['difficulty'] = 'Alta 🟠'
+        elif diff > 5000: data['difficulty'] = 'Moderada 🟡'
+        else: data['difficulty'] = 'Baixa 🟢'
+        
+        data['summary'] = f"O clã <strong>{my_clan}</strong> está a {diff:,} pontos de fama do 1º lugar. Foco total em ataques de alto valor."
+        return data
+
+    def generate_war_intelligence_html(self, data):
+        """Gera o HTML para a seção de Inteligência de Guerra."""
+        if not data['boats']:
+            return ""
+            
+        # Meta de fama (ex: 50.000 para terminar a corrida)
+        FAME_GOAL = 50000
+        
+        # Cálculo de vantagem estratégica para alertas táticos
+        my_fame = 0
+        for b in data['boats']:
+            if b.get('Nome_Cla') == data.get('my_clan', 'Desconhecido'):
+                try:
+                    my_fame = int(b.get('Fama_Atual', '0').replace(',', '').replace('.', ''))
+                except: pass
+                break
+        
+        intel_alerts = ""
+        for b in data['boats']:
+            if b.get('Nome_Cla') != data.get('my_clan', 'Desconhecido'):
+                try:
+                    rival_fame = int(b.get('Fama_Atual', '0').replace(',', '').replace('.', ''))
+                    diff_val = my_fame - rival_fame
+                    if diff_val > 0:
+                        intel_alerts += f"<div class='intel-alert positive'>Vantagem de <strong>{diff_val:,}</strong> sobre {b.get('Nome_Cla')}</div>"
+                    else:
+                        intel_alerts += f"<div class='intel-alert negative'>Atrás de {b.get('Nome_Cla')} por <strong>{abs(diff_val):,}</strong></div>"
+                except: pass
+
+        boat_rows = ""
+        for b in data['boats']:
+            is_me = "highlight-row" if b.get('Nome_Cla') == data.get('my_clan', 'Desconhecido') else ""
+            try:
+                fame_val = int(b.get('Fama_Atual', '0').replace(',', '').replace('.', ''))
+            except:
+                fame_val = 0
+            
+            # Progresso visual
+            percent = min(100, (fame_val / FAME_GOAL) * 100)
+            status_color = "#48bb78" if b.get('Finalizado') == 'Sim' else "#3b82f6"
+            
+            # Posicao amigável (evita Noneº)
+            pos_val = b.get('Posicao')
+            pos_display = f"{pos_val}º" if pos_val and str(pos_val).isdigit() else "-"
+            
+            boat_rows += f"""
+                <tr class="{is_me}">
+                    <td style="width: 50px;">{pos_display}</td>
+                    <td>
+                        <div class="clan-fame-info">
+                            <strong>{b.get('Nome_Cla')}</strong>
+                            <div class="fame-progress-bar">
+                                <div class="fame-progress-fill" style="width: {percent}%; background: {status_color};"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: right; font-family: monospace;">{fame_val:,}</td>
+                    <td style="text-align: center;">{"✅" if b.get('Finalizado') == 'Sim' else "⚓"}</td>
+                </tr>
+            """
+            
+        rival_cards = ""
+        for cla, players in data['rivals'].items():
+            if cla == data.get('my_clan', 'Desconhecido'): continue
+            
+            player_list = "".join([f"<li><span class='rival-name'>{p['Jogador']}</span> <span class='rival-fame'>+{p['Fama_Hoje']}</span></li>" for p in players])
+            rival_cards += f"""
+                <div class="rival-mini-card">
+                    <h4>{cla}</h4>
+                    <ul>{player_list}</ul>
+                </div>
+            """
+            
+        # Título dinâmico baseado no dia da semana (Guerra: Qui=3 a Dom=6 + Seg=0 para Reset)
+        weekday = datetime.now().weekday()
+        war_day_map = {0: "Reset", 3: "1", 4: "2", 5: "3", 6: "4"}
+        day_suffix = f": Dia {war_day_map[weekday]}" if weekday in war_day_map else ""
+
+        return f"""
+        <div class="section war-intel-section">
+            <div class="elite-header">
+                <div class="elite-badge" style="background: #ef4444;">RADAR DE GUERRA</div>
+                <h2>📡 Inteligência de Guerra{day_suffix}</h2>
+                <p>Status da corrida fluvial e monitoramento de ameaças dos clãs rivais.</p>
+            </div>
+            
+            <div class="war-grid">
+                <div class="war-status-container">
+                    <h3>🏆 Corrida Fluvial</h3>
+                    <table class="war-intel-table">
+                        <thead>
+                            <tr><th>Pos</th><th>Clã / Progresso</th><th style="text-align: right;">Fama</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>{boat_rows}</tbody>
+                    </table>
+                </div>
+                
+                <div class="war-analysis">
+                    <div class="intel-summary-cards">
+                        <div class="intel-card diff-card">
+                            <span class="label">Nível de Ameaça</span>
+                            <span class="value">{data['difficulty']}</span>
+                        </div>
+                        <div class="intel-card info-card">
+                            <span class="label">Análise Tática</span>
+                            <div class="intel-alerts-box">{intel_alerts}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="rivals-container">
+                        <h3>☢️ Maiores Ameaças Inimigas</h3>
+                        <div class="rival-cards-grid">
+                            {rival_cards}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .war-intel-section {{ border-left: 5px solid #ef4444 !important; background: rgba(239, 68, 68, 0.02) !important; }}
+                .war-grid {{ display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; margin-top: 20px; }}
+                
+                .war-intel-table {{ width: 100%; border-collapse: collapse; }}
+                .war-intel-table th {{ text-align: left; padding: 12px; color: #94a3b8; font-size: 0.8em; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); }}
+                .war-intel-table td {{ padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }}
+                
+                .clan-fame-info {{ display: flex; flex-direction: column; gap: 5px; }}
+                .fame-progress-bar {{ height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; width: 100%; max-width: 200px; }}
+                .fame-progress-fill {{ height: 100%; transition: width 1s ease-out; }}
+                
+                .intel-summary-cards {{ display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 25px; }}
+                .intel-card {{ background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }}
+                .intel-card .label {{ display: block; font-size: 0.75em; color: #94a3b8; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }}
+                .intel-card .value {{ font-size: 1.3em; font-weight: 800; }}
+                
+                .intel-alerts-box {{ display: flex; flex-direction: column; gap: 8px; }}
+                .intel-alert {{ font-size: 0.85em; padding: 8px 12px; border-radius: 6px; border-left: 3px solid transparent; }}
+                .intel-alert.positive {{ background: rgba(72, 187, 120, 0.1); color: #48bb78; border-left-color: #48bb78; }}
+                .intel-alert.negative {{ background: rgba(248, 113, 113, 0.1); color: #f87171; border-left-color: #f87171; }}
+                
+                /* Estilos Copiador de Decks */
+                .deck-label-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }}
+                .copy-deck-btn {{ 
+                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+                    color: white;
+                    text-decoration: none;
+                    font-size: 0.7em;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    transition: all 0.2s;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }}
+                .copy-deck-btn:hover {{ transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); opacity: 0.9; }}
+                
+                .highlight-row {{ background: rgba(59, 130, 246, 0.1) !important; }}
+                .highlight-row strong {{ color: #60a5fa; }}
+                
+                .rival-cards-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }}
+                .rival-mini-card {{ background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }}
+                .rival-mini-card h4 {{ font-size: 0.85em; color: #f87171; margin-bottom: 8px; border-bottom: 1px solid rgba(248, 113, 113, 0.2); padding-bottom: 4px; }}
+                .rival-mini-card ul {{ list-style: none; padding: 0; margin: 0; }}
+                .rival-mini-card li {{ font-size: 0.8em; margin-bottom: 5px; display: flex; justify-content: space-between; }}
+                .rival-name {{ color: #e2e8f0; }}
+                .rival-fame {{ color: #48bb78; font-weight: bold; font-family: monospace; }}
+                
+                @media (max-width: 1000px) {{ .war-grid {{ grid-template-columns: 1fr; }} }}
+            </style>
+        </div>
+        """
+
     def generate_war_decks_html(self, war_players):
-        """Gera o HTML para a seção de Decks de Elite (Guerra)."""
-        if not war_players['clan'] and not war_players['global']:
+        """Gera o HTML para a seção de Decks de Elite (Guerra) e Meta Brasil."""
+        meta_br = self.get_meta_brasil_data()
+        
+        if not war_players['clan'] and not war_players['global'] and not meta_br:
             return ""
 
         html = """
         <div class="section elite-spy-section">
             <div class="elite-header">
                 <div class="elite-badge">TOP SECRET</div>
-                <h2>🕵️ Elite Spy: Decks de Guerra</h2>
-                <p>Os decks mais eficientes utilizados pelos melhores jogadores do clã e do ranking global.</p>
+                <h2>🕵️ Elite Spy: Guerra & Meta Brasil</h2>
+                <p>Inteligência competitiva: os melhores decks do clã, do ranking global de guerra e o Top 100 Brasil.</p>
             </div>
             
             <div class="deck-tabs">
                 <button class="tab-button active" onclick="showWarTab('clan-war')">Nossos Heróis</button>
-                <button class="tab-button" onclick="showWarTab('global-war')">Meta Global</button>
+                <button class="tab-button" onclick="showWarTab('global-war')">Meta Global (Guerra)</button>
+                <button class="tab-button" onclick="showWarTab('meta-br')">Top 100 Brasil</button>
             </div>
 
             <div id="clan-war" class="tab-content active">
                 <div class="cr-decks-list">
         """
 
+        # Aba 1: Nossos Heróis
         for player in war_players['clan']:
-            cards_html = "".join([f'<div class="cr-card-wrap"><img src="{self.get_card_image_path(card)}" class="cr-card-img" title="{card}"></div>' for card in player['deck']])
+            decks_html = ""
+            for i, deck in enumerate(player['decks']):
+                if not deck or len(deck) < 8: continue
+                cards_html = "".join([f'<div class="cr-card-wrap"><img src="{self.get_card_image_path(card)}" class="cr-card-img" title="{card}"></div>' for card in deck])
+                copy_link = self.get_copy_deck_link(deck)
+                
+                decks_html += f"""
+                    <div class="deck-row">
+                        <div class="deck-label-row">
+                            <span class="deck-label">Deck {i+1}</span>
+                            <a href="{copy_link}" class="copy-deck-btn">Copiar</a>
+                        </div>
+                        <div class="cr-grid-8x1">{cards_html}</div>
+                    </div>
+                """
+
             html += f"""
-                <div class="cr-deck-card">
+                <div class="cr-deck-card war-player-card">
                     <div class="cr-deck-header">
                         <div class="player-info">
                             <span class="cr-player-name">{player['name']}</span>
-                            <span class="cr-wr-badge">{player['win_rate']:.1f}% Win Rate</span>
+                            <span class="cr-wr-badge">{player['win_rate']:.1f}% WR</span>
                         </div>
-                        <span class="cr-deck-rank">#{player['total_battles']} Lutas</span>
+                        <span class="cr-deck-rank">Pos #{player['pos']} | {player['total_battles']} Lutas</span>
                     </div>
                     <div class="cr-deck-body">
-                        <div class="cr-grid-8x1">{cards_html}</div>
+                        {decks_html}
                     </div>
                 </div>
             """
@@ -2962,19 +3328,35 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-decks-list">
         """
 
+        # Aba 2: Meta Global (Guerra)
         for player in war_players['global']:
-            cards_html = "".join([f'<div class="cr-card-wrap"><img src="{self.get_card_image_path(card)}" class="cr-card-img" title="{card}"></div>' for card in player['deck']])
+            decks_html = ""
+            for i, deck in enumerate(player['decks']):
+                if not deck or len(deck) < 8: continue
+                cards_html = "".join([f'<div class="cr-card-wrap"><img src="{self.get_card_image_path(card)}" class="cr-card-img" title="{card}"></div>' for card in deck])
+                copy_link = self.get_copy_deck_link(deck)
+
+                decks_html += f"""
+                    <div class="deck-row">
+                        <div class="deck-label-row">
+                            <span class="deck-label">Deck {i+1}</span>
+                            <a href="{copy_link}" class="copy-deck-btn">Copiar</a>
+                        </div>
+                        <div class="cr-grid-8x1">{cards_html}</div>
+                    </div>
+                """
+
             html += f"""
-                <div class="cr-deck-card">
+                <div class="cr-deck-card war-player-card">
                     <div class="cr-deck-header">
                         <div class="player-info">
                             <span class="cr-player-name">{player['name']}</span>
-                            <span class="cr-wr-badge">{player['win_rate']:.1f}% Win Rate</span>
+                            <span class="cr-wr-badge">{player['win_rate']:.1f}% WR</span>
                         </div>
                         <span class="cr-deck-rank">RANK GLOBAL</span>
                     </div>
                     <div class="cr-deck-body">
-                        <div class="cr-grid-8x1">{cards_html}</div>
+                        {decks_html}
                     </div>
                 </div>
             """
@@ -2982,17 +3364,75 @@ class GitHubPagesHTMLGenerator:
         html += """
                 </div>
             </div>
+
+            <div id="meta-br" class="tab-content">
+                <div class="meta-br-container">
+                    <table class="meta-br-table">
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>Jogador</th>
+                                <th>Clã</th>
+                                <th>Troféus/Medalhas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        """
+        
+        for p in meta_br[:50]: # Mostra top 50 para não ficar muito longo
+            rank = p.get('rank', '-')
+            name = p.get('name', 'N/D')
+            clan = p.get('clan', {}).get('name', '-')
+            score = p.get('trophies') or p.get('score') or '-'
+            
+            html += f"""
+                <tr>
+                    <td><strong>#{rank}</strong></td>
+                    <td><span class="player-name-cell">{name}</span></td>
+                    <td><span class="clan-name-cell">{clan}</span></td>
+                    <td><span class="score-cell">{score} 🏆</span></td>
+                </tr>
+            """
+            
+        html += """
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <style>
+                .war-player-card { width: 100% !important; max-width: 500px; }
+                .deck-row { margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+                .deck-row:last-child { border-bottom: none; margin-bottom: 0; }
+                .deck-label { font-size: 0.7em; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
+                .cr-decks-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); gap: 20px; }
+                
+                /* Estilo Meta BR */
+                .meta-br-container { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 20px; margin-top: 10px; }
+                .meta-br-table { width: 100%; border-collapse: collapse; color: #e2e8f0; }
+                .meta-br-table th { text-align: left; padding: 12px; border-bottom: 2px solid rgba(255,255,255,0.1); color: #94a3b8; }
+                .meta-br-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+                .player-name-cell { color: #f6e05e; font-weight: bold; }
+                .score-cell { color: #63b3ed; font-weight: 800; }
+                
+                @media (max-width: 600px) {
+                    .cr-decks-list { grid-template-columns: 1fr; }
+                    .war-player-card { max-width: 100%; }
+                }
+            </style>
         </div>
         <script>
             function showWarTab(tabId) {
-                document.querySelectorAll('.elite-spy-section .tab-content').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.elite-spy-section .tab-button').forEach(b => b.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
+                const section = document.querySelector('.elite-spy-section');
+                section.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                section.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                section.querySelector('#' + tabId).classList.add('active');
                 event.currentTarget.classList.add('active');
             }
         </script>
         """
         return html
+
     
     def generate_chests_html(self) -> str:
         """Gera o HTML para a seção de próximos baús."""
@@ -3086,6 +3526,10 @@ class GitHubPagesHTMLGenerator:
             war_players = self.get_war_decks_from_csv()
             war_decks_html = self.generate_war_decks_html(war_players)
             
+            # Nova Seção: Inteligência de Guerra (Dia 4)
+            war_intel_data = self.get_war_intelligence_data()
+            war_intel_html = self.generate_war_intelligence_html(war_intel_data)
+            
             # Gera dados das abas de performance
             weekly_decks = self.get_weekly_decks_from_csv()
             repeated_opponents = self.get_repeated_opponents_from_csv()
@@ -3141,7 +3585,7 @@ class GitHubPagesHTMLGenerator:
                             🏰 {hp_p} | {hp_o}<br>
                             <small>👸 {hp_pri_p} | {hp_pri_o}</small>
                         </td>
-                        <td class="tech-metric">
+                        <td style="display: none;">
                             👤 #{rank_p}<br>
                             <small>🎯 #{rank_o}</small>
                         </td>
@@ -3183,7 +3627,7 @@ class GitHubPagesHTMLGenerator:
             return self.generate_full_html(stats, win_rate, deck_performance_html, 
                                          daily_histogram_html, clan_member_activity_html,
                                          battles_table_html, battles_cards_html, lethal_decks_html, war_decks_html,
-                                         chests_html)
+                                         chests_html, war_intel_html)
         except Exception as e:
             print(f"Erro ao gerar relatorio HTML: {str(e)}")
             return self.generate_error_page()
@@ -4163,7 +4607,7 @@ class GitHubPagesHTMLGenerator:
                           daily_histogram_html, clan_member_activity_html="",
                           battles_table_html="", battles_cards_html="",
                           lethal_decks_html="", war_decks_html="",
-                          chests_html="") -> str:
+                          chests_html="", war_intel_html="") -> str:
         """Generate the complete HTML document"""
         
         # Carregar dicas da IA se existirem
@@ -4267,11 +4711,13 @@ class GitHubPagesHTMLGenerator:
 
         {war_decks_html}
 
+        {war_intel_html}
+
         <div class="section">
             <h2>⚔️ Últimas Batalhas</h2>
             <div class="desktop-table">
                 <table>
-                    <thead><tr><th>Horário</th><th>Resultado</th><th>Oponente</th><th>Coroas</th><th>Troféus Δ</th><th>💧 Elixir</th><th>🏰 HP Torre</th><th>👤 Rank</th><th>Arena</th></tr></thead>
+                    <thead><tr><th>Horário</th><th>Resultado</th><th>Oponente</th><th>Coroas</th><th>Troféus Δ</th><th>💧 Elixir</th><th>🏰 HP Torre</th><th style="display: none;">👤 Rank</th><th>Arena</th></tr></thead>
                     <tbody>{battles_table_html}</tbody>
                 </table>
             </div>

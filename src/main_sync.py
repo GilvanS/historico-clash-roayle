@@ -44,11 +44,19 @@ def main():
     except Exception as e:
         logger.error(f"Erro na FASE 1.2 (Baús): {e}")
 
+    # 1.3 Coletar Meta Brasil (Fase 2 do Plano)
+    try:
+        logger.info("FASE 1.3: Coletando ranking Top 100 Brasil (Meta)...")
+        from collect_meta_br import collect_meta_br
+        collect_meta_br()
+    except Exception as e:
+        logger.error(f"Erro na FASE 1.3 (Meta BR): {e}")
+
     # 1.5 Coletar Decks de Guerra (Quinta a Domingo)
     try:
         # Quinta=3, Sexta=4, Sabado=5, Domingo=6
         hoje = datetime.now()
-        if hoje.weekday() in [3, 4, 5, 6]:
+        if hoje.weekday() in [0, 3, 4, 5, 6]:
             logger.info("FASE 1.5: Dia de Guerra detectado! Coletando decks dos melhores jogadores...")
             from collect_war_top_decks import collect_top_decks
             from collect_war_weekend import collect_boat_data

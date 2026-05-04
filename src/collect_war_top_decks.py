@@ -16,7 +16,7 @@ load_dotenv()
 
 # Campos para o CSV de decks de guerra
 WAR_FIELDNAMES = [
-    'data_coleta', 'tag_jogador', 'nome_jogador', 'tag_cla', 'nome_cla', 
+    'data_coleta', 'nome_jogador', 'tag_cla', 'nome_cla', 
     'fama_atual', 'posicao_no_top', 'categoria_top', 'deck_1', 'deck_2', 'deck_3', 'deck_4',
     'resultado_dia', 'lutou_hoje'
 ]
@@ -69,8 +69,8 @@ def collect_top_decks():
     all_participants.sort(key=lambda x: x.get('fame', 0), reverse=True)
     my_clan_participants.sort(key=lambda x: x.get('fame', 0), reverse=True)
     
-    top_global = all_participants[:5]
-    top_clan = my_clan_participants[:5]
+    top_global = all_participants[:10]
+    top_clan = my_clan_participants[:10]
 
     # Unir e remover duplicatas (usando a tag)
     players_to_fetch = []
@@ -116,7 +116,7 @@ def collect_top_decks():
             battles = br.json()
             for b in battles:
                 # Inclui clanWarWarDay e boatBattle explicitamente
-                if b.get('type') in ['clanWarWarDay', 'boatBattle']:
+                if b.get('type') in ['clanWarWarDay', 'boatBattle', 'riverRacePvP', 'riverRaceDuel']:
                     lutou = "Sim"
                     team = b.get('team', [{}])[0]
                     deck_str = format_deck(team.get('cards', []))
@@ -135,7 +135,6 @@ def collect_top_decks():
 
         results.append({
             'data_coleta': data_hoje,
-            'tag_jogador': p_tag,
             'nome_jogador': p_name,
             'tag_cla': p.get('clanTag'),
             'nome_cla': p.get('clanName'),
@@ -151,17 +150,66 @@ def collect_top_decks():
         })
 
 
-    # Salvar no CSV
+    # Salvar no CSV com inteligência de merge
     file_path = os.path.join(DATA_DIR, 'war_decks_top_players.csv')
-    file_exists = os.path.exists(file_path)
+    existing_data = []
     
-    with open(file_path, 'a', newline='', encoding='utf-8-sig') as f:
-        writer = csv.DictWriter(f, fieldnames=WAR_FIELDNAMES, delimiter=';')
-        if not file_exists:
-            writer.writeheader()
-        writer.writerows(results)
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                existing_data = list(reader)
+        except Exception as e:
+            print(f"Erro ao ler CSV existente: {e}")
 
-    print(f"\nSucesso! Decks salvos em {file_path}")
+    # Indexar dados existentes por (data, nome)
+    data_map = {}
+    for row in existing_data:
+        key = (row['data_coleta'], row.get('nome_jogador', ''))
+        data_map[key] = row
+
+    # Merge novos resultados
+    for new_row in results:
+        key = (new_row['data_coleta'], new_row['nome_jogador'])
+        if key in data_map:
+            old_row = data_map[key]
+            # Critério de atualização: Se o novo tem mais decks preenchidos ou se o antigo era "Nao" e o novo é "Sim"
+            old_decks_count = sum(1 for i in range(1, 5) if old_row.get(f'deck_{i}') and old_row.get(f'deck_{i}') != "N/A")
+            new_decks_count = sum(1 for i in range(1, 5) if new_row.get(f'deck_{i}') and new_row.get(f'deck_{i}') != "N/A")
+            
+            if new_decks_count >= old_decks_count or (old_row['lutou_hoje'] == "Nao" and new_row['lutou_hoje'] == "Sim"):
+                data_map[key] = new_row
+        else:
+            data_map[key] = new_row
+
+    # Converter de volta para lista e ordenar por data (desc) e posicao
+    final_results = list(data_map.values())
+    final_results.sort(key=lambda x: (datetime.strptime(x['data_coleta'], '%d/%m/%Y'), -int(x['posicao_no_top'])), reverse=True)
+
+    with open(file_path, 'w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.DictWriter(f, fieldnames=WAR_FIELDNAMES, delimiter=';')
+        writer.writeheader()
+        # Filtrar campos para garantir compatibilidade com WAR_FIELDNAMES
+        cleaned_results = [{k: r[k] for k in WAR_FIELDNAMES if k in r} for r in final_results]
+        writer.writerows(cleaned_results)
+
+    print(f"\nSucesso! Decks atualizados em {file_path}")
+    
+    # Trigger HTML Generation
+    try:
+        print("Atualizando Dashboard HTML...")
+        from html_generator import GitHubPagesHTMLGenerator
+        gen = GitHubPagesHTMLGenerator()
+        html_content = gen.generate_html_report()
+        # Salvar o arquivo no diretório raiz
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        index_path = os.path.join(root_dir, 'index.html')
+        with open(index_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        print(f"Dashboard atualizado com sucesso em {index_path}!")
+
+    except Exception as e:
+        print(f"Erro ao atualizar HTML: {e}")
 
 if __name__ == "__main__":
     collect_top_decks()

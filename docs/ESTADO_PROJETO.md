@@ -14,7 +14,7 @@ Este documento é mantido pelo seu Agente de Testes para que você tenha uma vis
 ## ✅ O que já foi feito (Sprint Atual)
 - [x] **Consolidação de Identidade:** O nome "GilvanS" foi removido de todos os arquivos de cache (`players.csv`) e do gerador de HTML. Agora o dashboard exibe apenas o nickname oficial.
 - [x] **Sincronização Root/Web:** Corrigido o delay de atualização do GitHub Pages garantindo que o `index.html` na raiz seja o arquivo oficial.
-- [x] **Configuração de Ambiente:** `.env` configurado com `CR_PLAYER_NAME="Λ Яᄃ λ Ð Arcade"`.
+- [x] **Configuração de Ambiente:** `.env` configurado com `CR_PLAYER_NAME="ツ ︻デ═一⟿ΔЯ₡λↁΣ☯︎"`.
 - [x] **Deduplicação de Batalhas:** Implementada lógica robusta no `consolidar_dados_2026.py` para evitar duplicatas entre o legado (2023-2025) e o novo banco de dados 2026.
 
 ---
