@@ -103,14 +103,18 @@ def extract_battle_row(battle: dict, player_tag: str):
     trophy_change = player_team.get('trophyChange', 0)
     starting_trophies = player_team.get('startingTrophies', 0)
 
+    def sanitize(text):
+        if not text: return ""
+        return str(text).replace(';', '-')
+
     return {
         '_dt_utc': dt_utc,  # campo interno, removido antes de salvar
         'data': format_date_brt(dt_utc),
-        'nome_oponente': opponent_team.get('name', 'Desconhecido'),
+        'nome_oponente': sanitize(opponent_team.get('name', 'Desconhecido')),
         'tag_oponente': opponent_team.get('tag', ''),
         'nivel_oponente': opponent_team.get('expLevel', 0),
         'trofes_oponente': opponent_team.get('startingTrophies', 0),
-        'clan_oponente': opponent_team.get('clan', {}).get('name', 'Sem cla'),
+        'clan_oponente': sanitize(opponent_team.get('clan', {}).get('name', 'Sem cla')),
         'resultado': resultado,
         'coroas_jogador': player_crowns,
         'coroas_oponente': opponent_crowns,
