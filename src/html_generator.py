@@ -575,8 +575,7 @@ class GitHubPagesHTMLGenerator:
     def _get_battle_deck_metrics(self, deck_str: str, battle: Dict, is_opponent: bool = False) -> Dict:
         """Monta metricas completas de um lado da batalha (jogador ou oponente).
         
-        Centraliza a logica que antes era construida manualmente com:
-        {**my_m, 'leaked': ..., 'level': ..., 'hp': ...}
+        Centraliza a logica que antes era construida manualmente.
         
         Args:
             deck_str: String de cartas do lado.
@@ -586,19 +585,21 @@ class GitHubPagesHTMLGenerator:
             Dict completo com avg, cycle, leaked, level e hp.
         """
         if is_opponent:
-            leaked_raw = battle.get('elixir_vazado_oponente', 0)
-            level_raw = battle.get('nivel_oponente') or battle.get('opponent_level', 14)
+            leaked_raw = battle.get('elixir_vazado_oponente') or battle.get('opp_leaked', 0)
+            level_raw = battle.get('nivel_torre_oponente') or battle.get('nivel_oponente') or battle.get('opponent_level') or battle.get('opp_tower_level', 14)
         else:
-            leaked_raw = battle.get('elixir_vazado_jogador', 0)
-            level_raw = battle.get('nivel_torre_jogador') or battle.get('player_level', 14)
+            leaked_raw = battle.get('elixir_vazado_jogador') or battle.get('player_leaked', 0)
+            level_raw = battle.get('nivel_torre_jogador') or battle.get('player_level') or battle.get('player_tower_level', 14)
         
         # Sanitizacao: converte para tipos corretos, protege contra string vazia ou None
         try:
-            leaked = float(leaked_raw) if leaked_raw and str(leaked_raw) not in ('0', '') else 0.0
+            leaked = float(leaked_raw) if leaked_raw and str(leaked_raw).strip() not in ('0', '', 'N/A') else 0.0
         except (ValueError, TypeError):
             leaked = 0.0
         try:
-            tower_level = int(level_raw) if level_raw and str(level_raw).isdigit() else 14
+            # Garante que level_raw seja tratado como string para isdigit, mas converte para int
+            s_level = str(level_raw).strip()
+            tower_level = int(s_level) if s_level.isdigit() and int(s_level) > 0 else 14
         except (ValueError, TypeError):
             tower_level = 14
 
@@ -2327,7 +2328,10 @@ class GitHubPagesHTMLGenerator:
                     'game_mode': b.get('modo_jogo', 'Batalha'),
                     'crowns': b.get('coroas_jogador', 0),
                     'opponent_crowns': b.get('coroas_oponente', 0),
-                    'trophy_change': b.get('trofeus', 0)
+                    'trophy_change': b.get('trofeus', 0),
+                    'date': b['data'],
+                    'player_clan': b.get('player_clan', ''),
+                    'opp_clan': b.get('opp_clan', '')
                 }))
                 active = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == 0 else ""
                 
@@ -2561,6 +2565,7 @@ class GitHubPagesHTMLGenerator:
                 'result': res, # Compatibilidade
                 'data_str': d_display,
                 'battle_time': d_display, # Compatibilidade
+                'data': d_display, # Compatibilidade
                 'my_deck': b.get('deck_jogador') or b.get('deck_cards', ''),
                 'deck_cards': b.get('deck_jogador') or b.get('deck_cards', ''), # Compatibilidade
                 'opp_deck': b.get('deck_oponente') or b.get('opponent_deck_cards', ''),
@@ -2569,6 +2574,12 @@ class GitHubPagesHTMLGenerator:
                 'opponent_crowns': b.get('coroas_oponente') or b.get('opponent_crowns', 0),
                 'trophy_change': b.get('trofes_ganhos') or b.get('trophy_change', 0),
                 'game_mode': b.get('modo_jogo') or b.get('arena_name', 'Batalha'),
+                'player_clan': b.get('player_clan', ''),
+                'opp_clan': b.get('opp_clan', ''),
+                'player_leaked': b.get('player_leaked', 0),
+                'opp_leaked': b.get('opp_leaked', 0),
+                'player_tower_level': b.get('player_tower_level', 14),
+                'opp_tower_level': b.get('opp_tower_level', 14),
                 'dt_obj': dt 
             })
             
@@ -2610,8 +2621,8 @@ class GitHubPagesHTMLGenerator:
                 const content = document.getElementById('battle-modal-content');
                 if (!modal || !content) return;
                 
-                const myDeckHtml = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.my_metrics);
-                const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_metrics);
+                const myDeckHtml = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.player_clan || '', data.my_metrics);
+                const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_clan || '', data.opp_metrics);
                 
                 const score = `${data.crowns || 0} - ${data.opponent_crowns || 0}`;
                 const tropChange = data.trophy_change || 0;
@@ -2622,7 +2633,10 @@ class GitHubPagesHTMLGenerator:
                 content.innerHTML = `
                     <div class="cr-vs-row-premium-v2">
                         <div class="cr-battle-score-header-premium">
-                            <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                                <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
+                                <div style="font-size:0.75em; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${data.date || ''}</div>
+                            </div>
                             <div class="cr-score-display-premium">
                                 <span class="cr-score-val">${score}</span>
                                 <span class="cr-trophy-change-p" style="color: ${tropColor}">${tropText}</span>
@@ -2672,7 +2686,7 @@ class GitHubPagesHTMLGenerator:
             if (e.target === modal) closeBattleModal();
         });
         
-        function getMiniGridJS(deckStr, sideClass, playerName, metrics) {
+        function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics) {
             if (!deckStr) return `<div class="${sideClass} cr-empty-grid">N/D</div>`;
             const cards = deckStr.replace(/ \| /g, '|').split('|');
             const playerTower = "assets/images/towers/player_tower.png";
@@ -2692,11 +2706,13 @@ class GitHubPagesHTMLGenerator:
             const tHP = metrics ? (metrics.hp || '--') : '--';
             const leakedColor = leaked > 0 ? '#f56565' : '#48bb78';
 
+            const clanHtml = clanName ? `<div class="cr-clan-name-premium">${clanName}</div>` : '';
+
             return `
                 <div class="cr-deck-side ${sideClass}">
                     <div class="cr-player-header-premium">
                         <div class="cr-player-name-premium">${playerName}</div>
-                        <div class="cr-clan-name-premium">Analytics Squad</div>
+                        ${clanHtml}
                     </div>
                     <div class="cr-tower-container-premium">
                         <img src="${towerImg}" class="cr-tower-img-premium" onerror="this.src='https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258'">
@@ -2825,8 +2841,8 @@ class GitHubPagesHTMLGenerator:
                 cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
                 ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
                 
-                my_metrics = self._get_deck_metrics(b['my_deck'])
-                opp_metrics = self._get_deck_metrics(b['opp_deck'])
+                my_metrics = self._get_battle_deck_metrics(b['my_deck'], b, is_opponent=False)
+                opp_metrics = self._get_battle_deck_metrics(b['opp_deck'], b, is_opponent=True)
                 
                 b_data = urllib.parse.quote(json.dumps({
                     'my_deck': b['my_deck'],
@@ -2838,7 +2854,14 @@ class GitHubPagesHTMLGenerator:
                     'opponent_crowns': b.get('opponent_crowns', 0),
                     'trophy_change': b.get('trophy_change', 0),
                     'my_metrics': my_metrics,
-                    'opp_metrics': opp_metrics
+                    'opp_metrics': opp_metrics,
+                    'date': b.get('data', '--/--'),
+                    'player_clan': b.get('player_clan', ''),
+                    'opp_clan': b.get('opp_clan', ''),
+                    'player_leaked': b.get('player_leaked', 0),
+                    'opp_leaked': b.get('opp_leaked', 0),
+                    'player_tower_level': b.get('player_tower_level', 14),
+                    'opp_tower_level': b.get('opp_tower_level', 14)
                 }))
                 
                 active_style = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == 0 else ""
