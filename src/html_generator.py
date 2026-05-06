@@ -2159,11 +2159,24 @@ class GitHubPagesHTMLGenerator:
             
             if len(deck_stats[cards]['battles']) < 30:
                 deck_stats[cards]['battles'].append({
-                    'resultado': res, 
+                    'resultado': res,
                     'data': dt.strftime('%d/%m %H:%M'),
                     'dt_obj': dt,
                     'my_deck': cards_raw,
-                    'opp_deck': row['deck_oponente']
+                    'opp_deck': row.get('deck_oponente', ''),
+                    # Dados extras para o preview VS (estilo RoyaleAPI)
+                    'opp_name': row.get('opponent_name') or row.get('nome_oponente', 'Oponente'),
+                    'opp_clan': row.get('opponent_clan_name', ''),
+                    'opp_tag':  row.get('opponent_tag') or row.get('tag_oponente', ''),
+                    'nivel_torre_oponente':  row.get('nivel_torre_oponente', '0'),
+                    'nivel_torre_jogador':   row.get('nivel_torre_jogador', '14'),
+                    'coroas_jogador':        row.get('coroas_jogador', '0'),
+                    'coroas_oponente':       row.get('coroas_oponente', '0'),
+                    'elixir_vazado_jogador': row.get('elixir_vazado_jogador', '0'),
+                    'elixir_vazado_oponente':row.get('elixir_vazado_oponente', '0'),
+                    'vida_torre_rei_jogador':row.get('vida_torre_rei_jogador', '0'),
+                    'vida_torre_rei_oponente':row.get('vida_torre_rei_oponente', '0'),
+                    'game_mode': row.get('game_mode') or row.get('type', 'Batalha'),
                 })
 
         # Fallback se não houver NADA na última semana
@@ -2360,9 +2373,18 @@ class GitHubPagesHTMLGenerator:
                 leaked_color = '#f56565' if float(leaked) > 0 else '#48bb78'
                 leaked_label = f"{leaked:.1f}" if float(leaked) > 0 else 'N/A'
 
+                # Badge de nivel por carta (nivel da torre do respectivo lado)
+                card_level = str(t_level) if t_level else '14'
+                cards_with_badge = "".join(
+                    f'<div class="cr-card-wrap-premium" title="{c}" style="position:relative;">'
+                    f'<img src="{self.get_card_image_path(c)}" class="cr-card-img">'
+                    f'<span class="cr-card-level-badge">Nivel {card_level}</span>'
+                    f'</div>'
+                    for c in cards
+                )
                 grid_html = f'''
                     <div class="cr-grid-4x2-premium">
-                        {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards)}
+                        {cards_with_badge}
                     </div>'''
 
                 footer_html = f'''
@@ -2389,11 +2411,19 @@ class GitHubPagesHTMLGenerator:
                         </div>
                     </div>'''
 
+                # Extrai info do cla do contexto de batalha para exibir abaixo do nome
+                p_clan = ''
+                if battle_ctx:
+                    p_clan = battle_ctx.get('opp_clan', '') if is_opponent else ''
+                clan_line = f'<div class="cr-player-clan">{p_clan}</div>' if p_clan else ''
+                hp_display = f'{t_hp:,}' if isinstance(t_hp, int) else str(t_hp)
+
                 return f'''
                     <div class="{side_class} cr-deck-side">
                         <div class="cr-player-header-premium">
                             <div class="cr-player-name-premium">{p_name}</div>
-                            <div class="cr-tower-info-premium">HP {t_hp} &bull; Lv {t_level}</div>
+                            {clan_line}
+                            <div class="cr-tower-info-premium">🏰 {hp_display} Pontos de vida</div>
                         </div>
                         <div class="cr-tower-container-premium">
                             <img src="{tower_img}" class="cr-tower-img-premium" onerror="this.src='{fallback_tower}'">
@@ -2401,6 +2431,17 @@ class GitHubPagesHTMLGenerator:
                         {grid_html}
                         {footer_html}
                     </div>'''
+
+            # Dados reais da primeira batalha para o header do preview
+            fb_res = first_battle.get('resultado', 'vitoria')
+            fb_result_label = 'VITORIA' if fb_res in ['vitoria','victory','vitória'] else 'DERROTA' if fb_res in ['derrota','defeat'] else 'EMPATE'
+            fb_result_color = '#48bb78' if fb_result_label == 'VITORIA' else ('#f56565' if fb_result_label == 'DERROTA' else '#ecc94b')
+            fb_crowns_p = first_battle.get('coroas_jogador', '1') or '1'
+            fb_crowns_o = first_battle.get('coroas_oponente', '0') or '0'
+            fb_score = f"{fb_crowns_p} - {fb_crowns_o}"
+            fb_opp_name = first_battle.get('opp_name', 'Oponente')
+            fb_game_mode = first_battle.get('game_mode', 'Batalha')
+            fb_opp_clan  = first_battle.get('opp_clan', '')
 
             wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
             html += f'''
@@ -2417,10 +2458,10 @@ class GitHubPagesHTMLGenerator:
                     {grid_h}
                     <div class="cr-stats-panel" style="flex:1;">
                         <div id="preview-{deck_id}" class="cr-battle-preview">
-                            <div class="cr-battle-header-premium">
-                                <div class="cr-battle-result-label">VITÓRIA</div>
-                                <div class="cr-battle-score-premium">1 - 0</div>
-                                <div class="cr-battle-mode-label">{first_battle.get('game_mode', 'Batalha')}</div>
+                            <div class="cr-battle-header-premium" style="border-bottom:2px solid {fb_result_color}30;">
+                                <div class="cr-battle-result-label" style="color:{fb_result_color};">{fb_result_label}</div>
+                                <div class="cr-battle-score-premium">{fb_score}</div>
+                                <div class="cr-battle-mode-label">{fb_game_mode}</div>
                             </div>
                             <div class="cr-vs-row-premium">
                                 {get_preview_grid(my_deck_init, 'my-deck-side', p_name=self.players_cache[0].get('name', 'Jogador') if self.players_cache else 'Jogador', battle_ctx=first_battle)}
@@ -4764,6 +4805,42 @@ class GitHubPagesHTMLGenerator:
             font-size: 0.8em;
         }
 
+        /* ===== BADGE DE NIVEL NAS CARTAS (estilo RoyaleAPI) ===== */
+        .cr-card-wrap-premium {
+            position: relative;
+            display: inline-block;
+        }
+        .cr-card-level-badge {
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            font-size: 0.52em;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+            pointer-events: none;
+            line-height: 1.3;
+            letter-spacing: 0.3px;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        /* ===== NOME DO CLA DO OPONENTE ===== */
+        .cr-player-clan {
+            font-size: 0.72em;
+            color: #94a3b8;
+            margin-top: -2px;
+            margin-bottom: 2px;
+            font-style: italic;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+
         @media (max-width: 1024px) {
             .cr-decks-list { grid-template-columns: 1fr; }
             /* Preview VS empilha verticalmente em tablets */
@@ -4778,26 +4855,48 @@ class GitHubPagesHTMLGenerator:
         }
 
         @media (max-width: 768px) {
-            /* Grid de cartas adaptado para mobile */
+            /* Grid de cartas adaptado para mobile - manter 4 colunas mas cards menores */
             .cr-grid-4x2-premium {
                 grid-template-columns: repeat(4, 1fr) !important;
-                gap: 4px !important;
+                gap: 3px !important;
             }
             .cr-card-img {
                 width: 100% !important;
-                max-width: 56px !important;
+                max-width: 48px !important;
+            }
+            /* Badge de nivel menor em mobile */
+            .cr-card-level-badge {
+                font-size: 0.44em;
+                padding: 1px 2px;
             }
             /* Rodape de metricas em linha unica com scroll se necessario */
             .cr-deck-footer {
                 gap: 2px;
                 padding: 8px 4px;
                 overflow-x: auto;
+                flex-wrap: nowrap;
             }
-            .cr-footer-metric { min-width: 38px; }
+            .cr-footer-metric { min-width: 36px; }
+            .cr-footer-label { display: none; } /* esconde label em telas muito pequenas */
             /* Deck body empilhado */
             .cr-deck-body {
                 flex-direction: column !important;
             }
+            /* VS layout: empilha jogador/oponente em mobile */
+            .cr-vs-row-premium {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            .cr-vs-divider-vertical {
+                transform: rotate(0deg);
+                padding: 2px 20px;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                border-left: none !important;
+            }
+            /* Player header fica compacto */
+            .cr-player-name-premium { font-size: 0.95em; }
+            .cr-tower-info-premium  { font-size: 0.7em; }
+            .cr-player-clan         { display: none; }
         }
 
         @media (max-width: 640px) {
