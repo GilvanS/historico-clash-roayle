@@ -535,26 +535,74 @@ class GitHubPagesHTMLGenerator:
         }
         return hp_map.get(int(level), 0)
 
-    def _get_deck_metrics(self, deck_str: str) -> Dict:
-        """Calcula media de elixir e ciclo de 4 cartas."""
+    def _get_deck_metrics(self, deck_str: str, leaked: float = 0, tower_level: int = 14) -> Dict:
+        """Calcula media de elixir, ciclo de 4 cartas, nivel da torre e elixir vazado.
+        
+        Args:
+            deck_str: String de cartas no formato 'Carta1 | Carta2 | ...' ou 'Carta1|Carta2|...'
+            leaked: Elixir vazado pelo lado (jogador ou oponente) nessa batalha.
+            tower_level: Nivel da torre do rei para calculo de HP.
+        Returns:
+            Dict com avg, cycle, leaked, level e hp da torre.
+        """
         if not deck_str or deck_str == 'N/D':
-            return {'avg': 0, 'cycle': 0}
+            return {'avg': 0, 'cycle': 0, 'leaked': leaked, 'level': tower_level, 'hp': self._get_tower_hp(tower_level)}
         
         cards = [c.strip() for c in deck_str.replace(' | ', '|').split('|')]
         costs = []
         for c in cards:
-            # Tenta encontrar o custo no mapeamento
-            cost = self.card_elixir_costs.get(c, 3.5) # Fallback para media se nao encontrar
+            # Tenta encontrar o custo no mapeamento; fallback para 3.5 (media global do jogo)
+            cost = self.card_elixir_costs.get(c, 3.5)
             costs.append(cost)
         
         if not costs:
-            return {'avg': 0, 'cycle': 0}
+            return {'avg': 0, 'cycle': 0, 'leaked': leaked, 'level': tower_level, 'hp': self._get_tower_hp(tower_level)}
             
-        avg = sum(costs) / len(costs)
-        # Ciclo de 4 cartas: as 4 mais baratas
+        avg = round(sum(costs) / len(costs), 1)
+        # Ciclo de 4 cartas: soma das 4 cartas mais baratas do deck
         cycle = sum(sorted(costs)[:4])
+        # Garante nivel valido para evitar KeyError no HP map
+        safe_level = max(1, min(15, int(tower_level) if str(tower_level).isdigit() else 14))
         
-        return {'avg': round(avg, 1), 'cycle': cycle}
+        return {
+            'avg': avg,
+            'cycle': cycle,
+            'leaked': float(leaked) if str(leaked).replace('.','').isdigit() else 0.0,
+            'level': safe_level,
+            'hp': self._get_tower_hp(safe_level)
+        }
+
+    def _get_battle_deck_metrics(self, deck_str: str, battle: Dict, is_opponent: bool = False) -> Dict:
+        """Monta metricas completas de um lado da batalha (jogador ou oponente).
+        
+        Centraliza a logica que antes era construida manualmente com:
+        {**my_m, 'leaked': ..., 'level': ..., 'hp': ...}
+        
+        Args:
+            deck_str: String de cartas do lado.
+            battle: Dicionario da batalha com os campos de nivel e elixir.
+            is_opponent: Se True, usa campos do oponente; senao usa campos do jogador.
+        Returns:
+            Dict completo com avg, cycle, leaked, level e hp.
+        """
+        if is_opponent:
+            leaked_raw = battle.get('elixir_vazado_oponente', 0)
+            level_raw = battle.get('nivel_oponente') or battle.get('opponent_level', 14)
+        else:
+            leaked_raw = battle.get('elixir_vazado_jogador', 0)
+            level_raw = battle.get('nivel_torre_jogador') or battle.get('player_level', 14)
+        
+        # Sanitizacao: converte para tipos corretos, protege contra string vazia ou None
+        try:
+            leaked = float(leaked_raw) if leaked_raw and str(leaked_raw) not in ('0', '') else 0.0
+        except (ValueError, TypeError):
+            leaked = 0.0
+        try:
+            tower_level = int(level_raw) if level_raw and str(level_raw).isdigit() else 14
+        except (ValueError, TypeError):
+            tower_level = 14
+
+        return self._get_deck_metrics(deck_str, leaked=leaked, tower_level=tower_level)
     
     def fetch_opponent_data_from_api(self, opponent_tag: str) -> Optional[Dict]:
         """Fetch opponent data from API and save to database"""
@@ -2252,17 +2300,17 @@ class GitHubPagesHTMLGenerator:
             # Timeline com data e hora
             timeline_h = ""
             for idx, b in enumerate(deck['battles'][:15]):
-                # Calcula métricas para o JSON
-                my_m = self._get_deck_metrics(b['my_deck'])
-                opp_m = self._get_deck_metrics(b['opp_deck'])
+                # Calcula metricas completas para cada lado via metodo centralizado
+                my_m = self._get_battle_deck_metrics(b['my_deck'], b, is_opponent=False)
+                opp_m = self._get_battle_deck_metrics(b['opp_deck'], b, is_opponent=True)
                 
                 b_json = urllib.parse.quote(json.dumps({
                     'my_deck': b['my_deck'], 
                     'opp_deck': b['opp_deck'],
                     'player_name': self.players_cache[0].get('name', 'Jogador') if self.players_cache else 'Jogador',
                     'opp_name': b.get('nome_oponente', 'Oponente'),
-                    'my_metrics': {**my_m, 'leaked': b.get('elixir_vazado_jogador', 0), 'level': b.get('nivel_torre_jogador', 14), 'hp': self._get_tower_hp(b.get('nivel_torre_jogador', 14))},
-                    'opp_metrics': {**opp_m, 'leaked': b.get('elixir_vazado_oponente', 0), 'level': b.get('nivel_oponente', 14), 'hp': self._get_tower_hp(b.get('nivel_oponente', 14))},
+                    'my_metrics': my_m,
+                    'opp_metrics': opp_m,
                     'game_mode': b.get('modo_jogo', 'Batalha'),
                     'crowns': b.get('coroas_jogador', 0),
                     'opponent_crowns': b.get('coroas_oponente', 0),
@@ -2288,44 +2336,70 @@ class GitHubPagesHTMLGenerator:
             my_deck_init = first_battle.get('my_deck', deck['deck_cards'])
             opp_deck_init = first_battle.get('opp_deck', '')
             
-            def get_preview_grid(d_str, side_class, p_name="Jogador", is_opponent=False):
+            def get_preview_grid(d_str, side_class, p_name="Jogador", is_opponent=False, battle_ctx=None):
                 if not d_str: return f'<div class="{side_class} cr-empty-grid">N/D</div>'
                 cards = [c.strip() for c in d_str.replace(' | ','|').split('|')]
-                metrics = self._get_deck_metrics(d_str)
-                
+
+                # Usa _get_battle_deck_metrics quando disponivel (traz level e leaked corretos)
+                # Caso nao haja contexto de batalha, usa _get_deck_metrics com fallbacks
+                if battle_ctx:
+                    metrics = self._get_battle_deck_metrics(d_str, battle_ctx, is_opponent=is_opponent)
+                else:
+                    metrics = self._get_deck_metrics(d_str)
+
                 # Torres locais
                 tower_img = "assets/images/towers/opp_tower.png" if is_opponent else "assets/images/towers/player_tower.png"
                 fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
-                
-                # Métricas extras
-                leaked = metrics.get('leaked', 0)
+
+                # Metricas extraidas centralizadamente
+                leaked  = metrics.get('leaked', 0)
                 t_level = metrics.get('level', 14)
-                t_hp = metrics.get('hp', self._get_tower_hp(t_level))
-                
+                t_hp    = metrics.get('hp', self._get_tower_hp(t_level))
+
+                # Cor do elixir vazado: verde = 0, vermelho = teve vazamento
+                leaked_color = '#f56565' if float(leaked) > 0 else '#48bb78'
+                leaked_label = f"{leaked:.1f}" if float(leaked) > 0 else 'N/A'
+
                 grid_html = f'''
                     <div class="cr-grid-4x2-premium">
                         {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards)}
                     </div>'''
-                
-                metrics_html = f'''
-                    <div class="cr-deck-metrics-premium">
-                        <div class="cr-metric-item-p" title="Media Elixir"><span class="cr-metric-icon">💧</span> {metrics["avg"]}</div>
-                        <div class="cr-metric-item-p" title="Ciclo 4 Cartas"><span class="cr-metric-icon">🔄</span> {metrics["cycle"]}</div>
-                        <div class="cr-metric-item-p" title="Elixir Vazado" style="color: {'#f56565' if float(leaked) > 0 else '#48bb78'}"><span class="cr-metric-icon">🚫</span> {leaked}</div>
+
+                footer_html = f'''
+                    <div class="cr-deck-footer">
+                        <div class="cr-footer-metric" title="Media de Elixir">
+                            <span class="cr-footer-icon">💧</span>
+                            <span class="cr-footer-val">{metrics["avg"]}</span>
+                            <span class="cr-footer-label">Elixir</span>
+                        </div>
+                        <div class="cr-footer-metric" title="Ciclo de 4 Cartas">
+                            <span class="cr-footer-icon">🔄</span>
+                            <span class="cr-footer-val">{metrics["cycle"]}</span>
+                            <span class="cr-footer-label">Ciclo</span>
+                        </div>
+                        <div class="cr-footer-metric" title="Elixir Vazado" style="color:{leaked_color}">
+                            <span class="cr-footer-icon">🚫</span>
+                            <span class="cr-footer-val">{leaked_label}</span>
+                            <span class="cr-footer-label">Vazado</span>
+                        </div>
+                        <div class="cr-footer-metric" title="Nivel da Torre do Rei">
+                            <span class="cr-footer-icon">🏰</span>
+                            <span class="cr-footer-val">Lv {t_level}</span>
+                            <span class="cr-footer-label">Torre</span>
+                        </div>
                     </div>'''
-                
+
                 return f'''
                     <div class="{side_class} cr-deck-side">
                         <div class="cr-player-header-premium">
                             <div class="cr-player-name-premium">{p_name}</div>
-                            <div class="cr-clan-name-premium">Analytics Squad</div>
+                            <div class="cr-tower-info-premium">HP {t_hp} &bull; Lv {t_level}</div>
                         </div>
                         <div class="cr-tower-container-premium">
                             <img src="{tower_img}" class="cr-tower-img-premium" onerror="this.src='{fallback_tower}'">
-                            <div class="cr-tower-info-premium">HP {t_hp} (Lvl {t_level})</div>
                         </div>
                         {grid_html}
-                        {metrics_html}
+                        {footer_html}
                     </div>'''
 
             wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
@@ -2349,9 +2423,9 @@ class GitHubPagesHTMLGenerator:
                                 <div class="cr-battle-mode-label">{first_battle.get('game_mode', 'Batalha')}</div>
                             </div>
                             <div class="cr-vs-row-premium">
-                                {get_preview_grid(my_deck_init, 'my-deck-side', p_name=self.players_cache[0].get('name', 'Jogador') if self.players_cache else 'Jogador')}
+                                {get_preview_grid(my_deck_init, 'my-deck-side', p_name=self.players_cache[0].get('name', 'Jogador') if self.players_cache else 'Jogador', battle_ctx=first_battle)}
                                 <div class="cr-vs-divider-vertical">vs</div>
-                                {get_preview_grid(opp_deck_init, 'opp-deck-side', p_name="Oponente", is_opponent=True)}
+                                {get_preview_grid(opp_deck_init, 'opp-deck-side', p_name="Oponente", is_opponent=True, battle_ctx=first_battle)}
                             </div>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-{deck_id}" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">{timeline_h}</div></div>
@@ -4280,10 +4354,59 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             justify-content: center;
             gap: 20px;
-            margin-top: 15px;
+            margin-top: 12px;
             padding: 10px;
             background: rgba(255,255,255,0.03);
             border-radius: 12px;
+        }
+
+        /* Rodape de metricas premium (Task 2) */
+        .cr-deck-footer {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 14px;
+            padding: 10px 8px;
+            background: linear-gradient(135deg, rgba(15,23,42,0.8), rgba(30,41,59,0.7));
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+            backdrop-filter: blur(6px);
+            gap: 4px;
+        }
+
+        .cr-footer-metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 44px;
+            padding: 4px 6px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        .cr-footer-metric:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .cr-footer-icon {
+            font-size: 0.95em;
+            line-height: 1;
+        }
+
+        .cr-footer-val {
+            font-size: 0.85em;
+            font-weight: 800;
+            color: #f1f5f9;
+            line-height: 1.2;
+        }
+
+        .cr-footer-label {
+            font-size: 0.55em;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .cr-metric-item-p {
@@ -4643,6 +4766,38 @@ class GitHubPagesHTMLGenerator:
 
         @media (max-width: 1024px) {
             .cr-decks-list { grid-template-columns: 1fr; }
+            /* Preview VS empilha verticalmente em tablets */
+            .cr-vs-row-premium {
+                flex-direction: column !important;
+                gap: 16px !important;
+            }
+            .cr-vs-divider-vertical {
+                transform: rotate(0deg);
+                padding: 4px 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Grid de cartas adaptado para mobile */
+            .cr-grid-4x2-premium {
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 4px !important;
+            }
+            .cr-card-img {
+                width: 100% !important;
+                max-width: 56px !important;
+            }
+            /* Rodape de metricas em linha unica com scroll se necessario */
+            .cr-deck-footer {
+                gap: 2px;
+                padding: 8px 4px;
+                overflow-x: auto;
+            }
+            .cr-footer-metric { min-width: 38px; }
+            /* Deck body empilhado */
+            .cr-deck-body {
+                flex-direction: column !important;
+            }
         }
 
         @media (max-width: 640px) {
@@ -4651,6 +4806,8 @@ class GitHubPagesHTMLGenerator:
             .container { padding: 10px; }
             .desktop-table { display: none; }
             .cr-deck-layout { flex-direction: column; }
+            /* Player name menor em mobile */
+            .cr-player-name-premium { font-size: 1em; }
         }
         """
     
