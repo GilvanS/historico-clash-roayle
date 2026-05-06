@@ -2432,16 +2432,6 @@ class GitHubPagesHTMLGenerator:
                         {footer_html}
                     </div>'''
 
-            # Dados reais da primeira batalha para o header do preview
-            fb_res = first_battle.get('resultado', 'vitoria')
-            fb_result_label = 'VITORIA' if fb_res in ['vitoria','victory','vitória'] else 'DERROTA' if fb_res in ['derrota','defeat'] else 'EMPATE'
-            fb_result_color = '#48bb78' if fb_result_label == 'VITORIA' else ('#f56565' if fb_result_label == 'DERROTA' else '#ecc94b')
-            fb_crowns_p = first_battle.get('coroas_jogador', '1') or '1'
-            fb_crowns_o = first_battle.get('coroas_oponente', '0') or '0'
-            fb_score = f"{fb_crowns_p} - {fb_crowns_o}"
-            fb_opp_name = first_battle.get('opp_name', 'Oponente')
-            fb_game_mode = first_battle.get('game_mode', 'Batalha')
-            fb_opp_clan  = first_battle.get('opp_clan', '')
 
             wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
             html += f'''
@@ -2457,17 +2447,8 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-body">
                     {grid_h}
                     <div class="cr-stats-panel" style="flex:1;">
-                        <div id="preview-{deck_id}" class="cr-battle-preview">
-                            <div class="cr-battle-header-premium" style="border-bottom:2px solid {fb_result_color}30;">
-                                <div class="cr-battle-result-label" style="color:{fb_result_color};">{fb_result_label}</div>
-                                <div class="cr-battle-score-premium">{fb_score}</div>
-                                <div class="cr-battle-mode-label">{fb_game_mode}</div>
-                            </div>
-                            <div class="cr-vs-row-premium">
-                                {get_preview_grid(my_deck_init, 'my-deck-side', p_name=self.players_cache[0].get('name', 'Jogador') if self.players_cache else 'Jogador', battle_ctx=first_battle)}
-                                <div class="cr-vs-divider-vertical">vs</div>
-                                {get_preview_grid(opp_deck_init, 'opp-deck-side', p_name="Oponente", is_opponent=True, battle_ctx=first_battle)}
-                            </div>
+                        <div class="cr-modal-trigger-msg" style="text-align:center; padding:15px; background:rgba(66,153,225,0.1); border-radius:12px; margin-bottom:10px; border:1px dashed rgba(66,153,225,0.3);">
+                            <span style="font-size:0.8em; color:#4299e1; font-weight:700;">💡 Clique nos badges abaixo para abrir o replay VS</span>
                         </div>
                         <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-{deck_id}" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">{timeline_h}</div></div>
                     </div>
@@ -2625,8 +2606,9 @@ class GitHubPagesHTMLGenerator:
         function updateBattlePreview(deckId, battleIdx, battleDataJson) {
             try {
                 const data = JSON.parse(decodeURIComponent(battleDataJson));
-                const previewContainer = document.getElementById('preview-' + deckId);
-                if (!previewContainer) return;
+                const modal = document.getElementById('cr-battle-modal');
+                const content = document.getElementById('battle-modal-content');
+                if (!modal || !content) return;
                 
                 const myDeckHtml = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.my_metrics);
                 const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_metrics);
@@ -2637,7 +2619,7 @@ class GitHubPagesHTMLGenerator:
                 const tropSign = tropChange > 0 ? '+' : '';
                 const tropText = tropChange !== 0 ? tropSign + tropChange : '';
 
-                previewContainer.innerHTML = `
+                content.innerHTML = `
                     <div class="cr-vs-row-premium-v2">
                         <div class="cr-battle-score-header-premium">
                             <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
@@ -2654,17 +2636,41 @@ class GitHubPagesHTMLGenerator:
                     </div>
                 `;
                 
+                // Show modal
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent scroll
+                
+                // Highlight badge in timeline
                 const timeline = document.querySelector('.timeline-' + deckId);
                 if (timeline) {
                     timeline.querySelectorAll('.cr-battle-badge').forEach((b, i) => {
                         if (i === battleIdx) {
                             b.style.boxShadow = '0 0 0 3px #4299e1';
-                            b.style.transform = 'scale(1)';
+                        } else {
+                            b.style.boxShadow = 'none';
                         }
                     });
                 }
             } catch(e) { console.error("Error updating preview:", e); }
         }
+
+        function closeBattleModal() {
+            const modal = document.getElementById('cr-battle-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scroll
+            }
+        }
+
+        // Close on ESC and click outside
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeBattleModal();
+        });
+
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('cr-battle-modal');
+            if (e.target === modal) closeBattleModal();
+        });
         
         function getMiniGridJS(deckStr, sideClass, playerName, metrics) {
             if (!deckStr) return `<div class="${sideClass} cr-empty-grid">N/D</div>`;
@@ -2810,22 +2816,6 @@ class GitHubPagesHTMLGenerator:
                     {metrics_html}
                 </div>'''
 
-            preview_html = f"""
-            <div id="preview-{tag_clean}" class="cr-battle-preview">
-                <div class="cr-battle-score-header-premium" style="text-align: center; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                    <div class="cr-game-mode-badge" style="margin-bottom: 0;">{last_game_mode}</div>
-                    <div class="cr-score-display-premium" style="background: rgba(15, 23, 42, 0.8); padding: 12px 35px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                        <div class="cr-score-val" style="font-size: 2.5em; font-weight: 900; color: #fff; letter-spacing: 5px;">{last_score}</div>
-                        <div class="cr-trophy-change-vs" style="color: {trophy_color}; font-size: 1.3em; font-weight: 800;">{trophy_sign}{last_trophy if last_trophy != 0 else ''}</div>
-                    </div>
-                </div>
-                <div class="cr-vs-row" style="align-items: flex-start; gap: 20px;">
-                    {get_deck_side_html(my_deck_last, 'my-deck-side', player_name)}
-                    <div class="cr-vs-divider-vertical" style="align-self: center; opacity: 0.2; font-size: 2em; font-weight: 900;">VS</div>
-                    {get_deck_side_html(opp_deck_last, 'opp-deck-side', opp['opponent_name'], is_opponent=True)}
-                </div>
-            </div>
-            """
             
             timeline_html = ""
             for idx, b in enumerate(stats_list[:15]):
@@ -2891,7 +2881,9 @@ class GitHubPagesHTMLGenerator:
                         </div>
                     </div>
                     
-                    {preview_html}
+                    <div class="cr-modal-trigger-msg" style="text-align:center; padding:15px; background:rgba(66,153,225,0.1); border-radius:12px; margin: 10px 0; border:1px dashed rgba(66,153,225,0.3);">
+                        <span style="font-size:0.8em; color:#4299e1; font-weight:700;">💡 Clique nos badges abaixo para abrir o replay VS</span>
+                    </div>
                     
                     <div class="cr-progress-bar" style="height:8px; background:rgba(0,0,0,0.2); border-radius:10px; overflow:hidden; margin: 15px 0;">
                         <div class="cr-bar-wins" style="width:{w_p}%; background:#48bb78;"></div>
@@ -4908,6 +4900,82 @@ class GitHubPagesHTMLGenerator:
             /* Player name menor em mobile */
             .cr-player-name-premium { font-size: 1em; }
         }
+
+        /* Modal Glassmorphism */
+        .cr-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cr-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .cr-modal-container {
+            width: 95%;
+            max-width: 1000px;
+            background: linear-gradient(145deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        .cr-modal-overlay.active .cr-modal-container {
+            transform: scale(1);
+        }
+
+        .cr-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .cr-modal-close:hover {
+            background: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        #battle-modal-content {
+            width: 100%;
+        }
+
+        /* Ajuste para o VS no Modal */
+        .cr-modal-container .cr-vs-row-premium-v2 {
+            background: transparent;
+            padding: 0;
+        }
         """
     
     def generate_full_html(self, stats, win_rate, deck_performance_html, 
@@ -4960,6 +5028,19 @@ class GitHubPagesHTMLGenerator:
     <style>{css_styles}</style>
 </head>
 <body>
+    <!-- Global Battle Modal Overlay -->
+    <div id="cr-battle-modal" class="cr-modal-overlay">
+        <div class="cr-modal-container">
+            <button class="cr-modal-close" onclick="closeBattleModal()">×</button>
+            <div id="battle-modal-content">
+                <!-- Content injected dynamically by JS -->
+                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <p>Carregando visualização de batalha...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         {coach_html}
         <div class="header">
