@@ -250,6 +250,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
@@ -713,16 +715,17 @@
         }
 
         .cr-mode-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 6px 14px;
+            font-size: 0.7em;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             background: rgba(var(--primary-rgb), 0.2);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 12px;
-            font-size: 0.75em;
             font-weight: 800;
             color: #fff;
             z-index: 20;
@@ -1151,7 +1154,7 @@
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1300px;
+            max-width: 1350px;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 24px;
@@ -1225,10 +1228,10 @@
                             <div class="cr-coach-title">Insights do Treinador AI</div>
                         </div>
                         <div class="cr-coach-tips">
-                            <div class="cr-coach-tip"><h4>Dica 1</h4><p>Mantenha o foco no Split-Push: Sua taxa de vitória é máxima com Royal Recruits; continue dividindo a pressão nas duas rotas para sobrecarregar a gestão de elixir do oponente.</p></div><div class="cr-coach-tip"><h4>Dica 2</h4><p>Refine o ciclo de Spell Bait: Utilize o Skeleton Barrel para forçar feitiços leves e proteja seu Dart Goblin, que é sua principal fonte de dano sustentado em contra-ataques.</p></div><div class="cr-coach-tip"><h4>Dica 3</h4><p>Evite arquétipos de alto risco: Seus dados mostram quedas de desempenho ao usar Elixir Golem ou Monk; atenha-se aos decks de controle e cerco onde sua eficiência é superior.</p></div>
+                            <div class="cr-coach-tip"><h4>Dica 1</h4><p>Pare de alternar decks drasticamente: seu aproveitamento é de 100% com Royal Recruits Bait, mas cai para 0% ao tentar decks pesados ou de ciclo rápido.</p></div><div class="cr-coach-tip"><h4>Dica 2</h4><p>Domine o Split-Lane: use a formação dividida dos Recrutas Reais para forçar o oponente a gastar elixir em ambas as rotas, punindo o lado mais fraco com o Skeleton Barrel.</p></div><div class="cr-coach-tip"><h4>Dica 3</h4><p>Gestão de Bait: utilize o Dart Goblin e a Gangue de Goblins para 'limpar' o caminho ou forçar o feitiço leve do oponente, abrindo janela de oportunidade para seus Morcegos e Barril.</p></div>
                         </div>
                         <div class="cr-coach-analysis">
-                            O deck de Royal Recruits com Skeleton Barrel é seu conjunto mais sólido, apresentando 100% de aproveitamento. Ele se beneficia da sua baixa taxa de elixir vazado e excelente capacidade de punição dupla.
+                            O deck de Recrutas Reais com Skeleton Barrel (Recruits Bait) é claramente seu melhor setup. Ele oferece uma defesa sólida com a Mosqueteira e pressão constante em duas rotas, o que compensa sua tendência de vazar pouco elixir.
                         </div>
                     </div>
                     
@@ -4192,14 +4195,14 @@
                 <div class="cr-decks-list">
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#1 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">3 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4221,14 +4224,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#2 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">3 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4250,14 +4253,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#3 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">1 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4279,14 +4282,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#4 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">1 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4308,14 +4311,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#5 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">1 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4337,14 +4340,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#6 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">1 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4366,14 +4369,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#7 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">1 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4395,14 +4398,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#8 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">1 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4424,14 +4427,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#9 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">1 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -4453,14 +4456,14 @@
             </div>
             <div class="cr-deck-card" style="border-top: 4px solid #48bb78;">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:#48bb78;">#10 DADOS DO CLÃ</span>
+                        <div class="cr-mode-badge" style="background:#48bb78; position: static; margin: 0;">Guerra/Desafio</div>
                         <span class="cr-deck-label">Taxa de Vitoria: 100.0%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">1 Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:#48bb78;">Guerra/Desafio</div>
                     
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-grid-4x2">
@@ -5661,7 +5664,7 @@
                     </tr>
                 
                     <tr class="battle-defeat">
-                        <td>10 hours ago</td>
+                        <td>11 hours ago</td>
                         <td><span class="result-defeat">Derrota</span></td>
                         <td>Toe Knee <small>(Nv 0)</small></td>
                         <td>0</td>
@@ -5682,7 +5685,7 @@
                     </tr>
                 
                     <tr class="battle-victory">
-                        <td>11 hours ago</td>
+                        <td>12 hours ago</td>
                         <td><span class="result-victory">Vitória - ツ ﹻデ═一⟿ΔЯ₡λↁΣ☯︎</span></td>
                         <td>Aegon <small>(Nv 0)</small></td>
                         <td>3</td>
@@ -5848,7 +5851,7 @@
                     <div class="battle-card battle-defeat">
                         <div class="battle-card-header">
                             <span class="result-defeat battle-result">Derrota</span>
-                            <span class="battle-time">10 hours ago</span>
+                            <span class="battle-time">11 hours ago</span>
                         </div>
                         <div class="battle-card-content">
                             <div class="battle-info">
@@ -5865,7 +5868,7 @@
                     <div class="battle-card battle-victory">
                         <div class="battle-card-header">
                             <span class="result-victory battle-result">Vitória - ツ ﹻデ═一⟿ΔЯ₡λↁΣ☯︎</span>
-                            <span class="battle-time">11 hours ago</span>
+                            <span class="battle-time">12 hours ago</span>
                         </div>
                         <div class="battle-card-content">
                             <div class="battle-info">
@@ -5971,7 +5974,7 @@
         
 
         <div class="footer">
-            <p>Report generated on 2026-05-08 13:11:07</p>
+            <p>Report generated on 2026-05-08 13:28:10</p>
             <p>Data last updated: 4 days ago</p>
             <p>Automatically updated via GitHub Actions</p>
         </div>
