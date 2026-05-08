@@ -245,7 +245,9 @@ class GitHubPagesHTMLGenerator:
                         'trofes_finais_jogador': row.get('trofes_finais_jogador') or '0',
                         'posicao_global_jogador': row.get('posicao_global_jogador') or 'N/A',
                         'posicao_global_oponente': row.get('posicao_global_oponente') or 'N/A',
-                        'nivel_torre_oponente': row.get('nivel_torre_oponente') or '0'
+                        'nivel_torre_oponente': row.get('nivel_torre_oponente') or '0',
+                        'torre_jogador': row.get('torre_jogador') or '',
+                        'torre_oponente': row.get('torre_oponente') or ''
                     }
                     
                     # SANITIZAÇÃO DE DADOS (RESET/CORRUPÇÃO)
@@ -271,11 +273,11 @@ class GitHubPagesHTMLGenerator:
 
 
     def _get_canonical_deck(self, deck_str: str) -> str:
-        """Gera uma representação canônica do deck (cartas ordenadas alfabeticamente)."""
+        """Gera uma representação do deck preservando a ordem original (fingerprint)."""
         if not deck_str or deck_str == 'N/D':
             return 'N/D'
         cards = [c.strip() for c in deck_str.replace(' | ', '|').split('|')]
-        return " | ".join(sorted(cards))
+        return " | ".join(cards)
 
     def _normalize_battle_time(self, raw_time: str) -> str:
         """Normaliza datas de batalha para formato ISO para manter agregacoes consistentes."""
@@ -606,6 +608,7 @@ class GitHubPagesHTMLGenerator:
         metrics = self._get_deck_metrics(deck_str, leaked=leaked, tower_level=tower_level)
         metrics['leaked_color'] = '#f56565' if float(leaked) > 0 else '#48bb78'
         metrics['leaked_label'] = f"{leaked:.1f}" if float(leaked) > 0 else 'N/A'
+        metrics['tower_name'] = battle.get('torre_oponente' if is_opponent else 'torre_jogador') or 'Tower Princess'
         return metrics
     
     def fetch_opponent_data_from_api(self, opponent_tag: str) -> Optional[Dict]:
@@ -700,7 +703,7 @@ class GitHubPagesHTMLGenerator:
                     opponent_team = opponents[0] if opponents else None
                     
                     # Format deck cards
-                    deck_cards = ' | '.join(sorted([card['name'] for card in player_team.get('cards', [])]))
+                    deck_cards = ' | '.join([card['name'] for card in player_team.get('cards', [])])
                     
                     # Determine result from crowns (same logic as analyzer.py)
                     player_crowns = player_team.get('crowns', 0)
@@ -737,7 +740,7 @@ class GitHubPagesHTMLGenerator:
                             opponent_team.get('tag') if opponent_team else None,
                             opponent_team.get('name') if opponent_team else None,
                             opponent_team.get('startingTrophies') if opponent_team else None,
-                            ' | '.join(sorted([card['name'] for card in opponent_team.get('cards', [])])) if opponent_team else None,
+                            ' | '.join([card['name'] for card in opponent_team.get('cards', [])]) if opponent_team else None,
                             trophy_change
                         ))
                     except sqlite3.Error as e:
@@ -2317,9 +2320,19 @@ class GitHubPagesHTMLGenerator:
             first_battle = deck['battles'][0] if deck['battles'] else {}
             game_mode = first_battle.get('modo_jogo', 'Batalha')
             
+            # Card da Torre
+            tower_name = first_battle.get('torre_jogador') or 'Tower Princess'
+            fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
+            tower_card_html = f'''
+                <div class="cr-tower-card-premium" title="{tower_name}" style="margin: 0 auto 15px auto;">
+                    <img src="{self.get_card_image_path(tower_name)}" class="cr-tower-card-img" onerror="this.src='{fallback_tower}'">
+                    <span class="cr-card-level-badge" style="bottom: -2px; right: -2px; font-size: 0.5em; padding: 1px 4px;">Lv {metrics.get('level', 14)}</span>
+                </div>'''
+
             grid_h = f'''
             <div class="cr-deck-side" style="flex:1; width:100%;">
                 <div class="cr-game-mode-badge" style="margin-bottom:10px;">{game_mode}</div>
+                {tower_card_html}
                 <div class="cr-grid-4x2">
                     {"".join(f'<div class="cr-card-wrap" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in cards_list)}
                 </div>
@@ -2442,16 +2455,22 @@ class GitHubPagesHTMLGenerator:
                 clan_line = f'<div class="cr-player-clan">{p_clan}</div>' if p_clan else ''
                 hp_display = f'{t_hp:,}' if isinstance(t_hp, int) else str(t_hp)
 
+                # Card da Torre (Novo)
+                tower_name = metrics.get('tower_name', 'Tower Princess')
+                tower_card_html = f'''
+                    <div class="cr-tower-card-premium" title="{tower_name}">
+                        <img src="{self.get_card_image_path(tower_name)}" class="cr-tower-card-img" onerror="this.src='{fallback_tower}'">
+                        <span class="cr-card-level-badge" style="bottom: -2px; right: -2px; font-size: 0.5em; padding: 1px 4px;">Lv {card_level}</span>
+                    </div>'''
+
                 return f'''
                     <div class="{side_class} cr-deck-side">
                         <div class="cr-player-header-premium">
                             <div class="cr-player-name-premium">{p_name}</div>
                             {clan_line}
-                            <div class="cr-tower-info-premium">🏰 {hp_display} Pontos de vida</div>
+                            <div class="cr-tower-info-premium">🏰 {hp_display} HP</div>
                         </div>
-                        <div class="cr-tower-container-premium">
-                            <img src="{tower_img}" class="cr-tower-img-premium" onerror="this.src='{fallback_tower}'">
-                        </div>
+                        {tower_card_html}
                         {grid_html}
                         {footer_html}
                     </div>'''
@@ -2788,30 +2807,27 @@ class GitHubPagesHTMLGenerator:
                     el.style.background = '#020617';
                 });
                 element.style.borderColor = '#4299e1';
-                element.style.background = '#1e293b'; // Fundo sólido destacado ao selecionar
-                
-            } catch(e) {
-                console.error("Erro ao atualizar visualizacao do oponente:", e);
+                element.style.background = '#1e293b';
             }
-        }
-        
-        function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics, deckLink, icons) {
+
+            function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics, deckLink, icons) {
             if (!deckStr) return `<div class="${sideClass} cr-empty-grid">N/D</div>`;
-            let cards = deckStr.replace(/ \| /g, '|').split('|').filter(Boolean).slice(0, 8);
-            const playerTower = "assets/images/towers/player_tower.png";
-            const oppTower = "assets/images/towers/opp_tower.png";
-            const towerImg = sideClass.includes('my') ? playerTower : oppTower;
+            let cards = deckStr.replace(/ \\| /g, '|').split('|').filter(Boolean).slice(0, 8);
             
+            const towerName = metrics ? (metrics.tower_name || 'Tower Princess') : 'Tower Princess';
+            const towerSlug = towerName.toLowerCase().replace(/\\s+/g, '-').replace(/\\./g, '');
+            const towerUrl = `https://royaleapi.github.io/cr-api-assets/cards/${towerSlug}.png`;
+            const fallbackTower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258";
+
             const cardsHtml = cards.map(c => {
                 const name = c.trim();
-                const cleanName = name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '').replace(/[()]/g, '');
-                const url = CARD_MAP[name] || CARD_MAP[cleanName] || CARD_MAP[name.replace(/\s+/g, '')];
+                const cleanName = name.toLowerCase().replace(/\\s+/g, '-').replace(/\\./g, '').replace(/[()]/g, '');
+                const url = CARD_MAP[name] || CARD_MAP[cleanName] || CARD_MAP[name.replace(/\\s+/g, '')];
                 
                 if (url) {
                     return `<div class="cr-card-wrap-premium" title="${name}"><img src="${url}" class="cr-card-img" loading="lazy"></div>`;
                 }
                 
-                // Fallback robusto usando CDN direta do RoyaleAPI
                 const slug = cleanName.replace('the-log', 'log').replace('p-e-k-k-a', 'pekka');
                 return `<div class="cr-card-wrap-premium" title="${name}"><img src="https://royaleapi.github.io/cr-api-assets/cards/${slug}.png" class="cr-card-img" onerror="this.src='https://royaleapi.com/static/img/cards-150/${slug}.png'" loading="lazy"></div>`;
             }).join('');
@@ -2825,24 +2841,22 @@ class GitHubPagesHTMLGenerator:
                 tHP = Number(tHP).toLocaleString('pt-BR');
             }
             const leakedColor = leaked > 0 ? '#f56565' : '#48bb78';
-
             const clanHtml = clanName ? `<div class="cr-clan-name-premium">${clanName}</div>` : '';
-            
-            const copyBtnHtml = (deckLink && deckLink !== '#') ?
-                `<a href="${deckLink}" class="cr-copy-deck-btn" title="Copiar Deck para o Jogo" onclick="showCopyToast(event)">
-                    <span style="font-size:1.2em;">📋</span> Copiar Deck
-                </a>` : '';
+
+            const towerCardHtml = `
+                <div class="cr-tower-card-premium" title="${towerName}">
+                    <img src="${towerUrl}" class="cr-tower-card-img" onerror="this.src='${fallbackTower}'">
+                    <span class="cr-card-level-badge" style="bottom: -2px; right: -2px; font-size: 0.5em; padding: 1px 4px;">Lv ${tLevel}</span>
+                </div>`;
 
             return `
                 <div class="cr-deck-side ${sideClass}">
                     <div class="cr-player-header-premium">
                         <div class="cr-player-name-premium">${playerName}</div>
                         ${clanHtml}
+                        <div class="cr-tower-info-premium">🏰 ${tHP} HP</div>
                     </div>
-                    <div class="cr-tower-container-premium">
-                        <img src="${towerImg}" class="cr-tower-img-premium" onerror="this.src='https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258'">
-                        <div class="cr-tower-info-premium">HP ${tHP} (Lvl ${tLevel})</div>
-                    </div>
+                    ${towerCardHtml}
                     <div class="cr-grid-4x2">
                         ${cardsHtml}
                     </div>
@@ -4556,10 +4570,41 @@ class GitHubPagesHTMLGenerator:
 
 
         .cr-tower-img-premium {
-            height: 35px; /* Reduzido de 40px para 35px */
+            height: 35px;
             width: auto;
             object-fit: contain;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+        }
+
+        .cr-tower-card-premium {
+            width: 72px;
+            height: 86px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border-radius: 12px;
+            border: 2px solid rgba(246, 173, 85, 0.3);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(246, 173, 85, 0.05);
+            margin-bottom: -15px;
+            z-index: 5;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .cr-tower-card-premium:hover {
+            transform: translateY(-8px) scale(1.15);
+            border-color: #f6ad55;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(246, 173, 85, 0.4);
+        }
+
+        .cr-tower-card-img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
 
         .cr-tower-info-premium {

@@ -23,7 +23,8 @@ FIELDNAMES = [
     'vida_torre_rei_jogador', 'vida_torre_rei_oponente', 
     'vida_torres_princesa_jogador', 'vida_torres_princesa_oponente',
     'trofes_iniciais_jogador', 'trofes_finais_jogador',
-    'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente'
+    'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente',
+    'torre_jogador', 'torre_oponente'
 ]
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data_csv_oficial')
@@ -62,10 +63,10 @@ def format_date_brt(dt_utc: datetime) -> str:
 
 
 def format_deck(cards: list) -> str:
-    """Formata lista de cartas como string separada por ' | '."""
+    """Formata lista de cartas como string separada por ' | ' na ordem original da API."""
     if not cards:
         return ''
-    return ' | '.join(sorted(card.get('name', '') for card in cards))
+    return ' | '.join(card.get('name', '') for card in cards)
 
 
 def extract_battle_row(battle: dict, player_tag: str):
@@ -107,6 +108,20 @@ def extract_battle_row(battle: dict, player_tag: str):
         if not text: return ""
         return str(text).replace(';', '-')
 
+    # Logica de Torres: Antes de 07/05/2026 = Tower Princess, Depois = API (fallback Tower Princess)
+    data_limite = datetime(2026, 5, 7)
+    
+    def get_tower_name(team_data, battle_dt):
+        if battle_dt < data_limite:
+            return 'Tower Princess'
+        
+        # Tenta extrair do supportCards
+        support = team_data.get('supportCards', [])
+        if support and isinstance(support, list) and len(support) > 0:
+            return support[0].get('name', 'Tower Princess')
+        
+        return 'Tower Princess'
+
     return {
         '_dt_utc': dt_utc,  # campo interno, removido antes de salvar
         'data': format_date_brt(dt_utc),
@@ -136,7 +151,9 @@ def extract_battle_row(battle: dict, player_tag: str):
         'trofes_finais_jogador': starting_trophies + trophy_change,
         'posicao_global_jogador': player_team.get('globalRank', 'N/A') or 'N/A',
         'posicao_global_oponente': opponent_team.get('globalRank', 'N/A') or 'N/A',
-        'nivel_torre_oponente': opponent_team.get('expLevel', 0)
+        'nivel_torre_oponente': opponent_team.get('expLevel', 0),
+        'torre_jogador': get_tower_name(player_team, dt_utc),
+        'torre_oponente': get_tower_name(opponent_team, dt_utc)
     }
 
 
@@ -169,10 +186,12 @@ def write_csv(file_path: str, rows: list):
 
 
 def make_dedup_key(row: dict) -> tuple:
-    """Chave de deduplicacao: (data, tag_oponente)."""
+    """Chave de deduplicacao: (data, tag_oponente, deck_jogador, deck_oponente)."""
     return (
         str(row.get('data', '')).strip(),
-        str(row.get('tag_oponente', '')).strip().upper()
+        str(row.get('tag_oponente', '')).strip().upper(),
+        str(row.get('deck_jogador', '')).strip(),
+        str(row.get('deck_oponente', '')).strip()
     )
 
 
