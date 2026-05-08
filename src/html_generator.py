@@ -2511,14 +2511,14 @@ class GitHubPagesHTMLGenerator:
             html += f'''
             <div class="cr-deck-card" style="border-top: 4px solid {wr_c};">
                 <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:{wr_c};">#{i} {source_label.upper()}</span>
+                        <div class="cr-mode-badge" style="background:{wr_c}; position: static; margin: 0;">{game_mode}</div>
                         <span class="cr-deck-label">Taxa de Vitoria: {win_rate}%</span>
                     </div>
                     <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">{total} Partidas</span>
                 </div>
                 <div class="cr-deck-body">
-                    <div class="cr-mode-badge" style="background:{wr_c};">{game_mode}</div>
                     {grid_h}
                     <div class="cr-stats-panel" style="flex:1; display:flex; align-items:center; justify-content:center;">
                         <div style="text-align:center; padding:10px; background:#f7fafc; border-radius:12px; width:100%;">
@@ -4211,6 +4211,8 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
@@ -4674,16 +4676,17 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-mode-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 6px 14px;
+            font-size: 0.7em;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             background: rgba(var(--primary-rgb), 0.2);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 12px;
-            font-size: 0.75em;
             font-weight: 800;
             color: #fff;
             z-index: 20;
@@ -5112,7 +5115,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1300px;
+            max-width: 1350px;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 24px;
