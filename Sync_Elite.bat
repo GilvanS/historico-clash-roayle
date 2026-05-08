@@ -28,7 +28,7 @@ git add src/data_csv_oficial/ README.md index.html src/data_clan/
 git diff --staged --quiet
 if errorlevel 1 (
     echo [OK] Alteracoes detectadas. Enviando para o GitHub...
-    git commit -m "chore: sincronizacao local Elite [skip ci] (%date% %time%)"
+    git commit -m "chore: sincronizacao local Elite (%date% %time%)"
     
     :: Loop de push com retry (similar ao GitHub Action)
     for /L %%i in (1,1,3) do (
