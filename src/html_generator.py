@@ -2815,9 +2815,9 @@ class GitHubPagesHTMLGenerator:
             let cards = deckStr.replace(/ \\| /g, '|').split('|').filter(Boolean).slice(0, 8);
             
             const towerName = metrics ? (metrics.tower_name || 'Tower Princess') : 'Tower Princess';
-            const towerSlug = towerName.toLowerCase().replace(/\\s+/g, '-').replace(/\\./g, '');
-            const towerUrl = `https://royaleapi.github.io/cr-api-assets/cards/${towerSlug}.png`;
-            const fallbackTower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258";
+            const towerSlug = towerName.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
+            const towerUrl = `https://cdn.royaleapi.com/static/img/cards-75/${towerSlug}.png`;
+            const fallbackTower = "https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png";
 
             const cardsHtml = cards.map(c => {
                 const name = c.trim();
@@ -5159,8 +5159,8 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-modal-container {
-            width: 95%;
-            max-width: 1350px;
+            width: 1350px !important;
+            max-width: 98% !important;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 24px;
@@ -5477,6 +5477,8 @@ class GitHubPagesHTMLGenerator:
         }}
     }});
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {self.generate_dashboard_scripts()}
 </body>
 </html>
         """
