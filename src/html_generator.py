@@ -5112,17 +5112,17 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1200px;
+            max-width: 1300px;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            border-radius: 32px;
-            box-shadow: 0 0 100px rgba(0, 0, 0, 0.8), 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 0 100px rgba(0, 0, 0, 0.9), 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            padding: 30px;
             position: relative;
             transform: scale(0.9);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             overflow-y: auto;
-            max-height: 90vh;
+            max-height: 92vh;
         }
 
         .cr-modal-overlay.active .cr-modal-container {
