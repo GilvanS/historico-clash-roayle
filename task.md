@@ -1,0 +1,6 @@
+- [x] Remoção de Glassmorphism e implementação de Solid Design
+- [x] Padronização de grids responsivos na aba Elite Spy
+- [x] Correção de mapeamento de imagens de cartas (P.E.K.K.A, The Log, Evoluções)
+- [x] Atualização dos modais de batalha com novo sistema de cores
+- [x] Sincronização e Deploy final via Sync_Elite.bat
+- [x] Resolução de conflitos de Git e integridade dos dados
