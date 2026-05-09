@@ -2773,21 +2773,23 @@ class GitHubPagesHTMLGenerator:
                     <div class="cr-player-header-premium">
                         <div class="cr-player-name-premium">${playerName}</div>
                         ${clanHtml}
-                        <div class="cr-tower-info-premium">🏰 ${tHP} HP</div>
                     </div>
                     ${towerCardHtml}
                     <div class="cr-grid-4x2">
                         ${cardsHtml}
                     </div>
-                    <div class="cr-elixir-metrics-container">
-                        <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                            <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span class="metric-label">Avg:</span> ${avg}
+                    <div class="cr-elixir-metrics-container" style="flex-direction: row; justify-content: space-around; background: rgba(0,0,0,0.5); padding: 12px; border-radius: 15px; margin-top: 15px; width: 100%; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                        <div class="cr-elixir-metrics-badge" title="Media Elixir" style="background:transparent; border:none; padding:0; flex:1;">
+                            <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span class="metric-label" style="font-size:0.9em; font-weight:800;">${avg}</span>
                         </div>
-                        <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
-                            <span class="metric-emoji">🔄</span> <span class="metric-label">Ciclo:</span> ${cycle}
+                        <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas" style="background:transparent; border:none; padding:0; flex:1;">
+                            <span class="metric-emoji" style="font-size:1.2em;">🔄</span> <span class="metric-label" style="font-size:0.9em; font-weight:800;">${cycle}</span>
                         </div>
-                        <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:${leakedColor}; color:${leakedColor};">
-                            <span class="metric-emoji">🚫</span> <span class="metric-label">Vazado:</span> ${leaked}
+                        <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="background:transparent; border:none; padding:0; color:${leakedColor}; flex:1;">
+                            <span class="metric-emoji" style="font-size:1.2em;">✨</span> <span class="metric-label" style="font-size:0.9em; font-weight:800;">${leaked}</span>
+                        </div>
+                        <div class="cr-elixir-metrics-badge" title="Vida da Torre" style="background:transparent; border:none; padding:0; flex:1.5; border-left: 1px solid rgba(255,255,255,0.1); padding-left:10px;">
+                            <span class="metric-emoji" style="font-size:1.2em;">🏰</span> <span class="metric-label" style="font-size:0.9em; font-weight:800;">${tHP}</span>
                         </div>
                     </div>
                     <div class="cr-copy-container">
@@ -2864,11 +2866,6 @@ class GitHubPagesHTMLGenerator:
                 const oMetricsEl = document.getElementById(`opp-metrics-${oppId}`);
                 if (pMetricsEl) pMetricsEl.innerHTML = data.p_metrics;
                 if (oMetricsEl) oMetricsEl.innerHTML = data.o_metrics;
-                
-                const pHpEl = document.getElementById(`player-hp-${oppId}`);
-                const oHpEl = document.getElementById(`opp-hp-${oppId}`);
-                if (pHpEl) pHpEl.innerHTML = data.p_hp;
-                if (oHpEl) oHpEl.innerHTML = data.o_hp;
 
                 const towers = document.querySelectorAll(`#opp-section-${oppId} .cr-tower-card-premium`);
                 if (towers.length >= 2) {
@@ -3024,70 +3021,89 @@ class GitHubPagesHTMLGenerator:
 
                 <!-- ÁREA PRINCIPAL DINÂMICA (PALCO VS) -->
                 <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 30px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-                        <!-- Player Header -->
-                        <div style="flex:1; text-align:center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                            <div style="color:#4299e1; font-weight:900; font-size:1.5em;">{player_name}</div>
-                            <div class="cr-tower-card-premium" title="{my_metrics_f['tower_name']}">
-                                <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-premium">
-                                <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {my_metrics_f['level']}</span>
-                            </div>
-                            <div style="font-size:0.85em; color:#94a3b8; font-weight:700;" id="player-hp-{i}">🏰 {my_metrics_f.get('hp', '--')} HP</div>
-                            
-                            <div id="player-metrics-{i}" style="display:flex; flex-direction:column; gap:8px; margin-top:5px; align-items:center;">
-                                <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {my_metrics_f['avg']}
-                                </div>
-                                <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
-                                    <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {my_metrics_f['cycle']}
-                                </div>
-                                <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:{my_metrics_f['leaked_color']}; color:{my_metrics_f['leaked_color']};">
-                                    <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> {my_metrics_f['leaked_label']}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Score Center -->
-                        <div style="flex:0 0 200px; text-align:center;">
-                            <div style="color:#94a3b8; font-size:0.7em; font-weight:800; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px;" id="mode-{i}">{first_b.get('game_mode', 'Batalha')}</div>
-                            <div style="display:flex; align-items:center; justify-content:center; gap:15px; background:#050914; padding:10px 20px; border-radius:50px; border:1px solid rgba(255,255,255,0.15);">
-                                <span style="font-size:2.2em; font-weight:900; color:#4299e1;" id="p-score-{i}">{my_crowns_f}</span>
-                                <span style="color:rgba(255,255,255,0.3); font-weight:900; font-size:1.5em;">-</span>
-                                <span style="font-size:2.2em; font-weight:900; color:#f56565;" id="o-score-{i}">{opp_crowns_f}</span>
-                            </div>
-                            <div style="color:#a0aec0; font-size:0.8em; font-weight:700; margin-top:10px;" id="date-main-{i}">📅 {first_b.get('data_str', '--/--')}</div>
-                        </div>
-
-                        <!-- Opponent Header -->
-                        <div style="flex:1; text-align:center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                            <div style="color:#f56565; font-weight:900; font-size:1.5em;">{opp['opponent_name']}</div>
-                            <div class="cr-tower-card-premium" title="{opp_metrics_f['tower_name']}">
-                                <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-premium">
-                                <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {opp_metrics_f['level']}</span>
-                            </div>
-                            <div style="font-size:0.85em; color:#94a3b8; font-weight:700;" id="opp-hp-{i}">🏰 {opp_metrics_f.get('hp', '--')} HP</div>
-
-                            <div id="opp-metrics-{i}" style="display:flex; flex-direction:column; gap:8px; margin-top:5px; align-items:center;">
-                                <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {opp_metrics_f['avg']}
-                                </div>
-                                <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
-                                    <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {opp_metrics_f['cycle']}
-                                </div>
-                                <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:{opp_metrics_f['leaked_color']}; color:{opp_metrics_f['leaked_color']};">
-                                    <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> {opp_metrics_f['leaked_label']}
-                                </div>
-                            </div>
+                    
+                    <!-- Top Score Center -->
+                    <div style="text-align:center; margin-bottom: 30px;">
+                        <div style="color:#94a3b8; font-size:0.75em; font-weight:800; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;" id="mode-{i}">{first_b.get('game_mode', 'Batalha')}</div>
+                        <div style="display:inline-flex; align-items:center; justify-content:center; gap:20px; background:#050914; padding:12px 35px; border-radius:50px; border:1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                            <span style="font-size:2.8em; font-weight:900; color:#4299e1;" id="p-score-{i}">{my_crowns_f}</span>
+                            <span style="color:rgba(255,255,255,0.2); font-weight:900; font-size:2em;">-</span>
+                            <span style="font-size:2.8em; font-weight:900; color:#f56565;" id="o-score-{i}">{opp_crowns_f}</span>
                         </div>
                     </div>
 
-                    <div class="cr-vs-decks-row-premium" style="display:grid; grid-template-columns: 1fr 40px 1fr; align-items:center; gap:20px;">
-                        <div class="cr-grid-4x2" id="p-grid-{i}">
-                            {"".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in my_deck_list_f)}
+                    <div class="cr-vs-decks-row-premium" style="display:grid; grid-template-columns: 1fr auto 1fr; align-items:flex-start; gap:30px;">
+                        <!-- Player Side -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:20px;">
+                            <div style="text-align:center; width:100%;">
+                                <div style="color:#4299e1; font-weight:900; font-size:1.6em; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px;">{player_name}</div>
+                                <div class="cr-tower-card-premium" id="p-tower-{i}" style="margin: 0 auto;">
+                                    <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-premium">
+                                    <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {my_metrics_f['level']}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="cr-grid-4x2" id="p-grid-{i}" style="max-width:100%;">
+                                {"".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in my_deck_list_f)}
+                            </div>
+                            
+                            <div id="player-metrics-{i}" style="display:flex; flex-direction:row; justify-content:space-around; width:100%; gap:15px; padding:15px; background:rgba(0,0,0,0.5); border-radius:20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                                <div style="display:flex; align-items:center; gap:8px;" title="Media Elixir">
+                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" style="width:22px; height:22px;">
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{my_metrics_f['avg']}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;" title="Ciclo 4 Cartas">
+                                    <span style="font-size:1.4em;">🔄</span>
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{my_metrics_f['cycle']}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; color:{my_metrics_f['leaked_color']};" title="Elixir Vazado">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" style="width:22px; height:22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
+                                    <span style="color:inherit; font-size:1.1em; font-weight:800;">{my_metrics_f['leaked_label']}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left:15px;" title="Vida da Torre">
+                                    <span style="font-size:1.4em;">🏰</span>
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{my_metrics_f.get('hp', '--')}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div style="text-align:center; font-weight:900; color:rgba(255,255,255,0.05); font-size:2em;">VS</div>
-                        <div class="cr-grid-4x2" id="o-grid-{i}">
-                            {"".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in opp_deck_list_f)}
+
+                        <!-- VS Middle Divider -->
+                        <div style="display:flex; flex-direction:column; justify-content:center; height:100%; padding-top: 180px;">
+                            <div style="font-weight:900; color:rgba(255,255,255,0.05); font-size:3em; letter-spacing: -5px;">VS</div>
+                        </div>
+
+                        <!-- Opponent Side -->
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:20px;">
+                            <div style="text-align:center; width:100%;">
+                                <div style="color:#f56565; font-weight:900; font-size:1.6em; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px;">{opp['opponent_name']}</div>
+                                <div class="cr-tower-card-premium" id="o-tower-{i}" style="margin: 0 auto;">
+                                    <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-premium">
+                                    <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {opp_metrics_f['level']}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="cr-grid-4x2" id="o-grid-{i}" style="max-width:100%;">
+                                {"".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in opp_deck_list_f)}
+                            </div>
+                            
+                            <div id="opp-metrics-{i}" style="display:flex; flex-direction:row; justify-content:space-around; width:100%; gap:15px; padding:15px; background:rgba(0,0,0,0.5); border-radius:20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                                <div style="display:flex; align-items:center; gap:8px;" title="Media Elixir">
+                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" style="width:22px; height:22px;">
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{opp_metrics_f['avg']}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;" title="Ciclo 4 Cartas">
+                                    <span style="font-size:1.4em;">🔄</span>
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{opp_metrics_f['cycle']}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; color:{opp_metrics_f['leaked_color']};" title="Elixir Vazado">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" style="width:22px; height:22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
+                                    <span style="color:inherit; font-size:1.1em; font-weight:800;">{opp_metrics_f['leaked_label']}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left:15px;" title="Vida da Torre">
+                                    <span style="font-size:1.4em;">🏰</span>
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{opp_metrics_f.get('hp', '--')}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -3116,30 +3132,45 @@ class GitHubPagesHTMLGenerator:
                 b_json = json.dumps({
                     'p_score': b.get('crowns', 0),
                     'o_score': b.get('opponent_crowns', 0),
+                b_json = json.dumps({
+                    'p_score': b.get('crowns', 0),
+                    'o_score': b.get('opponent_crowns', 0),
                     'p_metrics': f"""
-                                <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {m_metrics['avg']}
+                                <div style="display:flex; align-items:center; gap:8px;" title="Media Elixir">
+                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" style="width:22px; height:22px;">
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{m_metrics['avg']}</span>
                                 </div>
-                                <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
-                                    <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {m_metrics['cycle']}
+                                <div style="display:flex; align-items:center; gap:8px;" title="Ciclo 4 Cartas">
+                                    <span style="font-size:1.4em;">🔄</span>
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{m_metrics['cycle']}</span>
                                 </div>
-                                <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:{m_metrics['leaked_color']}; color:{m_metrics['leaked_color']};">
-                                    <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> {m_metrics['leaked_label']}
+                                <div style="display:flex; align-items:center; gap:8px; color:{m_metrics['leaked_color']};" title="Elixir Vazado">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" style="width:22px; height:22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
+                                    <span style="color:inherit; font-size:1.1em; font-weight:800;">{m_metrics['leaked_label']}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left:15px;" title="Vida da Torre">
+                                    <span style="font-size:1.4em;">🏰</span>
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{m_metrics.get('hp', '--')}</span>
                                 </div>
                     """,
                     'o_metrics': f"""
-                                <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {o_metrics['avg']}
+                                <div style="display:flex; align-items:center; gap:8px;" title="Media Elixir">
+                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" style="width:22px; height:22px;">
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{o_metrics['avg']}</span>
                                 </div>
-                                <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
-                                    <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {o_metrics['cycle']}
+                                <div style="display:flex; align-items:center; gap:8px;" title="Ciclo 4 Cartas">
+                                    <span style="font-size:1.4em;">🔄</span>
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{o_metrics['cycle']}</span>
                                 </div>
-                                <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:{o_metrics['leaked_color']}; color:{o_metrics['leaked_color']};">
-                                    <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> {o_metrics['leaked_label']}
+                                <div style="display:flex; align-items:center; gap:8px; color:{o_metrics['leaked_color']};" title="Elixir Vazado">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" style="width:22px; height:22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
+                                    <span style="color:inherit; font-size:1.1em; font-weight:800;">{o_metrics['leaked_label']}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left:15px;" title="Vida da Torre">
+                                    <span style="font-size:1.4em;">🏰</span>
+                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{o_metrics.get('hp', '--')}</span>
                                 </div>
                     """,
-                    'p_hp': f"🏰 {m_metrics.get('hp', '--')} HP",
-                    'o_hp': f"🏰 {o_metrics.get('hp', '--')} HP",
                     'p_tower': f"""
                         <img src="{m_metrics['tower_url']}" class="cr-tower-img-premium" onerror="this.src='https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png'">
                         <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {m_metrics['level']}</span>
@@ -4488,7 +4519,7 @@ class GitHubPagesHTMLGenerator:
             background: rgba(0,0,0,0.4);
             border-radius: 20px;
             width: 100%;
-            max-width: 500px;
+            max-width: 100%;
             margin: 0 auto;
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
