@@ -2948,9 +2948,7 @@ class GitHubPagesHTMLGenerator:
                 "https://images2.alphacoders.com/127/thumb-1920-1270367.jpg",
                 "https://images.alphacoders.com/128/thumb-1920-1284523.jpg",
                 "https://images8.alphacoders.com/130/thumb-1920-1305740.jpg",
-                "https://images3.alphacoders.com/859/thumb-1920-859892.jpg",
-                "https://images5.alphacoders.com/131/thumb-1920-1317585.jpg",
-                "https://images.alphacoders.com/132/thumb-1920-1320478.jpg"
+                "https://images3.alphacoders.com/859/thumb-1920-859892.jpg"
             ];
             // Escolha puramente aleatória em cada load
             const selectedBg = bgs[Math.floor(Math.random() * bgs.length)];
@@ -4396,10 +4394,10 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-tower-img-premium {
-            width: 120px;
-            height: 120px;
+            width: 180px;
+            height: 180px;
             object-fit: contain;
-            filter: drop-shadow(0 12px 20px rgba(0,0,0,0.6));
+            filter: drop-shadow(0 12px 25px rgba(0,0,0,0.7));
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 5;
         }
@@ -4642,10 +4640,10 @@ class GitHubPagesHTMLGenerator:
         /* Estilo unificado para torre removendo duplicatas */
 
         .cr-tower-card-premium {
-            width: 150px;
-            height: 180px;
+            width: 220px;
+            height: 260px;
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-            border-radius: 20px;
+            border-radius: 24px;
             border: 2px solid rgba(246, 173, 85, 0.4);
             position: relative;
             overflow: hidden;
@@ -4992,63 +4990,89 @@ class GitHubPagesHTMLGenerator:
         }
 
         @media (max-width: 768px) {
-            .container { padding: 20px 10px; }
-            .header h1 { font-size: 2em; }
+            .container {
+                width: 95% !important;
+                max-width: 100% !important;
+                padding: 15px 10px !important;
+                margin: 10px auto !important;
+            }
             
+            .cr-modal-container {
+                width: 95% !important;
+                max-width: 95% !important;
+                padding: 20px 15px !important;
+                border-radius: 16px !important;
+            }
+
+            .header h1 { font-size: 1.6em; }
+            
+            /* Palco VS Mobile */
+            .cr-main-vs-stage > div:first-child {
+                flex-direction: column !important;
+                gap: 25px !important;
+            }
+
+            /* Placar no topo */
+            .cr-main-vs-stage div[style*="flex:0 0 200px"], 
+            .cr-main-vs-stage div[id^="mode-"] {
+                order: -1 !important;
+                width: 100% !important;
+                flex: none !important;
+                margin-bottom: 10px;
+            }
+
             .cr-vs-row, .cr-vs-decks-row-premium {
                 flex-direction: column !important;
                 grid-template-columns: 1fr !important;
                 align-items: center !important;
-                gap: 40px !important;
+                gap: 30px !important;
+            }
+
+            /* Esconder o VS no meio para poupar espaço no mobile */
+            .cr-vs-decks-row-premium > div:nth-child(2) {
+                display: none !important;
             }
 
             .cr-deck-side {
                 width: 100% !important;
-                max-width: 450px !important;
+                max-width: 100% !important;
             }
 
             .cr-tower-img-premium {
-                width: 110px !important;
-                height: 110px !important;
+                width: 130px !important;
+                height: 130px !important;
             }
 
             .cr-tower-card-premium {
-                width: 140px !important;
-                height: 165px !important;
-                margin-bottom: 10px !important;
+                width: 160px !important;
+                height: 190px !important;
+                margin-bottom: 5px !important;
             }
 
             .cr-grid-4x2 {
                 grid-template-columns: repeat(4, 1fr) !important;
                 gap: 8px !important;
-                padding: 10px !important;
+                padding: 4px !important;
             }
 
             .cr-player-name-vs, .cr-player-name-premium {
-                font-size: 1.5em !important;
+                font-size: 1.35em !important;
             }
 
             .cr-vs-center-divider, .cr-vs-divider-vertical {
-                padding: 20px 0;
+                padding: 15px 0;
                 font-size: 2em !important;
-                opacity: 0.5 !important;
+                opacity: 0.8 !important;
             }
 
             .cr-battle-preview {
-                padding: 20px 15px !important;
+                padding: 15px 10px !important;
             }
-            
-            /* Ajuste para o Palco VS no mobile */
-            .cr-main-vs-stage > div:first-child {
-                flex-direction: column !important;
-                gap: 30px !important;
-            }
-            
-            .cr-main-vs-stage div[style*="flex:0 0 200px"] {
-                flex: none !important;
+
+            .cr-copy-deck-btn {
                 width: 100% !important;
-                order: -1; /* Placar no topo no mobile */
-                margin-bottom: 20px;
+                justify-content: center !important;
+                padding: 12px !important;
             }
         }
 
