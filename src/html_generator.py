@@ -2915,6 +2915,10 @@ class GitHubPagesHTMLGenerator:
             const day = new Date().getDate();
             const selectedBg = bgs[day % bgs.length];
             document.body.style.backgroundImage = `url('${selectedBg}')`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+            document.body.style.backgroundAttachment = 'fixed';
+            document.body.style.backgroundRepeat = 'no-repeat';
             
             // Fallback para imagem remota se a local falhar
             if (selectedBg.startsWith('assets/')) {
@@ -5159,7 +5163,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-modal-container {
-            width: 1350px !important;
+            width: 1600px !important;
             max-width: 98% !important;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
