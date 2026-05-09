@@ -4013,11 +4013,11 @@ class GitHubPagesHTMLGenerator:
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg-dark);
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
+            background: #020617;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+            background-repeat: no-repeat !important;
             color: #f8fafc;
             line-height: 1.6;
             min-height: 100vh;
@@ -4030,7 +4030,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 40px 20px;
             animation: fadeIn 0.8s ease-out;
@@ -4086,7 +4086,7 @@ class GitHubPagesHTMLGenerator:
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             width: 100%;
-            max-width: 1200px;
+            max-width: 1450px;
         }
 
         .stat-card {
