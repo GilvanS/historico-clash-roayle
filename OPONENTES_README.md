@@ -4,25 +4,17 @@ Script para gerar relatorio CSV dos oponentes enfrentados durante o ano e identi
 
 ## Como usar
 
-### 1. Configurar variaveis de ambiente
+### 1. Configurar variaveis no arquivo .env
 
-No Windows (PowerShell):
-```powershell
-$env:CR_API_TOKEN="seu_token_aqui"
-$env:CR_PLAYER_TAG="#SUATAG"
-```
+Para sua seguranca, as credenciais sao gerenciadas pelo arquivo `.env` na raiz do projeto.
 
-No Windows (CMD):
-```cmd
-set CR_API_TOKEN=seu_token_aqui
-set CR_PLAYER_TAG=#SUATAG
-```
-
-No Linux/Mac:
-```bash
-export CR_API_TOKEN="seu_token_aqui"
-export CR_PLAYER_TAG="#SUATAG"
-```
+1. Abra o arquivo `.env` (na raiz).
+2. Configure o seu token e tag:
+   ```env
+   CR_API_TOKEN="seu_token_aqui"
+   CR_PLAYER_TAG="#SUATAG"
+   ```
+3. O script carregara essas informacoes automaticamente.
 
 ### 2. Executar o script
 
