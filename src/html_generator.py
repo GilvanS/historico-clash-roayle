@@ -2810,6 +2810,22 @@ class GitHubPagesHTMLGenerator:
                 if (pMetricsEl) pMetricsEl.innerHTML = data.p_metrics;
                 if (oMetricsEl) oMetricsEl.innerHTML = data.o_metrics;
                 
+                // Atualiza HP e Torres
+                const pHpEl = document.getElementById(`player-hp-${oppId}`);
+                const oHpEl = document.getElementById(`opp-hp-${oppId}`);
+                if (pHpEl) pHpEl.innerHTML = data.p_hp;
+                if (oHpEl) oHpEl.innerHTML = data.o_hp;
+
+                // Atualiza Cards das Torres (Imagens e LV)
+                const pTowerEl = document.querySelector(`#opp-section-${oppId} .cr-tower-card-premium:nth-of-type(1)`);
+                const oTowerEl = document.querySelector(`#opp-section-${oppId} .cr-tower-card-premium:nth-of-type(2)`);
+                // Como temos várias torres, precisamos de IDs mais específicos ou querySelector
+                const towers = document.querySelectorAll(`#opp-section-${oppId} .cr-tower-card-premium`);
+                if (towers.length >= 2) {
+                    towers[0].innerHTML = data.p_tower;
+                    towers[1].innerHTML = data.o_tower;
+                }
+                
                 // Atualiza Grids de Decks
                 const pGridEl = document.getElementById(`p-grid-${oppId}`);
                 const oGridEl = document.getElementById(`o-grid-${oppId}`);
@@ -2896,13 +2912,19 @@ class GitHubPagesHTMLGenerator:
                     <div class="cr-grid-4x2">
                         ${cardsHtml}
                     </div>
+                    <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px; align-items:center;">
+                        <div class="cr-elixir-metrics-badge" title="Media Elixir">
+                            <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> ${avg}
+                        </div>
+                        <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
+                            <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> ${cycle}
+                        </div>
+                        <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:${leakedColor}; color:${leakedColor};">
+                            <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> ${leaked}
+                        </div>
+                    </div>
                     <div style="margin-top:15px; margin-bottom:10px; width:100%; display:flex; justify-content:center;">
                         ${copyBtnHtml}
-                    </div>
-                    <div class="cr-deck-metrics-premium" style="background: #020617; border-radius:15px; padding:10px; border:1px solid #1e293b;">
-                        <div class="cr-metric-item-p" title="Media Elixir" style="color:#fff; font-weight:700;"><span class="cr-metric-icon">💧</span> ${avg}</div>
-                        <div class="cr-metric-item-p" title="Ciclo 4 Cartas" style="color:#fff;"><span class="cr-metric-icon">🔄</span> ${cycle}</div>
-                        <div class="cr-metric-item-p" title="Elixir Vazado" style="color: ${leakedColor}; font-weight:800;"><span class="cr-metric-icon">🚫</span> ${leaked}</div>
                     </div>
                 </div>`;
         }
@@ -2938,7 +2960,7 @@ class GitHubPagesHTMLGenerator:
             if (event) event.currentTarget.classList.add('active');
         }
 
-        // Rotação aleatória de background
+        // Rotação dinâmica de background
         document.addEventListener('DOMContentLoaded', () => {
             const bgs = [
                 "https://images2.alphacoders.com/112/thumb-1920-1124066.jpg",
@@ -2950,15 +2972,39 @@ class GitHubPagesHTMLGenerator:
                 "https://images8.alphacoders.com/130/thumb-1920-1305740.jpg",
                 "https://images3.alphacoders.com/859/thumb-1920-859892.jpg"
             ];
-            // Escolha puramente aleatória em cada load
-            const selectedBg = bgs[Math.floor(Math.random() * bgs.length)];
             
-            document.body.style.backgroundImage = `linear-gradient(rgba(10, 15, 26, 0.75), rgba(10, 15, 26, 0.75)), url('${selectedBg}')`;
-            document.body.style.backgroundSize = 'cover';
-            document.body.style.backgroundPosition = 'center';
-            document.body.style.backgroundAttachment = 'fixed';
-            document.body.style.backgroundRepeat = 'no-repeat';
+            let bgIndex = Math.floor(Math.random() * bgs.length);
             
+            function updateBackground() {
+                const selectedBg = bgs[bgIndex];
+                document.body.style.backgroundImage = `linear-gradient(rgba(10, 15, 26, 0.45), rgba(10, 15, 26, 0.45)), url('${selectedBg}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundAttachment = 'fixed';
+                document.body.style.backgroundRepeat = 'no-repeat';
+                
+                // Atualiza info no console e footer
+                console.log("Background Ativo:", selectedBg);
+                const footer = document.querySelector('.footer');
+                if (footer) {
+                    let bgInfo = document.getElementById('cr-bg-info');
+                    if (!bgInfo) {
+                        bgInfo = document.createElement('p');
+                        bgInfo.id = 'cr-bg-info';
+                        bgInfo.style.fontSize = '0.7em';
+                        bgInfo.style.opacity = '0.4';
+                        bgInfo.style.marginTop = '10px';
+                        footer.appendChild(bgInfo);
+                    }
+                    bgInfo.innerHTML = `Wallpaper: <a href="${selectedBg}" target="_blank" style="color:inherit;text-decoration:none;">${selectedBg.split('/').pop()}</a>`;
+                }
+                
+                bgIndex = (bgIndex + 1) % bgs.length;
+            }
+
+            updateBackground();
+            setInterval(updateBackground, 30000); // Rotaciona a cada 30 segundos
+
             // Força o container principal a ter 1700px se a tela permitir
             const mainContainer = document.querySelector('.container');
             if (mainContainer) {
@@ -3031,9 +3077,18 @@ class GitHubPagesHTMLGenerator:
                                 <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-premium">
                                 <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {my_metrics_f['level']}</span>
                             </div>
-                            <div style="font-size:0.85em; color:#94a3b8; font-weight:700;">🏰 {my_metrics_f.get('hp', '--')} HP</div>
-                            <div style="font-size:0.8em; color:#94a3b8; margin-top:5px;">
-                                Vazado: <span style="color:{my_metrics_f['leaked_color']}; font-weight:800;">{my_metrics_f['leaked_label']}</span>
+                            <div style="font-size:0.85em; color:#94a3b8; font-weight:700;" id="player-hp-{i}">🏰 {my_metrics_f.get('hp', '--')} HP</div>
+                            
+                            <div id="player-metrics-{i}" style="display:flex; flex-direction:column; gap:8px; margin-top:5px; align-items:center;">
+                                <div class="cr-elixir-metrics-badge" title="Media Elixir">
+                                    <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {my_metrics_f['avg']}
+                                </div>
+                                <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
+                                    <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {my_metrics_f['cycle']}
+                                </div>
+                                <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:{my_metrics_f['leaked_color']}; color:{my_metrics_f['leaked_color']};">
+                                    <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> {my_metrics_f['leaked_label']}
+                                </div>
                             </div>
                         </div>
                         
@@ -3055,9 +3110,18 @@ class GitHubPagesHTMLGenerator:
                                 <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-premium">
                                 <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {opp_metrics_f['level']}</span>
                             </div>
-                            <div style="font-size:0.85em; color:#94a3b8; font-weight:700;">🏰 {opp_metrics_f.get('hp', '--')} HP</div>
-                            <div style="font-size:0.8em; color:#94a3b8; margin-top:5px;">
-                                Vazado: <span style="color:{opp_metrics_f['leaked_color']}; font-weight:800;">{opp_metrics_f['leaked_label']}</span>
+                            <div style="font-size:0.85em; color:#94a3b8; font-weight:700;" id="opp-hp-{i}">🏰 {opp_metrics_f.get('hp', '--')} HP</div>
+
+                            <div id="opp-metrics-{i}" style="display:flex; flex-direction:column; gap:8px; margin-top:5px; align-items:center;">
+                                <div class="cr-elixir-metrics-badge" title="Media Elixir">
+                                    <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {opp_metrics_f['avg']}
+                                </div>
+                                <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
+                                    <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {opp_metrics_f['cycle']}
+                                </div>
+                                <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:{opp_metrics_f['leaked_color']}; color:{opp_metrics_f['leaked_color']};">
+                                    <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> {opp_metrics_f['leaked_label']}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3098,22 +3162,36 @@ class GitHubPagesHTMLGenerator:
                     'p_score': b.get('crowns', 0),
                     'o_score': b.get('opponent_crowns', 0),
                     'p_metrics': f"""
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <img src="{m_metrics['tower_url']}" style="width:24px; height:24px; object-fit:contain;" title="{m_metrics['tower_name']}">
-                            <span>Lv {m_metrics['level']}</span>
-                        </div>
-                        <div style="height:15px; width:1px; background:rgba(255,255,255,0.1);"></div>
-                        <span>Vazado: <span style='color:{m_metrics['leaked_color']};'>{m_metrics['leaked_label']}</span></span>
-                        <div style="width:100%; display:block; margin-top:5px;">Custo: <b>{m_metrics['avg']}</b> | Ciclo: <b>{m_metrics['cycle']}</b></div>
+                                <div class="cr-elixir-metrics-badge" title="Media Elixir">
+                                    <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {m_metrics['avg']}
+                                </div>
+                                <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
+                                    <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {m_metrics['cycle']}
+                                </div>
+                                <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:{m_metrics['leaked_color']}; color:{m_metrics['leaked_color']};">
+                                    <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> {m_metrics['leaked_label']}
+                                </div>
                     """,
                     'o_metrics': f"""
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <img src="{o_metrics['tower_url']}" style="width:24px; height:24px; object-fit:contain;" title="{o_metrics['tower_name']}">
-                            <span>Lv {o_metrics['level']}</span>
-                        </div>
-                        <div style="height:15px; width:1px; background:rgba(255,255,255,0.1);"></div>
-                        <span>Vazado: <span style='color:{o_metrics['leaked_color']};'>{o_metrics['leaked_label']}</span></span>
-                        <div style="width:100%; display:block; margin-top:5px;">Custo: <b>{o_metrics['avg']}</b> | Ciclo: <b>{o_metrics['cycle']}</b></div>
+                                <div class="cr-elixir-metrics-badge" title="Media Elixir">
+                                    <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {o_metrics['avg']}
+                                </div>
+                                <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
+                                    <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {o_metrics['cycle']}
+                                </div>
+                                <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:{o_metrics['leaked_color']}; color:{o_metrics['leaked_color']};">
+                                    <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> {o_metrics['leaked_label']}
+                                </div>
+                    """,
+                    'p_hp': f"🏰 {m_metrics.get('hp', '--')} HP",
+                    'o_hp': f"🏰 {o_metrics.get('hp', '--')} HP",
+                    'p_tower': f"""
+                        <img src="{m_metrics['tower_url']}" class="cr-tower-img-premium" onerror="this.src='https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png'">
+                        <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {m_metrics['level']}</span>
+                    """,
+                    'o_tower': f"""
+                        <img src="{o_metrics['tower_url']}" class="cr-tower-img-premium" onerror="this.src='https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png'">
+                        <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {o_metrics['level']}</span>
                     """,
                     'p_grid': "".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in [cx.strip() for cx in b['my_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
                     'o_grid': "".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in [cx.strip() for cx in b['opp_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
@@ -4394,8 +4472,8 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-tower-img-premium {
-            width: 180px;
-            height: 180px;
+            width: 130px;
+            height: 130px;
             object-fit: contain;
             filter: drop-shadow(0 12px 25px rgba(0,0,0,0.7));
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -4640,14 +4718,14 @@ class GitHubPagesHTMLGenerator:
         /* Estilo unificado para torre removendo duplicatas */
 
         .cr-tower-card-premium {
-            width: 220px;
-            height: 260px;
+            width: 110px;
+            height: 140px;
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-            border-radius: 24px;
+            border-radius: 16px;
             border: 2px solid rgba(246, 173, 85, 0.4);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.7), inset 0 0 20px rgba(246, 173, 85, 0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7), inset 0 0 20px rgba(246, 173, 85, 0.1);
             margin-bottom: 0px;
             z-index: 5;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -4655,6 +4733,27 @@ class GitHubPagesHTMLGenerator:
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(12px);
+        }
+
+        .cr-elixir-icon-p {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 5px rgba(255,0,255,0.4));
+            vertical-align: middle;
+        }
+
+        .cr-elixir-metrics-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 10px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.8em;
+            font-weight: 700;
+            color: #fff;
         }
 
         .cr-tower-card-premium:hover {
@@ -4985,8 +5084,8 @@ class GitHubPagesHTMLGenerator:
         /* MEDIA QUERIES PARA MOBILE (TASK 3) */
         @media (max-width: 1024px) {
             .cr-vs-row { gap: 30px; }
-            .cr-tower-img-premium { width: 100px; height: 100px; }
-            .cr-tower-card-premium { width: 130px; height: 150px; }
+            .cr-tower-img-premium { width: 90px; height: 90px; }
+            .cr-tower-card-premium { width: 110px; height: 140px; }
         }
 
         @media (max-width: 768px) {
@@ -5039,13 +5138,13 @@ class GitHubPagesHTMLGenerator:
             }
 
             .cr-tower-img-premium {
-                width: 130px !important;
-                height: 130px !important;
+                width: 90px !important;
+                height: 90px !important;
             }
 
             .cr-tower-card-premium {
-                width: 160px !important;
-                height: 190px !important;
+                width: 100px !important;
+                height: 125px !important;
                 margin-bottom: 5px !important;
             }
 
@@ -5141,9 +5240,7 @@ class GitHubPagesHTMLGenerator:
             margin-bottom: 20px;
         }
 
-        .cr-battle-preview > div {
-            flex: 1;
-        }
+
 
         .cr-battle-preview .vs-divider {
             flex: 0 0 auto;
