@@ -15,6 +15,10 @@ from datetime import datetime, timedelta
 from csv_database_manager import CSVDatabaseManager
 from collections import Counter
 from typing import List, Dict, Optional
+from dotenv import load_dotenv
+
+# Carrega variaveis de ambiente do arquivo .env
+load_dotenv()
 
 class OpponentsReporter:
     def __init__(self, api_token: str, db_path: str = None):
