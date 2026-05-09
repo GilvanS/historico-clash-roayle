@@ -2715,144 +2715,11 @@ class GitHubPagesHTMLGenerator:
         return """
         <script>
         const CARD_MAP = """ + card_map_json + """;
-        function updateBattlePreview(deckId, battleIdx, battleDataJson) {
-            try {
-                const data = JSON.parse(decodeURIComponent(battleDataJson));
-                const modal = document.getElementById('cr-battle-modal');
-                const content = document.getElementById('battle-modal-content');
-                if (!modal || !content) return;
-                
-                const myDeckHtml = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.player_clan || '', data.my_metrics, data.my_deck_link, data.my_icons);
-                const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_clan || '', data.opp_metrics, data.opp_deck_link, data.opp_icons);
-                
-                const score = `${data.crowns || 0} - ${data.opponent_crowns || 0}`;
-                const tropChange = data.trophy_change || 0;
-                const tropColor = tropChange > 0 ? '#48bb78' : (tropChange < 0 ? '#f56565' : '#718096');
-                const tropSign = tropChange > 0 ? '+' : '';
-                const tropText = tropChange !== 0 ? tropSign + tropChange : '';
 
-                content.innerHTML = `
-                    <div class="cr-vs-row-premium-v2">
-                        <div class="cr-battle-score-header-premium">
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                                <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
-                                <div style="font-size:0.75em; color:#94a3b8; font-weight:700; letter-spacing:1px; text-transform:uppercase;">${data.date || ''}</div>
-                            </div>
-                            <div class="cr-score-display-premium">
-                                <span class="cr-score-val">${score}</span>
-                                <span class="cr-trophy-change-p" style="color: ${tropColor}">${tropText}</span>
-                            </div>
-                        </div>
-                        <div class="cr-vs-decks-row-premium">
-                            ${myDeckHtml}
-                            <div class="cr-vs-center-divider">VS</div>
-                            ${oppDeckHtml}
-                        </div>
-                    </div>
-                `;
-                
-                // Show modal
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden'; // Prevent scroll
-                
-                // Highlight badge in timeline
-                const timeline = document.querySelector('.timeline-' + deckId);
-                if (timeline) {
-                    timeline.querySelectorAll('.cr-battle-badge').forEach((b, i) => {
-                        if (i === battleIdx) {
-                            b.style.boxShadow = '0 0 0 3px #4299e1';
-                        } else {
-                            b.style.boxShadow = 'none';
-                        }
-                    });
-                }
-            } catch(e) { console.error("Error updating preview:", e); }
-        }
-
-        function closeBattleModal() {
-            const modal = document.getElementById('cr-battle-modal');
-            if (modal) {
-                modal.classList.remove('active');
-                document.body.style.overflow = ''; // Restore scroll
-            }
-        }
-
-        // Close on ESC and click outside
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeBattleModal();
-        });
-
-        document.addEventListener('click', (e) => {
-            const modal = document.getElementById('cr-battle-modal');
-            if (e.target === modal) closeBattleModal();
-        });
-
-        function updateOpponentView(oppId, element) {
-            try {
-                // Lê o JSON do data-attribute de forma segura
-                const data = JSON.parse(element.getAttribute('data-battle'));
-                
-                // Atualiza Placar e Modo
-                const pScoreEl = document.getElementById(`p-score-${oppId}`);
-                const oScoreEl = document.getElementById(`o-score-${oppId}`);
-                if (pScoreEl) pScoreEl.innerText = data.p_score;
-                if (oScoreEl) oScoreEl.innerText = data.o_score;
-                
-                // Atualiza Metadados (Data e Modo)
-                const dateEl = document.getElementById(`date-main-${oppId}`);
-                const modeEl = document.getElementById(`mode-${oppId}`);
-                if (dateEl) dateEl.innerText = '📅 ' + data.date;
-                if (modeEl) modeEl.innerText = data.mode;
-                
-                // Atualiza Métricas (Vazamento, Nível, etc)
-                const pMetricsEl = document.getElementById(`player-metrics-${oppId}`);
-                const oMetricsEl = document.getElementById(`opp-metrics-${oppId}`);
-                if (pMetricsEl) pMetricsEl.innerHTML = data.p_metrics;
-                if (oMetricsEl) oMetricsEl.innerHTML = data.o_metrics;
-                
-                // Atualiza HP e Torres
-                const pHpEl = document.getElementById(`player-hp-${oppId}`);
-                const oHpEl = document.getElementById(`opp-hp-${oppId}`);
-                if (pHpEl) pHpEl.innerHTML = data.p_hp;
-                if (oHpEl) oHpEl.innerHTML = data.o_hp;
-
-                // Atualiza Cards das Torres (Imagens e LV)
-                const pTowerEl = document.querySelector(`#opp-section-${oppId} .cr-tower-card-premium:nth-of-type(1)`);
-                const oTowerEl = document.querySelector(`#opp-section-${oppId} .cr-tower-card-premium:nth-of-type(2)`);
-                // Como temos várias torres, precisamos de IDs mais específicos ou querySelector
-                const towers = document.querySelectorAll(`#opp-section-${oppId} .cr-tower-card-premium`);
-                if (towers.length >= 2) {
-                    towers[0].innerHTML = data.p_tower;
-                    towers[1].innerHTML = data.o_tower;
-                }
-                
-                // Atualiza Grids de Decks
-                const pGridEl = document.getElementById(`p-grid-${oppId}`);
-                const oGridEl = document.getElementById(`o-grid-${oppId}`);
-                if (pGridEl) pGridEl.innerHTML = data.p_grid;
-                if (oGridEl) oGridEl.innerHTML = data.o_grid;
-                
-                // Atualiza Links de Cópia
-                const pCopyEl = document.getElementById(`p-copy-${oppId}`);
-                const oCopyEl = document.getElementById(`o-copy-${oppId}`);
-                if (pCopyEl) pCopyEl.href = data.p_copy;
-                if (oCopyEl) oCopyEl.href = data.o_copy;
-                
-                // Efeito visual de seleção na timeline
-                const container = element.parentElement;
-                container.querySelectorAll('.cr-date-selector').forEach(el => {
-                    el.style.borderColor = '#1e293b';
-                    el.style.background = '#020617';
-                });
-                element.style.borderColor = '#4299e1';
-                element.style.background = '#1e293b';
-            }
-
-            function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics, deckLink, icons) {
+        function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics, deckLink, icons) {
             if (!deckStr) return `<div class="${sideClass} cr-empty-grid">N/D</div>`;
             let cards = deckStr.replace(/ \\| /g, '|').split('|').filter(Boolean).slice(0, 8);
             
-            // Lógica robusta para ícone da torre
             let towerUrl = "https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png";
             let towerName = "Tower Princess";
             
@@ -2893,7 +2760,7 @@ class GitHubPagesHTMLGenerator:
             const towerCardHtml = `
                 <div class="cr-tower-card-premium" title="${towerName}">
                     <img src="${towerUrl}" class="cr-tower-img-premium" onerror="this.src='${fallbackTower}'">
-                    <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV ${tLevel}</span>
+                    <span class="cr-card-level-badge">LV ${tLevel}</span>
                 </div>`;
 
             const copyBtnHtml = deckLink ? `
@@ -2912,43 +2779,130 @@ class GitHubPagesHTMLGenerator:
                     <div class="cr-grid-4x2">
                         ${cardsHtml}
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px; align-items:center;">
+                    <div class="cr-elixir-metrics-container">
                         <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                            <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> ${avg}
+                            <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span class="metric-label">Avg:</span> ${avg}
                         </div>
                         <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
-                            <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> ${cycle}
+                            <span class="metric-emoji">🔄</span> <span class="metric-label">Ciclo:</span> ${cycle}
                         </div>
                         <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="border-color:${leakedColor}; color:${leakedColor};">
-                            <span style="font-size:1.1em; margin-right:4px;">🚫</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Vazado:</span> ${leaked}
+                            <span class="metric-emoji">🚫</span> <span class="metric-label">Vazado:</span> ${leaked}
                         </div>
                     </div>
-                    <div style="margin-top:15px; margin-bottom:10px; width:100%; display:flex; justify-content:center;">
+                    <div class="cr-copy-container">
                         ${copyBtnHtml}
                     </div>
                 </div>`;
         }
 
+        function updateBattlePreview(deckId, battleIdx, battleDataJson) {
+            try {
+                const data = JSON.parse(decodeURIComponent(battleDataJson));
+                const modal = document.getElementById('cr-battle-modal');
+                const content = document.getElementById('battle-modal-content');
+                if (!modal || !content) return;
+                
+                const myDeckHtml = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.player_clan || '', data.my_metrics, data.my_deck_link, data.my_icons);
+                const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_clan || '', data.opp_metrics, data.opp_deck_link, data.opp_icons);
+                
+                const score = `${data.crowns || 0} - ${data.opponent_crowns || 0}`;
+                const tropChange = data.trophy_change || 0;
+                const tropColor = tropChange > 0 ? '#48bb78' : (tropChange < 0 ? '#f56565' : '#718096');
+                const tropSign = tropChange > 0 ? '+' : '';
+                const tropText = tropChange !== 0 ? tropSign + tropChange : '';
+
+                content.innerHTML = `
+                    <div class="cr-vs-row-premium-v2">
+                        <div class="cr-battle-score-header-premium">
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                                <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
+                                <div class="cr-battle-date-p">${data.date || ''}</div>
+                            </div>
+                            <div class="cr-score-display-premium">
+                                <span class="cr-score-val">${score}</span>
+                                <span class="cr-trophy-change-p" style="color: ${tropColor}">${tropText}</span>
+                            </div>
+                        </div>
+                        <div class="cr-vs-decks-row-premium">
+                            ${myDeckHtml}
+                            <div class="cr-vs-center-divider">VS</div>
+                            ${oppDeckHtml}
+                        </div>
+                    </div>
+                `;
+                
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                
+            } catch(e) { console.error("Error updating preview:", e); }
+        }
+
+        function closeBattleModal() {
+            const modal = document.getElementById('cr-battle-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function updateOpponentView(oppId, element) {
+            try {
+                const data = JSON.parse(element.getAttribute('data-battle'));
+                
+                const pScoreEl = document.getElementById(`p-score-${oppId}`);
+                const oScoreEl = document.getElementById(`o-score-${oppId}`);
+                if (pScoreEl) pScoreEl.innerText = data.p_score;
+                if (oScoreEl) oScoreEl.innerText = data.o_score;
+                
+                const dateEl = document.getElementById(`date-main-${oppId}`);
+                const modeEl = document.getElementById(`mode-${oppId}`);
+                if (dateEl) dateEl.innerText = '📅 ' + data.date;
+                if (modeEl) modeEl.innerText = data.mode;
+                
+                const pMetricsEl = document.getElementById(`player-metrics-${oppId}`);
+                const oMetricsEl = document.getElementById(`opp-metrics-${oppId}`);
+                if (pMetricsEl) pMetricsEl.innerHTML = data.p_metrics;
+                if (oMetricsEl) oMetricsEl.innerHTML = data.o_metrics;
+                
+                const pHpEl = document.getElementById(`player-hp-${oppId}`);
+                const oHpEl = document.getElementById(`opp-hp-${oppId}`);
+                if (pHpEl) pHpEl.innerHTML = data.p_hp;
+                if (oHpEl) oHpEl.innerHTML = data.o_hp;
+
+                const towers = document.querySelectorAll(`#opp-section-${oppId} .cr-tower-card-premium`);
+                if (towers.length >= 2) {
+                    towers[0].innerHTML = data.p_tower;
+                    towers[1].innerHTML = data.o_tower;
+                }
+                
+                const pGridEl = document.getElementById(`p-grid-${oppId}`);
+                const oGridEl = document.getElementById(`o-grid-${oppId}`);
+                if (pGridEl) pGridEl.innerHTML = data.p_grid;
+                if (oGridEl) oGridEl.innerHTML = data.o_grid;
+                
+                const pCopyEl = document.getElementById(`p-copy-${oppId}`);
+                const oCopyEl = document.getElementById(`o-copy-${oppId}`);
+                if (pCopyEl) pCopyEl.href = data.p_copy;
+                if (oCopyEl) oCopyEl.href = data.o_copy;
+                
+                const container = element.parentElement;
+                container.querySelectorAll('.cr-date-selector').forEach(el => {
+                    el.style.borderColor = '#1e293b';
+                    el.style.background = '#020617';
+                });
+                element.style.borderColor = '#4299e1';
+                element.style.background = '#1e293b';
+            } catch(e) { console.error("Error updating opponent view:", e); }
+        }
+
         function showCopyToast(e) {
             const toast = document.createElement('div');
             toast.textContent = 'Aguardando abertura no jogo...';
-            toast.style.position = 'fixed';
-            toast.style.bottom = '20px';
-            toast.style.left = '50%';
-            toast.style.transform = 'translateX(-50%)';
-            toast.style.background = 'rgba(72, 187, 120, 0.95)';
-            toast.style.color = '#fff';
-            toast.style.padding = '12px 24px';
-            toast.style.borderRadius = '50px';
-            toast.style.fontWeight = 'bold';
-            toast.style.zIndex = '9999';
-            toast.style.boxShadow = '0 5px 15px rgba(0,0,0,0.4)';
-            toast.style.backdropFilter = 'blur(10px)';
-            toast.style.fontFamily = "'Outfit', sans-serif";
+            toast.className = 'cr-toast-premium';
             document.body.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.5s ease';
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
         }
@@ -2960,7 +2914,15 @@ class GitHubPagesHTMLGenerator:
             if (event) event.currentTarget.classList.add('active');
         }
 
-        // Rotação dinâmica de background
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeBattleModal();
+        });
+
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('cr-battle-modal');
+            if (e.target === modal) closeBattleModal();
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             const bgs = [
                 "https://images2.alphacoders.com/112/thumb-1920-1124066.jpg",
@@ -2977,38 +2939,31 @@ class GitHubPagesHTMLGenerator:
             
             function updateBackground() {
                 const selectedBg = bgs[bgIndex];
-                document.body.style.backgroundImage = `linear-gradient(rgba(10, 15, 26, 0.45), rgba(10, 15, 26, 0.45)), url('${selectedBg}')`;
+                document.body.style.backgroundImage = `linear-gradient(rgba(10, 15, 26, 0.5), rgba(10, 15, 26, 0.5)), url('${selectedBg}')`;
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundAttachment = 'fixed';
-                document.body.style.backgroundRepeat = 'no-repeat';
                 
-                // Atualiza info no console e footer
-                console.log("Background Ativo:", selectedBg);
                 const footer = document.querySelector('.footer');
                 if (footer) {
                     let bgInfo = document.getElementById('cr-bg-info');
                     if (!bgInfo) {
                         bgInfo = document.createElement('p');
                         bgInfo.id = 'cr-bg-info';
-                        bgInfo.style.fontSize = '0.7em';
-                        bgInfo.style.opacity = '0.4';
-                        bgInfo.style.marginTop = '10px';
+                        bgInfo.className = 'cr-bg-info-style';
                         footer.appendChild(bgInfo);
                     }
-                    bgInfo.innerHTML = `Wallpaper: <a href="${selectedBg}" target="_blank" style="color:inherit;text-decoration:none;">${selectedBg.split('/').pop()}</a>`;
+                    bgInfo.innerHTML = `Wallpaper: <a href="${selectedBg}" target="_blank">${selectedBg.split('/').pop()}</a>`;
                 }
-                
                 bgIndex = (bgIndex + 1) % bgs.length;
             }
 
             updateBackground();
-            setInterval(updateBackground, 30000); // Rotaciona a cada 30 segundos
+            setInterval(updateBackground, 30000);
 
-            // Força o container principal a ter 1700px se a tela permitir
             const mainContainer = document.querySelector('.container');
             if (mainContainer) {
-                mainContainer.style.maxWidth = '1700px';
+                mainContainer.style.maxWidth = '1800px';
                 mainContainer.style.width = '100%';
             }
         });
@@ -3081,7 +3036,7 @@ class GitHubPagesHTMLGenerator:
                             
                             <div id="player-metrics-{i}" style="display:flex; flex-direction:column; gap:8px; margin-top:5px; align-items:center;">
                                 <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                                    <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {my_metrics_f['avg']}
+                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {my_metrics_f['avg']}
                                 </div>
                                 <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
                                     <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {my_metrics_f['cycle']}
@@ -3114,7 +3069,7 @@ class GitHubPagesHTMLGenerator:
 
                             <div id="opp-metrics-{i}" style="display:flex; flex-direction:column; gap:8px; margin-top:5px; align-items:center;">
                                 <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                                    <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {opp_metrics_f['avg']}
+                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {opp_metrics_f['avg']}
                                 </div>
                                 <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
                                     <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {opp_metrics_f['cycle']}
@@ -3163,7 +3118,7 @@ class GitHubPagesHTMLGenerator:
                     'o_score': b.get('opponent_crowns', 0),
                     'p_metrics': f"""
                                 <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                                    <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {m_metrics['avg']}
+                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {m_metrics['avg']}
                                 </div>
                                 <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
                                     <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {m_metrics['cycle']}
@@ -3174,7 +3129,7 @@ class GitHubPagesHTMLGenerator:
                     """,
                     'o_metrics': f"""
                                 <div class="cr-elixir-metrics-badge" title="Media Elixir">
-                                    <img src="https://liquipedia.net/commons/images/6/60/Card_stats_icon_Elixir.png" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {o_metrics['avg']}
+                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Avg:</span> {o_metrics['avg']}
                                 </div>
                                 <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas">
                                     <span style="font-size:1.1em; margin-right:4px;">🔄</span> <span style="color:#94a3b8;margin-right:4px;font-size:0.9em;">Ciclo:</span> {o_metrics['cycle']}
@@ -4153,11 +4108,10 @@ class GitHubPagesHTMLGenerator:
         body {
             font-family: 'Inter', sans-serif;
             background: #020617;
-            background-image: url('https://picsum.photos/1920/1080?random=' + Math.floor(Math.random() * 1000));
-            background-size: cover !important;
-            background-position: center !important;
-            background-attachment: fixed !important;
-            background-repeat: no-repeat !important;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             color: #f8fafc;
             line-height: 1.6;
             min-height: 100vh;
@@ -4170,7 +4124,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .container {
-            max-width: 1700px;
+            max-width: 1800px;
             margin: 0 auto;
             padding: 40px 20px;
             animation: fadeIn 0.8s ease-out;
@@ -4226,7 +4180,7 @@ class GitHubPagesHTMLGenerator:
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             width: 100%;
-            max-width: 1700px;
+            max-width: 1800px;
         }
 
         .stat-card {
@@ -4435,7 +4389,7 @@ class GitHubPagesHTMLGenerator:
             position: relative;
             overflow: hidden;
             width: 100%;
-            max-width: 1700px;
+            max-width: 1800px;
             margin-left: auto;
             margin-right: auto;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
@@ -4718,21 +4672,98 @@ class GitHubPagesHTMLGenerator:
         /* Estilo unificado para torre removendo duplicatas */
 
         .cr-tower-card-premium {
-            width: 110px;
-            height: 140px;
+            width: 85px;
+            height: 102px;
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-            border-radius: 16px;
+            border-radius: 12px;
             border: 2px solid rgba(246, 173, 85, 0.4);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.7), inset 0 0 20px rgba(246, 173, 85, 0.1);
-            margin-bottom: 0px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 0 15px rgba(246, 173, 85, 0.1);
+            margin: 0 auto 10px auto;
             z-index: 5;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(12px);
+        }
+
+        .cr-elixir-metrics-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .cr-elixir-metrics-badge .metric-label {
+            color: #94a3b8;
+            margin-right: 4px;
+            font-size: 0.9em;
+        }
+
+        .cr-elixir-metrics-badge .metric-emoji {
+            font-size: 1.1em;
+            margin-right: 4px;
+        }
+
+        .cr-copy-container {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .cr-toast-premium {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(72, 187, 120, 0.98);
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-weight: 800;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2);
+            font-family: 'Outfit', sans-serif;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { transform: translate(-50%, 100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .cr-bg-info-style {
+            font-size: 0.7em;
+            opacity: 0.4;
+            margin-top: 10px;
+            color: #94a3b8;
+        }
+
+        .cr-bg-info-style a {
+            color: inherit;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .cr-bg-info-style a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .cr-battle-date-p {
+            font-size: 0.75em;
+            color: #94a3b8;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
         .cr-elixir-icon-p {
