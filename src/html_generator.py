@@ -1683,6 +1683,10 @@ class GitHubPagesHTMLGenerator:
                     <span>Wins</span>
                 </div>
                 <div class="legend-item">
+                    <span class="legend-color legend-draws"></span>
+                    <span>Draws</span>
+                </div>
+                <div class="legend-item">
                     <span class="legend-color legend-losses"></span>
                     <span>Losses</span>
                 </div>
@@ -4947,13 +4951,56 @@ class GitHubPagesHTMLGenerator:
             white-space: nowrap;
         }
 
+        /* Histogram Premium v2 (Glassmorphism) */
+        .chart-container {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px 25px 60px 25px;
+            margin: 25px 0;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            overflow: visible;
+        }
+
+        .chart-container.histogram-desktop { display: block; }
+        .chart-container.histogram-mobile { display: none; }
+
+        .stacked-histogram {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 200px;
+            gap: 10px;
+            padding: 0 5px;
+        }
+
         .histogram-bar {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            gap: 4px;
+            gap: 6px;
             position: relative;
+            height: 100%;
+        }
+
+        .bar-stack {
+            width: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 2px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bar-stack:hover {
+            transform: scaleY(1.05);
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
 
         /* MEDIA QUERIES PARA MOBILE (TASK 3) */
@@ -5048,6 +5095,30 @@ class GitHubPagesHTMLGenerator:
                 justify-content: center !important;
                 padding: 12px !important;
             }
+
+            /* Histogram Mobile Adjustments */
+            .chart-container.histogram-desktop { display: none; }
+            .chart-container.histogram-mobile { display: block; }
+            
+            .chart-container {
+                padding: 20px 10px 50px 10px !important;
+                margin: 15px 0 !important;
+            }
+
+            .stacked-histogram {
+                height: 160px !important;
+                gap: 6px !important;
+            }
+
+            .bar-date {
+                bottom: -35px !important;
+                font-size: 0.65em !important;
+            }
+
+            .histogram-legend {
+                gap: 15px !important;
+                margin-top: 40px !important;
+            }
         }
 
         .bar-segment {
@@ -5065,13 +5136,47 @@ class GitHubPagesHTMLGenerator:
 
         .bar-date {
             position: absolute;
-            bottom: -35px;
+            bottom: -40px;
             left: 50%;
             transform: translateX(-50%) rotate(-45deg);
-            font-size: 0.7em;
-            color: #64748b;
+            font-size: 0.75em;
+            color: #94a3b8;
             white-space: nowrap;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
         }
+
+        /* Histogram Legend Premium */
+        .histogram-legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 50px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85em;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .legend-wins { background: var(--success); }
+        .legend-losses { background: var(--danger); }
+        .legend-draws { background: var(--accent); }
 
         .rival-badge {
             font-size: 0.65em;
