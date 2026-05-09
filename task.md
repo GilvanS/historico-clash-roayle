@@ -4,3 +4,9 @@
 - [x] Atualização dos modais de batalha com novo sistema de cores
 - [x] Sincronização e Deploy final via Sync_Elite.bat
 - [x] Resolução de conflitos de Git e integridade dos dados
+- [x] Padronização da largura máxima do dashboard para 1700px
+- [x] Integração de ícones de torre e métricas de elixir no Palco VS
+- [x] Expansão do sistema de background (10 imagens) com overlay de legibilidade
+- [x] Aumento do tamanho das torres para 120px e implementação de molduras premium
+- [x] Implementação de Media Queries para Layout Vertical (Mobile Stack) no Palco VS
+- [x] Correção de sintaxe e redundâncias no CSS/JS do Dashboard

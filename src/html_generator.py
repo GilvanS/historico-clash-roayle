@@ -398,6 +398,25 @@ class GitHubPagesHTMLGenerator:
         }
         return card_mapping.get(card_name, card_name.replace(' ', '').replace('.', '').replace('-', ''))
 
+    def get_tower_image_path(self, tower_name: str) -> str:
+        """Retorna a URL da imagem da torre"""
+        if not tower_name or tower_name == 'N/D':
+            return "https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png"
+        
+        # Mapeamento para os slugs da RoyaleAPI
+        tower_slugs = {
+            'Tower Princess': 'tower-princess',
+            'Cannoneer': 'cannoneer',
+            'Dagger Duchess': 'dagger-duchess',
+            'King Tower': 'king-tower'
+        }
+        
+        slug = tower_slugs.get(tower_name)
+        if not slug:
+            slug = tower_name.lower().replace(' ', '-').replace('.', '')
+            
+        return f"https://cdn.royaleapi.com/static/img/cards-75/{slug}.png"
+
     def get_card_image_path(self, card_name: str) -> str:
         """Retorna a URL da imagem da carta usando o cards_master_icons.csv"""
         if not card_name or card_name == 'N/D':
@@ -609,6 +628,7 @@ class GitHubPagesHTMLGenerator:
         metrics['leaked_color'] = '#f56565' if float(leaked) > 0 else '#48bb78'
         metrics['leaked_label'] = f"{leaked:.1f}" if float(leaked) > 0 else 'N/A'
         metrics['tower_name'] = battle.get('torre_oponente' if is_opponent else 'torre_jogador') or 'Tower Princess'
+        metrics['tower_url'] = self.get_tower_image_path(metrics['tower_name'])
         return metrics
     
     def fetch_opponent_data_from_api(self, opponent_tag: str) -> Optional[Dict]:
@@ -2621,10 +2641,12 @@ class GitHubPagesHTMLGenerator:
                 'game_mode': b.get('modo_jogo') or b.get('arena_name', 'Batalha'),
                 'player_clan': b.get('player_clan', ''),
                 'opp_clan': b.get('opp_clan', ''),
-                'player_leaked': b.get('player_leaked', 0),
-                'opp_leaked': b.get('opp_leaked', 0),
-                'player_tower_level': b.get('player_tower_level', 14),
-                'opp_tower_level': b.get('opp_tower_level', 14),
+                'player_leaked': b.get('elixir_vazado_jogador') or b.get('player_leaked', 0),
+                'opp_leaked': b.get('elixir_vazado_oponente') or b.get('opp_leaked', 0),
+                'torre_jogador': b.get('torre_jogador') or b.get('player_tower_name', 'Tower Princess'),
+                'torre_oponente': b.get('torre_oponente') or b.get('opp_tower_name', 'Tower Princess'),
+                'player_tower_level': b.get('nivel_torre_jogador') or b.get('player_tower_level', 14),
+                'opp_tower_level': b.get('nivel_torre_oponente') or b.get('opp_tower_level', 14),
                 'dt_obj': dt 
             })
             
@@ -2814,9 +2836,18 @@ class GitHubPagesHTMLGenerator:
             if (!deckStr) return `<div class="${sideClass} cr-empty-grid">N/D</div>`;
             let cards = deckStr.replace(/ \\| /g, '|').split('|').filter(Boolean).slice(0, 8);
             
-            const towerName = metrics ? (metrics.tower_name || 'Tower Princess') : 'Tower Princess';
-            const towerSlug = towerName.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
-            const towerUrl = `https://cdn.royaleapi.com/static/img/cards-75/${towerSlug}.png`;
+            // Lógica robusta para ícone da torre
+            let towerUrl = "https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png";
+            let towerName = "Tower Princess";
+            
+            if (icons && icons.tower_url) {
+                towerUrl = icons.tower_url;
+                towerName = icons.tower_name || "Tower Skin";
+            } else if (metrics && metrics.tower_url) {
+                towerUrl = metrics.tower_url;
+                towerName = metrics.tower_name || "Tower Skin";
+            }
+            
             const fallbackTower = "https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png";
 
             const cardsHtml = cards.map(c => {
@@ -2845,9 +2876,14 @@ class GitHubPagesHTMLGenerator:
 
             const towerCardHtml = `
                 <div class="cr-tower-card-premium" title="${towerName}">
-                    <img src="${towerUrl}" class="cr-tower-card-img" onerror="this.src='${fallbackTower}'">
-                    <span class="cr-card-level-badge" style="bottom: -2px; right: -2px; font-size: 0.5em; padding: 1px 4px;">Lv ${tLevel}</span>
+                    <img src="${towerUrl}" class="cr-tower-img-premium" onerror="this.src='${fallbackTower}'">
+                    <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV ${tLevel}</span>
                 </div>`;
+
+            const copyBtnHtml = deckLink ? `
+                <a href="${deckLink}" class="cr-copy-deck-btn" onclick="showCopyToast(event)">
+                    <span>📋</span> COPIAR DECK
+                </a>` : '';
 
             return `
                 <div class="cr-deck-side ${sideClass}">
@@ -2902,32 +2938,34 @@ class GitHubPagesHTMLGenerator:
             if (event) event.currentTarget.classList.add('active');
         }
 
-        // Rotação diária de background
+        // Rotação aleatória de background
         document.addEventListener('DOMContentLoaded', () => {
             const bgs = [
                 "https://images2.alphacoders.com/112/thumb-1920-1124066.jpg",
-                "https://wallpapers.com/images/featured/clash-royale-v0d8p9p3f2j7j0u0.jpg",
-                "https://images5.alphacoders.com/687/687588.jpg",
-                "https://images.alphacoders.com/112/1124063.jpg",
-                "https://images7.alphacoders.com/687/687590.jpg",
-                "https://images2.alphacoders.com/687/687589.jpg",
-                "https://images8.alphacoders.com/687/687593.jpg"
+                "https://images5.alphacoders.com/129/thumb-1920-1297235.jpg",
+                "https://images.alphacoders.com/859/thumb-1920-859000.jpg",
+                "https://images5.alphacoders.com/128/thumb-1920-1284525.jpg",
+                "https://images2.alphacoders.com/127/thumb-1920-1270367.jpg",
+                "https://images.alphacoders.com/128/thumb-1920-1284523.jpg",
+                "https://images8.alphacoders.com/130/thumb-1920-1305740.jpg",
+                "https://images3.alphacoders.com/859/thumb-1920-859892.jpg",
+                "https://images5.alphacoders.com/131/thumb-1920-1317585.jpg",
+                "https://images.alphacoders.com/132/thumb-1920-1320478.jpg"
             ];
-            const day = new Date().getDate();
-            const selectedBg = bgs[day % bgs.length];
-            document.body.style.backgroundImage = `url('${selectedBg}')`;
+            // Escolha puramente aleatória em cada load
+            const selectedBg = bgs[Math.floor(Math.random() * bgs.length)];
+            
+            document.body.style.backgroundImage = `linear-gradient(rgba(10, 15, 26, 0.75), rgba(10, 15, 26, 0.75)), url('${selectedBg}')`;
             document.body.style.backgroundSize = 'cover';
             document.body.style.backgroundPosition = 'center';
             document.body.style.backgroundAttachment = 'fixed';
             document.body.style.backgroundRepeat = 'no-repeat';
             
-            // Fallback para imagem remota se a local falhar
-            if (selectedBg.startsWith('assets/')) {
-                const img = new Image();
-                img.onerror = () => {
-                    document.body.style.backgroundImage = "url('https://images2.alphacoders.com/112/thumb-1920-1124066.jpg')";
-                };
-                img.src = selectedBg;
+            // Força o container principal a ter 1700px se a tela permitir
+            const mainContainer = document.querySelector('.container');
+            if (mainContainer) {
+                mainContainer.style.maxWidth = '1700px';
+                mainContainer.style.width = '100%';
             }
         });
         </script>
@@ -2989,11 +3027,15 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 30px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
                         <!-- Player Header -->
-                        <div style="flex:1; text-align:center;">
-                            <div style="color:#4299e1; font-weight:900; font-size:1.3em; margin-bottom:5px;">{player_name}</div>
-                            <div style="font-size:0.8em; color:#94a3b8;" id="player-metrics-{i}">
-                                Torre Lv {first_b.get('player_tower_level', 14)} | Vazado: <span style="color:{my_metrics_f['leaked_color']};">{my_metrics_f['leaked_label']}</span><br>
-                                Custo: <b>{my_metrics_f['avg']}</b> | Ciclo: <b>{my_metrics_f['cycle']}</b>
+                        <div style="flex:1; text-align:center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                            <div style="color:#4299e1; font-weight:900; font-size:1.5em;">{player_name}</div>
+                            <div class="cr-tower-card-premium" title="{my_metrics_f['tower_name']}">
+                                <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-premium">
+                                <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {my_metrics_f['level']}</span>
+                            </div>
+                            <div style="font-size:0.85em; color:#94a3b8; font-weight:700;">🏰 {my_metrics_f.get('hp', '--')} HP</div>
+                            <div style="font-size:0.8em; color:#94a3b8; margin-top:5px;">
+                                Vazado: <span style="color:{my_metrics_f['leaked_color']}; font-weight:800;">{my_metrics_f['leaked_label']}</span>
                             </div>
                         </div>
                         
@@ -3009,11 +3051,15 @@ class GitHubPagesHTMLGenerator:
                         </div>
 
                         <!-- Opponent Header -->
-                        <div style="flex:1; text-align:center;">
-                            <div style="color:#f56565; font-weight:900; font-size:1.3em; margin-bottom:5px;">{opp['opponent_name']}</div>
-                            <div style="font-size:0.8em; color:#94a3b8;" id="opp-metrics-{i}">
-                                Torre Lv {first_b.get('opp_tower_level', 14)} | Vazado: <span style="color:{opp_metrics_f['leaked_color']};">{opp_metrics_f['leaked_label']}</span><br>
-                                Custo: <b>{opp_metrics_f['avg']}</b> | Ciclo: <b>{opp_metrics_f['cycle']}</b>
+                        <div style="flex:1; text-align:center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                            <div style="color:#f56565; font-weight:900; font-size:1.5em;">{opp['opponent_name']}</div>
+                            <div class="cr-tower-card-premium" title="{opp_metrics_f['tower_name']}">
+                                <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-premium">
+                                <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {opp_metrics_f['level']}</span>
+                            </div>
+                            <div style="font-size:0.85em; color:#94a3b8; font-weight:700;">🏰 {opp_metrics_f.get('hp', '--')} HP</div>
+                            <div style="font-size:0.8em; color:#94a3b8; margin-top:5px;">
+                                Vazado: <span style="color:{opp_metrics_f['leaked_color']}; font-weight:800;">{opp_metrics_f['leaked_label']}</span>
                             </div>
                         </div>
                     </div>
@@ -3053,8 +3099,24 @@ class GitHubPagesHTMLGenerator:
                 b_json = json.dumps({
                     'p_score': b.get('crowns', 0),
                     'o_score': b.get('opponent_crowns', 0),
-                    'p_metrics': f"Torre Lv {b.get('player_tower_level', 14)} | Vazado: <span style='color:{m_metrics['leaked_color']};'>{m_metrics['leaked_label']}</span><br>Custo: <b>{m_metrics['avg']}</b> | Ciclo: <b>{m_metrics['cycle']}</b>",
-                    'o_metrics': f"Torre Lv {b.get('opp_tower_level', 14)} | Vazado: <span style='color:{o_metrics['leaked_color']};'>{o_metrics['leaked_label']}</span><br>Custo: <b>{o_metrics['avg']}</b> | Ciclo: <b>{o_metrics['cycle']}</b>",
+                    'p_metrics': f"""
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <img src="{m_metrics['tower_url']}" style="width:24px; height:24px; object-fit:contain;" title="{m_metrics['tower_name']}">
+                            <span>Lv {m_metrics['level']}</span>
+                        </div>
+                        <div style="height:15px; width:1px; background:rgba(255,255,255,0.1);"></div>
+                        <span>Vazado: <span style='color:{m_metrics['leaked_color']};'>{m_metrics['leaked_label']}</span></span>
+                        <div style="width:100%; display:block; margin-top:5px;">Custo: <b>{m_metrics['avg']}</b> | Ciclo: <b>{m_metrics['cycle']}</b></div>
+                    """,
+                    'o_metrics': f"""
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <img src="{o_metrics['tower_url']}" style="width:24px; height:24px; object-fit:contain;" title="{o_metrics['tower_name']}">
+                            <span>Lv {o_metrics['level']}</span>
+                        </div>
+                        <div style="height:15px; width:1px; background:rgba(255,255,255,0.1);"></div>
+                        <span>Vazado: <span style='color:{o_metrics['leaked_color']};'>{o_metrics['leaked_label']}</span></span>
+                        <div style="width:100%; display:block; margin-top:5px;">Custo: <b>{o_metrics['avg']}</b> | Ciclo: <b>{o_metrics['cycle']}</b></div>
+                    """,
                     'p_grid': "".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in [cx.strip() for cx in b['my_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
                     'o_grid': "".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in [cx.strip() for cx in b['opp_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
                     'p_copy': self.get_copy_deck_link([cx.strip() for cx in b['my_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
@@ -4015,6 +4077,7 @@ class GitHubPagesHTMLGenerator:
         body {
             font-family: 'Inter', sans-serif;
             background: #020617;
+            background-image: url('https://picsum.photos/1920/1080?random=' + Math.floor(Math.random() * 1000));
             background-size: cover !important;
             background-position: center !important;
             background-attachment: fixed !important;
@@ -4087,7 +4150,7 @@ class GitHubPagesHTMLGenerator:
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             width: 100%;
-            max-width: 1550px;
+            max-width: 1700px;
         }
 
         .stat-card {
@@ -4296,7 +4359,7 @@ class GitHubPagesHTMLGenerator:
             position: relative;
             overflow: hidden;
             width: 100%;
-            max-width: 2200px;
+            max-width: 1700px;
             margin-left: auto;
             margin-right: auto;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
@@ -4333,15 +4396,17 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-tower-img-premium {
-            width: 80px;
-            height: 80px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
-            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.5));
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 12px 20px rgba(0,0,0,0.6));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 5;
         }
 
         .cr-tower-img-premium:hover {
-            transform: translateY(-5px) scale(1.1);
+            transform: translateY(-10px) scale(1.15);
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.8));
         }
 
         .cr-player-name-vs {
@@ -4574,29 +4639,24 @@ class GitHubPagesHTMLGenerator:
         }
 
 
-        .cr-tower-img-premium {
-            height: 35px;
-            width: auto;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
-        }
+        /* Estilo unificado para torre removendo duplicatas */
 
         .cr-tower-card-premium {
-            width: 72px;
-            height: 86px;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-            border-radius: 12px;
-            border: 2px solid rgba(246, 173, 85, 0.3);
+            width: 150px;
+            height: 180px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+            border-radius: 20px;
+            border: 2px solid rgba(246, 173, 85, 0.4);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(246, 173, 85, 0.05);
-            margin-bottom: -15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7), inset 0 0 20px rgba(246, 173, 85, 0.1);
+            margin-bottom: 0px;
             z-index: 5;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(12px);
         }
 
         .cr-tower-card-premium:hover {
@@ -4922,6 +4982,74 @@ class GitHubPagesHTMLGenerator:
             justify-content: flex-end;
             gap: 4px;
             position: relative;
+        }
+
+        /* MEDIA QUERIES PARA MOBILE (TASK 3) */
+        @media (max-width: 1024px) {
+            .cr-vs-row { gap: 30px; }
+            .cr-tower-img-premium { width: 100px; height: 100px; }
+            .cr-tower-card-premium { width: 130px; height: 150px; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px 10px; }
+            .header h1 { font-size: 2em; }
+            
+            .cr-vs-row, .cr-vs-decks-row-premium {
+                flex-direction: column !important;
+                grid-template-columns: 1fr !important;
+                align-items: center !important;
+                gap: 40px !important;
+            }
+
+            .cr-deck-side {
+                width: 100% !important;
+                max-width: 450px !important;
+            }
+
+            .cr-tower-img-premium {
+                width: 110px !important;
+                height: 110px !important;
+            }
+
+            .cr-tower-card-premium {
+                width: 140px !important;
+                height: 165px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .cr-grid-4x2 {
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 8px !important;
+                padding: 10px !important;
+            }
+
+            .cr-player-name-vs, .cr-player-name-premium {
+                font-size: 1.5em !important;
+            }
+
+            .cr-vs-center-divider, .cr-vs-divider-vertical {
+                padding: 20px 0;
+                font-size: 2em !important;
+                opacity: 0.5 !important;
+            }
+
+            .cr-battle-preview {
+                padding: 20px 15px !important;
+            }
+            
+            /* Ajuste para o Palco VS no mobile */
+            .cr-main-vs-stage > div:first-child {
+                flex-direction: column !important;
+                gap: 30px !important;
+            }
+            
+            .cr-main-vs-stage div[style*="flex:0 0 200px"] {
+                flex: none !important;
+                width: 100% !important;
+                order: -1; /* Placar no topo no mobile */
+                margin-bottom: 20px;
+            }
         }
 
         .bar-segment {
