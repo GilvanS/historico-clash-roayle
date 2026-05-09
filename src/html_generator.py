@@ -2905,12 +2905,13 @@ class GitHubPagesHTMLGenerator:
         // Rotação diária de background
         document.addEventListener('DOMContentLoaded', () => {
             const bgs = [
-                "assets/backgrounds/bg1.jpg",
-                "assets/backgrounds/bg2.jpg",
-                "assets/backgrounds/bg3.jpg",
                 "https://images2.alphacoders.com/112/thumb-1920-1124066.jpg",
                 "https://wallpapers.com/images/featured/clash-royale-v0d8p9p3f2j7j0u0.jpg",
-                "https://images5.alphacoders.com/687/687588.jpg"
+                "https://images5.alphacoders.com/687/687588.jpg",
+                "https://images.alphacoders.com/112/1124063.jpg",
+                "https://images7.alphacoders.com/687/687590.jpg",
+                "https://images2.alphacoders.com/687/687589.jpg",
+                "https://images8.alphacoders.com/687/687593.jpg"
             ];
             const day = new Date().getDate();
             const selectedBg = bgs[day % bgs.length];
@@ -4030,7 +4031,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 1700px;
             margin: 0 auto;
             padding: 40px 20px;
             animation: fadeIn 0.8s ease-out;
@@ -4086,7 +4087,7 @@ class GitHubPagesHTMLGenerator:
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             width: 100%;
-            max-width: 1450px;
+            max-width: 1550px;
         }
 
         .stat-card {
@@ -5163,7 +5164,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-modal-container {
-            width: 1600px !important;
+            width: 1700px !important;
             max-width: 98% !important;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
