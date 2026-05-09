@@ -2748,50 +2748,39 @@ class GitHubPagesHTMLGenerator:
             }
             const leakedColor = leaked > 0 ? '#f56565' : '#48bb78';
             const leakClass = leaked > 1.0 ? 'cr-leak-critical' : (leaked > 0 ? 'cr-leak-warning' : '');
-            const clanHtml = clanName ? `<div class="cr-clan-name-premium">${clanName}</div>` : '';
+            const clanHtml = clanName ? `<div class="cr-clan-name-premium" style="opacity:0.6; font-size:0.85em;">${clanName}</div>` : '';
 
-            const towerCardHtml = `
-                <div class="cr-tower-card-premium" title="${towerName}">
-                    <img src="${towerUrl}" class="cr-tower-img-premium" onerror="this.src='${fallbackTower}'">
-                    <span class="cr-card-level-badge">LV ${tLevel}</span>
-                </div>`;
-
-            const copyBtnHtml = deckLink ? `
-                <a href="${deckLink}" class="cr-copy-deck-btn" onclick="showCopyToast(event)">
-                    <span>📋</span> COPIAR DECK
-                </a>` : '';
-
-            return `
-                <div class="cr-deck-side ${sideClass}">
-                    <div class="cr-tower-card-premium" title="${towerName}">
-                        <img src="${towerUrl}" class="cr-tower-img-premium" onerror="this.src='${fallbackTower}'">
-                        <span class="cr-card-level-badge">LV ${tLevel}</span>
-                    </div>
-                    <div class="cr-player-header-premium">
-                        <div class="cr-player-name-premium">${playerName}</div>
+            return {
+                playerName,
+                clanHtml,
+                towerUrl,
+                towerName,
+                tLevel,
+                tHP,
+                cardsHtml: `
+                    <div class="cr-player-header-premium" style="margin-bottom:15px; text-align:center;">
+                        <div class="cr-player-name-premium" style="font-size:1.4em; font-weight:900;">${playerName}</div>
                         ${clanHtml}
                     </div>
                     <div class="cr-grid-4x2">
                         ${cardsHtml}
-                    </div>
-                    <div class="cr-deck-metrics-horizontal">
+                    </div>`,
+                metricsHtml: `
+                    <div class="cr-deck-metrics-horizontal" style="justify-content:center; gap:20px; width:100%;">
                         <div class="cr-metric-inline" title="Media Elixir">
-                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p" style="width:16px; height:16px;"> <span>${avg}</span>
+                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width:20px;"> <span style="font-size:1.1em; font-weight:800;">${avg}</span>
                         </div>
                         <div class="cr-metric-inline" title="Ciclo 4 Cartas">
-                            <span class="cr-icon">🔄</span> <span>${cycle}</span>
+                            <span class="cr-icon">🔄</span> <span style="font-size:1.1em; font-weight:800;">${cycle}</span>
                         </div>
                         <div class="cr-metric-inline ${leakClass}" title="Elixir Vazado" style="color:${leakedColor}">
-                            <span class="cr-icon">💧</span> <span>${leaked}</span>
+                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" style="width:20px;"> <span style="font-size:1.1em; font-weight:800;">${leaked}</span>
                         </div>
-                        <div class="cr-metric-inline" title="Vida da Torre" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left:10px;">
-                            <span class="cr-icon">🏰</span> <span>${tHP}</span>
+                        <div class="cr-metric-inline" title="Vida da Torre">
+                            <span class="cr-icon">🏰</span> <span style="font-size:1.1em; font-weight:800;">${tHP}</span>
                         </div>
-                    </div>
-                    <div class="cr-copy-container">
-                        ${copyBtnHtml}
-                    </div>
-                </div>`;
+                    </div>`
+            };
         }
 
         function updateBattlePreview(deckId, battleIdx, battleDataJson) {
@@ -2801,8 +2790,8 @@ class GitHubPagesHTMLGenerator:
                 const content = document.getElementById('battle-modal-content');
                 if (!modal || !content) return;
                 
-                const myDeckHtml = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.player_clan || '', data.my_metrics, data.my_deck_link, data.my_icons);
-                const oppDeckHtml = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_clan || '', data.opp_metrics, data.opp_deck_link, data.opp_icons);
+                const pData = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.player_clan || '', data.my_metrics, data.my_deck_link, data.my_icons);
+                const oData = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_clan || '', data.opp_metrics, data.opp_deck_link, data.opp_icons);
                 
                 const score = `${data.crowns || 0} - ${data.opponent_crowns || 0}`;
                 const tropChange = data.trophy_change || 0;
@@ -2811,30 +2800,44 @@ class GitHubPagesHTMLGenerator:
                 const tropText = tropChange !== 0 ? tropSign + tropChange : '';
 
                 content.innerHTML = `
-                    <div class="cr-vs-row-premium-v2">
-                        ${myDeckHtml}
-                        
-                        <div class="cr-battle-vs-center">
-                            <div class="cr-battle-result-badge cr-badge-${data.result.toLowerCase()}">${data.result.toUpperCase()}</div>
-                            
-                            <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
-                            
-                            <div class="cr-score-display-premium">
-                                <span class="cr-score-val">${score}</span>
+                    <div class="cr-modal-premium-layout" style="width:100%; height:100%; display:flex; flex-direction:column;">
+                        <div class="cr-modal-top-stage">
+                            <div class="cr-tower-stage-p">
+                                <img src="${pData.towerUrl}" class="cr-tower-img-large">
+                                <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV ${pData.tLevel}</span>
                             </div>
                             
-                            <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.2em;">
-                                ${tropText}
+                            <div class="cr-modal-score-center">
+                                <div class="cr-battle-result-badge cr-badge-${data.result.toLowerCase()}">${data.result.toUpperCase()}</div>
+                                <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
+                                <div class="cr-score-display-premium" style="margin:10px 0;">
+                                    <span class="cr-score-val" style="font-size:3em;">${score}</span>
+                                </div>
+                                <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.5em;">${tropText}</div>
+                                <div style="opacity: 0.5; font-size: 0.9em;">${data.date || ''}</div>
                             </div>
-                            
-                            <div class="cr-battle-date-p" style="opacity: 0.6; font-size: 0.8em;">${data.date || ''}</div>
-                            
-                            <div class="cr-swords-icon">⚔️</div>
+
+                            <div class="cr-tower-stage-p">
+                                <img src="${oData.towerUrl}" class="cr-tower-img-large">
+                                <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV ${oData.tLevel}</span>
+                            </div>
                         </div>
 
-                        ${oppDeckHtml}
-                    </div>
-                `;
+                        <div class="cr-modal-decks-grid">
+                            <div class="cr-deck-side-modal">${pData.cardsHtml}</div>
+                            <div class="cr-deck-side-modal">${oData.cardsHtml}</div>
+                        </div>
+
+                        <div class="cr-modal-metrics-footer">
+                            <div class="cr-metrics-wrap-p">${pData.metricsHtml}</div>
+                            <div class="cr-metrics-wrap-p">${oData.metricsHtml}</div>
+                        </div>
+                        
+                        <div class="cr-copy-row" style="display:flex; justify-content:space-around; padding:20px 50px;">
+                            ${data.my_deck_link ? `<a href="${data.my_deck_link}" class="cr-copy-deck-btn" style="flex:1; margin-right:20px; text-align:center;">COPIAR MEU DECK</a>` : ''}
+                            ${data.opp_deck_link ? `<a href="${data.opp_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center; background:rgba(255,255,255,0.1);">COPIAR DECK INIMIGO</a>` : ''}
+                        </div>
+                    </div>`;
                 
                 modal.classList.add('active');
                 document.body.style.overflow = 'hidden';
@@ -3742,7 +3745,7 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
 
-            <div id="tab-global-war" class="tab-content">
+            <div id="tab-meta-br" class="tab-content">
                 <div class="meta-br-container">
                     <table class="meta-br-table">
                         <thead>
@@ -4203,11 +4206,11 @@ class GitHubPagesHTMLGenerator:
             opacity: 0.3;
         }
 
-        /* Deck Lists Premium v2 */
         .cr-decks-list {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 25px;
+            padding: 15px;
             width: 100%;
         }
 
@@ -4421,14 +4424,69 @@ class GitHubPagesHTMLGenerator:
             position: relative;
         }
 
-        .cr-vs-row-premium-v2 {
+        /* New Modal Layout Premium v2 */
+        .cr-modal-top-stage {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 30px 50px;
+            background: rgba(15, 23, 42, 0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px 24px 0 0;
+            margin-bottom: 25px;
+        }
+
+        .cr-tower-stage-p {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 150px;
+        }
+
+        .cr-tower-img-large {
+            width: 100px;
+            height: 120px;
+            object-fit: contain;
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6));
+            transition: transform 0.3s ease;
+        }
+        
+        .cr-tower-img-large:hover { transform: scale(1.1); }
+
+        .cr-modal-score-center {
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cr-modal-decks-grid {
             display: grid;
-            grid-template-columns: 1fr 200px 1fr;
-            align-items: start;
+            grid-template-columns: 1fr 1fr;
             gap: 40px;
+            padding: 0 50px;
             width: 100%;
             max-width: 1800px;
             margin: 0 auto;
+        }
+
+        .cr-modal-metrics-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 25px 50px;
+            margin-top: 30px;
+            background: rgba(15, 23, 42, 0.4);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-radius: 0 0 24px 24px;
+        }
+
+        .cr-vs-row-premium-v2 {
+            display: none; /* Replaced by new layout */
         }
 
         @media (max-width: 1400px) {
@@ -4508,7 +4566,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-grid-4x2 {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             padding: 15px;
             background: rgba(0,0,0,0.3);
