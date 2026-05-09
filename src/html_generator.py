@@ -2410,87 +2410,64 @@ class GitHubPagesHTMLGenerator:
                 if not d_str: return f'<div class="{side_class} cr-empty-grid">N/D</div>'
                 cards = [c.strip() for c in d_str.replace(' | ','|').split('|') if c.strip()][:8]
 
-                # Usa _get_battle_deck_metrics quando disponivel (traz level e leaked corretos)
-                # Caso nao haja contexto de batalha, usa _get_deck_metrics com fallbacks
                 if battle_ctx:
                     metrics = self._get_battle_deck_metrics(d_str, battle_ctx, is_opponent=is_opponent)
                 else:
                     metrics = self._get_deck_metrics(d_str)
-
-                # Torres locais
-                tower_img = "assets/images/towers/opp_tower.png" if is_opponent else "assets/images/towers/player_tower.png"
-                fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
 
                 # Metricas extraidas centralizadamente
                 leaked  = metrics.get('leaked', 0)
                 t_level = metrics.get('level', 14)
                 t_hp    = metrics.get('hp', self._get_tower_hp(t_level))
 
-                # Cor do elixir vazado: verde = 0, vermelho = teve vazamento
                 leaked_color = '#f56565' if float(leaked) > 0 else '#48bb78'
-                leaked_label = f"{leaked:.1f}" if float(leaked) > 0 else 'N/A'
+                leaked_label = f"{leaked:.1f}" if float(leaked) > 0 else '0.0'
 
-                # Badge de nivel por carta (nivel da torre do respectivo lado)
-                card_level = str(t_level) if t_level else '14'
-                cards_with_badge = "".join(
-                    f'<div class="cr-card-wrap-premium" title="{c}" style="position:relative;">'
-                    f'<img src="{self.get_card_image_path(c)}" class="cr-card-img">'
-                    f'<span class="cr-card-level-badge">Nivel {card_level}</span>'
-                    f'</div>'
-                    for c in cards
-                )
+                # Card da Torre (No Topo conforme novo layout)
+                tower_name = metrics.get('tower_name', 'Tower Princess')
+                fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
+                
+                tower_card_html = f'''
+                    <div class="cr-tower-card-premium" title="{tower_name}">
+                        <img src="{self.get_card_image_path(tower_name)}" class="cr-tower-card-img" onerror="this.src='{fallback_tower}'">
+                        <span class="cr-card-level-badge">Lv {t_level}</span>
+                    </div>'''
+
                 grid_html = f'''
                     <div class="cr-grid-4x2">
-                        {cards_with_badge}
+                        {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><span class="cr-card-level-badge">Lv {t_level}</span></div>' for c in cards)}
                     </div>'''
 
+                # Metricas Horizontais
                 footer_html = f'''
-                    <div class="cr-deck-footer">
-                        <div class="cr-footer-metric" title="Media de Elixir">
-                            <span class="cr-footer-icon">💧</span>
-                            <span class="cr-footer-val">{metrics["avg"]}</span>
-                            <span class="cr-footer-label">Elixir</span>
+                    <div class="cr-deck-metrics-horizontal">
+                        <div class="cr-metric-inline" title="Media de Elixir">
+                            <span class="cr-icon">💧</span> <span class="cr-val">{metrics["avg"]}</span>
                         </div>
-                        <div class="cr-footer-metric" title="Ciclo de 4 Cartas">
-                            <span class="cr-footer-icon">🔄</span>
-                            <span class="cr-footer-val">{metrics["cycle"]}</span>
-                            <span class="cr-footer-label">Ciclo</span>
+                        <div class="cr-metric-inline" title="Ciclo de 4 Cartas">
+                            <span class="cr-icon">🔄</span> <span class="cr-val">{metrics["cycle"]}</span>
                         </div>
-                        <div class="cr-footer-metric" title="Elixir Vazado" style="color:{leaked_color}">
-                            <span class="cr-footer-icon">🚫</span>
-                            <span class="cr-footer-val">{leaked_label}</span>
-                            <span class="cr-footer-label">Vazado</span>
-                        </div>
-                        <div class="cr-footer-metric" title="Nivel da Torre do Rei">
-                            <span class="cr-footer-icon">🏰</span>
-                            <span class="cr-footer-val">Lv {t_level}</span>
-                            <span class="cr-footer-label">Torre</span>
+                        <div class="cr-metric-inline" title="Elixir Vazado" style="color:{leaked_color}">
+                            <span class="cr-icon">🚫</span> <span class="cr-val">{leaked_label}</span>
                         </div>
                     </div>'''
 
-                # Extrai info do cla do contexto de batalha para exibir abaixo do nome
                 p_clan = ''
                 if battle_ctx:
                     p_clan = battle_ctx.get('opp_clan', '') if is_opponent else ''
                 clan_line = f'<div class="cr-player-clan">{p_clan}</div>' if p_clan else ''
                 hp_display = f'{t_hp:,}' if isinstance(t_hp, int) else str(t_hp)
 
-                # Card da Torre (Novo)
-                tower_name = metrics.get('tower_name', 'Tower Princess')
-                tower_card_html = f'''
-                    <div class="cr-tower-card-premium" title="{tower_name}">
-                        <img src="{self.get_card_image_path(tower_name)}" class="cr-tower-card-img" onerror="this.src='{fallback_tower}'">
-                        <span class="cr-card-level-badge" style="bottom: -2px; right: -2px; font-size: 0.5em; padding: 1px 4px;">Lv {card_level}</span>
-                    </div>'''
-
                 return f'''
-                    <div class="{side_class} cr-deck-side">
-                        <div class="cr-player-header-premium">
-                            <div class="cr-player-name-premium">{p_name}</div>
-                            {clan_line}
-                            <div class="cr-tower-info-premium">🏰 {hp_display} HP</div>
+                    <div class="{side_class} cr-deck-side-v2">
+                        <div class="cr-player-header-v2">
+                            {tower_card_html}
+                            <div class="cr-player-info-v2">
+                                <div class="cr-player-name-v2">{p_name}</div>
+                                {clan_line}
+                                <div class="cr-tower-hp-v2">🏰 {hp_display} HP</div>
+                            </div>
                         </div>
-                        {tower_card_html}
                         {grid_html}
                         {footer_html}
                     </div>'''
@@ -3129,9 +3106,6 @@ class GitHubPagesHTMLGenerator:
                 m_metrics = self._get_battle_deck_metrics(b['my_deck'], b, is_opponent=False)
                 o_metrics = self._get_battle_deck_metrics(b['opp_deck'], b, is_opponent=True)
                 
-                b_json = json.dumps({
-                    'p_score': b.get('crowns', 0),
-                    'o_score': b.get('opponent_crowns', 0),
                 b_json = json.dumps({
                     'p_score': b.get('crowns', 0),
                     'o_score': b.get('opponent_crowns', 0),
