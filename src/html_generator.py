@@ -2085,10 +2085,10 @@ class GitHubPagesHTMLGenerator:
         return f"""
         <div class="deck-tabs-container">
             <div class="deck-tabs">
-                <button class="tab-button active" onclick="switchDeckTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
-                <button class="tab-button" onclick="switchDeckTab(event, 'weekly-decks')">Meus Decks da Semana</button>
-                <button class="tab-button" onclick="switchDeckTab(event, 'lethal-decks')">Decks Inimigos Letais</button>
-                <button class="tab-button" onclick="switchDeckTab(event, 'winning-decks')">Melhores Decks (Semana)</button>
+                <button class="tab-button active" onclick="switchTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
+                <button class="tab-button" onclick="switchTab(event, 'weekly-decks')">Meus Decks da Semana</button>
+                <button class="tab-button" onclick="switchTab(event, 'lethal-decks')">Decks Inimigos Letais</button>
+                <button class="tab-button" onclick="switchTab(event, 'winning-decks')">Melhores Decks (Semana)</button>
             </div>
 
             <div id="tab-repeated-opponents" class="tab-content active">
@@ -2107,7 +2107,6 @@ class GitHubPagesHTMLGenerator:
                 {winning_decks_html}
             </div>
         </div>
-        {self.generate_dashboard_scripts()}
         """
     def load_all_data_rows(self) -> List[Dict]:
         """Carrega e unifica dados de todas as fontes disponíveis via CSV diretamente."""
@@ -2903,10 +2902,15 @@ class GitHubPagesHTMLGenerator:
             }, 3000);
         }
 
-        function switchDeckTab(event, tabName) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active');
+        function switchTab(event, tabName) {
+            const container = event.currentTarget.closest('.section, .elite-spy-section, .deck-tabs-container') || document;
+            container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            container.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            
+            const targetId = tabName.startsWith('tab-') ? tabName : 'tab-' + tabName;
+            const targetTab = document.getElementById(targetId) || document.getElementById(tabName);
+            
+            if (targetTab) targetTab.classList.add('active');
             if (event) event.currentTarget.classList.add('active');
         }
 
@@ -3651,12 +3655,12 @@ class GitHubPagesHTMLGenerator:
             </div>
             
             <div class="deck-tabs">
-                <button class="tab-button active" onclick="showWarTab('clan-war')">Nossos Heróis</button>
-                <button class="tab-button" onclick="showWarTab('global-war')">Meta Global (Guerra)</button>
-                <button class="tab-button" onclick="showWarTab('meta-br')">Top 100 Brasil</button>
+                <button class="tab-button active" onclick="switchTab(event, 'clan-war')">Nossos Heróis</button>
+                <button class="tab-button" onclick="switchTab(event, 'global-war')">Meta Global (Guerra)</button>
+                <button class="tab-button" onclick="switchTab(event, 'meta-br')">Top 100 Brasil</button>
             </div>
 
-            <div id="clan-war" class="tab-content active">
+            <div id="tab-clan-war" class="tab-content active">
                 <div class="cr-decks-list">
         """
 
@@ -3697,7 +3701,7 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
 
-            <div id="global-war" class="tab-content">
+            <div id="tab-global-war" class="tab-content">
                 <div class="cr-decks-list">
         """
 
@@ -3738,7 +3742,7 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
 
-            <div id="meta-br" class="tab-content">
+            <div id="tab-global-war" class="tab-content">
                 <div class="meta-br-container">
                     <table class="meta-br-table">
                         <thead>
@@ -3794,16 +3798,8 @@ class GitHubPagesHTMLGenerator:
                 }
             </style>
         </div>
-        <script>
-            function showWarTab(tabId) {
-                const section = document.querySelector('.elite-spy-section');
-                section.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                section.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-                section.querySelector('#' + tabId).classList.add('active');
-                event.currentTarget.classList.add('active');
-            }
-        </script>
         """
+        return html
         return html
 
     
@@ -5443,6 +5439,64 @@ class GitHubPagesHTMLGenerator:
         .cr-modal-container .cr-vs-row-premium-v2 {
             background: transparent;
             padding: 0;
+        }
+
+        /* Tabs System Premium v2 */
+        .deck-tabs-container { margin-top: 20px; }
+        .deck-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            padding: 8px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .deck-tabs::-webkit-scrollbar { display: none; }
+
+        .tab-button {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            color: #94a3b8;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .tab-button.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        .tab-content {
+            display: none;
+            animation: cr-fade-in 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes cr-fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         """
     
