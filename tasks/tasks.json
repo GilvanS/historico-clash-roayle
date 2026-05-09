@@ -1,0 +1,50 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Implementar Redesign RoyaleAPI Premium v2",
+        "description": "Redesenhar o componente VS Battle no html_generator.py para seguir o estilo RoyaleAPI Premium v2 (Torres no topo, Score central, Grid 4x2 e Metricas horizontais).",
+        "details": "1. Atualizar CSS para suporte a 1800px e Glassmorphism. 2. Implementar a aba Victory/Defeat lateral. 3. Configurar os icones de elixir e leak conforme a referencia.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Atualizar CSS Glassmorphism v2",
+            "description": "Atualizar get_base_css_styles com as classes para layout v2, badges laterais e container de 1800px.",
+            "details": "",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 2,
+            "title": "Refatorar Estrutura HTML VS Row",
+            "description": "Refatorar get_preview_grid para inverter a hierarquia (Torres -> Score -> Decks -> Metricas).",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 3,
+            "title": "Implementar Modal de Detalhes da Batalha",
+            "description": "Implementar logicade JS para abertura de Modal ao clicar em uma batalha na lista.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 1
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2026-05-09T17:17:32.833Z",
+      "description": "Default tasks context",
+      "updated": "2026-05-09T18:07:38.643Z"
+    }
+  }
+}

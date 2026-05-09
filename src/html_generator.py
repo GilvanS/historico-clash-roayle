@@ -23,7 +23,11 @@ except ImportError:
     # Python < 3.11 compatibility
     UTC = timezone.utc
 from typing import List, Dict, Optional
+from dotenv import load_dotenv
 from csv_database_manager import CSVManager
+
+# Carrega variaveis de ambiente
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -2712,15 +2716,23 @@ class GitHubPagesHTMLGenerator:
 
             const cardsHtml = cards.map(c => {
                 const name = c.trim();
-                const cleanName = name.toLowerCase().replace(/\\s+/g, '-').replace(/\\./g, '').replace(/[()]/g, '');
-                const url = CARD_MAP[name] || CARD_MAP[cleanName] || CARD_MAP[name.replace(/\\s+/g, '')];
+                const isEvo = name.includes('(Evolution)') || name.includes('Evolved');
+                const displayName = name.replace('(Evolution)', '').replace('Evolved', '').trim();
+                const cleanName = displayName.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '').replace(/[()]/g, '');
                 
-                if (url) {
-                    return `<div class="cr-card-wrap-premium" title="${name}"><img src="${url}" class="cr-card-img" loading="lazy"></div>`;
+                let url = CARD_MAP[name] || CARD_MAP[displayName] || CARD_MAP[cleanName];
+                
+                if (!url) {
+                    const slug = cleanName.replace('the-log', 'log').replace('p-e-k-k-a', 'pekka');
+                    url = `https://royaleapi.github.io/cr-api-assets/cards/${slug}.png`;
                 }
-                
-                const slug = cleanName.replace('the-log', 'log').replace('p-e-k-k-a', 'pekka');
-                return `<div class="cr-card-wrap-premium" title="${name}"><img src="https://royaleapi.github.io/cr-api-assets/cards/${slug}.png" class="cr-card-img" onerror="this.src='https://royaleapi.com/static/img/cards-150/${slug}.png'" loading="lazy"></div>`;
+
+                const evoClass = isEvo ? 'cr-card-evo-border' : '';
+                return `
+                    <div class="cr-card-wrap-premium ${evoClass}" title="${name}">
+                        <img src="${url}" class="cr-card-img" onerror="this.src='https://royaleapi.com/static/img/cards-150/${cleanName}.png'" loading="lazy">
+                        ${isEvo ? '<div class="cr-evo-icon"></div>' : ''}
+                    </div>`;
             }).join('');
             
             const avg = metrics ? metrics.avg : '--';
@@ -2732,6 +2744,7 @@ class GitHubPagesHTMLGenerator:
                 tHP = Number(tHP).toLocaleString('pt-BR');
             }
             const leakedColor = leaked > 0 ? '#f56565' : '#48bb78';
+            const leakClass = leaked > 1.0 ? 'cr-leak-critical' : (leaked > 0 ? 'cr-leak-warning' : '');
             const clanHtml = clanName ? `<div class="cr-clan-name-premium">${clanName}</div>` : '';
 
             const towerCardHtml = `
@@ -2747,26 +2760,29 @@ class GitHubPagesHTMLGenerator:
 
             return `
                 <div class="cr-deck-side ${sideClass}">
+                    <div class="cr-tower-card-premium" title="${towerName}">
+                        <img src="${towerUrl}" class="cr-tower-img-premium" onerror="this.src='${fallbackTower}'">
+                        <span class="cr-card-level-badge">LV ${tLevel}</span>
+                    </div>
                     <div class="cr-player-header-premium">
                         <div class="cr-player-name-premium">${playerName}</div>
                         ${clanHtml}
                     </div>
-                    ${towerCardHtml}
                     <div class="cr-grid-4x2">
                         ${cardsHtml}
                     </div>
-                    <div class="cr-elixir-metrics-container" style="flex-direction: row; justify-content: space-around; background: rgba(0,0,0,0.5); padding: 12px; border-radius: 15px; margin-top: 15px; width: 100%; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
-                        <div class="cr-elixir-metrics-badge" title="Media Elixir" style="background:transparent; border:none; padding:0; flex:1;">
-                            <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" class="cr-elixir-icon-p"> <span class="metric-label" style="font-size:0.9em; font-weight:800;">${avg}</span>
+                    <div class="cr-deck-metrics-horizontal">
+                        <div class="cr-metric-inline" title="Media Elixir">
+                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p" style="width:16px; height:16px;"> <span>${avg}</span>
                         </div>
-                        <div class="cr-elixir-metrics-badge" title="Ciclo 4 Cartas" style="background:transparent; border:none; padding:0; flex:1;">
-                            <span class="metric-emoji" style="font-size:1.2em;">🔄</span> <span class="metric-label" style="font-size:0.9em; font-weight:800;">${cycle}</span>
+                        <div class="cr-metric-inline" title="Ciclo 4 Cartas">
+                            <span class="cr-icon">🔄</span> <span>${cycle}</span>
                         </div>
-                        <div class="cr-elixir-metrics-badge" title="Elixir Vazado" style="background:transparent; border:none; padding:0; color:${leakedColor}; flex:1;">
-                            <span class="metric-emoji" style="font-size:1.2em;">✨</span> <span class="metric-label" style="font-size:0.9em; font-weight:800;">${leaked}</span>
+                        <div class="cr-metric-inline ${leakClass}" title="Elixir Vazado" style="color:${leakedColor}">
+                            <span class="cr-icon">💧</span> <span>${leaked}</span>
                         </div>
-                        <div class="cr-elixir-metrics-badge" title="Vida da Torre" style="background:transparent; border:none; padding:0; flex:1.5; border-left: 1px solid rgba(255,255,255,0.1); padding-left:10px;">
-                            <span class="metric-emoji" style="font-size:1.2em;">🏰</span> <span class="metric-label" style="font-size:0.9em; font-weight:800;">${tHP}</span>
+                        <div class="cr-metric-inline" title="Vida da Torre" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left:10px;">
+                            <span class="cr-icon">🏰</span> <span>${tHP}</span>
                         </div>
                     </div>
                     <div class="cr-copy-container">
@@ -2793,21 +2809,27 @@ class GitHubPagesHTMLGenerator:
 
                 content.innerHTML = `
                     <div class="cr-vs-row-premium-v2">
-                        <div class="cr-battle-score-header-premium">
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                                <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
-                                <div class="cr-battle-date-p">${data.date || ''}</div>
-                            </div>
+                        ${myDeckHtml}
+                        
+                        <div class="cr-battle-vs-center">
+                            <div class="cr-battle-result-badge cr-badge-${data.result.toLowerCase()}">${data.result.toUpperCase()}</div>
+                            
+                            <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
+                            
                             <div class="cr-score-display-premium">
                                 <span class="cr-score-val">${score}</span>
-                                <span class="cr-trophy-change-p" style="color: ${tropColor}">${tropText}</span>
                             </div>
+                            
+                            <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.2em;">
+                                ${tropText}
+                            </div>
+                            
+                            <div class="cr-battle-date-p" style="opacity: 0.6; font-size: 0.8em;">${data.date || ''}</div>
+                            
+                            <div class="cr-swords-icon">⚔️</div>
                         </div>
-                        <div class="cr-vs-decks-row-premium">
-                            ${myDeckHtml}
-                            <div class="cr-vs-center-divider">VS</div>
-                            ${oppDeckHtml}
-                        </div>
+
+                        ${oppDeckHtml}
                     </div>
                 `;
                 
@@ -2861,12 +2883,8 @@ class GitHubPagesHTMLGenerator:
                 if (oCopyEl) oCopyEl.href = data.o_copy;
                 
                 const container = element.parentElement;
-                container.querySelectorAll('.cr-date-selector').forEach(el => {
-                    el.style.borderColor = '#1e293b';
-                    el.style.background = '#020617';
-                });
-                element.style.borderColor = '#4299e1';
-                element.style.background = '#1e293b';
+                container.querySelectorAll('.cr-date-selector').forEach(el => el.classList.remove('active'));
+                element.classList.add('active');
             } catch(e) { console.error("Error updating opponent view:", e); }
         }
 
@@ -2945,238 +2963,176 @@ class GitHubPagesHTMLGenerator:
         """
 
     def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
-        """Gera HTML para oponentes repetidos com match cards inline."""
+        """Gera HTML para oponentes repetidos com match cards inline usando layout Premium v2."""
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
         
         player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
         
-        html = '<div class="cr-opponents-list" style="display:flex; flex-direction:column; gap:40px;">'
+        html = '<div class="cr-opponents-list">'
         import json
-        import urllib.parse
         
         for i, opp in enumerate(opponents, 1):
-            tag_clean = opp['opponent_tag'].replace('#', '')
-            wins = opp['user_wins']
-            losses = opp['user_losses']
-            draws = opp['user_draws']
+            wins, losses, draws = opp['user_wins'], opp['user_losses'], opp['user_draws']
             total = opp['total_battles']
             wr = opp['user_win_rate']
-            category = opp['category']
-            cat_class = opp['category_class']
-            
-            w_p = round((wins/total*100),1) if total > 0 else 0
-            l_p = round((losses/total*100),1) if total > 0 else 0
-            d_p = round((draws/total*100),1) if total > 0 else 0
-            
+            category, cat_class = opp['category'], opp['category_class']
             stats_list = opp['stats']
             wr_c = '#48bb78' if wr >= 60 else ('#f56565' if wr <= 40 else '#718096')
             
-            # Única área de visualização principal (Palco VS)
+            # Primeira batalha (Palco VS inicial)
             first_b = stats_list[0]
-            my_crowns_f = first_b.get('crowns', 0)
-            opp_crowns_f = first_b.get('opponent_crowns', 0)
             my_metrics_f = self._get_battle_deck_metrics(first_b['my_deck'], first_b, is_opponent=False)
             opp_metrics_f = self._get_battle_deck_metrics(first_b['opp_deck'], first_b, is_opponent=True)
-            my_deck_list_f = [c.strip() for c in first_b.get('my_deck', '').replace(' | ', '|').split('|') if c.strip()][:8]
-            opp_deck_list_f = [c.strip() for c in first_b.get('opp_deck', '').replace(' | ', '|').split('|') if c.strip()][:8]
-            
+
+            def get_deck_grid_html(deck_str):
+                if not deck_str or deck_str == 'N/D': return '<div class="cr-empty-grid">N/D</div>'
+                cards = [c.strip() for c in deck_str.replace(' | ', '|').split('|') if c.strip()][:8]
+                html_cards = []
+                for c in cards:
+                    is_evo = "Evolution" in c or "Evolved" in c
+                    evo_class = " cr-card-evo-border" if is_evo else ""
+                    img_url = self.get_card_image_path(c)
+                    html_cards.append(f'<div class="cr-card-wrap-premium{evo_class}" title="{c}"><img src="{img_url}" class="cr-card-img" loading="lazy"></div>')
+                return "".join(html_cards)
+
+            def get_metrics_panel_html(metrics):
+                leaked = metrics.get('leaked', 0)
+                leak_class = "cr-leak-warning" if leaked > 0.1 else ""
+                if leaked >= 1.0: leak_class = "cr-leak-critical"
+                
+                t_hp = metrics.get('hp', '--')
+                if isinstance(t_hp, (int, float)):
+                    t_hp = f"{int(t_hp):,}".replace(",", ".")
+
+                return f'''
+                <div class="cr-metric-inline" title="Media Elixir">
+                    <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p"> <span>{metrics['avg']}</span>
+                </div>
+                <div class="cr-metric-inline" title="Ciclo 4 Cartas">
+                    <span class="cr-icon">🔄</span> <span>{metrics['cycle']}</span>
+                </div>
+                <div class="cr-metric-inline {leak_class}" title="Elixir Vazado">
+                    <span class="cr-icon">💧</span> <span>{metrics.get('leaked_label', leaked)}</span>
+                </div>
+                <div class="cr-metric-inline cr-hp-metric-border" title="Vida da Torre">
+                    <span class="cr-icon">🏰</span> <span>{t_hp}</span>
+                </div>
+                '''
+
             html += f'''
-            <div class="cr-deck-card" id="opp-section-{i}" style="width:100%; max-width:none; background: #0f172a; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); overflow:hidden;">
-                <div class="cr-deck-header" style="padding: 20px 30px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+            <div class="cr-deck-card cr-opp-card-row cr-glass-premium" id="opp-section-{i}">
+                <div class="cr-deck-header cr-opp-header-premium">
+                    <div class="cr-opp-header-content">
                         <div class="cr-deck-meta">
-                            <span class="cr-deck-rank">#{i}</span>
-                            <span class="cr-deck-label" style="font-size:1.4em; color:#fff; font-weight:800;">{opp['opponent_name']}</span>
+                            <span class="cr-deck-rank cr-opp-rank-badge">OPONENTE #{i}</span>
+                            <span class="cr-deck-label cr-opp-name-main">{opp['opponent_name']}</span>
                             <span class="rival-badge {cat_class}-badge">{category}</span>
                         </div>
-                        <div style="text-align:right;">
-                            <span style="font-size:0.8em;color:#94a3b8;font-family:monospace;display:block;">{opp['opponent_tag']}</span>
-                            <span class="cr-wr-badge" style="background:{wr_c}; color:#fff; font-size:0.9em; margin-top:5px;">{wr}% WR ({wins}V - {draws}E - {losses}D)</span>
+                        <div class="cr-opp-stats-summary">
+                            <span class="cr-opp-tag-small">{opp['opponent_tag']}</span>
+                            <span class="cr-wr-badge" style="background:{wr_c}; box-shadow: 0 4px 12px {wr_c}44;">{wr}% WR ({wins}V - {draws}E - {losses}D)</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- ÁREA PRINCIPAL DINÂMICA (PALCO VS) -->
-                <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 30px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.05);">
-                    
-                    <!-- Top Score Center -->
-                    <div style="text-align:center; margin-bottom: 30px;">
-                        <div style="color:#94a3b8; font-size:0.75em; font-weight:800; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;" id="mode-{i}">{first_b.get('game_mode', 'Batalha')}</div>
-                        <div style="display:inline-flex; align-items:center; justify-content:center; gap:20px; background:#050914; padding:12px 35px; border-radius:50px; border:1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                            <span style="font-size:2.8em; font-weight:900; color:#4299e1;" id="p-score-{i}">{my_crowns_f}</span>
-                            <span style="color:rgba(255,255,255,0.2); font-weight:900; font-size:2em;">-</span>
-                            <span style="font-size:2.8em; font-weight:900; color:#f56565;" id="o-score-{i}">{opp_crowns_f}</span>
-                        </div>
-                    </div>
-
-                    <div class="cr-vs-decks-row-premium" style="display:grid; grid-template-columns: 1fr auto 1fr; align-items:flex-start; gap:30px;">
+                <div class="cr-main-vs-stage" id="main-vs-{i}">
+                    <div class="cr-vs-row-premium-v2">
                         <!-- Player Side -->
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:20px;">
-                            <div style="text-align:center; width:100%;">
-                                <div style="color:#4299e1; font-weight:900; font-size:1.6em; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px;">{player_name}</div>
-                                <div class="cr-tower-card-premium" id="p-tower-{i}" style="margin: 0 auto;">
-                                    <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-premium">
-                                    <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {my_metrics_f['level']}</span>
-                                </div>
+                        <div class="cr-deck-side player">
+                            <div class="cr-tower-card-premium">
+                                <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-premium">
+                                <span class="cr-card-level-badge">LV {my_metrics_f['level']}</span>
                             </div>
-                            
-                            <div class="cr-grid-4x2" id="p-grid-{i}" style="max-width:100%;">
-                                {"".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in my_deck_list_f)}
+                            <div class="cr-player-header-premium">
+                                <div class="cr-player-name-premium player-color-text">{player_name}</div>
                             </div>
-                            
-                            <div id="player-metrics-{i}" style="display:flex; flex-direction:row; justify-content:space-around; width:100%; gap:15px; padding:15px; background:rgba(0,0,0,0.5); border-radius:20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
-                                <div style="display:flex; align-items:center; gap:8px;" title="Media Elixir">
-                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" style="width:22px; height:22px;">
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{my_metrics_f['avg']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px;" title="Ciclo 4 Cartas">
-                                    <span style="font-size:1.4em;">🔄</span>
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{my_metrics_f['cycle']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px; color:{my_metrics_f['leaked_color']};" title="Elixir Vazado">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" style="width:22px; height:22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
-                                    <span style="color:inherit; font-size:1.1em; font-weight:800;">{my_metrics_f['leaked_label']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left:15px;" title="Vida da Torre">
-                                    <span style="font-size:1.4em;">🏰</span>
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{my_metrics_f.get('hp', '--')}</span>
-                                </div>
+                            <div class="cr-grid-4x2" id="p-grid-{i}">
+                                {get_deck_grid_html(first_b['my_deck'])}
+                            </div>
+                            <div class="cr-deck-metrics-horizontal" id="player-metrics-{i}">
+                                {get_metrics_panel_html(my_metrics_f)}
                             </div>
                         </div>
 
-                        <!-- VS Middle Divider -->
-                        <div style="display:flex; flex-direction:column; justify-content:center; height:100%; padding-top: 180px;">
-                            <div style="font-weight:900; color:rgba(255,255,255,0.05); font-size:3em; letter-spacing: -5px;">VS</div>
+                        <!-- Center Score -->
+                        <div class="cr-vs-center-divider cr-center-score-column">
+                            <div id="mode-{i}" class="cr-mode-tag-small">{first_b.get('game_mode', 'Batalha')}</div>
+                            <div class="cr-battle-result-badge cr-badge-empate cr-score-badge-large">
+                                <span id="p-score-{i}">{first_b.get('crowns', 0)}</span>
+                                <span class="cr-score-divider">-</span>
+                                <span id="o-score-{i}">{first_b.get('opponent_crowns', 0)}</span>
+                            </div>
+                            <div class="cr-vs-text-bg">VS</div>
+                            <div id="date-main-{i}" class="cr-battle-date-text">📅 {first_b.get('data_str', '--/--')}</div>
                         </div>
 
                         <!-- Opponent Side -->
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:20px;">
-                            <div style="text-align:center; width:100%;">
-                                <div style="color:#f56565; font-weight:900; font-size:1.6em; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px;">{opp['opponent_name']}</div>
-                                <div class="cr-tower-card-premium" id="o-tower-{i}" style="margin: 0 auto;">
-                                    <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-premium">
-                                    <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {opp_metrics_f['level']}</span>
-                                </div>
+                        <div class="cr-deck-side opponent">
+                            <div class="cr-tower-card-premium">
+                                <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-premium">
+                                <span class="cr-card-level-badge">LV {opp_metrics_f['level']}</span>
                             </div>
-                            
-                            <div class="cr-grid-4x2" id="o-grid-{i}" style="max-width:100%;">
-                                {"".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in opp_deck_list_f)}
+                            <div class="cr-player-header-premium">
+                                <div class="cr-player-name-premium opp-color-text">{opp['opponent_name']}</div>
                             </div>
-                            
-                            <div id="opp-metrics-{i}" style="display:flex; flex-direction:row; justify-content:space-around; width:100%; gap:15px; padding:15px; background:rgba(0,0,0,0.5); border-radius:20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
-                                <div style="display:flex; align-items:center; gap:8px;" title="Media Elixir">
-                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" style="width:22px; height:22px;">
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{opp_metrics_f['avg']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px;" title="Ciclo 4 Cartas">
-                                    <span style="font-size:1.4em;">🔄</span>
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{opp_metrics_f['cycle']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px; color:{opp_metrics_f['leaked_color']};" title="Elixir Vazado">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" style="width:22px; height:22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
-                                    <span style="color:inherit; font-size:1.1em; font-weight:800;">{opp_metrics_f['leaked_label']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left:15px;" title="Vida da Torre">
-                                    <span style="font-size:1.4em;">🏰</span>
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{opp_metrics_f.get('hp', '--')}</span>
-                                </div>
+                            <div class="cr-grid-4x2" id="o-grid-{i}">
+                                {get_deck_grid_html(first_b['opp_deck'])}
+                            </div>
+                            <div class="cr-deck-metrics-horizontal" id="opp-metrics-{i}">
+                                {get_metrics_panel_html(opp_metrics_f)}
                             </div>
                         </div>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; margin-top:25px; padding: 0 40px;">
-                        <a href="{self.get_copy_deck_link(my_deck_list_f)}" id="p-copy-{i}" target="_blank" class="cr-copy-deck-btn"><span>📋</span> COPIAR DECK</a>
-                        <a href="{self.get_copy_deck_link(opp_deck_list_f)}" id="o-copy-{i}" target="_blank" class="cr-copy-deck-btn" style="background:linear-gradient(135deg, rgba(245, 101, 101, 0.2) 0%, rgba(229, 62, 62, 0.4) 100%); border-color:rgba(245, 101, 101, 0.4);"><span>📋</span> COPIAR DECK</a>
+                    <div class="cr-vs-actions-row">
+                        <a href="{self.get_copy_deck_link([c.strip() for c in first_b.get('my_deck','').split('|') if c.strip()])}" id="p-copy-{i}" target="_blank" class="cr-copy-deck-btn"><span>📋</span> COPIAR DECK</a>
+                        <a href="{self.get_copy_deck_link([c.strip() for c in first_b.get('opp_deck','').split('|') if c.strip()])}" id="o-copy-{i}" target="_blank" class="cr-copy-deck-btn cr-btn-danger-premium"><span>📋</span> COPIAR DECK</a>
                     </div>
                 </div>
 
-                <!-- LISTA DE SELEÇÃO DE DATA (TIMELINE) -->
-                <div style="background: #050914; padding: 15px 30px; border-top: 1px solid rgba(255,255,255,0.15);">
-                    <div style="color:#94a3b8; font-size:0.7em; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Histórico de Confrontos (Clique na data para alternar)</div>
-                    <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px; scrollbar-width: thin;">
+                <div class="cr-timeline-container">
+                    <div class="cr-timeline-header-text">HISTÓRICO RECENTE (CLIQUE PARA ALTERNAR O PALCO VS)</div>
+                    <div class="cr-timeline-scroll">
             '''
 
-            for idx, b in enumerate(stats_list[:30]): # Aumentado para 30 partidas
+            for idx, b in enumerate(stats_list[:30]):
                 res = b['resultado'].lower()
-                d_str = b.get('data_str', '--/--')
                 cor = '#48bb78' if res in ['vitoria','victory'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
                 ic = 'V' if res in ['vitoria','victory'] else ('D' if res in ['derrota','defeat'] else 'E')
                 
-                # Dados para o JS de troca
                 m_metrics = self._get_battle_deck_metrics(b['my_deck'], b, is_opponent=False)
                 o_metrics = self._get_battle_deck_metrics(b['opp_deck'], b, is_opponent=True)
                 
                 b_json = json.dumps({
                     'p_score': b.get('crowns', 0),
                     'o_score': b.get('opponent_crowns', 0),
-                    'p_metrics': f"""
-                                <div style="display:flex; align-items:center; gap:8px;" title="Media Elixir">
-                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" style="width:22px; height:22px;">
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{m_metrics['avg']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px;" title="Ciclo 4 Cartas">
-                                    <span style="font-size:1.4em;">🔄</span>
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{m_metrics['cycle']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px; color:{m_metrics['leaked_color']};" title="Elixir Vazado">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" style="width:22px; height:22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
-                                    <span style="color:inherit; font-size:1.1em; font-weight:800;">{m_metrics['leaked_label']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left:15px;" title="Vida da Torre">
-                                    <span style="font-size:1.4em;">🏰</span>
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{m_metrics.get('hp', '--')}</span>
-                                </div>
-                    """,
-                    'o_metrics': f"""
-                                <div style="display:flex; align-items:center; gap:8px;" title="Media Elixir">
-                                    <img src="https://th.bing.com/th/id/R.aad727a9222ed0ab1e7a4182f12405a1?rik=xX4ws2kupzbHiw&riu=http%3a%2f%2fclash-wiki.com%2fimages%2ficons%2felixir_big_icon.png&ehk=DpEqzblvXzq3u8sVME8Upq9zPeqLoWvpkvT28kdmzzU%3d&risl=&pid=ImgRaw&r=0" style="width:22px; height:22px;">
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{o_metrics['avg']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px;" title="Ciclo 4 Cartas">
-                                    <span style="font-size:1.4em;">🔄</span>
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{o_metrics['cycle']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px; color:{o_metrics['leaked_color']};" title="Elixir Vazado">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" style="width:22px; height:22px; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">
-                                    <span style="color:inherit; font-size:1.1em; font-weight:800;">{o_metrics['leaked_label']}</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid rgba(255,255,255,0.1); padding-left:15px;" title="Vida da Torre">
-                                    <span style="font-size:1.4em;">🏰</span>
-                                    <span style="color:#fff; font-size:1.1em; font-weight:800;">{o_metrics.get('hp', '--')}</span>
-                                </div>
-                    """,
-                    'p_tower': f"""
-                        <img src="{m_metrics['tower_url']}" class="cr-tower-img-premium" onerror="this.src='https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png'">
-                        <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {m_metrics['level']}</span>
-                    """,
-                    'o_tower': f"""
-                        <img src="{o_metrics['tower_url']}" class="cr-tower-img-premium" onerror="this.src='https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png'">
-                        <span class="cr-card-level-badge" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8em; border: 1px solid rgba(255,255,255,0.2);">LV {o_metrics['level']}</span>
-                    """,
-                    'p_grid': "".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in [cx.strip() for cx in b['my_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
-                    'o_grid': "".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><div class="cr-card-level">L 15</div></div>' for c in [cx.strip() for cx in b['opp_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
-                    'p_copy': self.get_copy_deck_link([cx.strip() for cx in b['my_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
-                    'o_copy': self.get_copy_deck_link([cx.strip() for cx in b['opp_deck'].replace(' | ', '|').split('|') if cx.strip()][:8]),
-                    'date': d_str,
+                    'p_metrics': get_metrics_panel_html(m_metrics),
+                    'o_metrics': get_metrics_panel_html(o_metrics),
+                    'p_tower': f'<img src="{m_metrics["tower_url"]}" class="cr-tower-img-premium"><span class="cr-card-level-badge">LV {m_metrics["level"]}</span>',
+                    'o_tower': f'<img src="{o_metrics["tower_url"]}" class="cr-tower-img-premium"><span class="cr-card-level-badge">LV {o_metrics["level"]}</span>',
+                    'p_grid': get_deck_grid_html(b['my_deck']),
+                    'o_grid': get_deck_grid_html(b['opp_deck']),
+                    'p_copy': self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()]),
+                    'o_copy': self.get_copy_deck_link([c.strip() for c in b['opp_deck'].split('|') if c.strip()]),
+                    'date': b.get('data_str', '--/--'),
                     'mode': b.get('game_mode', 'Batalha')
                 }).replace("'", "&apos;")
 
+                active_class = " active" if idx == 0 else ""
                 html += f'''
-                        <div class="cr-date-selector" onclick="updateOpponentView({i}, this)" data-battle='{b_json}' style="flex:0 0 auto; display:flex; align-items:center; gap:8px; padding: 8px 12px; background:#1e293b; border:1px solid #475569; border-radius:10px; cursor:pointer; transition:all 0.2s;">
-                            <span style="background:{cor}; width:18px; height:18px; font-size:0.6em; display:flex; align-items:center; justify-content:center; border-radius:4px; font-weight:900; color:#fff;">{ic}</span>
-                            <span style="color:#94a3b8; font-size:0.75em; font-weight:700;">📅 {d_str}</span>
-                        </div>'''
+                    <div class="cr-date-selector{active_class}" onclick="updateOpponentView({i}, this)" data-battle='{b_json}'>
+                        <span class="cr-result-dot" style="background:{cor}; box-shadow: 0 0 10px {cor}66;">{ic}</span>
+                        <span class="cr-date-text-small">{b.get('data_str', '--/--')}</span>
+                    </div>'''
 
-            html += f'''
-                    </div>
-                </div>
-            </div>'''
+            html += f'</div></div></div>'
             
         return html + "</div>"
 
 
+
     def generate_lethal_decks_html(self, lethal_decks: List[Dict]) -> str:
-        """Gera HTML para os decks que mais causam derrotas."""
+        """Gera HTML para os decks que mais causam derrotas com layout Premium v2."""
         if not lethal_decks: return '<div class="cr-empty-state">Dados insuficientes para mapear decks letais.</div>'
         
         html = '<div class="cr-decks-list">'
@@ -3185,34 +3141,30 @@ class GitHubPagesHTMLGenerator:
             losses = ld['losses_caused']
             opponents = ld['opponents_list']
             last = ld['last_encounter'][:16].replace('T', ' ')
-            
             c_list = ld['cards']
-            def c_h(n):
-                img = self.get_card_image_path(n)
-                return f'<div class="cr-card-wrap" title="{n}" style="width:50px;height:60px;"><img src="{img}" class="cr-card-img" loading="lazy"></div>'
             
             html += f'''
-            <div class="cr-deck-card" style="padding:20px; border-left: 5px solid #e53e3e; background: #0f172a;">
-                <div class="cr-deck-header" style="background: rgba(229, 62, 62, 0.1); border-bottom: 1px solid rgba(229, 62, 62, 0.2);">
+            <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-left: 4px solid #f56565;">
+                <div class="cr-deck-header" style="background: rgba(245, 101, 101, 0.1);">
                     <div class="cr-deck-meta">
-                        <span class="cr-deck-rank" style="background:#e53e3e;">#{i} MAIS LETAL</span>
-                        <span class="cr-deck-label" style="font-weight:800; color:#fff;">Causou {losses} derrotas</span>
+                        <span class="cr-deck-rank" style="background:#f56565;">#{i} MAIS LETAL</span>
+                        <span class="cr-deck-label">Causou {losses} derrotas</span>
                     </div>
                 </div>
-                <div class="cr-deck-body" style="display: flex; flex-direction: row; gap: 25px; align-items: flex-start; padding-top:20px;">
-                    <div style="flex: 0 0 280px;">
+                <div class="cr-deck-body cr-lethal-body">
+                    <div class="cr-lethal-grid-wrap">
                         <div class="cr-grid-4x2">
                             {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in c_list[:8])}
                         </div>
                     </div>
-                    <div class="cr-stats-panel" style="flex:1;">
-                        <div style="font-size:0.95em; color:#e2e8f0; margin-bottom:12px; line-height:1.5;">
-                            <strong style="color:#f56565;">Usuários comuns:</strong><br>{opponents}
+                    <div class="cr-stats-panel cr-lethal-stats">
+                        <div class="cr-lethal-info">
+                            <strong style="color:#f56565;">Usuários comuns:</strong> {opponents}
                         </div>
-                        <div style="font-size:0.85em; color:#94a3b8; margin-bottom:15px;">
+                        <div class="cr-lethal-date">
                             <strong>Última derrota:</strong> {last}
                         </div>
-                        <div style="background: rgba(229, 62, 62, 0.2); color:#feb2b2; font-size:0.75em; padding:8px 12px; border-radius:8px; font-weight:800; text-transform:uppercase; border: 1px solid rgba(229, 62, 62, 0.3); letter-spacing:0.5px;">
+                        <div class="cr-lethal-warning">
                             ⚠️ ALERTA: Counter de Alta Periculosidade
                         </div>
                     </div>
@@ -3220,6 +3172,7 @@ class GitHubPagesHTMLGenerator:
             </div>'''
             
         return html + "</div>"
+
 
 
     def generate_clan_member_activity_html(self, clan_members: List[Dict], deck_analytics: Dict, player_name: str) -> str:
@@ -4091,16 +4044,17 @@ class GitHubPagesHTMLGenerator:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
 
         :root {
-            --glass-bg: #0f172a;
-            --glass-border: #1e293b;
-            --glass-blur: none;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: 20px;
             --primary: #4299e1;
-            --primary-glow: rgba(66, 153, 225, 0.4);
+            --primary-glow: rgba(66, 153, 225, 0.5);
             --accent: #f6ad55;
             --success: #48bb78;
             --danger: #f56565;
-            --bg-dark: #0f172a;
-            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --bg-dark: #020617;
+            --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            --premium-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         }
 
         * {
@@ -4112,7 +4066,7 @@ class GitHubPagesHTMLGenerator:
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #020617;
+            background: var(--bg-dark);
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -4132,16 +4086,18 @@ class GitHubPagesHTMLGenerator:
             max-width: 1800px;
             margin: 0 auto;
             padding: 40px 20px;
-            animation: fadeIn 0.8s ease-out;
+            animation: cr-fade-in-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        @keyframes cr-fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .glass-panel {
+        .glass-panel, .cr-glass-premium {
             background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             box-shadow: var(--card-shadow);
@@ -4158,6 +4114,7 @@ class GitHubPagesHTMLGenerator:
             align-items: center;
             gap: 20px;
             background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             box-shadow: var(--card-shadow);
@@ -4167,17 +4124,17 @@ class GitHubPagesHTMLGenerator:
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+            box-shadow: 0 0 20px var(--primary-glow);
         }
 
         .header h1 {
             font-size: 3.5em;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
         }
 
         .player-stats {
@@ -4185,51 +4142,57 @@ class GitHubPagesHTMLGenerator:
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 20px;
             width: 100%;
-            max-width: 1800px;
         }
 
         .stat-card {
-            padding: 20px;
-            background: #1e293b;
-            border-radius: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #334155;
+            padding: 24px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 20px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-8px);
+            background: rgba(30, 41, 59, 0.8);
             border-color: var(--primary);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4), 0 0 15px var(--primary-glow);
         }
 
         .stat-card h3 {
             font-size: 0.75em;
             color: #94a3b8;
             margin-bottom: 8px;
-            font-weight: 700;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .stat-card .value {
-            font-size: 1.8em;
-            font-weight: 800;
+            font-size: 2em;
+            font-weight: 900;
             color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .section {
             padding: 40px;
             margin-bottom: 40px;
             background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             box-shadow: var(--card-shadow);
         }
 
         .section h2 {
-            font-size: 1.8em;
-            margin-bottom: 30px;
+            font-size: 2em;
+            margin-bottom: 35px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
+            color: #fff;
         }
 
         .section h2::after {
@@ -4237,277 +4200,333 @@ class GitHubPagesHTMLGenerator:
             flex: 1;
             height: 2px;
             background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: 0.2;
+            opacity: 0.3;
         }
 
-        /* Tabs */
-        .deck-tabs-container {
-            margin-top: 20px;
-        }
-
-        .deck-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 30px;
-            padding: 8px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px;
-            width: fit-content;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .tab-button {
-            padding: 12px 24px;
-            border-radius: 12px;
-            color: #94a3b8;
-            font-weight: 700;
-            font-size: 0.9em;
-            transition: all 0.3s;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .tab-button:hover {
-            color: #fff;
-            background: rgba(255,255,255,0.05);
-        }
-
-        .tab-button.active {
-            color: #fff;
-            background: var(--primary);
-            box-shadow: 0 4px 15px var(--primary-glow);
-        }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
-
-        /* Deck Lists */
+        /* Deck Lists Premium v2 */
         .cr-decks-list {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
             width: 100%;
-            justify-content: center;
         }
 
         .cr-deck-card {
-            border-radius: 24px;
+            border-radius: 32px;
             overflow: hidden;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--glass-border);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
             position: relative;
-            width: 100%;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.4);
         }
 
         .cr-deck-card:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(15, 23, 42, 0.6);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            transform: scale(1.01);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
         }
 
-        /* Background image support for premium cards */
-        .cr-deck-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: var(--card-bg-image, none);
-            background-size: cover;
-            background-position: center;
-            opacity: 0.15;
-            z-index: -1;
-            pointer-events: none;
+        .cr-timeline-container {
+            margin-top: 20px;
+            padding: 20px 30px;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.05);
         }
+
+        .cr-timeline-header-text {
+            font-size: 0.75em;
+            color: #64748b;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .cr-timeline-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 10px 5px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) transparent;
+        }
+
+        .cr-timeline-scroll::-webkit-scrollbar { height: 6px; }
+        .cr-timeline-scroll::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        .cr-date-selector {
+            flex: 0 0 auto;
+            padding: 8px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .cr-date-selector:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .cr-date-selector.active {
+            background: var(--primary);
+            border-color: #fff;
+            box-shadow: 0 0 20px var(--primary-glow);
+            transform: scale(1.05);
+        }
+
+        .cr-date-selector.active .cr-date-text-small { color: #fff; }
+
+        .cr-result-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6em;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .cr-date-text-small {
+            font-size: 0.8em;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        /* Lethal Decks Premium v2 Styles */
+        .cr-lethal-card {
+            margin-bottom: 20px;
+        }
+
+        .cr-lethal-body {
+            flex-direction: row !important;
+            align-items: center;
+            gap: 40px !important;
+        }
+
+        .cr-lethal-grid-wrap {
+            flex: 0 0 320px;
+        }
+
+        .cr-lethal-stats {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .cr-lethal-info {
+            font-size: 1em;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .cr-lethal-date {
+            font-size: 0.9em;
+            color: #94a3b8;
+        }
+
+        .cr-lethal-warning {
+            display: inline-block;
+            background: rgba(245, 101, 101, 0.15);
+            color: #feb2b2;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            border: 1px solid rgba(245, 101, 101, 0.3);
+            letter-spacing: 1px;
+            animation: cr-pulse-red 3s infinite;
+        }
+
+        /* Utils */
+        .cr-toast-premium {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--primary);
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: cr-fade-in-up 0.3s ease;
+            transition: opacity 0.5s;
+        }
+
+        .cr-bg-info-style {
+            font-size: 0.8em;
+            opacity: 0.6;
+            margin-top: 10px;
+        }
+
+        .cr-bg-info-style a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .cr-bg-info-style a:hover { text-decoration: underline; }
 
         .cr-deck-header {
-            padding: 20px 24px;
-            background: rgba(255, 255, 255, 0.03);
+            padding: 25px 35px;
+            background: linear-gradient(to right, rgba(30,41,59,0.6), rgba(15,23,42,0.9));
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .cr-deck-rank {
-            background: linear-gradient(135deg, var(--primary) 0%, #3182ce 100%);
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: #94a3b8;
+            padding: 5px 15px;
+            border-radius: 20px;
             font-weight: 800;
-            font-size: 0.7em;
-            box-shadow: 0 4px 10px rgba(66, 153, 225, 0.3);
+            font-size: 0.75em;
+            text-transform: uppercase;
         }
 
         .cr-wr-badge {
-            font-weight: 800;
-            padding: 6px 14px;
-            border-radius: 10px;
-            font-size: 0.85em;
-            background: rgba(255,255,255,0.1);
+            font-weight: 900;
+            padding: 8px 18px;
+            border-radius: 12px;
+            font-size: 0.95em;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .cr-deck-body {
-            padding: 24px;
+            padding: 30px;
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 25px;
         }
 
-        .cr-card-wrap {
-            aspect-ratio: 5/6;
-            background: #1e293b;
-            border-radius: 14px;
-            border: 2px solid rgba(255,255,255,0.05);
+        /* VS Stage Premium v2 - Unified Layout */
+        .cr-main-vs-stage {
+            padding: 40px;
+            background: radial-gradient(circle at center, #1e293b, #0f172a);
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-            transition: transform 0.2s;
         }
 
-        .cr-card-wrap:hover {
-            transform: scale(1.05) translateY(-2px);
-            z-index: 10;
-            border-color: var(--primary);
-        }
-
-        .cr-card-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Layout VS Horizontal Premium */
-        .cr-battle-preview {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            padding: 35px;
-            background: linear-gradient(145deg, rgba(30,41,59,0.4), rgba(15,23,42,0.6));
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 30px;
-            position: relative;
-            overflow: hidden;
+        .cr-vs-row-premium-v2 {
+            display: grid;
+            grid-template-columns: 1fr 200px 1fr;
+            align-items: start;
+            gap: 40px;
             width: 100%;
             max-width: 1800px;
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            margin: 0 auto;
         }
 
-        .cr-battle-score-header-premium {
-            z-index: 2;
-            width: 100%;
-        }
-
-        .cr-vs-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 60px;
-            width: 100%;
+        @media (max-width: 1400px) {
+            .cr-vs-row-premium-v2 {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .cr-vs-center-divider, .cr-center-score-column {
+                order: -1;
+                margin-bottom: 20px;
+            }
         }
 
         .cr-deck-side {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
-            flex: 1;
-            max-width: 900px;
-        }
-
-        .cr-tower-side-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
+            gap: 25px;
             width: 100%;
         }
 
-        .cr-tower-img-premium {
-            width: 130px;
-            height: 130px;
-            object-fit: contain;
-            filter: drop-shadow(0 12px 25px rgba(0,0,0,0.7));
+        .cr-tower-card-premium {
+            width: 90px;
+            height: 110px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 5;
+            backdrop-filter: blur(10px);
         }
 
-        .cr-tower-img-premium:hover {
-            transform: translateY(-10px) scale(1.15);
-            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.8));
+        .cr-tower-card-premium:hover {
+            transform: translateY(-10px) scale(1.1);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 20px var(--primary-glow);
         }
 
-        .cr-player-name-vs {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.2em;
-            font-weight: 800;
+        .cr-tower-img-premium {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+        }
+
+        .cr-card-level-badge {
+            position: absolute;
+            bottom: -8px;
+            background: #1e293b;
             color: #fff;
+            font-size: 0.65em;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+
+        .cr-player-header-premium {
+            text-align: center;
+        }
+
+        .cr-player-name-premium {
+            font-size: 1.5em;
+            font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 1px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
+        .player-color-text { color: var(--primary); }
+        .opp-color-text { color: var(--danger); }
 
-        .cr-trophy-change-vs {
-            font-size: 0.8em;
-            font-weight: 700;
-            margin-top: 5px;
-        }
-
-        .cr-game-mode-badge {
-            font-size: 0.7em;
-            background: rgba(0,0,0,0.5);
-            padding: 6px 14px;
-            border-radius: 20px;
-            color: #94a3b8;
-            border: 1px solid rgba(255,255,255,0.1);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            white-space: nowrap;
-            margin-bottom: 10px;
-        }
-
-        .cr-grid-8x1 {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 5px;
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-            width: 100%;
-        }
-
-        .cr-grid-4x2, .cr-grid-4x2-premium {
+        .cr-grid-4x2 {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             padding: 15px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
             width: 100%;
-            max-width: 100%;
-            margin: 0 auto;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+            box-shadow: inset 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .cr-card-wrap-premium {
             aspect-ratio: 5/6;
             background: #1e293b;
-            border-radius: 12px;
-            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
             transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
 
         .cr-card-wrap-premium:hover {
@@ -4517,582 +4536,402 @@ class GitHubPagesHTMLGenerator:
             box-shadow: 0 15px 30px rgba(0,0,0,0.6);
         }
 
-        .cr-card-level {
+        .cr-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Evolution Effects */
+        .cr-card-evo-border {
+            border: 2px solid #ff00ff !important;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5), inset 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        .cr-card-evo-border::after {
+            content: 'EVO';
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
+            top: -5px; right: -5px;
+            background: #ff00ff;
             color: #fff;
-            font-size: 0.6em;
-            text-align: center;
-            padding: 2px 0;
+            font-size: 0.55em;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px #ff00ff;
+            z-index: 5;
+        }
+
+        /* Metrics Horizontal Premium */
+        .cr-deck-metrics-horizontal {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 12px 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            width: 100%;
+            backdrop-filter: blur(5px);
+        }
+
+        .cr-hp-metric-border {
+            border-left: 1px solid rgba(255,255,255,0.1); 
+            padding-left:15px;
+        }
+
+        .cr-metric-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95em;
+            font-weight: 800;
+            color: #f1f5f9;
+            transition: all 0.2s;
+        }
+
+        .cr-metric-inline:hover {
+            transform: translateY(-2px);
+            color: #fff;
+            filter: drop-shadow(0 0 8px var(--primary-glow));
+        }
+
+        .cr-elixir-icon-p {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+
+        .cr-metric-inline .cr-icon {
+            font-size: 1.2em;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
+        }
+
+        /* Elixir Leak Animations */
+        .cr-leak-warning { color: #f6ad55; }
+        .cr-leak-critical { 
+            color: #f56565; 
+            text-shadow: 0 0 10px rgba(245, 101, 101, 0.5);
+            animation: cr-pulse-red 2s infinite;
+        }
+
+        @keyframes cr-pulse-red {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.05); filter: brightness(1.3); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        .cr-battle-vs-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-width: 160px;
+            padding: 20px;
+        }
+
+        .cr-battle-result-badge {
+            padding: 15px 35px;
+            border-radius: 50px;
+            background: #020617;
+            border: 2px solid rgba(255,255,255,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            backdrop-filter: blur(10px);
+            transform: skewX(-15deg);
+        }
+
+        .cr-score-badge-large {
+            font-size: 2.2em;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .cr-score-val, .cr-score-badge-large span {
+            color: #fff;
+            letter-spacing: 2px;
+            transform: skewX(15deg);
+        }
+
+        .cr-score-divider {
+            opacity: 0.3;
+            transform: skewX(15deg);
+        }
+
+        .cr-mode-tag-premium {
+            color: #94a3b8;
+            font-size: 0.85em;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(255,255,255,0.05);
+            padding: 4px 12px;
+            border-radius: 6px;
+        }
+
+        .cr-score-display-premium {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .cr-vs-text-bg {
+            font-weight: 900;
+            color: rgba(255,255,255,0.03);
+            font-size: 4em;
+            line-height: 1;
+            margin-top: 20px;
+            user-select: none;
+        }
+
+        .cr-battle-date-p {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85em;
+            font-weight: 700;
+        }
+
+        .cr-swords-icon {
+            font-size: 2.5em;
+            margin-top: 15px;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+            opacity: 0.5;
+        }
+
+        /* Timeline Selectors */
+        .cr-timeline-container {
+            background: #050914;
+            padding: 25px 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .cr-timeline-header-text {
+            color:#64748b;
+            font-size:0.7em;
+            font-weight:900;
+            text-transform:uppercase;
+            letter-spacing:1.5px;
+            margin-bottom:15px;
+        }
+
+        .cr-timeline-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            scrollbar-width: thin;
+        }
+
+        .cr-date-selector {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .cr-date-selector:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .cr-date-selector.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 10px 20px var(--primary-glow);
+        }
+
+        .cr-result-dot {
+            width: 20px;
+            height: 20px;
+            font-size: 0.65em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .cr-date-text-small {
+            color: #94a3b8;
+            font-size: 0.8em;
+            font-weight: 700;
+        }
+
+        .cr-date-selector.active .cr-date-text-small {
+            color: #fff;
+        }
+
+        /* Buttons Premium */
+        .cr-vs-actions-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding: 0 20px;
         }
 
         .cr-copy-deck-btn {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, rgba(66, 153, 225, 0.2) 0%, rgba(49, 130, 206, 0.4) 100%);
-            border: 1px solid rgba(66, 153, 225, 0.4);
+            gap: 10px;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(66, 153, 225, 0.2) 100%);
+            border: 1px solid rgba(66, 153, 225, 0.3);
+            border-radius: 16px;
             color: #fff;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 0.85em;
+            font-weight: 800;
+            font-size: 0.9em;
             text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             text-transform: uppercase;
             letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .cr-btn-danger-premium {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.2) 0%, rgba(229, 62, 62, 0.4) 100%);
+            border-color: rgba(245, 101, 101, 0.4);
         }
 
         .cr-copy-deck-btn:hover {
-            background: linear-gradient(135deg, rgba(66, 153, 225, 0.4) 0%, rgba(49, 130, 206, 0.6) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.4);
-            border-color: rgba(66, 153, 225, 0.8);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px var(--primary-glow);
+            filter: brightness(1.2);
         }
 
-        .cr-copy-deck-btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 2px 10px rgba(66, 153, 225, 0.2);
+        /* Opponents List Row Premium */
+        .cr-opponents-list {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
         }
 
-        .cr-battle-header-premium {
+        .cr-opp-card-row {
+            width: 100%;
+            max-width: none;
+            margin-bottom: 40px;
+        }
+
+        .cr-opp-header-premium {
+            padding: 25px 40px;
+            background: linear-gradient(to right, rgba(30,41,59,0.5), rgba(15,23,42,0.8));
+        }
+
+        .cr-opp-header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 30px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px 16px 0 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            width: 100%;
         }
 
-        .cr-battle-result-label {
-            color: var(--primary);
-            font-weight: 800;
-            font-size: 1.1em;
-            letter-spacing: 1px;
-        }
-
-        .cr-battle-score-premium {
-            font-size: 1.5em;
-            font-weight: 900;
-            color: #fff;
-            letter-spacing: 4px;
-        }
-
-        .cr-battle-mode-label {
+        .cr-opp-rank-badge {
+            background: rgba(255,255,255,0.1);
             color: #94a3b8;
             font-size: 0.8em;
+            padding: 4px 12px;
+            border-radius: 20px;
             font-weight: 700;
-            text-transform: uppercase;
+            margin-right: 15px;
         }
 
-        .cr-vs-row-premium-v2 {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            padding: 25px;
-            background: #0f172a;
-            border-radius: 0 0 20px 20px;
-        }
-
-        .cr-battle-score-header-premium {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .cr-score-display-premium {
-            background: #050914;
-            padding: 10px 30px;
-            border-radius: 50px;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .cr-score-val {
-            font-size: 2.2em;
-            font-weight: 900;
+        .cr-opp-name-main {
+            font-size: 1.8em;
             color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            letter-spacing: 5px;
-        }
-
-        .cr-vs-decks-row-premium {
-            display: grid;
-            grid-template-columns: 1fr 60px 1fr;
-            align-items: center;
-            width: 100%;
-        }
-
-        .cr-vs-center-divider {
-            font-size: 1.5em;
             font-weight: 900;
-            color: rgba(255,255,255,0.2);
-            text-align: center;
+            letter-spacing: -0.5px;
         }
 
-        .cr-vs-divider-vertical {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.2em;
-            font-weight: 900;
-            color: rgba(255,255,255,0.1);
-            text-transform: uppercase;
-            text-align: center;
+        .cr-opp-stats-summary {
+            text-align: right;
         }
 
-        .cr-player-header-premium {
-            text-align: center;
-            margin-bottom: 15px;
+        .cr-opp-tag-small {
+            font-size: 0.8em;
+            color: #64748b;
+            font-family: monospace;
+            display: block;
+            margin-bottom: 4px;
         }
 
-        .cr-player-name-premium {
-            font-size: 1.4em;
-            font-weight: 900;
-            color: #fff;
-            margin-bottom: 2px;
-        }
-
-        .cr-clan-name-premium {
-            font-size: 0.7em;
-            color: #94a3b8;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-
-        /* Estilo unificado para torre removendo duplicatas */
-
-        .cr-tower-card-premium {
-            width: 85px;
-            height: 102px;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-            border-radius: 12px;
-            border: 2px solid rgba(246, 173, 85, 0.4);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 0 15px rgba(246, 173, 85, 0.1);
-            margin: 0 auto 10px auto;
-            z-index: 5;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(12px);
-        }
-
-        .cr-elixir-metrics-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 15px;
-            align-items: center;
-            width: 100%;
-        }
-
-        .cr-elixir-metrics-badge .metric-label {
-            color: #94a3b8;
-            margin-right: 4px;
-            font-size: 0.9em;
-        }
-
-        .cr-elixir-metrics-badge .metric-emoji {
-            font-size: 1.1em;
-            margin-right: 4px;
-        }
-
-        .cr-copy-container {
-            margin-top: 15px;
-            margin-bottom: 10px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        .cr-toast-premium {
+        /* Modal Glassmorphism v2 */
+        .cr-modal-overlay {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(72, 187, 120, 0.98);
-            color: #fff;
-            padding: 14px 28px;
-            border-radius: 50px;
-            font-weight: 800;
-            z-index: 9999;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.7);
             backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.2);
-            font-family: 'Outfit', sans-serif;
-            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            -webkit-backdrop-filter: blur(15px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
 
-        @keyframes slideUp {
-            from { transform: translate(-50%, 100%); opacity: 0; }
-            to { transform: translate(-50%, 0); opacity: 1; }
-        }
-
-        .cr-bg-info-style {
-            font-size: 0.7em;
-            opacity: 0.4;
-            margin-top: 10px;
-            color: #94a3b8;
-        }
-
-        .cr-bg-info-style a {
-            color: inherit;
-            text-decoration: none;
-            transition: opacity 0.2s;
-        }
-
-        .cr-bg-info-style a:hover {
+        .cr-modal-overlay.active {
+            display: flex;
             opacity: 1;
-            text-decoration: underline;
         }
 
-        .cr-battle-date-p {
-            font-size: 0.75em;
-            color: #94a3b8;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .cr-elixir-icon-p {
-            width: 22px;
-            height: 22px;
-            object-fit: contain;
-            filter: drop-shadow(0 0 5px rgba(255,0,255,0.4));
-            vertical-align: middle;
-        }
-
-        .cr-elixir-metrics-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(0,0,0,0.6);
-            padding: 4px 10px;
-            border-radius: 50px;
+        .cr-modal-container {
+            width: 95%;
+            max-width: 1400px;
+            max-height: 90vh;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255,255,255,0.1);
-            font-size: 0.8em;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .cr-tower-card-premium:hover {
-            transform: translateY(-8px) scale(1.15);
-            border-color: #f6ad55;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(246, 173, 85, 0.4);
-        }
-
-        .cr-tower-card-img {
-            width: 90%;
-            height: 90%;
-            object-fit: contain;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-
-        .cr-tower-info-premium {
-            font-size: 0.7em;
-            color: #94a3b8;
-            font-weight: bold;
-            background: rgba(0,0,0,0.3);
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-
-        .cr-deck-metrics-premium {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 12px;
-            padding: 10px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(0,0,0,0.5);
-        }
-
-        /* Rodape de metricas premium (Task 2) */
-        .cr-deck-footer {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-top: 14px;
-            padding: 10px 8px;
-            background: linear-gradient(135deg, rgba(15,23,42,0.8), rgba(30,41,59,0.7));
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 14px;
-            backdrop-filter: blur(6px);
-            gap: 4px;
-        }
-
-        .cr-footer-metric {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            min-width: 44px;
-            padding: 4px 6px;
-            border-radius: 10px;
-            transition: background 0.2s;
-        }
-
-        .cr-footer-metric:hover {
-            background: rgba(255,255,255,0.06);
-        }
-
-        .cr-footer-icon {
-            font-size: 0.95em;
-            line-height: 1;
-        }
-
-        .cr-footer-val {
-            font-size: 0.85em;
-            font-weight: 800;
-            color: #f1f5f9;
-            line-height: 1.2;
-        }
-
-        .cr-footer-label {
-            font-size: 0.55em;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .cr-metric-item-p {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 800;
-            font-size: 0.9em;
-            color: #f8fafc;
-        }
-
-        .cr-metric-icon {
-            opacity: 0.8;
-        }
-
-        .cr-deck-metrics {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        .cr-metric-badge {
-            padding: 4px 10px;
-            background: rgba(15, 23, 42, 0.6);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.65em;
-            font-weight: 700;
-            color: #94a3b8;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .vs-divider-premium {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.5em;
-            font-weight: 900;
-            color: #fff;
-            opacity: 0.3;
-            letter-spacing: -1px;
-        }
-
-        .cr-mode-badge {
-            font-size: 0.7em;
-            font-weight: 800;
-            padding: 4px 12px;
-            border-radius: 20px;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: rgba(var(--primary-rgb), 0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.15);
-            font-weight: 800;
-            color: #fff;
-            z-index: 20;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        .cr-stats-panel {
-            background: rgba(0,0,0,0.25);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.03);
-        }
-
-        .cr-stats-table { width: 100%; border-collapse: collapse; }
-        .cr-stats-table th {
-            color: #64748b;
-            font-size: 0.7em;
-            padding: 8px;
-            text-align: center;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-        .cr-stats-table td {
-            text-align: center;
-            padding: 10px;
-            font-size: 1.2em;
-            font-weight: 800;
-            color: #f1f5f9;
-        }
-
-        .cr-th-win, .cr-td-win { color: var(--success) !important; }
-        .cr-th-loss, .cr-td-loss { color: var(--danger) !important; }
-
-        /* Timeline */
-        .cr-battles-timeline {
-            margin-top: 10px;
-            padding: 15px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 16px;
-        }
-
-        .cr-timeline-label {
-            font-size: 0.65em;
-            color: #64748b;
-            font-weight: 700;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-        }
-
-        .cr-timeline-badges {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-        }
-
-        .cr-battle-badge {
-            min-width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 0.9em;
-            transition: transform 0.2s;
-        }
-
-        .cr-battle-badge:hover { transform: scale(1.1); }
-
-        .battle-victory, .cr-badge-V { background: var(--success); box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3); }
-        .battle-defeat, .cr-badge-D { background: var(--danger); box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3); }
-        .battle-draw, .cr-badge-E { background: var(--accent); box-shadow: 0 4px 12px rgba(246, 173, 85, 0.3); }
-
-        /* Tables & Lists */
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 8px;
-            margin-top: -8px;
-        }
-
-        th {
-            text-align: left;
-            padding: 16px 24px;
-            color: #94a3b8;
-            font-size: 0.8em;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        tr {
-            transition: all 0.3s;
-        }
-
-        tbody tr {
-            background: rgba(255,255,255,0.03);
-        }
-
-        tbody tr:hover {
-            background: rgba(255,255,255,0.08);
-            transform: scale(1.005);
-        }
-
-        td {
-            padding: 16px 24px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        td:first-child { border-left: 1px solid rgba(255,255,255,0.05); border-radius: 16px 0 0 16px; }
-        td:last-child { border-right: 1px solid rgba(255,255,255,0.05); border-radius: 0 16px 16px 0; }
-
-        /* Charts */
-        .chart-container {
-            padding: 30px;
-            margin-top: 20px;
-        }
-
-        .stacked-histogram {
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-            height: 250px;
-            padding-bottom: 40px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Elite Spy Custom Styles */
-        .elite-spy-section {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
-            border: 1px solid #334155 !important;
+            border-radius: 30px;
+            box-shadow: 0 25px 100px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
             position: relative;
-            overflow: hidden;
+            padding: 40px;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .elite-spy-section::after {
-            content: '';
+        .cr-modal-overlay.active .cr-modal-container {
+            transform: scale(1);
+        }
+
+        .cr-modal-close {
             position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .elite-header {
-            margin-bottom: 30px;
-            text-align: left;
-        }
-
-        .elite-badge {
-            display: inline-block;
-            background: #ef4444;
+            top: 25px;
+            right: 30px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
             color: #fff;
-            font-size: 0.6em;
-            font-weight: 900;
-            padding: 4px 12px;
-            border-radius: 4px;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .cr-modal-close:hover {
+            background: var(--primary);
+            transform: rotate(90deg);
         }
 
         .elite-spy-section .cr-player-name {
@@ -5449,7 +5288,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-modal-container {
-            width: 1700px !important;
+            width: 1800px !important;
             max-width: 98% !important;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
