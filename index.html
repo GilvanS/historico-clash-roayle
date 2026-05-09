@@ -1091,7 +1091,7 @@
             }
 
             .cr-grid-4x2 {
-                grid-template-columns: repeat(4, 1fr) !important;
+                grid-template-columns: repeat(2, 1fr) !important;
                 gap: 8px !important;
                 padding: 4px !important;
             }
@@ -1339,7 +1339,7 @@
         @media (max-width: 768px) {
             /* Grid de cartas adaptado para mobile - manter 4 colunas mas cards menores */
             .cr-grid-4x2-premium {
-                grid-template-columns: repeat(4, 1fr) !important;
+                grid-template-columns: repeat(2, 1fr) !important;
                 gap: 3px !important;
             }
             .cr-card-img {
@@ -1385,7 +1385,8 @@
             .header h1 { font-size: 2.2em; }
             .section { padding: 24px; }
             .container { padding: 10px; }
-            .desktop-table { display: none; }
+            /* .desktop-table { display: none; } -- Removido para garantir visibilidade */
+
             .cr-deck-layout { flex-direction: column; }
             /* Player name menor em mobile */
             .cr-player-name-premium { font-size: 1em; }
