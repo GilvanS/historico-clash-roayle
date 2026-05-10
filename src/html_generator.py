@@ -4231,13 +4231,21 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-deck-card {
-            border-radius: 32px;
+            border-radius: 20px;
             overflow: hidden;
             background: #0f172a;
             border: 1px solid rgba(255,255,255,0.08);
             transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
             position: relative;
             box-shadow: 0 15px 45px rgba(0,0,0,0.4);
+            aspect-ratio: 1 / 1.25;
+        }
+
+        .cr-deck-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .cr-deck-card:hover {
@@ -4446,8 +4454,10 @@ class GitHubPagesHTMLGenerator:
         .cr-vs-stage-v2 {
             display: flex;
             flex-direction: column;
-            gap: 30px;
+            gap: 20px;
             width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
         /* Top Row: Towers & Score */
@@ -4466,11 +4476,11 @@ class GitHubPagesHTMLGenerator:
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            padding: 30px 50px;
+            padding: 20px 40px;
             background: rgba(15, 23, 42, 0.4);
             border-bottom: 1px solid rgba(255,255,255,0.05);
             border-radius: 24px 24px 0 0;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .cr-tower-stage-p {
@@ -4613,13 +4623,15 @@ class GitHubPagesHTMLGenerator:
 
         .cr-grid-4x2 {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             padding: 15px;
             background: rgba(0,0,0,0.3);
             border-radius: 24px;
             border: 1px solid rgba(255,255,255,0.05);
             width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
             box-shadow: inset 0 4px 15px rgba(0,0,0,0.3);
         }
 
@@ -4673,10 +4685,12 @@ class GitHubPagesHTMLGenerator:
             justify-content: space-around;
             align-items: center;
             background: rgba(15, 23, 42, 0.6);
-            padding: 12px 25px;
+            padding: 12px 20px;
             border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.08);
             width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
             backdrop-filter: blur(5px);
         }
 
@@ -4805,9 +4819,9 @@ class GitHubPagesHTMLGenerator:
         .cr-vs-text-bg {
             font-weight: 900;
             color: rgba(255,255,255,0.03);
-            font-size: 4em;
+            font-size: 2.5em;
             line-height: 1;
-            margin-top: 20px;
+            margin-top: 10px;
             user-select: none;
         }
 
