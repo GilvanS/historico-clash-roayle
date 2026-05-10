@@ -120,7 +120,9 @@ class GitHubPagesHTMLGenerator:
             logger.info(f"Mestre de {len(master)} icones carregado com sucesso.")
         except Exception as e:
             logger.error(f"Erro ao ler cards_master_icons.csv: {e}")
-        return master    def _load_all_battles_from_csv(self, player_tag: str = None) -> List[Dict]:
+        return master
+
+    def _load_all_battles_from_csv(self, player_tag: str = None) -> List[Dict]:
         """Loads all battles from the consolidated CSV files with robust detection."""
         if not player_tag:
             player_tag = self.player_tag
@@ -4108,7 +4110,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 40px 20px;
             animation: cr-fade-in-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -4462,7 +4464,7 @@ class GitHubPagesHTMLGenerator:
             flex-direction: column;
             gap: 20px;
             width: 100%;
-            max-width: 1000px;
+            max-width: 850px;
             margin: 0 auto;
         }
 
@@ -4533,7 +4535,7 @@ class GitHubPagesHTMLGenerator:
             gap: 40px;
             padding: 0 50px;
             width: 100%;
-            max-width: 1800px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -4563,7 +4565,7 @@ class GitHubPagesHTMLGenerator:
             width: 100%;
         }
 
-        @media (max-width: 1400px) {
+        @media (max-width: 1000px) {
             .cr-vs-row-premium-v2 {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -4647,7 +4649,7 @@ class GitHubPagesHTMLGenerator:
             border-radius: 24px;
             border: 1px solid rgba(255,255,255,0.05);
             width: 100%;
-            max-width: 450px;
+            max-width: 420px;
             margin: 0 auto;
             box-shadow: inset 0 4px 15px rgba(0,0,0,0.3);
         }
@@ -5051,7 +5053,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1400px;
+            max-width: 1000px;
             max-height: 90vh;
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(25px);
@@ -5549,7 +5551,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-modal-container {
-            width: 1400px !important;
+            width: 1000px !important;
             max-width: 98% !important;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
