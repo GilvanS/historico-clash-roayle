@@ -2701,7 +2701,6 @@ class GitHubPagesHTMLGenerator:
             if 'mini-p-e-k-k-a' in slug: card_urls['minipekka'] = url
             if 'the-log' in slug: card_urls['log'] = url
 
-        
         card_map_json = json.dumps(card_urls)
 
         return """
@@ -2752,12 +2751,14 @@ class GitHubPagesHTMLGenerator:
             if (tHP !== '--' && !isNaN(tHP)) {
                 tHP = Number(tHP).toLocaleString('pt-BR');
             }
+
+            const isLeak = leaked > 0;
+            const leakClass = isLeak ? 'cr-leak-active' : '';
             
             const copyHtml = deckLink ? `<a href="${deckLink}" class="cr-copy-deck-btn" title="Copiar Deck">📋</a>` : '';
             
             return {
                 playerName,
-                clanHtml,
                 towerUrl,
                 towerName,
                 tLevel,
@@ -2770,19 +2771,17 @@ class GitHubPagesHTMLGenerator:
                         ${copyHtml}
                     </div>`,
                 metricsHtml: `
-                    <div class="cr-deck-metrics-horizontal">
-                        <div class="cr-metric-inline" title="Media Elixir">
-                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p"> <span>${avg}</span>
-                        </div>
-                        <div class="cr-metric-inline" title="Ciclo 4 Cartas">
-                            <span class="cr-icon">🔄</span> <span>${cycle}</span>
-                        </div>
-                        <div class="cr-metric-inline ${leakClass}" title="Elixir Vazado">
-                            <img src="${isLeak ? 'https://cdn.royaleapi.com/static/img/ui/elixir-leak.png' : 'https://cdn.royaleapi.com/static/img/ui/elixir.png'}" class="${isLeak ? 'cr-leak-icon' : 'cr-elixir-icon-p'}"> <span>${leaked}</span>
-                        </div>
-                        <div class="cr-metric-inline cr-hp-metric-border" title="Vida da Torre">
-                            <span class="cr-icon">🏰</span> <span>${tHP}</span>
-                        </div>
+                    <div class="cr-metric-inline" title="Media Elixir">
+                        <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p"> <span>${avg}</span>
+                    </div>
+                    <div class="cr-metric-inline" title="Ciclo 4 Cartas">
+                        <span class="cr-icon">🔄</span> <span>${cycle}</span>
+                    </div>
+                    <div class="cr-metric-inline ${leakClass}" title="Elixir Vazado">
+                        <img src="${isLeak ? 'https://cdn.royaleapi.com/static/img/ui/elixir-leak.png' : 'https://cdn.royaleapi.com/static/img/ui/elixir.png'}" class="${isLeak ? 'cr-leak-icon' : 'cr-elixir-icon-p'}"> <span>${leaked}</span>
+                    </div>
+                    <div class="cr-metric-inline cr-hp-metric-border" title="Vida da Torre">
+                        <span class="cr-icon">🏰</span> <span>${tHP}</span>
                     </div>`
             };
         }
@@ -2798,10 +2797,6 @@ class GitHubPagesHTMLGenerator:
                 const oData = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_clan || '', data.opp_metrics, data.opp_deck_link, data.opp_icons);
                 
                 const score = `${data.crowns || 0} - ${data.opponent_crowns || 0}`;
-                const tropChange = data.trophy_change || 0;
-                const tropColor = tropChange > 0 ? '#48bb78' : (tropChange < 0 ? '#f56565' : '#718096');
-                const tropSign = tropChange > 0 ? '+' : '';
-                const tropText = tropChange !== 0 ? tropSign + tropChange : '';
 
                 content.innerHTML = `
                     <div class="cr-modal-premium-layout cr-vs-stage-v2">
@@ -2844,26 +2839,23 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
 
-                        <div class="cr-modal-metrics-footer" style="margin-top:10px; gap:20px; padding:15px 30px;">
-                            <div class="cr-metrics-wrap-p">${pData.metricsHtml}</div>
-                            <div class="cr-metrics-wrap-p">${oData.metricsHtml}</div>
-                        </div>
-
-                        <div class="cr-modal-metrics-footer">
-                            <div class="cr-metrics-wrap-p">${data.p_metrics}</div>
-                            <div class="cr-vs-metrics-divider"></div>
-                            <div class="cr-metrics-wrap-p">${data.o_metrics}</div>
-                        </div>
-
-                        <div class="cr-vs-date-footer">
-                             <div class="cr-date-info-item">
-                                <span class="icon">📅</span>
-                                <span>${data.date || ''}</span>
-                             </div>
-                             <div class="cr-date-info-item">
-                                <span class="icon">🕒</span>
-                                <span>${data.time || '00:00'}</span>
-                             </div>
+                        <div class="cr-vs-metrics-unified">
+                            <div class="cr-vs-footer-metrics">
+                                <div class="cr-metrics-wrap-p">${pData.metricsHtml}</div>
+                                <div class="cr-vs-metrics-divider"></div>
+                                <div class="cr-metrics-wrap-p">${oData.metricsHtml}</div>
+                            </div>
+                            
+                            <div class="cr-vs-date-row-integrated">
+                                 <div class="cr-date-info-item">
+                                    <span class="icon">📅</span>
+                                    <span>${data.date || ''}</span>
+                                 </div>
+                                 <div class="cr-date-info-item">
+                                    <span class="icon">🕒</span>
+                                    <span>${data.time || '00:00'}</span>
+                                 </div>
+                            </div>
                         </div>
                     </div>`;
                 
@@ -3057,7 +3049,7 @@ class GitHubPagesHTMLGenerator:
                 copy_btn = f'<a href="{copy_link}" class="cr-copy-deck-btn" title="Copiar Deck">📋</a>' if copy_link else ''
                 return f'<div class="cr-grid-wrapper-premium"><div class="cr-grid-4x2">{html_cards}</div>{copy_btn}</div>'
 
-            def get_metrics_panel_html(metrics):
+            def get_metrics_panel_html(metrics, is_opponent=False):
                 leaked = metrics.get('leaked', 0)
                 leak_class = "cr-leak-warning" if leaked > 0.1 else ""
                 if leaked >= 1.0: leak_class = "cr-leak-critical"
@@ -3089,7 +3081,7 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header cr-opp-header-premium">
                     <div class="cr-opp-header-content">
                         <div class="cr-deck-meta">
-                            <span class="cr-deck-rank cr-opp-rank-badge">OPONENTE #{i}</span>
+                            <span class="cr-deck-rank cr-opp-rank-badge">CONFRONTO #{i}</span>
                             <span class="cr-deck-label cr-opp-name-main">{opp['opponent_name']}</span>
                             <span class="rival-badge {cat_class}-badge">{category}</span>
                         </div>
@@ -3151,38 +3143,38 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
 
-                        <!-- Footer: Metrics with Divider -->
-                        <div class="cr-vs-footer-metrics">
-                            <div class="cr-metrics-wrap-p" id="player-metrics-{i}">
-                                {get_metrics_panel_html(my_metrics_f)}
+                        <!-- Consolidated Metrics & Date Info -->
+                        <div class="cr-vs-metrics-unified">
+                            <div class="cr-vs-footer-metrics">
+                                <div class="cr-metrics-wrap-p" id="player-metrics-{i}">
+                                    {get_metrics_panel_html(my_metrics_f)}
+                                </div>
+                                <div class="cr-vs-metrics-divider"></div>
+                                <div class="cr-metrics-wrap-p" id="opp-metrics-{i}">
+                                    {get_metrics_panel_html(opp_metrics_f, is_opponent=True)}
+                                </div>
                             </div>
-                            <div class="cr-vs-metrics-divider"></div>
-                            <div class="cr-metrics-wrap-p" id="opp-metrics-{i}">
-                                {get_metrics_panel_html(opp_metrics_f)}
-                            </div>
-                        </div>
-
-                        <!-- Integrated Date/Time Footer -->
-                        <div class="cr-vs-date-footer">
-                             <div class="cr-date-info-item">
-                                <span class="icon">📅</span>
-                                <span id="date-val-{i}">{first_b.get('data_str', '--/--').split(' ')[0]}</span>
-                             </div>
-                             <div class="cr-date-info-item">
-                                <span class="icon">🕒</span>
-                                <span id="time-val-{i}">{first_b.get('data_str', '00:00').split(' ')[1] if ' ' in first_b.get('data_str','') else '00:00'}</span>
-                             </div>
+                            
+                            {f'''<div class="cr-vs-date-row-integrated">
+                                 <div class="cr-date-info-item">
+                                    <span class="icon">📅</span>
+                                    <span id="date-val-{i}">{first_b.get('data_str', '--/--').split(' ')[0]}</span>
+                                 </div>
+                                 <div class="cr-date-info-item">
+                                    <span class="icon">🕒</span>
+                                    <span id="time-val-{i}">{first_b.get('data_str', '00:00').split(' ')[1] if ' ' in first_b.get('data_str','') else '00:00'}</span>
+                                 </div>
+                            </div>''' if total > 3 else ''}
                         </div>
                     </div>
 
                     <div class="cr-vs-actions-row">
-                        <a href="{self.get_copy_deck_link([c.strip() for c in first_b.get('my_deck','').split('|') if c.strip()])}" id="p-copy-{i}" target="_blank" class="cr-copy-deck-btn"><span>📋</span> COPIAR DECK</a>
-                        <a href="{self.get_copy_deck_link([c.strip() for c in first_b.get('opp_deck','').split('|') if c.strip()])}" id="o-copy-{i}" target="_blank" class="cr-copy-deck-btn cr-btn-danger-premium"><span>📋</span> COPIAR DECK</a>
+                        <a href="{self.get_copy_deck_link([c.strip() for c in first_b.get('my_deck','').split('|') if c.strip()])}" id="p-copy-{i}" target="_blank" class="cr-copy-deck-btn cr-btn-simple"><span>📋</span></a>
+                        <a href="{self.get_copy_deck_link([c.strip() for c in first_b.get('opp_deck','').split('|') if c.strip()])}" id="o-copy-{i}" target="_blank" class="cr-copy-deck-btn cr-btn-simple"><span>📋</span></a>
                     </div>
                 </div>
 
                 <div class="cr-timeline-container" style="display: {'block' if total > 1 else 'none'};">
-                    <div class="cr-timeline-header-text">HISTÓRICO RECENTE (CLIQUE PARA ALTERNAR O PALCO VS)</div>
                     <div class="cr-timeline-scroll">
             '''
 
@@ -3194,11 +3186,15 @@ class GitHubPagesHTMLGenerator:
                 m_metrics = self._get_battle_deck_metrics(b['my_deck'], b, is_opponent=False)
                 o_metrics = self._get_battle_deck_metrics(b['opp_deck'], b, is_opponent=True)
                 
+                # Só mostrar data se tiver mais de 3 lutas
+                data_str_val = b.get('data_str', '--/--').split(' ')[0] if total > 3 else ''
+                time_str_val = b.get('data_str', '00:00').split(' ')[1] if ' ' in b.get('data_str','') else '00:00'
+                
                 b_json = json.dumps({
                     'p_score': b.get('crowns', 0),
                     'o_score': b.get('opponent_crowns', 0),
                     'p_metrics': get_metrics_panel_html(m_metrics),
-                    'o_metrics': get_metrics_panel_html(o_metrics),
+                    'o_metrics': get_metrics_panel_html(o_metrics, is_opponent=True),
                     'p_tower_url': m_metrics["tower_url"],
                     'p_level': m_metrics["level"],
                     'o_tower_url': o_metrics["tower_url"],
@@ -3207,12 +3203,12 @@ class GitHubPagesHTMLGenerator:
                     'player_clan': player_clan,
                     'opp_name': opp["opponent_name"],
                     'opp_clan': opp.get('opp_clan', ''),
-                    'p_grid': get_deck_grid_html(b['my_deck'], self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()])),
-                    'o_grid': get_deck_grid_html(b['opp_deck'], self.get_copy_deck_link([c.strip() for c in b['opp_deck'].split('|') if c.strip()])),
+                    'p_grid': get_deck_grid_html(b['my_deck'], ""), 
+                    'o_grid': get_deck_grid_html(b['opp_deck'], ""),
                     'p_copy': self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()]),
                     'o_copy': self.get_copy_deck_link([c.strip() for c in b['opp_deck'].split('|') if c.strip()]),
-                    'date': b.get('data_str', '--/--').split(' ')[0],
-                    'time': b.get('data_str', '00:00').split(' ')[1] if ' ' in b.get('data_str','') else '00:00',
+                    'date': data_str_val,
+                    'time': time_str_val,
                     'mode': b.get('game_mode', 'Batalha'),
                     'total': total
                 }).replace("'", "&apos;")
@@ -3220,8 +3216,11 @@ class GitHubPagesHTMLGenerator:
                 active_class = " active" if idx == 0 else ""
                 html += f'''
                     <div class="cr-date-selector{active_class}" onclick="updateOpponentView({i}, this)" data-battle='{b_json}'>
-                        <span class="cr-result-dot" style="background:{cor}; box-shadow: 0 0 10px {cor}66;">{ic}</span>
-                        <span class="cr-date-text-small">{b.get('data_str', '--/--')}</span>
+                        <div class="cr-sel-top">
+                            <span class="cr-result-dot" style="background:{cor};">{ic}</span>
+                            <span class="cr-sel-time">{time_str_val}</span>
+                        </div>
+                        {f'<span class="cr-date-text-small">{data_str_val}</span>' if data_str_val else ''}
                     </div>'''
 
             html += f'</div></div></div>'
@@ -4301,13 +4300,20 @@ class GitHubPagesHTMLGenerator:
             opacity: 0.3;
         }
 
-        .cr-decks-list {
+        .cr-opponents-list {
             display: grid;
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 25px;
-            padding: 15px;
+            gap: 20px;
+            padding: 10px;
             width: 100%;
         }
+
+        @media (max-width: 900px) {
+            .cr-opponents-list {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
 
         .cr-deck-card {
             border-radius: 20px;
@@ -4555,7 +4561,7 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             flex-direction: column;
             gap: 2px;
-            flex: 2.5;
+            flex: 1; /* More balanced flex */
             min-width: 0;
         }
 
@@ -4565,14 +4571,16 @@ class GitHubPagesHTMLGenerator:
             text-transform: uppercase;
             letter-spacing: 0.5px;
             overflow: visible;
-            word-wrap: break-word;
+            white-space: normal;
             line-height: 1.1;
+            word-break: break-word;
+            max-width: 100%;
         }
 
         .cr-vs-player-clan {
-            font-size: 0.65em;
+            font-size: 0.75em; /* Increased slightly */
             color: #94a3b8;
-            opacity: 0.6;
+            opacity: 0.8;
             font-weight: 500;
         }
 
@@ -4582,7 +4590,7 @@ class GitHubPagesHTMLGenerator:
             align-items: center;
             justify-content: center;
             gap: 2px;
-            flex: 1;
+            flex: 0 0 100px; /* Reduced width for score box to give more space to names */
         }
 
         .cr-vs-score-main {
@@ -4613,9 +4621,9 @@ class GitHubPagesHTMLGenerator:
         .cr-tower-overlap {
             margin-bottom: -55px;
             position: relative;
-            z-index: 1;
+            z-index: 0; /* Lower than deck */
             transition: all 0.3s ease;
-            transform: translateY(-15px);
+            transform: translateY(-25px);
         }
 
         .cr-tower-overlap:hover {
@@ -4628,6 +4636,7 @@ class GitHubPagesHTMLGenerator:
             width: 100%;
             max-width: 420px;
             margin: 0 auto;
+            z-index: 2; /* Higher than tower icon */
         }
 
         .cr-grid-4x2 {
@@ -4720,48 +4729,55 @@ class GitHubPagesHTMLGenerator:
             z-index: 3;
         }
 
-        .cr-modal-metrics-footer, .cr-vs-footer-metrics {
+        .cr-vs-metrics-unified {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            background: rgba(15, 23, 42, 0.4);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-radius: 0 0 24px 24px;
+            margin-top: 10px;
+        }
+
+        .cr-vs-footer-metrics {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
             gap: 15px;
-            padding: 15px 30px;
-            margin-top: 15px;
-            background: rgba(15, 23, 42, 0.4);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            border-radius: 0; /* Changed to be middle section */
-            position: relative;
+            padding: 12px 30px;
+            border-top: none;
+            border-radius: 0;
         }
 
-        .cr-vs-metrics-divider {
-            width: 1px;
-            height: 30px;
-            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent);
-            align-self: center;
+        .cr-vs-divider-light {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
+            width: 80%;
+            margin: 0 auto;
         }
 
-        .cr-vs-date-footer {
+        .cr-vs-date-row-integrated {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 20px;
-            padding: 10px;
-            background: rgba(15, 23, 42, 0.6);
+            padding: 5px 10px 10px 10px;
             border-top: 1px solid rgba(255,255,255,0.03);
-            border-radius: 0 0 24px 24px;
+            margin-top: -5px;
         }
 
         .cr-date-info-item {
             display: flex;
             align-items: center;
-            gap: 6px;
-            color: rgba(255,255,255,0.5);
-            font-size: 0.7em;
+            gap: 8px;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.75em;
             font-weight: 700;
         }
 
-        .cr-date-info-item i, .cr-date-info-item span.icon {
-            font-size: 1.1em;
-            opacity: 0.7;
+        .cr-date-info-item span.icon {
+            font-size: 1.2em;
+            opacity: 0.8;
+            filter: grayscale(0.5);
         }
 
         .cr-vs-row-premium-v2 {
@@ -5035,13 +5051,13 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-mode-tag-premium {
-            color: #64748b;
-            font-size: 0.55em;
-            font-weight: 900;
+            color: #94a3b8;
+            font-size: 0.5em;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            background: rgba(255,255,255,0.03);
-            padding: 2px 8px;
+            letter-spacing: 0.5px;
+            background: rgba(255,255,255,0.05);
+            padding: 2px 6px;
             border-radius: 4px;
         }
 
@@ -5162,13 +5178,22 @@ class GitHubPagesHTMLGenerator:
             text-decoration: none;
             transition: all 0.2s;
             z-index: 10;
-            font-size: 12px;
+            font-size: 10px;
+        }
+
+        .cr-copy-deck-btn span {
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .cr-copy-deck-btn:hover span {
+            transform: scale(1.2);
         }
 
         .cr-copy-deck-btn:hover {
-            background: var(--primary);
-            transform: scale(1.1);
-            border-color: #fff;
+            background: rgba(15, 23, 42, 0.8);
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         .cr-vs-actions-row {
@@ -5179,7 +5204,13 @@ class GitHubPagesHTMLGenerator:
         .cr-opponents-list {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
+            gap: 25px;
+        }
+
+        @media (max-width: 1200px) {
+            .cr-opponents-list {
+                grid-template-columns: 1fr;
+            }
         }
 
         .cr-opp-card-row {
@@ -5213,7 +5244,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-opp-name-main {
-            font-size: 1.3em;
+            font-size: 1.1em;
             color: #fff;
             font-weight: 900;
             letter-spacing: -0.5px;
