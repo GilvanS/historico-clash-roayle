@@ -4689,7 +4689,7 @@ class GitHubPagesHTMLGenerator:
             border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.08);
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
             margin: 0 auto;
             backdrop-filter: blur(5px);
         }
