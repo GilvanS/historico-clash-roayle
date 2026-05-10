@@ -2701,7 +2701,7 @@ class GitHubPagesHTMLGenerator:
         const CARD_MAP = """ + card_map_json + """;
 
         function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics, deckLink, icons) {
-            if (!deckStr) return `<div class="${sideClass} cr-empty-grid">N/D</div>`;
+            if (!deckStr) return { playerName, cardsHtml: `<div class="${sideClass} cr-empty-grid">N/D</div>`, metricsHtml: '' };
             let cards = deckStr.replace(/ \\| /g, '|').split('|').filter(Boolean).slice(0, 8);
             
             let towerUrl = "https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png";
@@ -2715,8 +2715,6 @@ class GitHubPagesHTMLGenerator:
                 towerName = metrics.tower_name || "Tower Skin";
             }
             
-            const fallbackTower = "https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png";
-
             const cardsHtml = cards.map(c => {
                 const name = c.trim();
                 const isEvo = name.includes('(Evolution)') || name.includes('Evolved');
@@ -2746,8 +2744,9 @@ class GitHubPagesHTMLGenerator:
             if (tHP !== '--' && !isNaN(tHP)) {
                 tHP = Number(tHP).toLocaleString('pt-BR');
             }
-            const leakedColor = leaked > 0 ? '#f56565' : '#48bb78';
-            const leakClass = leaked > 1.0 ? 'cr-leak-critical' : (leaked > 0 ? 'cr-leak-warning' : '');
+            
+            const isLeak = leaked > 0;
+            const leakClass = leaked >= 1.0 ? 'cr-leak-critical' : (isLeak ? 'cr-leak-warning' : '');
             const clanHtml = clanName ? `<div class="cr-clan-name-premium" style="opacity:0.6; font-size:0.85em;">${clanName}</div>` : '';
 
             return {
@@ -2758,26 +2757,26 @@ class GitHubPagesHTMLGenerator:
                 tLevel,
                 tHP,
                 cardsHtml: `
-                    <div class="cr-player-header-premium" style="margin-bottom:15px; text-align:center;">
-                        <div class="cr-player-name-premium" style="font-size:1.4em; font-weight:900;">${playerName}</div>
+                    <div class="cr-player-header-premium" style="margin-bottom:20px;">
+                        <div class="cr-player-name-premium ${sideClass === 'my-deck-side' ? 'player-color-text' : 'opp-color-text'}">${playerName}</div>
                         ${clanHtml}
                     </div>
                     <div class="cr-grid-4x2">
                         ${cardsHtml}
                     </div>`,
                 metricsHtml: `
-                    <div class="cr-deck-metrics-horizontal" style="justify-content:center; gap:20px; width:100%;">
+                    <div class="cr-deck-metrics-horizontal">
                         <div class="cr-metric-inline" title="Media Elixir">
-                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width:20px;"> <span style="font-size:1.1em; font-weight:800;">${avg}</span>
+                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p"> <span>${avg}</span>
                         </div>
                         <div class="cr-metric-inline" title="Ciclo 4 Cartas">
-                            <span class="cr-icon">🔄</span> <span style="font-size:1.1em; font-weight:800;">${cycle}</span>
+                            <span class="cr-icon">🔄</span> <span>${cycle}</span>
                         </div>
-                        <div class="cr-metric-inline ${leakClass}" title="Elixir Vazado" style="color:${leakedColor}">
-                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" style="width:20px;"> <span style="font-size:1.1em; font-weight:800;">${leaked}</span>
+                        <div class="cr-metric-inline ${leakClass}" title="Elixir Vazado">
+                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" class="${isLeak ? 'cr-leak-icon' : 'cr-elixir-icon-p'}"> <span>${leaked}</span>
                         </div>
-                        <div class="cr-metric-inline" title="Vida da Torre">
-                            <span class="cr-icon">🏰</span> <span style="font-size:1.1em; font-weight:800;">${tHP}</span>
+                        <div class="cr-metric-inline cr-hp-metric-border" title="Vida da Torre">
+                            <span class="cr-icon">🏰</span> <span>${tHP}</span>
                         </div>
                     </div>`
             };
@@ -2800,26 +2799,28 @@ class GitHubPagesHTMLGenerator:
                 const tropText = tropChange !== 0 ? tropSign + tropChange : '';
 
                 content.innerHTML = `
-                    <div class="cr-modal-premium-layout" style="width:100%; height:100%; display:flex; flex-direction:column;">
+                    <div class="cr-modal-premium-layout cr-vs-stage-v2">
                         <div class="cr-modal-top-stage">
                             <div class="cr-tower-stage-p">
-                                <img src="${pData.towerUrl}" class="cr-tower-img-large">
-                                <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV ${pData.tLevel}</span>
+                                <div class="cr-tower-card-premium">
+                                    <img src="${pData.towerUrl}" class="cr-tower-img-premium">
+                                    <span class="cr-card-level-badge">LV ${pData.tLevel}</span>
+                                </div>
                             </div>
                             
                             <div class="cr-modal-score-center">
                                 <div class="cr-battle-result-badge cr-badge-${data.result.toLowerCase()}">${data.result.toUpperCase()}</div>
                                 <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
-                                <div class="cr-score-display-premium" style="margin:10px 0;">
-                                    <span class="cr-score-val" style="font-size:3em;">${score}</span>
-                                </div>
-                                <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.5em;">${tropText}</div>
-                                <div style="opacity: 0.5; font-size: 0.9em;">${data.date || ''}</div>
+                                <div class="cr-score-display-premium">${score}</div>
+                                <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.5em; margin-top:-10px;">${tropText}</div>
+                                <div class="cr-battle-date-p">${data.date || ''}</div>
                             </div>
 
                             <div class="cr-tower-stage-p">
-                                <img src="${oData.towerUrl}" class="cr-tower-img-large">
-                                <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV ${oData.tLevel}</span>
+                                <div class="cr-tower-card-premium">
+                                    <img src="${oData.towerUrl}" class="cr-tower-img-premium">
+                                    <span class="cr-card-level-badge">LV ${oData.tLevel}</span>
+                                </div>
                             </div>
                         </div>
 
@@ -2833,8 +2834,8 @@ class GitHubPagesHTMLGenerator:
                             <div class="cr-metrics-wrap-p">${oData.metricsHtml}</div>
                         </div>
                         
-                        <div class="cr-copy-row" style="display:flex; justify-content:space-around; padding:20px 50px;">
-                            ${data.my_deck_link ? `<a href="${data.my_deck_link}" class="cr-copy-deck-btn" style="flex:1; margin-right:20px; text-align:center;">COPIAR MEU DECK</a>` : ''}
+                        <div class="cr-copy-row" style="display:flex; justify-content:space-around; padding:20px 50px; gap:20px;">
+                            ${data.my_deck_link ? `<a href="${data.my_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center;">COPIAR MEU DECK</a>` : ''}
                             ${data.opp_deck_link ? `<a href="${data.opp_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center; background:rgba(255,255,255,0.1);">COPIAR DECK INIMIGO</a>` : ''}
                         </div>
                     </div>`;
@@ -2856,42 +2857,54 @@ class GitHubPagesHTMLGenerator:
         function updateOpponentView(oppId, element) {
             try {
                 const data = JSON.parse(element.getAttribute('data-battle'));
+                console.log("Updating Opponent View:", oppId, data);
                 
+                // 1. Atualizar Placar
                 const pScoreEl = document.getElementById(`p-score-${oppId}`);
                 const oScoreEl = document.getElementById(`o-score-${oppId}`);
                 if (pScoreEl) pScoreEl.innerText = data.p_score;
                 if (oScoreEl) oScoreEl.innerText = data.o_score;
                 
+                // 2. Atualizar Data e Modo
                 const dateEl = document.getElementById(`date-main-${oppId}`);
                 const modeEl = document.getElementById(`mode-${oppId}`);
                 if (dateEl) dateEl.innerText = '📅 ' + data.date;
                 if (modeEl) modeEl.innerText = data.mode;
                 
+                // 3. Atualizar Painéis de Métricas (Horizontal)
                 const pMetricsEl = document.getElementById(`player-metrics-${oppId}`);
                 const oMetricsEl = document.getElementById(`opp-metrics-${oppId}`);
                 if (pMetricsEl) pMetricsEl.innerHTML = data.p_metrics;
                 if (oMetricsEl) oMetricsEl.innerHTML = data.o_metrics;
 
-                const towers = document.querySelectorAll(`#opp-section-${oppId} .cr-tower-card-premium`);
-                if (towers.length >= 2) {
-                    towers[0].innerHTML = data.p_tower;
-                    towers[1].innerHTML = data.o_tower;
-                }
+                // 4. Atualizar Torres (Layout Premium v2)
+                const pTowerStage = document.getElementById(`p-tower-stage-${oppId}`);
+                const oTowerStage = document.getElementById(`o-tower-stage-${oppId}`);
+                if (pTowerStage) pTowerStage.innerHTML = data.p_tower;
+                if (oTowerStage) oTowerStage.innerHTML = data.o_tower;
                 
+                // 5. Atualizar Grids de Decks (4x2)
                 const pGridEl = document.getElementById(`p-grid-${oppId}`);
                 const oGridEl = document.getElementById(`o-grid-${oppId}`);
                 if (pGridEl) pGridEl.innerHTML = data.p_grid;
                 if (oGridEl) oGridEl.innerHTML = data.o_grid;
                 
+                // 6. Atualizar Links de Cópia
                 const pCopyEl = document.getElementById(`p-copy-${oppId}`);
                 const oCopyEl = document.getElementById(`o-copy-${oppId}`);
                 if (pCopyEl) pCopyEl.href = data.p_copy;
                 if (oCopyEl) oCopyEl.href = data.o_copy;
                 
+                // 7. Gerenciar Classes Active no Seletor de Datas
                 const container = element.parentElement;
                 container.querySelectorAll('.cr-date-selector').forEach(el => el.classList.remove('active'));
                 element.classList.add('active');
-            } catch(e) { console.error("Error updating opponent view:", e); }
+
+                if (typeof log !== 'undefined') log.info("Vista do oponente " + oppId + " atualizada");
+            } catch(e) { 
+                console.error("Error updating opponent view:", e);
+                if (typeof log !== 'undefined') log.error("Falha ao atualizar vista do oponente", e);
+            }
         }
 
         function showCopyToast(e) {
@@ -3015,6 +3028,9 @@ class GitHubPagesHTMLGenerator:
                 if isinstance(t_hp, (int, float)):
                     t_hp = f"{int(t_hp):,}".replace(",", ".")
 
+                leak_icon = "https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" if leaked > 0 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
+                leak_img_class = "cr-leak-icon" if leaked > 0 else "cr-elixir-icon-p"
+
                 return f'''
                 <div class="cr-metric-inline" title="Media Elixir">
                     <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p"> <span>{metrics['avg']}</span>
@@ -3023,7 +3039,7 @@ class GitHubPagesHTMLGenerator:
                     <span class="cr-icon">🔄</span> <span>{metrics['cycle']}</span>
                 </div>
                 <div class="cr-metric-inline {leak_class}" title="Elixir Vazado">
-                    <span class="cr-icon">💧</span> <span>{metrics.get('leaked_label', leaked)}</span>
+                    <img src="{leak_icon}" class="{leak_img_class}"> <span>{metrics.get('leaked_label', leaked)}</span>
                 </div>
                 <div class="cr-metric-inline cr-hp-metric-border" title="Vida da Torre">
                     <span class="cr-icon">🏰</span> <span>{t_hp}</span>
@@ -3048,46 +3064,46 @@ class GitHubPagesHTMLGenerator:
 
                 <div class="cr-main-vs-stage" id="main-vs-{i}">
                     <div class="cr-vs-row-premium-v2">
-                        <!-- Player Side -->
-                        <div class="cr-deck-side player">
-                            <div class="cr-tower-card-premium">
-                                <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-premium">
-                                <span class="cr-card-level-badge">LV {my_metrics_f['level']}</span>
+                        <!-- Top Row: Towers & Score -->
+                        <div class="cr-vs-top-row">
+                            <div class="cr-tower-stage-p" id="p-tower-stage-{i}">
+                                <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-large">
+                                <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {my_metrics_f['level']}</span>
+                                <div class="cr-player-name-premium player-color-text" style="font-size:1.2em; margin-top:5px;">{player_name}</div>
                             </div>
-                            <div class="cr-player-header-premium">
-                                <div class="cr-player-name-premium player-color-text">{player_name}</div>
+                            
+                            <div class="cr-modal-score-center">
+                                <div id="mode-{i}" class="cr-mode-tag-premium">{first_b.get('game_mode', 'Batalha')}</div>
+                                <div class="cr-score-display-premium">
+                                    <span id="p-score-{i}">{first_b.get('crowns', 0)}</span>
+                                    <span class="cr-score-divider">-</span>
+                                    <span id="o-score-{i}">{first_b.get('opponent_crowns', 0)}</span>
+                                </div>
+                                <div id="date-main-{i}" class="cr-battle-date-p">📅 {first_b.get('data_str', '--/--')}</div>
+                                <div class="cr-vs-text-bg" style="font-size: 3em; margin-top: 5px; opacity: 0.1;">VS</div>
                             </div>
+
+                            <div class="cr-tower-stage-p" id="o-tower-stage-{i}">
+                                <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-large">
+                                <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {opp_metrics_f['level']}</span>
+                                <div class="cr-player-name-premium opp-color-text" style="font-size:1.2em; margin-top:5px;">{opp['opponent_name']}</div>
+                            </div>
+                        </div>
+
+                        <!-- Middle Row: Decks -->
+                        <div class="cr-vs-decks-grid">
                             <div class="cr-grid-4x2" id="p-grid-{i}">
                                 {get_deck_grid_html(first_b['my_deck'])}
                             </div>
-                            <div class="cr-deck-metrics-horizontal" id="player-metrics-{i}">
-                                {get_metrics_panel_html(my_metrics_f)}
-                            </div>
-                        </div>
-
-                        <!-- Center Score -->
-                        <div class="cr-vs-center-divider cr-center-score-column">
-                            <div id="mode-{i}" class="cr-mode-tag-small">{first_b.get('game_mode', 'Batalha')}</div>
-                            <div class="cr-battle-result-badge cr-badge-empate cr-score-badge-large">
-                                <span id="p-score-{i}">{first_b.get('crowns', 0)}</span>
-                                <span class="cr-score-divider">-</span>
-                                <span id="o-score-{i}">{first_b.get('opponent_crowns', 0)}</span>
-                            </div>
-                            <div class="cr-vs-text-bg">VS</div>
-                            <div id="date-main-{i}" class="cr-battle-date-text">📅 {first_b.get('data_str', '--/--')}</div>
-                        </div>
-
-                        <!-- Opponent Side -->
-                        <div class="cr-deck-side opponent">
-                            <div class="cr-tower-card-premium">
-                                <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-premium">
-                                <span class="cr-card-level-badge">LV {opp_metrics_f['level']}</span>
-                            </div>
-                            <div class="cr-player-header-premium">
-                                <div class="cr-player-name-premium opp-color-text">{opp['opponent_name']}</div>
-                            </div>
                             <div class="cr-grid-4x2" id="o-grid-{i}">
                                 {get_deck_grid_html(first_b['opp_deck'])}
+                            </div>
+                        </div>
+
+                        <!-- Bottom Row: Metrics -->
+                        <div class="cr-vs-footer-metrics">
+                            <div class="cr-deck-metrics-horizontal" id="player-metrics-{i}">
+                                {get_metrics_panel_html(my_metrics_f)}
                             </div>
                             <div class="cr-deck-metrics-horizontal" id="opp-metrics-{i}">
                                 {get_metrics_panel_html(opp_metrics_f)}
@@ -3119,8 +3135,8 @@ class GitHubPagesHTMLGenerator:
                     'o_score': b.get('opponent_crowns', 0),
                     'p_metrics': get_metrics_panel_html(m_metrics),
                     'o_metrics': get_metrics_panel_html(o_metrics),
-                    'p_tower': f'<img src="{m_metrics["tower_url"]}" class="cr-tower-img-premium"><span class="cr-card-level-badge">LV {m_metrics["level"]}</span>',
-                    'o_tower': f'<img src="{o_metrics["tower_url"]}" class="cr-tower-img-premium"><span class="cr-card-level-badge">LV {o_metrics["level"]}</span>',
+                    'p_tower': f'<img src="{m_metrics["tower_url"]}" class="cr-tower-img-large"><span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {m_metrics["level"]}</span><div class="cr-player-name-premium player-color-text" style="font-size:1.2em; margin-top:5px;">{player_name}</div>',
+                    'o_tower': f'<img src="{o_metrics["tower_url"]}" class="cr-tower-img-large"><span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {o_metrics["level"]}</span><div class="cr-player-name-premium opp-color-text" style="font-size:1.2em; margin-top:5px;">{opp["opponent_name"]}</div>',
                     'p_grid': get_deck_grid_html(b['my_deck']),
                     'o_grid': get_deck_grid_html(b['opp_deck']),
                     'p_copy': self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()]),
@@ -4422,10 +4438,30 @@ class GitHubPagesHTMLGenerator:
             padding: 40px;
             background: radial-gradient(circle at center, #1e293b, #0f172a);
             position: relative;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
         }
 
-        /* New Modal Layout Premium v2 */
-        .cr-modal-top-stage {
+        .cr-vs-stage-v2 {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 100%;
+        }
+
+        /* Top Row: Towers & Score */
+        .cr-vs-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 40px;
+            margin-bottom: 10px;
+        }
+
+        /* New Modal & Static Layout Premium v2 */
+        .cr-modal-top-stage, .cr-vs-top-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -4474,7 +4510,7 @@ class GitHubPagesHTMLGenerator:
             margin: 0 auto;
         }
 
-        .cr-modal-metrics-footer {
+        .cr-modal-metrics-footer, .cr-vs-footer-metrics {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 40px;
@@ -4486,7 +4522,18 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-vs-row-premium-v2 {
-            display: none; /* Replaced by new layout */
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .cr-vs-decks-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 0 50px;
+            width: 100%;
         }
 
         @media (max-width: 1400px) {
@@ -4655,9 +4702,24 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-elixir-icon-p {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             object-fit: contain;
+            filter: drop-shadow(0 0 5px rgba(248, 113, 113, 0.4));
+        }
+
+        .cr-leak-icon {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(245, 101, 101, 0.6));
+            animation: cr-pulse-leak 2s infinite ease-in-out;
+        }
+
+        @keyframes cr-pulse-leak {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
         }
 
         .cr-metric-inline .cr-icon {
