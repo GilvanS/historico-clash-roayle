@@ -618,10 +618,10 @@ class GitHubPagesHTMLGenerator:
             Dict completo com avg, cycle, leaked, level e hp.
         """
         if is_opponent:
-            leaked_raw = battle.get('elixir_vazado_oponente') or battle.get('opp_leaked', 0)
+            leaked_raw = battle.get('elixir_vazado_oponente') or battle.get('opp_leaked') or battle.get('elixir_leaked_opponent') or battle.get('opponent_leaked', 0)
             level_raw = battle.get('nivel_torre_oponente') or battle.get('nivel_oponente') or battle.get('opponent_level') or battle.get('opp_tower_level', 14)
         else:
-            leaked_raw = battle.get('elixir_vazado_jogador') or battle.get('player_leaked', 0)
+            leaked_raw = battle.get('elixir_vazado_jogador') or battle.get('player_leaked') or battle.get('elixir_leaked_player') or battle.get('player_leaked_elixir', 0)
             level_raw = battle.get('nivel_torre_jogador') or battle.get('player_level') or battle.get('player_tower_level', 14)
         
         # Sanitizacao: converte para tipos corretos, protege contra string vazia ou None
@@ -2765,10 +2765,6 @@ class GitHubPagesHTMLGenerator:
                 tLevel,
                 tHP,
                 cardsHtml: `
-                    <div class="cr-player-header-premium" style="margin-bottom:20px;">
-                        <div class="cr-player-name-premium ${sideClass === 'my-deck-side' ? 'player-color-text' : 'opp-color-text'}">${playerName}</div>
-                        ${clanHtml}
-                    </div>
                     <div class="cr-grid-4x2">
                         ${cardsHtml}
                     </div>`,
@@ -2808,43 +2804,58 @@ class GitHubPagesHTMLGenerator:
 
                 content.innerHTML = `
                     <div class="cr-modal-premium-layout cr-vs-stage-v2">
-                        <div class="cr-modal-top-stage">
-                            <div class="cr-tower-stage-p">
-                                <div class="cr-tower-card-premium">
-                                    <img src="${pData.towerUrl}" class="cr-tower-img-premium">
-                                    <span class="cr-card-level-badge">LV ${pData.tLevel}</span>
-                                </div>
+                        <div class="cr-vs-header-compact">
+                            <div class="cr-vs-player-info" style="text-align: left;">
+                                <div class="cr-vs-player-name player-color-text">${data.player_name}</div>
+                                <div class="cr-vs-player-clan">${data.player_clan || ''}</div>
                             </div>
                             
-                            <div class="cr-modal-score-center">
-                                <div class="cr-battle-result-badge cr-badge-${data.result.toLowerCase()}">${data.result.toUpperCase()}</div>
-                                <div class="cr-mode-tag-premium">${data.game_mode || 'Batalha'}</div>
-                                <div class="cr-score-display-premium">${score}</div>
-                                <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.5em; margin-top:-10px;">${tropText}</div>
-                                <div class="cr-battle-date-p">${data.date || ''}</div>
+                            <div class="cr-vs-score-box">
+                                <div class="cr-vs-score-main">${score}</div>
+                                <div class="cr-mode-tag-premium" style="margin-top:-5px;">${data.game_mode || 'Batalha'}</div>
                             </div>
 
-                            <div class="cr-tower-stage-p">
-                                <div class="cr-tower-card-premium">
-                                    <img src="${oData.towerUrl}" class="cr-tower-img-premium">
-                                    <span class="cr-card-level-badge">LV ${oData.tLevel}</span>
+                            <div class="cr-vs-player-info" style="text-align: right;">
+                                <div class="cr-vs-player-name opp-color-text">${data.opp_name}</div>
+                                <div class="cr-vs-player-clan">${data.opp_clan || ''}</div>
+                            </div>
+                        </div>
+
+                        <div class="cr-vs-decks-grid-v2">
+                            <div class="cr-side-container">
+                                <div class="cr-tower-overlap">
+                                    <div class="cr-tower-card-premium" style="width:70px; height:90px;">
+                                        <img src="${pData.towerUrl}" class="cr-tower-img-premium">
+                                        <span class="cr-card-level-badge">LV ${pData.tLevel}</span>
+                                    </div>
                                 </div>
+                                <div class="cr-deck-wrap-v2">${pData.cardsHtml}</div>
+                            </div>
+
+                            <div class="cr-side-container">
+                                <div class="cr-tower-overlap">
+                                    <div class="cr-tower-card-premium" style="width:70px; height:90px;">
+                                        <img src="${oData.towerUrl}" class="cr-tower-img-premium cr-mirror-opponent">
+                                        <span class="cr-card-level-badge">LV ${oData.tLevel}</span>
+                                    </div>
+                                </div>
+                                <div class="cr-deck-wrap-v2">${oData.cardsHtml}</div>
                             </div>
                         </div>
 
-                        <div class="cr-modal-decks-grid">
-                            <div class="cr-deck-side-modal">${pData.cardsHtml}</div>
-                            <div class="cr-deck-side-modal">${oData.cardsHtml}</div>
-                        </div>
-
-                        <div class="cr-modal-metrics-footer">
+                        <div class="cr-modal-metrics-footer" style="margin-top:10px; gap:20px; padding:15px 30px;">
                             <div class="cr-metrics-wrap-p">${pData.metricsHtml}</div>
                             <div class="cr-metrics-wrap-p">${oData.metricsHtml}</div>
                         </div>
+
+                        <div class="cr-modal-score-center" style="margin-top:-10px;">
+                             <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.2em;">${tropText}</div>
+                             <div class="cr-battle-date-p" style="font-size:0.75em;">${data.date || ''}</div>
+                        </div>
                         
-                        <div class="cr-copy-row" style="display:flex; justify-content:space-around; padding:20px 50px; gap:20px;">
-                            ${data.my_deck_link ? `<a href="${data.my_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center;">COPIAR MEU DECK</a>` : ''}
-                            ${data.opp_deck_link ? `<a href="${data.opp_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center; background:rgba(255,255,255,0.1);">COPIAR DECK INIMIGO</a>` : ''}
+                        <div class="cr-copy-row" style="display:flex; justify-content:space-around; padding:15px 50px; gap:20px;">
+                            ${data.my_deck_link ? `<a href="${data.my_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center; padding:10px;">COPIAR MEU DECK</a>` : ''}
+                            ${data.opp_deck_link ? `<a href="${data.opp_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center; padding:10px; background:rgba(255,255,255,0.1);">COPIAR DECK INIMIGO</a>` : ''}
                         </div>
                     </div>`;
                 
@@ -2865,6 +2876,7 @@ class GitHubPagesHTMLGenerator:
         function updateOpponentView(oppId, element) {
             try {
                 const data = JSON.parse(element.getAttribute('data-battle'));
+                const total = parseInt(data.total || 0);
                 console.log("Updating Opponent View:", oppId, data);
                 
                 // 1. Atualizar Placar
@@ -2873,10 +2885,12 @@ class GitHubPagesHTMLGenerator:
                 if (pScoreEl) pScoreEl.innerText = data.p_score;
                 if (oScoreEl) oScoreEl.innerText = data.o_score;
                 
-                // 2. Atualizar Data e Modo
+                // 2. Atualizar Data e Modo (Data apenas se houver histórico para escolher: total > 1)
                 const dateEl = document.getElementById(`date-main-${oppId}`);
                 const modeEl = document.getElementById(`mode-${oppId}`);
-                if (dateEl) dateEl.innerText = '📅 ' + data.date;
+                if (dateEl) {
+                    dateEl.innerText = '📅 ' + (data.date || '--/--');
+                }
                 if (modeEl) modeEl.innerText = data.mode;
                 
                 // 3. Atualizar Painéis de Métricas (Horizontal)
@@ -2888,8 +2902,19 @@ class GitHubPagesHTMLGenerator:
                 // 4. Atualizar Torres (Layout Premium v2)
                 const pTowerStage = document.getElementById(`p-tower-stage-${oppId}`);
                 const oTowerStage = document.getElementById(`o-tower-stage-${oppId}`);
-                if (pTowerStage) pTowerStage.innerHTML = data.p_tower;
-                if (oTowerStage) oTowerStage.innerHTML = data.o_tower;
+                if (pTowerStage) pTowerStage.innerHTML = `<img src="${data.p_tower_url}" class="cr-tower-img-premium"><span class="cr-card-level-badge">LV ${data.p_level}</span>`;
+                if (oTowerStage) oTowerStage.innerHTML = `<img src="${data.o_tower_url}" class="cr-tower-img-premium cr-mirror-opponent"><span class="cr-card-level-badge">LV ${data.o_level}</span>`;
+                
+                // 4b. Atualizar Nomes e Clãs no Header
+                const pNameEl = document.getElementById(`p-name-${oppId}`);
+                const oNameEl = document.getElementById(`o-name-${oppId}`);
+                const pClanEl = document.getElementById(`p-clan-${oppId}`);
+                const oClanEl = document.getElementById(`o-clan-${oppId}`);
+                
+                if (pNameEl) pNameEl.innerText = data.player_name;
+                if (oNameEl) oNameEl.innerText = data.opp_name;
+                if (pClanEl) pClanEl.innerText = data.player_clan || '';
+                if (oClanEl) oClanEl.innerText = data.opp_clan || '';
                 
                 // 5. Atualizar Grids de Decks (4x2)
                 const pGridEl = document.getElementById(`p-grid-${oppId}`);
@@ -2911,7 +2936,6 @@ class GitHubPagesHTMLGenerator:
                 if (typeof log !== 'undefined') log.info("Vista do oponente " + oppId + " atualizada");
             } catch(e) { 
                 console.error("Error updating opponent view:", e);
-                if (typeof log !== 'undefined') log.error("Falha ao atualizar vista do oponente", e);
             }
         }
 
@@ -2999,6 +3023,7 @@ class GitHubPagesHTMLGenerator:
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
         
         player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
+        player_clan = next((p.get('clan_name', '') for p in self.players_cache if p.get('player_tag') == self.player_tag), '')
         
         html = '<div class="cr-opponents-list">'
         import json
@@ -3071,51 +3096,68 @@ class GitHubPagesHTMLGenerator:
                 </div>
 
                 <div class="cr-main-vs-stage" id="main-vs-{i}">
-                    <div class="cr-vs-row-premium-v2">
-                        <!-- Top Row: Towers & Score -->
-                        <div class="cr-vs-top-row">
-                            <div class="cr-tower-stage-p" id="p-tower-stage-{i}">
-                                <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-large">
-                                <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {my_metrics_f['level']}</span>
-                                <div class="cr-player-name-premium player-color-text" style="font-size:1.2em; margin-top:5px;">{player_name}</div>
+                    <div class="cr-vs-stage-v2">
+                        <!-- Compact Header Bar -->
+                        <div class="cr-vs-header-compact">
+                            <div class="cr-vs-player-info" style="text-align: left;">
+                                <div class="cr-vs-player-name player-color-text" id="p-name-{i}">{player_name}</div>
+                                <div class="cr-vs-player-clan" id="p-clan-{i}">{player_clan}</div>
                             </div>
                             
-                            <div class="cr-modal-score-center">
-                                <div id="mode-{i}" class="cr-mode-tag-premium">{first_b.get('game_mode', 'Batalha')}</div>
-                                <div class="cr-score-display-premium">
+                            <div class="cr-vs-score-box">
+                                <div class="cr-vs-score-main">
                                     <span id="p-score-{i}">{first_b.get('crowns', 0)}</span>
-                                    <span class="cr-score-divider">-</span>
+                                    <span>-</span>
                                     <span id="o-score-{i}">{first_b.get('opponent_crowns', 0)}</span>
                                 </div>
-                                <div id="date-main-{i}" class="cr-battle-date-p">📅 {first_b.get('data_str', '--/--')}</div>
-                                <div class="cr-vs-text-bg" style="font-size: 3em; margin-top: 5px; opacity: 0.1;">VS</div>
+                                <div id="mode-{i}" class="cr-mode-tag-premium" style="margin-top:-5px;">{first_b.get('game_mode', 'Batalha')}</div>
                             </div>
 
-                            <div class="cr-tower-stage-p" id="o-tower-stage-{i}">
-                                <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-large cr-mirror-opponent">
-                                <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {opp_metrics_f['level']}</span>
-                                <div class="cr-player-name-premium opp-color-text" style="font-size:1.2em; margin-top:5px;">{opp['opponent_name']}</div>
+                            <div class="cr-vs-player-info" style="text-align: right;">
+                                <div class="cr-vs-player-name opp-color-text" id="o-name-{i}">{opp['opponent_name']}</div>
+                                <div class="cr-vs-player-clan" id="o-clan-{i}">{opp.get('opponent_clan', '')}</div>
                             </div>
                         </div>
 
-                        <!-- Middle Row: Decks -->
-                        <div class="cr-vs-decks-grid">
-                            <div class="cr-grid-4x2" id="p-grid-{i}">
-                                {get_deck_grid_html(first_b['my_deck'])}
+                        <!-- Main Content: Decks and Towers -->
+                        <div class="cr-vs-decks-grid-v2">
+                            <div class="cr-side-container">
+                                <div class="cr-tower-overlap">
+                                    <div class="cr-tower-card-premium" id="p-tower-stage-{i}" style="width:70px; height:90px;">
+                                        <img src="{my_metrics_f['tower_url']}" class="cr-tower-img-premium">
+                                        <span class="cr-card-level-badge">LV {my_metrics_f['level']}</span>
+                                    </div>
+                                </div>
+                                <div class="cr-deck-wrap-v2" id="p-grid-{i}">
+                                    {get_deck_grid_html(first_b['my_deck'])}
+                                </div>
                             </div>
-                            <div class="cr-grid-4x2" id="o-grid-{i}">
-                                {get_deck_grid_html(first_b['opp_deck'])}
+
+                            <div class="cr-side-container">
+                                <div class="cr-tower-overlap">
+                                    <div class="cr-tower-card-premium" id="o-tower-stage-{i}" style="width:70px; height:90px;">
+                                        <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-premium cr-mirror-opponent">
+                                        <span class="cr-card-level-badge">LV {opp_metrics_f['level']}</span>
+                                    </div>
+                                </div>
+                                <div class="cr-deck-wrap-v2" id="o-grid-{i}">
+                                    {get_deck_grid_html(first_b['opp_deck'])}
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Bottom Row: Metrics -->
-                        <div class="cr-vs-footer-metrics">
-                            <div class="cr-deck-metrics-horizontal" id="player-metrics-{i}">
+                        <!-- Footer: Metrics -->
+                        <div class="cr-vs-footer-metrics" style="margin-top:10px; gap:20px; padding:15px 30px;">
+                            <div class="cr-metrics-wrap-p" id="player-metrics-{i}">
                                 {get_metrics_panel_html(my_metrics_f)}
                             </div>
-                            <div class="cr-deck-metrics-horizontal" id="opp-metrics-{i}">
+                            <div class="cr-metrics-wrap-p" id="opp-metrics-{i}">
                                 {get_metrics_panel_html(opp_metrics_f)}
                             </div>
+                        </div>
+
+                        <div class="cr-modal-score-center" style="margin-top:-10px;">
+                             <div id="date-main-{i}" class="cr-battle-date-p" style="font-size:0.85em; color:rgba(255,255,255,0.85); font-weight:800;">{f"📅 {first_b.get('data_str', '--/--')}"}</div>
                         </div>
                     </div>
 
@@ -3125,7 +3167,7 @@ class GitHubPagesHTMLGenerator:
                     </div>
                 </div>
 
-                <div class="cr-timeline-container">
+                <div class="cr-timeline-container" style="display: {'block' if total > 1 else 'none'};">
                     <div class="cr-timeline-header-text">HISTÓRICO RECENTE (CLIQUE PARA ALTERNAR O PALCO VS)</div>
                     <div class="cr-timeline-scroll">
             '''
@@ -3143,14 +3185,21 @@ class GitHubPagesHTMLGenerator:
                     'o_score': b.get('opponent_crowns', 0),
                     'p_metrics': get_metrics_panel_html(m_metrics),
                     'o_metrics': get_metrics_panel_html(o_metrics),
-                    'p_tower': f'<img src="{m_metrics["tower_url"]}" class="cr-tower-img-large"><span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {m_metrics["level"]}</span><div class="cr-player-name-premium player-color-text" style="font-size:1.2em; margin-top:5px;">{player_name}</div>',
-                    'o_tower': f'<img src="{o_metrics["tower_url"]}" class="cr-tower-img-large cr-mirror-opponent"><span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {o_metrics["level"]}</span><div class="cr-player-name-premium opp-color-text" style="font-size:1.2em; margin-top:5px;">{opp["opponent_name"]}</div>',
+                    'p_tower_url': m_metrics["tower_url"],
+                    'p_level': m_metrics["level"],
+                    'o_tower_url': o_metrics["tower_url"],
+                    'o_level': o_metrics["level"],
+                    'player_name': player_name,
+                    'player_clan': player_clan,
+                    'opp_name': opp["opponent_name"],
+                    'opp_clan': opp.get('opp_clan', ''),
                     'p_grid': get_deck_grid_html(b['my_deck']),
                     'o_grid': get_deck_grid_html(b['opp_deck']),
                     'p_copy': self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()]),
                     'o_copy': self.get_copy_deck_link([c.strip() for c in b['opp_deck'].split('|') if c.strip()]),
                     'date': b.get('data_str', '--/--'),
-                    'mode': b.get('game_mode', 'Batalha')
+                    'mode': b.get('game_mode', 'Batalha'),
+                    'total': total
                 }).replace("'", "&apos;")
 
                 active_class = " active" if idx == 0 else ""
@@ -4213,6 +4262,13 @@ class GitHubPagesHTMLGenerator:
             box-shadow: var(--card-shadow);
         }
 
+        .battle-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
         .section h2 {
             font-size: 2em;
             margin-bottom: 35px;
@@ -4451,7 +4507,7 @@ class GitHubPagesHTMLGenerator:
 
         /* VS Stage Premium v2 - Unified Layout */
         .cr-main-vs-stage {
-            padding: 40px;
+            padding: 20px 10px;
             background: radial-gradient(circle at center, #1e293b, #0f172a);
             position: relative;
             border-radius: 24px;
@@ -4462,9 +4518,103 @@ class GitHubPagesHTMLGenerator:
         .cr-vs-stage-v2 {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 10px;
             width: 100%;
-            max-width: 850px;
+            max-width: none;
+            margin: 0 auto;
+        }
+
+        .cr-vs-header-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 8px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px 20px 0 0;
+            margin-bottom: 10px;
+        }
+
+        .cr-vs-player-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cr-vs-player-name {
+            font-size: 0.8em;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        .cr-vs-player-clan {
+            font-size: 0.65em;
+            color: #94a3b8;
+            opacity: 0.6;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .cr-vs-score-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .cr-vs-score-main {
+            font-size: 1.2em;
+            font-weight: 900;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
+        .cr-vs-decks-grid-v2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 0 20px;
+            width: 100%;
+            position: relative;
+        }
+
+        .cr-side-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .cr-tower-overlap {
+            margin-bottom: -50px;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+            transform: translateY(-10px);
+        }
+
+        .cr-tower-overlap:hover {
+            transform: scale(1.1);
+            z-index: 5;
+        }
+
+        .cr-deck-wrap-v2 {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            max-width: 380px;
             margin: 0 auto;
         }
 
@@ -4495,16 +4645,21 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
-            width: 220px;
+            gap: 0;
+            width: 200px;
+            position: relative;
+            z-index: 1;
         }
 
         .cr-tower-img-large {
-            width: 180px;
-            height: 180px;
+            width: 140px;
+            height: 140px;
             object-fit: contain;
             filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6));
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: -35px;
+            position: relative;
+            z-index: 2;
         }
 
         .cr-tower-img-large:hover {
@@ -4532,19 +4687,21 @@ class GitHubPagesHTMLGenerator:
         .cr-modal-decks-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            padding: 0 50px;
+            gap: 20px;
+            padding: 0 30px;
             width: 100%;
-            max-width: 1350px;
+            max-width: 900px;
             margin: 0 auto;
+            position: relative;
+            z-index: 3;
         }
 
         .cr-modal-metrics-footer, .cr-vs-footer-metrics {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            padding: 25px 50px;
-            margin-top: 30px;
+            gap: 15px;
+            padding: 10px 15px;
+            margin-top: 15px;
             background: rgba(15, 23, 42, 0.4);
             border-top: 1px solid rgba(255,255,255,0.05);
             border-radius: 0 0 24px 24px;
@@ -4718,14 +4875,24 @@ class GitHubPagesHTMLGenerator:
             padding-left:15px;
         }
 
+        .cr-metrics-wrap-p {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            gap: 5px;
+        }
+
         .cr-metric-inline {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.95em;
+            gap: 2px;
+            font-size: 0.55em;
             font-weight: 800;
-            color: #f1f5f9;
+            color: #fff;
             transition: all 0.2s;
+            white-space: nowrap;
+            letter-spacing: -0.2px;
         }
 
         .cr-metric-inline:hover {
@@ -4735,11 +4902,11 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-elixir-icon-p {
-            width: 20px !important;
-            height: 20px !important;
+            width: 12px !important;
+            height: 12px !important;
             object-fit: contain;
             vertical-align: middle;
-            margin-right: 5px;
+            margin-right: 2px;
         }
 
         .cr-leak-icon-small {
@@ -4751,11 +4918,12 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-leak-icon {
-            width: 22px !important;
-            height: 22px !important;
+            width: 16px !important;
+            height: 16px !important;
             object-fit: contain;
-            filter: drop-shadow(0 0 8px rgba(245, 101, 101, 0.6));
+            filter: drop-shadow(0 0 6px rgba(245, 101, 101, 0.6));
             animation: cr-pulse-leak 2s infinite ease-in-out;
+            margin-right: 2px;
         }
 
         @keyframes cr-pulse-leak {
@@ -4826,14 +4994,14 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-mode-tag-premium {
-            color: #94a3b8;
-            font-size: 0.85em;
-            font-weight: 800;
+            color: #64748b;
+            font-size: 0.65em;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            background: rgba(255,255,255,0.05);
-            padding: 4px 12px;
-            border-radius: 6px;
+            letter-spacing: 1px;
+            background: rgba(255,255,255,0.03);
+            padding: 2px 8px;
+            border-radius: 4px;
         }
 
         .cr-score-display-premium {
@@ -4937,54 +5105,46 @@ class GitHubPagesHTMLGenerator:
             color: #fff;
         }
 
-        /* Buttons Premium */
-        .cr-vs-actions-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 40px;
-            padding: 0 20px;
-        }
-
         .cr-copy-deck-btn {
-            display: inline-flex;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 28px;
+            height: 28px;
+            display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 28px;
-            background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(66, 153, 225, 0.2) 100%);
-            border: 1px solid rgba(66, 153, 225, 0.3);
-            border-radius: 16px;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
             color: #fff;
-            font-weight: 800;
-            font-size: 0.9em;
             text-decoration: none;
-            transition: all 0.3s;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .cr-btn-danger-premium {
-            background: linear-gradient(135deg, rgba(245, 101, 101, 0.2) 0%, rgba(229, 62, 62, 0.4) 100%);
-            border-color: rgba(245, 101, 101, 0.4);
+            transition: all 0.2s;
+            z-index: 10;
+            font-size: 14px;
         }
 
         .cr-copy-deck-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px var(--primary-glow);
-            filter: brightness(1.2);
+            background: var(--primary);
+            transform: scale(1.1);
+            border-color: #fff;
+        }
+
+        .cr-vs-actions-row {
+            display: none; /* Removed large buttons */
         }
 
         /* Opponents List Row Premium */
         .cr-opponents-list {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
         }
 
         .cr-opp-card-row {
             width: 100%;
             max-width: none;
-            margin-bottom: 40px;
+            margin-bottom: 0;
         }
 
         .cr-opp-header-premium {
@@ -4997,6 +5157,8 @@ class GitHubPagesHTMLGenerator:
             justify-content: space-between;
             align-items: center;
             width: 100%;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .cr-opp-rank-badge {
@@ -5010,10 +5172,14 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-opp-name-main {
-            font-size: 1.8em;
+            font-size: 1.4em;
             color: #fff;
             font-weight: 900;
             letter-spacing: -0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
         }
 
         .cr-opp-stats-summary {
@@ -5053,7 +5219,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1350px;
+            max-width: 1250px;
             max-height: 90vh;
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(25px);
@@ -5519,6 +5685,12 @@ class GitHubPagesHTMLGenerator:
             .cr-player-clan         { display: none; }
         }
 
+        @media (max-width: 1100px) {
+            .cr-opponents-list, .battle-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 640px) {
             .header h1 { font-size: 2.2em; }
             .section { padding: 24px; }
@@ -5551,7 +5723,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-modal-container {
-            width: 1350px !important;
+            width: 1250px !important;
             max-width: 98% !important;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
