@@ -4532,7 +4532,7 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             flex-direction: column;
             gap: 2px;
-            flex: 1;
+            flex: 2.5;
             min-width: 0;
         }
 
@@ -4875,7 +4875,7 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             align-items: center;
             gap: 4px;
-            font-size: 0.75em;
+            font-size: 0.65em;
             font-weight: 800;
             color: #fff;
             transition: all 0.2s;
@@ -4889,8 +4889,8 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-elixir-icon-p {
-            width: 14px !important;
-            height: 14px !important;
+            width: 12px !important;
+            height: 12px !important;
             object-fit: contain;
             vertical-align: middle;
         }
@@ -4904,8 +4904,8 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-leak-icon {
-            width: 14px !important;
-            height: 14px !important;
+            width: 12px !important;
+            height: 12px !important;
             object-fit: contain;
             filter: drop-shadow(0 0 6px rgba(245, 101, 101, 0.6));
             animation: cr-pulse-leak 2s infinite ease-in-out;
@@ -4918,7 +4918,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-metric-inline .cr-icon {
-            font-size: 1.2em;
+            font-size: 1em;
             filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
         }
 
@@ -4980,7 +4980,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-mode-tag-premium {
             color: #64748b;
-            font-size: 0.65em;
+            font-size: 0.55em;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -5069,9 +5069,9 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-result-dot {
-            width: 20px;
-            height: 20px;
-            font-size: 0.65em;
+            width: 18px;
+            height: 18px;
+            font-size: 0.55em;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -5082,7 +5082,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-date-text-small {
             color: #94a3b8;
-            font-size: 0.8em;
+            font-size: 0.65em;
             font-weight: 700;
         }
 
@@ -5092,21 +5092,21 @@ class GitHubPagesHTMLGenerator:
 
         .cr-copy-deck-btn {
             position: absolute;
-            bottom: 5px;
-            right: 5px;
-            width: 28px;
-            height: 28px;
+            bottom: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.4);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
+            border-radius: 6px;
             color: #fff;
             text-decoration: none;
             transition: all 0.2s;
             z-index: 10;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .cr-copy-deck-btn:hover {
@@ -5157,14 +5157,13 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-opp-name-main {
-            font-size: 1.4em;
+            font-size: 1.3em;
             color: #fff;
             font-weight: 900;
             letter-spacing: -0.5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 150px;
+            white-space: normal;
+            word-break: break-word;
+            max-width: 250px;
         }
 
         .cr-opp-stats-summary {
