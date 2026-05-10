@@ -3058,6 +3058,7 @@ class GitHubPagesHTMLGenerator:
                 if isinstance(t_hp, (int, float)):
                     t_hp = f"{int(t_hp):,}".replace(",", ".")
 
+                # Unificando o ícone de elixir e vazamento (garrafinha vazada se houver vazamento)
                 leak_icon = "https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" if leaked > 0 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
                 leak_img_class = "cr-leak-icon" if leaked > 0 else "cr-elixir-icon-p"
 
@@ -3143,7 +3144,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
 
-                        <!-- Consolidated Metrics & Date Info -->
+                        <!-- Consolidated Metrics & Date Info Integrated -->
                         <div class="cr-vs-metrics-unified">
                             <div class="cr-vs-footer-metrics">
                                 <div class="cr-metrics-wrap-p" id="player-metrics-{i}">
@@ -3155,7 +3156,7 @@ class GitHubPagesHTMLGenerator:
                                 </div>
                             </div>
                             
-                            {f'''<div class="cr-vs-date-row-integrated">
+                            <div class="cr-vs-date-row-integrated">
                                  <div class="cr-date-info-item">
                                     <span class="icon">📅</span>
                                     <span id="date-val-{i}">{first_b.get('data_str', '--/--').split(' ')[0]}</span>
@@ -3164,7 +3165,7 @@ class GitHubPagesHTMLGenerator:
                                     <span class="icon">🕒</span>
                                     <span id="time-val-{i}">{first_b.get('data_str', '00:00').split(' ')[1] if ' ' in first_b.get('data_str','') else '00:00'}</span>
                                  </div>
-                            </div>''' if total > 3 else ''}
+                            </div>
                         </div>
                     </div>
 
@@ -4561,15 +4562,16 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             flex-direction: column;
             gap: 2px;
-            flex: 1; /* More balanced flex */
+            flex: 1; 
             min-width: 0;
+            overflow: hidden;
         }
 
         .cr-vs-player-name {
-            font-size: 0.9em;
+            font-size: 0.85em;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             overflow: visible;
             white-space: normal;
             line-height: 1.1;
@@ -4578,10 +4580,13 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-vs-player-clan {
-            font-size: 0.75em; /* Increased slightly */
+            font-size: 0.7em;
             color: #94a3b8;
-            opacity: 0.8;
+            opacity: 0.7;
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .cr-vs-score-box {
@@ -4590,7 +4595,7 @@ class GitHubPagesHTMLGenerator:
             align-items: center;
             justify-content: center;
             gap: 2px;
-            flex: 0 0 100px; /* Reduced width for score box to give more space to names */
+            flex: 0 0 90px;
         }
 
         .cr-vs-score-main {
@@ -4621,14 +4626,14 @@ class GitHubPagesHTMLGenerator:
         .cr-tower-overlap {
             margin-bottom: -55px;
             position: relative;
-            z-index: 0; /* Lower than deck */
+            z-index: 1; /* Lower than deck wrapper */
             transition: all 0.3s ease;
             transform: translateY(-25px);
         }
 
         .cr-tower-overlap:hover {
             transform: scale(1.1);
-            z-index: 5;
+            z-index: 15;
         }
 
         .cr-grid-wrapper-premium {
@@ -4636,7 +4641,7 @@ class GitHubPagesHTMLGenerator:
             width: 100%;
             max-width: 420px;
             margin: 0 auto;
-            z-index: 2; /* Higher than tower icon */
+            z-index: 10; /* Guaranteed to be above tower icon */
         }
 
         .cr-grid-4x2 {
@@ -4692,12 +4697,13 @@ class GitHubPagesHTMLGenerator:
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             margin-bottom: -35px;
             position: relative;
-            z-index: 2;
+            z-index: 1;
         }
 
         .cr-tower-img-large:hover {
             transform: translateY(-10px) scale(1.05);
             filter: drop-shadow(0 20px 40px rgba(var(--primary-rgb), 0.4));
+            z-index: 2;
         }
 
         .cr-mirror-opponent {
@@ -4769,9 +4775,9 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             align-items: center;
             gap: 8px;
-            color: rgba(255,255,255,0.4);
-            font-size: 0.75em;
-            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.72em;
+            font-weight: 800;
         }
 
         .cr-date-info-item span.icon {
