@@ -2987,7 +2987,7 @@ class GitHubPagesHTMLGenerator:
 
             const mainContainer = document.querySelector('.container');
             if (mainContainer) {
-                mainContainer.style.maxWidth = '1800px';
+                mainContainer.style.maxWidth = '1350px';
                 mainContainer.style.width = '100%';
             }
         });
@@ -4110,7 +4110,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1350px;
             margin: 0 auto;
             padding: 40px 20px;
             animation: cr-fade-in-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -4535,7 +4535,7 @@ class GitHubPagesHTMLGenerator:
             gap: 40px;
             padding: 0 50px;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1350px;
             margin: 0 auto;
         }
 
@@ -5053,7 +5053,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1000px;
+            max-width: 1350px;
             max-height: 90vh;
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(25px);
@@ -5551,7 +5551,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-modal-container {
-            width: 1000px !important;
+            width: 1350px !important;
             max-width: 98% !important;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
