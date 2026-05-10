@@ -2849,9 +2849,21 @@ class GitHubPagesHTMLGenerator:
                             <div class="cr-metrics-wrap-p">${oData.metricsHtml}</div>
                         </div>
 
-                        <div class="cr-modal-score-center" style="margin-top:-5px;">
-                             <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.1em;">${tropText}</div>
-                             <div class="cr-battle-date-p" style="font-size:0.75em; opacity:0.8;">${data.date || ''}</div>
+                        <div class="cr-modal-metrics-footer">
+                            <div class="cr-metrics-wrap-p">${data.p_metrics}</div>
+                            <div class="cr-vs-metrics-divider"></div>
+                            <div class="cr-metrics-wrap-p">${data.o_metrics}</div>
+                        </div>
+
+                        <div class="cr-vs-date-footer">
+                             <div class="cr-date-info-item">
+                                <span class="icon">📅</span>
+                                <span>${data.date || ''}</span>
+                             </div>
+                             <div class="cr-date-info-item">
+                                <span class="icon">🕒</span>
+                                <span>${data.time || '00:00'}</span>
+                             </div>
                         </div>
                     </div>`;
                 
@@ -2881,12 +2893,13 @@ class GitHubPagesHTMLGenerator:
                 if (pScoreEl) pScoreEl.innerText = data.p_score;
                 if (oScoreEl) oScoreEl.innerText = data.o_score;
                 
-                // 2. Atualizar Data e Modo (Data apenas se houver histórico para escolher: total > 1)
-                const dateEl = document.getElementById(`date-main-${oppId}`);
+                // 2. Atualizar Data e Modo
+                const dateValEl = document.getElementById(`date-val-${oppId}`);
+                const timeValEl = document.getElementById(`time-val-${oppId}`);
                 const modeEl = document.getElementById(`mode-${oppId}`);
-                if (dateEl) {
-                    dateEl.innerText = '📅 ' + (data.date || '--/--');
-                }
+                
+                if (dateValEl) dateValEl.innerText = data.date || '--/--';
+                if (timeValEl) timeValEl.innerText = data.time || '00:00';
                 if (modeEl) modeEl.innerText = data.mode;
                 
                 // 3. Atualizar Painéis de Métricas (Horizontal)
@@ -3138,18 +3151,27 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
 
-                        <!-- Footer: Metrics -->
-                        <div class="cr-vs-footer-metrics" style="margin-top:10px; gap:20px; padding:15px 30px;">
+                        <!-- Footer: Metrics with Divider -->
+                        <div class="cr-vs-footer-metrics">
                             <div class="cr-metrics-wrap-p" id="player-metrics-{i}">
                                 {get_metrics_panel_html(my_metrics_f)}
                             </div>
+                            <div class="cr-vs-metrics-divider"></div>
                             <div class="cr-metrics-wrap-p" id="opp-metrics-{i}">
                                 {get_metrics_panel_html(opp_metrics_f)}
                             </div>
                         </div>
 
-                        <div class="cr-modal-score-center" style="margin-top:-5px;">
-                             <div id="date-main-{i}" class="cr-battle-date-p" style="font-size:0.75em; color:rgba(255,255,255,0.7); font-weight:800;">{f"📅 {first_b.get('data_str', '--/--')}"}</div>
+                        <!-- Integrated Date/Time Footer -->
+                        <div class="cr-vs-date-footer">
+                             <div class="cr-date-info-item">
+                                <span class="icon">📅</span>
+                                <span id="date-val-{i}">{first_b.get('data_str', '--/--').split(' ')[0]}</span>
+                             </div>
+                             <div class="cr-date-info-item">
+                                <span class="icon">🕒</span>
+                                <span id="time-val-{i}">{first_b.get('data_str', '00:00').split(' ')[1] if ' ' in first_b.get('data_str','') else '00:00'}</span>
+                             </div>
                         </div>
                     </div>
 
@@ -3189,7 +3211,8 @@ class GitHubPagesHTMLGenerator:
                     'o_grid': get_deck_grid_html(b['opp_deck'], self.get_copy_deck_link([c.strip() for c in b['opp_deck'].split('|') if c.strip()])),
                     'p_copy': self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()]),
                     'o_copy': self.get_copy_deck_link([c.strip() for c in b['opp_deck'].split('|') if c.strip()]),
-                    'date': b.get('data_str', '--/--'),
+                    'date': b.get('data_str', '--/--').split(' ')[0],
+                    'time': b.get('data_str', '00:00').split(' ')[1] if ' ' in b.get('data_str','') else '00:00',
                     'mode': b.get('game_mode', 'Batalha'),
                     'total': total
                 }).replace("'", "&apos;")
@@ -4699,13 +4722,46 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-metrics-footer, .cr-vs-footer-metrics {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr auto 1fr;
             gap: 15px;
-            padding: 10px 15px;
+            padding: 15px 30px;
             margin-top: 15px;
             background: rgba(15, 23, 42, 0.4);
             border-top: 1px solid rgba(255,255,255,0.05);
+            border-radius: 0; /* Changed to be middle section */
+            position: relative;
+        }
+
+        .cr-vs-metrics-divider {
+            width: 1px;
+            height: 30px;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent);
+            align-self: center;
+        }
+
+        .cr-vs-date-footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border-top: 1px solid rgba(255,255,255,0.03);
             border-radius: 0 0 24px 24px;
+        }
+
+        .cr-date-info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.7em;
+            font-weight: 700;
+        }
+
+        .cr-date-info-item i, .cr-date-info-item span.icon {
+            font-size: 1.1em;
+            opacity: 0.7;
         }
 
         .cr-vs-row-premium-v2 {
