@@ -4716,23 +4716,24 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-elixir-icon-p {
-            width: 20px;
-            height: 20px;
+            width: 20px !important;
+            height: 20px !important;
             object-fit: contain;
-            filter: drop-shadow(0 0 5px rgba(248, 113, 113, 0.4));
+            vertical-align: middle;
+            margin-right: 5px;
         }
 
         .cr-leak-icon-small {
-            width: 22px;
-            height: 22px;
+            width: 22px !important;
+            height: 22px !important;
             object-fit: contain;
             margin-right: 4px;
             vertical-align: middle;
         }
 
         .cr-leak-icon {
-            width: 22px;
-            height: 22px;
+            width: 22px !important;
+            height: 22px !important;
             object-fit: contain;
             filter: drop-shadow(0 0 8px rgba(245, 101, 101, 0.6));
             animation: cr-pulse-leak 2s infinite ease-in-out;
@@ -5033,7 +5034,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1400px;
+            max-width: 1700px;
             max-height: 90vh;
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(25px);
