@@ -2455,7 +2455,7 @@ class GitHubPagesHTMLGenerator:
                             <span class="cr-icon">🔄</span> <span class="cr-val">{metrics["cycle"]}</span>
                         </div>
                         <div class="cr-metric-inline" title="Elixir Vazado" style="color:{leaked_color}">
-                            <span class="cr-icon">🚫</span> <span class="cr-val">{leaked_label}</span>
+                            <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" class="cr-leak-icon-small"> <span class="cr-val">{leaked_label}</span>
                         </div>
                     </div>'''
 
@@ -3028,7 +3028,7 @@ class GitHubPagesHTMLGenerator:
                 if isinstance(t_hp, (int, float)):
                     t_hp = f"{int(t_hp):,}".replace(",", ".")
 
-                leak_icon = "https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" if leaked > 0 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
+                leak_icon = "https://cdn-icons-png.flaticon.com/512/3168/3168716.png" if leaked > 0 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
                 leak_img_class = "cr-leak-icon" if leaked > 0 else "cr-elixir-icon-p"
 
                 return f'''
@@ -4720,6 +4720,14 @@ class GitHubPagesHTMLGenerator:
             height: 20px;
             object-fit: contain;
             filter: drop-shadow(0 0 5px rgba(248, 113, 113, 0.4));
+        }
+
+        .cr-leak-icon-small {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            margin-right: 4px;
+            vertical-align: middle;
         }
 
         .cr-leak-icon {
