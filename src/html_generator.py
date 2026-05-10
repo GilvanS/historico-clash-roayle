@@ -403,23 +403,29 @@ class GitHubPagesHTMLGenerator:
         return card_mapping.get(card_name, card_name.replace(' ', '').replace('.', '').replace('-', ''))
 
     def get_tower_image_path(self, tower_name: str) -> str:
-        """Retorna a URL da imagem da torre"""
+        """Retorna o caminho local da imagem da torre"""
         if not tower_name or tower_name == 'N/D':
-            return "https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png"
+            return "./docs/princesa-tropa-de-torre-clash-royale.png"
         
-        # Mapeamento para os slugs da RoyaleAPI
-        tower_slugs = {
-            'Tower Princess': 'tower-princess',
-            'Cannoneer': 'cannoneer',
-            'Dagger Duchess': 'dagger-duchess',
-            'King Tower': 'king-tower'
+        # Mapeamento para arquivos locais na pasta docs
+        tower_mapping = {
+            'Tower Princess': 'princesa-tropa-de-torre-clash-royale',
+            'Cannoneer': 'canhoneiro-clash-royale-render-3d-cannonier',
+            'Dagger Duchess': 'tudo-sobre-duquesa-das-adagas-clash-royale-knives-thrower',
+            'Royal Chef': 'tudo-sobre-cozinheiro-real-clash-royale-royal-chef-FylAY7',
+            'King Tower': 'princesa-tropa-de-torre-clash-royale'
         }
         
-        slug = tower_slugs.get(tower_name)
+        slug = tower_mapping.get(tower_name)
         if not slug:
-            slug = tower_name.lower().replace(' ', '-').replace('.', '')
+            # Tenta busca parcial caso o nome venha diferente da API
+            if 'Dagger' in tower_name: slug = 'tudo-sobre-duquesa-das-adagas-clash-royale-knives-thrower'
+            elif 'Cannon' in tower_name: slug = 'canhoneiro-clash-royale-render-3d-cannonier'
+            elif 'Princess' in tower_name: slug = 'princesa-tropa-de-torre-clash-royale'
+            elif 'Chef' in tower_name: slug = 'tudo-sobre-cozinheiro-real-clash-royale-royal-chef-FylAY7'
+            else: slug = 'princesa-tropa-de-torre-clash-royale'
             
-        return f"https://cdn.royaleapi.com/static/img/cards-75/{slug}.png"
+        return f"./docs/{slug}.png"
 
     def get_card_image_path(self, card_name: str) -> str:
         """Retorna a URL da imagem da carta usando o cards_master_icons.csv"""
@@ -3084,7 +3090,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
 
                             <div class="cr-tower-stage-p" id="o-tower-stage-{i}">
-                                <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-large">
+                                <img src="{opp_metrics_f['tower_url']}" class="cr-tower-img-large cr-mirror-opponent">
                                 <span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {opp_metrics_f['level']}</span>
                                 <div class="cr-player-name-premium opp-color-text" style="font-size:1.2em; margin-top:5px;">{opp['opponent_name']}</div>
                             </div>
@@ -3136,7 +3142,7 @@ class GitHubPagesHTMLGenerator:
                     'p_metrics': get_metrics_panel_html(m_metrics),
                     'o_metrics': get_metrics_panel_html(o_metrics),
                     'p_tower': f'<img src="{m_metrics["tower_url"]}" class="cr-tower-img-large"><span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {m_metrics["level"]}</span><div class="cr-player-name-premium player-color-text" style="font-size:1.2em; margin-top:5px;">{player_name}</div>',
-                    'o_tower': f'<img src="{o_metrics["tower_url"]}" class="cr-tower-img-large"><span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {o_metrics["level"]}</span><div class="cr-player-name-premium opp-color-text" style="font-size:1.2em; margin-top:5px;">{opp["opponent_name"]}</div>',
+                    'o_tower': f'<img src="{o_metrics["tower_url"]}" class="cr-tower-img-large cr-mirror-opponent"><span class="cr-card-level-badge" style="position:static; margin-top:5px;">LV {o_metrics["level"]}</span><div class="cr-player-name-premium opp-color-text" style="font-size:1.2em; margin-top:5px;">{opp["opponent_name"]}</div>',
                     'p_grid': get_deck_grid_html(b['my_deck']),
                     'o_grid': get_deck_grid_html(b['opp_deck']),
                     'p_copy': self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()]),
@@ -4488,18 +4494,29 @@ class GitHubPagesHTMLGenerator:
             flex-direction: column;
             align-items: center;
             gap: 12px;
-            width: 150px;
+            width: 220px;
         }
 
         .cr-tower-img-large {
-            width: 100px;
-            height: 120px;
+            width: 180px;
+            height: 180px;
             object-fit: contain;
             filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6));
-            transition: transform 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cr-tower-img-large:hover {
+            transform: translateY(-10px) scale(1.05);
+            filter: drop-shadow(0 20px 40px rgba(var(--primary-rgb), 0.4));
+        }
+
+        .cr-mirror-opponent {
+            transform: scaleX(-1);
         }
         
-        .cr-tower-img-large:hover { transform: scale(1.1); }
+        .cr-mirror-opponent:hover {
+            transform: translateY(-10px) scale(-1.05, 1.05);
+        }
 
         .cr-modal-score-center {
             flex: 1;
@@ -5034,7 +5051,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1700px;
+            max-width: 1500px;
             max-height: 90vh;
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(25px);
