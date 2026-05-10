@@ -2753,10 +2753,8 @@ class GitHubPagesHTMLGenerator:
                 tHP = Number(tHP).toLocaleString('pt-BR');
             }
             
-            const isLeak = leaked > 0;
-            const leakClass = leaked >= 1.0 ? 'cr-leak-critical' : (isLeak ? 'cr-leak-warning' : '');
-            const clanHtml = clanName ? `<div class="cr-clan-name-premium" style="opacity:0.6; font-size:0.85em;">${clanName}</div>` : '';
-
+            const copyHtml = deckLink ? `<a href="${deckLink}" class="cr-copy-deck-btn" title="Copiar Deck">📋</a>` : '';
+            
             return {
                 playerName,
                 clanHtml,
@@ -2765,8 +2763,11 @@ class GitHubPagesHTMLGenerator:
                 tLevel,
                 tHP,
                 cardsHtml: `
-                    <div class="cr-grid-4x2">
-                        ${cardsHtml}
+                    <div class="cr-grid-wrapper-premium">
+                        <div class="cr-grid-4x2">
+                            ${cardsHtml}
+                        </div>
+                        ${copyHtml}
                     </div>`,
                 metricsHtml: `
                     <div class="cr-deck-metrics-horizontal">
@@ -2777,7 +2778,7 @@ class GitHubPagesHTMLGenerator:
                             <span class="cr-icon">🔄</span> <span>${cycle}</span>
                         </div>
                         <div class="cr-metric-inline ${leakClass}" title="Elixir Vazado">
-                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" class="${isLeak ? 'cr-leak-icon' : 'cr-elixir-icon-p'}"> <span>${leaked}</span>
+                            <img src="${isLeak ? 'https://cdn.royaleapi.com/static/img/ui/elixir-leak.png' : 'https://cdn.royaleapi.com/static/img/ui/elixir.png'}" class="${isLeak ? 'cr-leak-icon' : 'cr-elixir-icon-p'}"> <span>${leaked}</span>
                         </div>
                         <div class="cr-metric-inline cr-hp-metric-border" title="Vida da Torre">
                             <span class="cr-icon">🏰</span> <span>${tHP}</span>
@@ -2829,7 +2830,7 @@ class GitHubPagesHTMLGenerator:
                                         <span class="cr-card-level-badge">LV ${pData.tLevel}</span>
                                     </div>
                                 </div>
-                                <div class="cr-deck-wrap-v2">${pData.cardsHtml}</div>
+                                <div id="p-grid-modal">${pData.cardsHtml}</div>
                             </div>
 
                             <div class="cr-side-container">
@@ -2839,7 +2840,7 @@ class GitHubPagesHTMLGenerator:
                                         <span class="cr-card-level-badge">LV ${oData.tLevel}</span>
                                     </div>
                                 </div>
-                                <div class="cr-deck-wrap-v2">${oData.cardsHtml}</div>
+                                <div id="o-grid-modal">${oData.cardsHtml}</div>
                             </div>
                         </div>
 
@@ -2848,14 +2849,9 @@ class GitHubPagesHTMLGenerator:
                             <div class="cr-metrics-wrap-p">${oData.metricsHtml}</div>
                         </div>
 
-                        <div class="cr-modal-score-center" style="margin-top:-10px;">
-                             <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.2em;">${tropText}</div>
-                             <div class="cr-battle-date-p" style="font-size:0.75em;">${data.date || ''}</div>
-                        </div>
-                        
-                        <div class="cr-copy-row" style="display:flex; justify-content:space-around; padding:15px 50px; gap:20px;">
-                            ${data.my_deck_link ? `<a href="${data.my_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center; padding:10px;">COPIAR MEU DECK</a>` : ''}
-                            ${data.opp_deck_link ? `<a href="${data.opp_deck_link}" class="cr-copy-deck-btn" style="flex:1; text-align:center; padding:10px; background:rgba(255,255,255,0.1);">COPIAR DECK INIMIGO</a>` : ''}
+                        <div class="cr-modal-score-center" style="margin-top:-5px;">
+                             <div class="cr-trophy-change-p" style="color: ${tropColor}; font-weight: 800; font-size: 1.1em;">${tropText}</div>
+                             <div class="cr-battle-date-p" style="font-size:0.75em; opacity:0.8;">${data.date || ''}</div>
                         </div>
                     </div>`;
                 
@@ -3041,16 +3037,12 @@ class GitHubPagesHTMLGenerator:
             my_metrics_f = self._get_battle_deck_metrics(first_b['my_deck'], first_b, is_opponent=False)
             opp_metrics_f = self._get_battle_deck_metrics(first_b['opp_deck'], first_b, is_opponent=True)
 
-            def get_deck_grid_html(deck_str):
+            def get_deck_grid_html(deck_str, copy_link=None):
                 if not deck_str or deck_str == 'N/D': return '<div class="cr-empty-grid">N/D</div>'
                 cards = [c.strip() for c in deck_str.replace(' | ', '|').split('|') if c.strip()][:8]
-                html_cards = []
-                for c in cards:
-                    is_evo = "Evolution" in c or "Evolved" in c
-                    evo_class = " cr-card-evo-border" if is_evo else ""
-                    img_url = self.get_card_image_path(c)
-                    html_cards.append(f'<div class="cr-card-wrap-premium{evo_class}" title="{c}"><img src="{img_url}" class="cr-card-img" loading="lazy"></div>')
-                return "".join(html_cards)
+                html_cards = "".join(f'<div class="cr-card-wrap-premium{" cr-card-evo-border" if "Evolution" in c or "Evolved" in c else ""}" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in cards)
+                copy_btn = f'<a href="{copy_link}" class="cr-copy-deck-btn" title="Copiar Deck">📋</a>' if copy_link else ''
+                return f'<div class="cr-grid-wrapper-premium"><div class="cr-grid-4x2">{html_cards}</div>{copy_btn}</div>'
 
             def get_metrics_panel_html(metrics):
                 leaked = metrics.get('leaked', 0)
@@ -3061,7 +3053,7 @@ class GitHubPagesHTMLGenerator:
                 if isinstance(t_hp, (int, float)):
                     t_hp = f"{int(t_hp):,}".replace(",", ".")
 
-                leak_icon = "https://cdn-icons-png.flaticon.com/512/3168/3168716.png" if leaked > 0 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
+                leak_icon = "https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" if leaked > 0 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
                 leak_img_class = "cr-leak-icon" if leaked > 0 else "cr-elixir-icon-p"
 
                 return f'''
@@ -3128,8 +3120,8 @@ class GitHubPagesHTMLGenerator:
                                         <span class="cr-card-level-badge">LV {my_metrics_f['level']}</span>
                                     </div>
                                 </div>
-                                <div class="cr-deck-wrap-v2" id="p-grid-{i}">
-                                    {get_deck_grid_html(first_b['my_deck'])}
+                                <div id="p-grid-{i}">
+                                    {get_deck_grid_html(first_b['my_deck'], self.get_copy_deck_link([c.strip() for c in first_b.get('my_deck','').split('|') if c.strip()]))}
                                 </div>
                             </div>
 
@@ -3140,8 +3132,8 @@ class GitHubPagesHTMLGenerator:
                                         <span class="cr-card-level-badge">LV {opp_metrics_f['level']}</span>
                                     </div>
                                 </div>
-                                <div class="cr-deck-wrap-v2" id="o-grid-{i}">
-                                    {get_deck_grid_html(first_b['opp_deck'])}
+                                <div id="o-grid-{i}">
+                                    {get_deck_grid_html(first_b['opp_deck'], self.get_copy_deck_link([c.strip() for c in first_b.get('opp_deck','').split('|') if c.strip()]))}
                                 </div>
                             </div>
                         </div>
@@ -3156,8 +3148,8 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
 
-                        <div class="cr-modal-score-center" style="margin-top:-10px;">
-                             <div id="date-main-{i}" class="cr-battle-date-p" style="font-size:0.85em; color:rgba(255,255,255,0.85); font-weight:800;">{f"📅 {first_b.get('data_str', '--/--')}"}</div>
+                        <div class="cr-modal-score-center" style="margin-top:-5px;">
+                             <div id="date-main-{i}" class="cr-battle-date-p" style="font-size:0.75em; color:rgba(255,255,255,0.7); font-weight:800;">{f"📅 {first_b.get('data_str', '--/--')}"}</div>
                         </div>
                     </div>
 
@@ -3193,8 +3185,8 @@ class GitHubPagesHTMLGenerator:
                     'player_clan': player_clan,
                     'opp_name': opp["opponent_name"],
                     'opp_clan': opp.get('opp_clan', ''),
-                    'p_grid': get_deck_grid_html(b['my_deck']),
-                    'o_grid': get_deck_grid_html(b['opp_deck']),
+                    'p_grid': get_deck_grid_html(b['my_deck'], self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()])),
+                    'o_grid': get_deck_grid_html(b['opp_deck'], self.get_copy_deck_link([c.strip() for c in b['opp_deck'].split('|') if c.strip()])),
                     'p_copy': self.get_copy_deck_link([c.strip() for c in b['my_deck'].split('|') if c.strip()]),
                     'o_copy': self.get_copy_deck_link([c.strip() for c in b['opp_deck'].split('|') if c.strip()]),
                     'date': b.get('data_str', '--/--'),
@@ -4545,11 +4537,13 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-vs-player-name {
-            font-size: 0.8em;
+            font-size: 0.9em;
             font-weight: 900;
             text-transform: uppercase;
-            white-space: nowrap;
             letter-spacing: 0.5px;
+            overflow: visible;
+            word-wrap: break-word;
+            line-height: 1.1;
         }
 
         .cr-vs-player-clan {
@@ -4557,7 +4551,6 @@ class GitHubPagesHTMLGenerator:
             color: #94a3b8;
             opacity: 0.6;
             font-weight: 500;
-            white-space: nowrap;
         }
 
         .cr-vs-score-box {
@@ -4595,11 +4588,11 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-tower-overlap {
-            margin-bottom: -50px;
+            margin-bottom: -55px;
             position: relative;
             z-index: 1;
             transition: all 0.3s ease;
-            transform: translateY(-10px);
+            transform: translateY(-15px);
         }
 
         .cr-tower-overlap:hover {
@@ -4607,15 +4600,23 @@ class GitHubPagesHTMLGenerator:
             z-index: 5;
         }
 
-        .cr-deck-wrap-v2 {
+        .cr-grid-wrapper-premium {
             position: relative;
-            z-index: 2;
             width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .cr-grid-4x2 {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            max-width: 380px;
-            margin: 0 auto;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            width: 100%;
+            box-shadow: inset 0 4px 15px rgba(0,0,0,0.3);
         }
 
         /* Top Row: Towers & Score */
@@ -4797,29 +4798,16 @@ class GitHubPagesHTMLGenerator:
         .player-color-text { color: var(--primary); }
         .opp-color-text { color: var(--danger); }
 
-        .cr-grid-4x2 {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            padding: 15px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.05);
-            width: 100%;
-            max-width: 420px;
-            margin: 0 auto;
-            box-shadow: inset 0 4px 15px rgba(0,0,0,0.3);
-        }
-
+        /* Card Wrapper Premium */
         .cr-card-wrap-premium {
             aspect-ratio: 5/6;
             background: #1e293b;
-            border-radius: 14px;
+            border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
             position: relative;
             overflow: hidden;
             transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
         .cr-card-wrap-premium:hover {
@@ -4886,13 +4874,12 @@ class GitHubPagesHTMLGenerator:
         .cr-metric-inline {
             display: flex;
             align-items: center;
-            gap: 2px;
-            font-size: 0.55em;
+            gap: 4px;
+            font-size: 0.75em;
             font-weight: 800;
             color: #fff;
             transition: all 0.2s;
             white-space: nowrap;
-            letter-spacing: -0.2px;
         }
 
         .cr-metric-inline:hover {
@@ -4902,11 +4889,10 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-elixir-icon-p {
-            width: 12px !important;
-            height: 12px !important;
+            width: 14px !important;
+            height: 14px !important;
             object-fit: contain;
             vertical-align: middle;
-            margin-right: 2px;
         }
 
         .cr-leak-icon-small {
@@ -4918,12 +4904,11 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-leak-icon {
-            width: 16px !important;
-            height: 16px !important;
+            width: 14px !important;
+            height: 14px !important;
             object-fit: contain;
             filter: drop-shadow(0 0 6px rgba(245, 101, 101, 0.6));
             animation: cr-pulse-leak 2s infinite ease-in-out;
-            margin-right: 2px;
         }
 
         @keyframes cr-pulse-leak {
