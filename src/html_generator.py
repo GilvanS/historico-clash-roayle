@@ -4047,9 +4047,9 @@ class GitHubPagesHTMLGenerator:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
 
         :root {
-            --glass-bg: rgba(15, 23, 42, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-blur: 20px;
+            --glass-bg: #0f172a; /* Solid Slate */
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: 0px;
             --primary: #4299e1;
             --primary-glow: rgba(66, 153, 225, 0.5);
             --accent: #f6ad55;
@@ -4099,8 +4099,6 @@ class GitHubPagesHTMLGenerator:
 
         .glass-panel, .cr-glass-premium {
             background: var(--glass-bg);
-            backdrop-filter: blur(var(--glass-blur));
-            -webkit-backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             box-shadow: var(--card-shadow);
@@ -4117,7 +4115,6 @@ class GitHubPagesHTMLGenerator:
             align-items: center;
             gap: 20px;
             background: var(--glass-bg);
-            backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             box-shadow: var(--card-shadow);
@@ -4153,7 +4150,6 @@ class GitHubPagesHTMLGenerator:
             border-radius: 20px;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 1px solid rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
         }
 
         .stat-card:hover {
@@ -4183,7 +4179,6 @@ class GitHubPagesHTMLGenerator:
             padding: 40px;
             margin-bottom: 40px;
             background: var(--glass-bg);
-            backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             box-shadow: var(--card-shadow);
@@ -4434,7 +4429,6 @@ class GitHubPagesHTMLGenerator:
             left: 50%;
             transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.9);
-            backdrop-filter: blur(10px);
             border: 1px solid var(--primary);
             color: #fff;
             padding: 12px 30px;
@@ -4781,13 +4775,25 @@ class GitHubPagesHTMLGenerator:
         }
 
         @media (max-width: 1000px) {
-            .cr-vs-row-premium-v2 {
+            .cr-vs-decks-grid, .cr-modal-decks-grid {
                 grid-template-columns: 1fr;
-                gap: 20px;
+                gap: 30px;
+                padding: 0 15px;
             }
-            .cr-vs-center-divider, .cr-center-score-column {
-                order: -1;
-                margin-bottom: 20px;
+            .cr-modal-top-stage, .cr-vs-top-row {
+                flex-direction: column;
+                gap: 20px;
+                padding: 20px;
+            }
+            .cr-tower-stage-p {
+                width: 100%;
+            }
+            .cr-vs-footer-metrics {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .cr-vs-divider-light {
+                display: none;
             }
         }
 
@@ -4811,7 +4817,6 @@ class GitHubPagesHTMLGenerator:
             justify-content: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            backdrop-filter: blur(10px);
         }
 
         .cr-tower-card-premium:hover {
@@ -4912,7 +4917,6 @@ class GitHubPagesHTMLGenerator:
             width: 100%;
             max-width: 500px;
             margin: 0 auto;
-            backdrop-filter: blur(5px);
         }
 
         .cr-hp-metric-border {
@@ -5014,7 +5018,6 @@ class GitHubPagesHTMLGenerator:
             gap: 20px;
             font-family: 'Outfit', sans-serif;
             font-weight: 900;
-            backdrop-filter: blur(10px);
             transform: skewX(-15deg);
         }
 
@@ -5258,8 +5261,6 @@ class GitHubPagesHTMLGenerator:
             width: 100%;
             height: 100%;
             background: rgba(2, 6, 23, 0.7);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -5278,8 +5279,6 @@ class GitHubPagesHTMLGenerator:
             max-width: 1250px;
             max-height: 90vh;
             background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 30px;
             box-shadow: 0 25px 100px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
@@ -5334,8 +5333,6 @@ class GitHubPagesHTMLGenerator:
         /* Histogram Premium v2 (Glassmorphism) */
         .chart-container {
             background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 24px;
             padding: 30px 25px 60px 25px;

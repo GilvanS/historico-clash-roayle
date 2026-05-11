@@ -23,16 +23,22 @@ Este documento registra as principais evoluções técnicas e decisões de desig
 - **Métricas Horizontais:** Adição de custo médio e ciclo diretamente no card do deck letal.
 - **Alertas Visuais:** Implementação de bordas dinâmicas e avisos de "Alta Periculosidade" para facilitar a identificação de counters.
 
-## 🎨 Decisões de Design (Premium v2)
+## 🎨 Decisões de Design (Premium v2 - Solid Edition)
 
-- **Estética:** Uso intenso de *Glassmorphism* (`.cr-glass-premium`) com bordas suaves e fundos semitransparentes.
+- **Estética:** Transição para **Solid Design** (removido Glassmorphism/blur). Foco em performance e clareza com fundos sólidos (#0f172a), bordas de 1px e gradientes suaves.
+- **Responsividade:** Implementação de **Mobile Stack** no Palco VS (empilhamento vertical em < 1000px).
 - **Paleta de Cores:**
     - **Vitória (W):** `#48bb78` (Verde Esmeralda)
     - **Derrota (L):** `#f56565` (Vermelho Coral)
     - **Empate (D):** `#718096` (Cinza Azulado)
 - **Tipografia:** Enfatização de pesos 800 e 900 para nomes e tags, garantindo legibilidade em temas escuros.
 
-## 🛠️ Instruções de Manutenção
+## 🛠️ Instruções de Manutenção & Estabilidade (Maio/2026)
+
+- **Sintaxe:** Sempre verificar fechamento de chaves no CSS de `@media` (linha 4745) e evitar duplicação na função `updateOpponentView`.
+- **Métricas:** O Elixir Leak agora usa ícones dinâmicos baseados no valor real de vazamento.
+- **Deploy:** O script `Sync_Elite.bat` continua sendo o método oficial de sincronização com o GitHub Pages.
+- **Performance:** A remoção do `backdrop-filter` garante fluidez mesmo em dispositivos mobile mais antigos.
 
 ### Adicionar Novas Métricas
 Para adicionar novos dados ao palco VS, modifique o método `_get_battle_deck_metrics` e atualize o dicionário `battle_data` no método `_generate_history_dots` dentro do arquivo `html_generator.py`.
