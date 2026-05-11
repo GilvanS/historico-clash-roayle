@@ -2842,9 +2842,6 @@ class GitHubPagesHTMLGenerator:
                 const container = element.parentElement;
                 container.querySelectorAll('.cr-history-dot').forEach(el => el.classList.remove('active'));
                 element.classList.add('active');
-            } catch(e) { console.error("Error updating opponent view:", e); }
-        }
-t.add('active');
                 if (typeof log !== 'undefined') log.info("Vista do oponente " + oppId + " atualizada");
             } catch(e) { console.error("Error updating opponent view:", e); }
         }
@@ -2979,15 +2976,17 @@ t.add('active');
         return dots_html
 
     def _generate_metrics_panel_html_simple(self, metrics):
-        leaked = metrics.get('leaked', 0)
+        leaked = float(metrics.get('leaked', 0))
         leak_class = "cr-leak-warning" if leaked > 0.1 else ""
         t_hp = metrics.get('hp', '--')
-        leak_icon = "https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" if leaked > 0 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
+        # Escolhe o icone baseado no vazamento
+        leak_icon = "https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" if leaked > 0.1 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
+        
         return f"""
-            <div class="cr-metric-inline"><img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p"> <span>{metrics['avg']}</span></div>
-            <div class="cr-metric-inline"><span class="cr-icon">🔄</span> <span>{metrics['cycle']}</span></div>
-            <div class="cr-metric-inline {leak_class}"><img src="{leak_icon}" class="cr-elixir-icon-p"> <span>{metrics.get('leaked_label', leaked)}</span></div>
-            <div class="cr-metric-inline"><span class="cr-icon">🏰</span> <span>{t_hp}</span></div>
+            <div class="cr-metric-inline" title="Custo Medio de Elixir"><img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" class="cr-elixir-icon-p"> <span>{metrics['avg']}</span></div>
+            <div class="cr-metric-inline" title="Ciclo de 4 Cartas"><span class="cr-icon">🔄</span> <span>{metrics['cycle']}</span></div>
+            <div class="cr-metric-inline {leak_class}" title="Elixir Vazado"><img src="{leak_icon}" class="cr-elixir-icon-p"> <span>{metrics.get('leaked_label', '0.0')}</span></div>
+            <div class="cr-metric-inline" title="Vida da Torre do Rei"><span class="cr-icon">🏰</span> <span>{t_hp}</span></div>
         """
 
     def _generate_deck_grid_html_simple(self, deck_str, copy_link=None):
@@ -4741,7 +4740,6 @@ t.add('active');
             grid-template-columns: 1fr auto 1fr;
             gap: 15px;
             align-items: center;
-        }
         }
 
         .cr-vs-divider-light {
