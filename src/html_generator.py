@@ -2787,91 +2787,10 @@ class GitHubPagesHTMLGenerator:
                     <div class="cr-metric-inline ${leakClass}" title="Elixir Vazado">
                         <img src="${isLeak ? 'https://cdn.royaleapi.com/static/img/ui/elixir-leak.png' : 'https://cdn.royaleapi.com/static/img/ui/elixir.png'}" class="${isLeak ? 'cr-leak-icon' : 'cr-elixir-icon-p'}"> <span>${leaked}</span>
                     </div>
-                    <div class="cr-metric-inline cr-hp-metric-border" title="Vida da Torre">
-                        <span class="cr-icon">🏰</span> <span>${tHP}</span>
-                    </div>`
-            };
-        }
-
-        function updateBattlePreview(deckId, battleIdx, battleDataJson) {
-            try {
-                const data = JSON.parse(decodeURIComponent(battleDataJson));
-                const modal = document.getElementById('cr-battle-modal');
-                const content = document.getElementById('battle-modal-content');
-                if (!modal || !content) return;
-                
-                const pData = getMiniGridJS(data.my_deck, 'my-deck-side', data.player_name, data.player_clan || '', data.my_metrics, data.my_deck_link, data.my_icons);
-                const oData = getMiniGridJS(data.opp_deck, 'opp-deck-side', data.opp_name, data.opp_clan || '', data.opp_metrics, data.opp_deck_link, data.opp_icons);
-                
-                const score = `${data.crowns || 0} - ${data.opponent_crowns || 0}`;
-
-                content.innerHTML = `
-                    <div class="cr-modal-premium-layout cr-vs-stage-v2">
-                        <div class="cr-vs-header-compact">
-                            <div class="cr-vs-player-info" style="text-align: left;">
-                                <div class="cr-vs-player-name player-color-text">${data.player_name}</div>
-                                <div class="cr-vs-player-clan">${data.player_clan || ''}</div>
-                            </div>
-                            
-                            <div class="cr-vs-score-box">
-                                <div class="cr-vs-score-main">${score}</div>
-                                <div class="cr-mode-tag-premium" style="margin-top:-5px;">${data.game_mode || 'Batalha'}</div>
-                            </div>
-
-                            <div class="cr-vs-player-info" style="text-align: right;">
-                                <div class="cr-vs-player-tag" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: bold;">${data.opp_tag || ''}</div>
-                                <div class="cr-vs-player-name opp-color-text">${data.opp_name}</div>
-                                <div class="cr-vs-player-clan">${data.opp_clan || ''}</div>
-                            </div>
-                        </div>
-
-                        <div class="cr-vs-decks-grid-v2">
-                            <div class="cr-side-container">
-                                <div class="cr-tower-overlap">
-                                    <div class="cr-tower-card-premium" style="width:70px; height:90px;">
-                                        <img src="${pData.towerUrl}" class="cr-tower-img-premium">
-                                        <span class="cr-card-level-badge">LV ${pData.tLevel}</span>
-                                    </div>
-                                </div>
-                                <div id="p-grid-modal" style="z-index: 10; position: relative;">${pData.cardsHtml}</div>
-                            </div>
-
-                            <div class="cr-side-container">
-                                <div class="cr-tower-overlap">
-                                    <div class="cr-tower-card-premium" style="width:70px; height:90px;">
-                                        <img src="${oData.towerUrl}" class="cr-tower-img-premium cr-mirror-opponent">
-                                        <span class="cr-card-level-badge">LV ${oData.tLevel}</span>
-                                    </div>
-                                </div>
-                                <div id="o-grid-modal" style="z-index: 10; position: relative;">${oData.cardsHtml}</div>
-                            </div>
-                        </div>
-
-                        <div class="cr-vs-metrics-unified">
-                            <div class="cr-vs-footer-metrics">
-                                <div class="cr-metrics-wrap-p">
-                                    ${pData.metricsHtml}
-                                    <div class="cr-vs-date-inline">
-                                        <span>📅 ${data.date || ''}</span>
-                                        <span>🕒 ${data.time || '00:00'}</span>
-                                    </div>
-                                </div>
-                                <div class="cr-vs-metrics-divider"></div>
-                                <div class="cr-metrics-wrap-p">
-                                    ${oData.metricsHtml}
-                                    <div class="cr-vs-date-inline">
-                                        <span>📅 ${data.date || ''}</span>
-                                        <span>🕒 ${data.time || '00:00'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                
-            } catch(e) { console.error("Error updating preview:", e); }
+                    <div class        function updateBattlePreview(deckId, battleIdx, battleDataJson) {
+            // Modal removido conforme solicitação para economizar espaço
+            // A atualização agora é feita inline via updateOpponentView onde aplicável
+            console.log("updateBattlePreview called, but modal is disabled");
         }
 
         function closeBattleModal() {
@@ -2914,10 +2833,18 @@ class GitHubPagesHTMLGenerator:
                 const oCopyEl = document.getElementById(`o-copy-${oppId}`);
                 if (pCopyEl) pCopyEl.href = data.p_copy;
                 if (oCopyEl) oCopyEl.href = data.o_copy;
+
+                const pDateEl = document.getElementById(`p-date-${oppId}`);
+                const oDateEl = document.getElementById(`o-date-${oppId}`);
+                if (pDateEl) pDateEl.innerText = `📅 ${data.date} 🕒 ${data.time}`;
+                if (oDateEl) oDateEl.innerText = `📅 ${data.date} 🕒 ${data.time}`;
                 
                 const container = element.parentElement;
                 container.querySelectorAll('.cr-history-dot').forEach(el => el.classList.remove('active'));
                 element.classList.add('active');
+            } catch(e) { console.error("Error updating opponent view:", e); }
+        }
+t.add('active');
                 if (typeof log !== 'undefined') log.info("Vista do oponente " + oppId + " atualizada");
             } catch(e) { console.error("Error updating opponent view:", e); }
         }
@@ -3069,7 +2996,6 @@ class GitHubPagesHTMLGenerator:
         html_cards = "".join(f'<div class="cr-card-wrap-premium"><img src="{self.get_card_image_path(c)}" class="cr-card-img"></div>' for c in cards)
         return f'<div class="cr-grid-4x2">{html_cards}</div>'
 
-
     def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
         """Gera HTML para oponentes repetidos com match cards inline usando layout Premium v2."""
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
@@ -3092,17 +3018,13 @@ class GitHubPagesHTMLGenerator:
 
             html += f'''
             <div class="cr-deck-card cr-opp-card-row cr-glass-premium" id="opp-section-{i}">
-                <div class="cr-deck-header cr-opp-header-premium">
-                    <div class="cr-opp-header-content-v2" style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 15px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <span class="cr-opp-rank">#{i}</span>
-                            <span style="color: #94a3b8; font-size: 0.8em; font-weight: 800; text-transform: uppercase;">Oponente:</span>
-                            <span style="font-weight: 900; font-size: 1.2em; color: #f8fafc;">{opp['opponent_name']}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <span class="rival-badge {cat_class}-badge">{category}</span>
-                            <span class="cr-wr-badge" style="background:{wr_c}; font-weight: 900;">{wr}% WR</span>
-                        </div>
+                <div class="cr-deck-header cr-opp-header-premium" style="padding: 15px 25px;">
+                    <div class="cr-opp-header-content-v2" style="display: flex; align-items: center; gap: 15px; width: 100%; white-space: nowrap; overflow-x: auto; scrollbar-width: none;">
+                        <span class="cr-opp-rank" style="flex-shrink: 0;">#{i}</span>
+                        <span style="color: #94a3b8; font-size: 0.8em; font-weight: 800; text-transform: uppercase; flex-shrink: 0;">Oponente:</span>
+                        <span style="font-weight: 900; font-size: 1.1em; color: #f8fafc; flex-shrink: 0;">{opp['opponent_name']}</span>
+                        <span class="rival-badge {cat_class}-badge" style="flex-shrink: 0; margin-left: auto;">{category}</span>
+                        <span class="cr-wr-badge" style="background:{wr_c}; font-weight: 900; flex-shrink: 0;">{wr}% WR</span>
                     </div>
                 </div>
 
@@ -3158,19 +3080,27 @@ class GitHubPagesHTMLGenerator:
 
                         <div class="cr-vs-metrics-unified" style="padding-bottom: 10px;">
                             <div class="cr-vs-footer-metrics">
-                                <div class="cr-metrics-wrap-p" id="player-metrics-{i}">
-                                    {self._generate_metrics_panel_html_simple(my_metrics_f)}
+                                <div class="cr-side-metrics-group">
+                                    <div class="cr-metrics-wrap-p" id="player-metrics-{i}">
+                                        {self._generate_metrics_panel_html_simple(my_metrics_f)}
+                                    </div>
+                                    <div id="p-date-{i}" class="cr-vs-date-inline-p" style="margin-top:5px;">📅 {first_b.get('data_str','--/--').split(' ')[0]} 🕒 {first_b.get('data_str','00:00').split(' ')[1] if ' ' in first_b.get('data_str','') else '00:00'}</div>
                                 </div>
                                 <div class="cr-vs-metrics-divider"></div>
-                                <div class="cr-metrics-wrap-p" id="opp-metrics-{i}">
-                                    {self._generate_metrics_panel_html_simple(opp_metrics_f)}
+                                <div class="cr-side-metrics-group">
+                                    <div class="cr-metrics-wrap-p" id="opp-metrics-{i}">
+                                        {self._generate_metrics_panel_html_simple(opp_metrics_f)}
+                                    </div>
+                                    <div id="o-date-{i}" class="cr-vs-date-inline-p" style="margin-top:5px;">📅 {first_b.get('data_str','--/--').split(' ')[0]} 🕒 {first_b.get('data_str','00:00').split(' ')[1] if ' ' in first_b.get('data_str','') else '00:00'}</div>
                                 </div>
                             </div>
 
-                            <div class="cr-history-dots-wrap-inline" style="margin-top: 15px; padding: 0 15px;">
-                                <div style="color: rgba(255,255,255,0.4); font-size: 0.7em; font-weight: 800; margin-bottom: 8px; text-transform: uppercase;">Histórico:</div>
-                                <div class="cr-history-dots-row-inline" style="display: flex; gap: 8px; overflow-x: auto;">
-                                    {self._generate_history_dots(i, stats_list, player_name, player_clan, opp["opponent_name"], opp.get('opp_clan', ''), opp['opponent_tag'])}
+                            <div class="cr-history-dots-wrap-inline" style="margin-top: 15px; padding: 0 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: rgba(255,255,255,0.4); font-size: 0.7em; font-weight: 800; text-transform: uppercase;">Lutas:</span>
+                                    <div class="cr-history-dots-row-inline" style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;">
+                                        {self._generate_history_dots(i, stats_list, player_name, player_clan, opp["opponent_name"], opp.get('opp_clan', ''), opp['opponent_tag'])}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3183,8 +3113,6 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
             '''
-            
-        return html + "</div>"
 
 
 
@@ -3200,6 +3128,10 @@ class GitHubPagesHTMLGenerator:
             last = ld['last_encounter'][:16].replace('T', ' ')
             c_list = ld['cards']
             
+            # Obter métricas para o deck letal
+            metrics = self._get_deck_metrics(deck_str)
+            tower_url = metrics.get('tower_url', 'https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png')
+            
             html += f'''
             <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-left: 4px solid #f56565;">
                 <div class="cr-deck-header" style="background: rgba(245, 101, 101, 0.1);">
@@ -3209,19 +3141,34 @@ class GitHubPagesHTMLGenerator:
                     </div>
                 </div>
                 <div class="cr-deck-body cr-lethal-body">
-                    <div class="cr-lethal-grid-wrap">
-                        <div class="cr-grid-4x2">
-                            {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in c_list[:8])}
+                    <div class="cr-lethal-layout" style="display: flex; gap: 20px; align-items: center;">
+                        <div class="cr-side-container" style="min-height: auto; flex: 0 0 150px;">
+                            <div class="cr-tower-overlap" style="opacity: 0.15;">
+                                <img src="{tower_url}" class="cr-tower-img-premium" style="max-height: 100px;">
+                            </div>
+                            <div class="cr-tower-card-premium" style="width:70px; height:90px; margin: 0 auto;">
+                                <img src="{tower_url}" class="cr-tower-img-premium">
+                                <span class="cr-card-level-badge">LV {metrics.get('level', 14)}</span>
+                            </div>
+                        </div>
+                        <div class="cr-lethal-grid-wrap" style="flex: 1;">
+                            <div class="cr-grid-4x2">
+                                {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in c_list[:8])}
+                            </div>
+                            <div class="cr-deck-metrics-horizontal" style="margin-top: 10px; padding: 8px 15px;">
+                                <div class="cr-metric-inline"><span class="cr-icon">💧</span> <span class="cr-val">{metrics["avg"]}</span></div>
+                                <div class="cr-metric-inline"><span class="cr-icon">🔄</span> <span class="cr-val">{metrics["cycle"]}</span></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="cr-stats-panel cr-lethal-stats">
+                    <div class="cr-stats-panel cr-lethal-stats" style="margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
                         <div class="cr-lethal-info">
                             <strong style="color:#f56565;">Usuários comuns:</strong> {opponents}
                         </div>
-                        <div class="cr-lethal-date">
+                        <div class="cr-lethal-date" style="font-size: 0.8em; color: #94a3b8; margin-top: 5px;">
                             <strong>Última derrota:</strong> {last}
                         </div>
-                        <div class="cr-lethal-warning">
+                        <div class="cr-lethal-warning" style="margin-top: 10px; font-weight: 900; color: #f56565; text-transform: uppercase; letter-spacing: 1px; font-size: 0.7em;">
                             ⚠️ ALERTA: Counter de Alta Periculosidade
                         </div>
                     </div>
