@@ -3112,6 +3112,7 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
             '''
+        return html + "</div>"
 
 
 
