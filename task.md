@@ -10,3 +10,9 @@
 - [x] Aumento do tamanho das torres para 120px e implementação de molduras premium
 - [x] Implementação de Media Queries para Layout Vertical (Mobile Stack) no Palco VS
 - [x] Correção de sintaxe e redundâncias no CSS/JS do Dashboard
+- [x] Analisar o problema de "vácuo" vertical nos cards e modal.
+- [x] Corrigir a lógica de altura (`height: auto`, `min-height: 0`) no CSS injetado.
+- [x] Integrar a exibição do HP da torre abaixo do nível (badge LV).
+- [x] Garantir a visibilidade dos botões de seleção de batalha (dots) no footer.
+- [x] Eliminar o vácuo no final do modal container.
+- [x] Validar a sintaxe do arquivo `html_generator.py` e gerar o dashboard local.
