@@ -2976,6 +2976,20 @@ class GitHubPagesHTMLGenerator:
                     transform: translateY(-2px);
                     filter: brightness(1.2);
                 }
+                .cr-tower-zoom {
+                    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s ease !important;
+                    cursor: pointer;
+                    transform-origin: center bottom;
+                    will-change: transform;
+                    backface-visibility: hidden;
+                }
+                .cr-tower-zoom:hover {
+                    transform: scale(1.1) translateY(-5px) !important;
+                    filter: brightness(1.15) drop-shadow(0 10px 20px rgba(0,0,0,0.4)) !important;
+                }
+                .cr-mirror-opponent:hover {
+                    transform: scale(-1.1, 1.1) translateY(-5px) !important;
+                }
                 .cr-opp-card-row {
                     padding-bottom: 5px !important;
                 }
@@ -3102,11 +3116,11 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 0 12px 4px 12px !important; min-height: 0 !important; height: auto !important;">
                     <div class="cr-vs-stage-v2" style="height: auto !important; min-height: 0 !important;">
                         <!-- Amostragem da Batalha Premium v2 -->
-                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.2fr 0.6fr 1.2fr; align-items: center; gap: 10px; padding: 15px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
+                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.8fr 0.4fr 1.8fr; align-items: center; gap: 10px; padding: 15px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
                             <!-- Lado Esquerdo: Player Style -->
-                            <div style="text-align: left; display: flex; flex-direction: column; gap: 2px;">
-                                <div style="font-family: 'Krona One', sans-serif, system-ui; font-size: 0.75em; letter-spacing: 1px; color: #8dbaff; line-height: 1.2; font-weight: 900;">
-                                    ツ -- デー ΔЯCΛΔΞΩ<br><span style="font-size: 1.1em; color: #fff;">{player_name}</span>
+                            <div style="text-align: left; display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
+                                <div style="font-family: 'Krona One', sans-serif, system-ui; font-size: 1.1em; color: #fff; line-height: 1.2; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {player_name}
                                 </div>
                                 <div style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">{player_clan}</div>
                             </div>
@@ -3122,9 +3136,9 @@ class GitHubPagesHTMLGenerator:
                             </div>
 
                             <!-- Lado Direito: Opponent Style -->
-                            <div style="text-align: right; display: flex; flex-direction: column; gap: 2px;">
+                            <div style="text-align: right; display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
                                 <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{opp['opponent_tag']}</div>
-                                <div style="font-size: 1.25em; font-weight: 950; color: #f87171; text-transform: uppercase; letter-spacing: -0.5px; line-height: 1;">
+                                <div style="font-size: 1.25em; font-weight: 950; color: #f87171; text-transform: uppercase; letter-spacing: -0.5px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     <span style="opacity: 0.4; font-size: 0.6em; vertical-align: middle; margin-right: 2px;">OPONENTE:</span>{opp['opponent_name']}
                                 </div>
                                 <div style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase;">{opp.get('opp_clan', 'Sem Clã')}</div>
@@ -3135,7 +3149,7 @@ class GitHubPagesHTMLGenerator:
                         <div class="cr-vs-decks-grid-v2" style="gap: 10px; margin-top: 15px; height: auto !important; min-height: 0 !important;">
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 130px !important; height: auto !important; background: transparent; padding: 0;">
                                 <div id="p-tower-container-{i}" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; z-index: 1;">
-                                    <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" style="width: 100%; height: 100%; object-fit: contain;">
+                                    <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" class="cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain;">
                                     <div style="margin-top: -10px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="p-tower-bar-{i}" style="width: 100%; height: 100%; background: #4ade80;"></div></div>
                                         <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
@@ -3149,7 +3163,7 @@ class GitHubPagesHTMLGenerator:
 
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 130px !important; height: auto !important; background: transparent; padding: 0;">
                                 <div id="o-tower-container-{i}" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; z-index: 1;">
-                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-mirror-opponent" style="width: 100%; height: 100%; object-fit: contain;">
+                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-mirror-opponent cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain;">
                                     <div style="margin-top: -10px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="o-tower-bar-{i}" style="width: 100%; height: 100%; background: #f87171;"></div></div>
                                         <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
@@ -5400,7 +5414,7 @@ class GitHubPagesHTMLGenerator:
 
         .cr-modal-container {
             width: 95%;
-            max-width: 1250px;
+            max-width: 1450px;
             max-height: 92vh;
             background: rgba(15, 23, 42, 0.95);
             border: 1px solid rgba(255,255,255,0.1);
@@ -5902,7 +5916,7 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-modal-container {
-            width: 1250px !important;
+            width: 1450px !important;
             max-width: 98% !important;
             background: #0f172a; /* Fundo sólido para legibilidade máxima */
             border: 1px solid rgba(255, 255, 255, 0.2);
