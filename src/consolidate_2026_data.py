@@ -14,7 +14,8 @@ FIELDNAMES = [
     'elixir_vazado_jogador', 'elixir_vazado_oponente', 'nivel_torre_jogador', 
     'vida_torre_rei_jogador', 'vida_torre_rei_oponente', 'vida_torres_princesa_jogador', 
     'vida_torres_princesa_oponente', 'trofes_iniciais_jogador', 'trofes_finais_jogador', 
-    'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente'
+    'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente',
+    'torre_jogador', 'torre_oponente'
 ]
 
 def parse_date(date_str):
