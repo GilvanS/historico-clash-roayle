@@ -2427,14 +2427,14 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-body" style="padding: 10px 15px; background: transparent; overflow: visible;">
                     <div class="cr-main-vs-stage" style="padding: 0; min-height: 0;">
                         <!-- Amostragem da Batalha Premium v2 -->
-                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.8fr 0.4fr 1.8fr; align-items: center; gap: 10px; padding: 10px 0 15px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
+                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.5fr 1fr 1.5fr; align-items: center; gap: 10px; padding: 10px 0 15px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
                             <div style="text-align: left; overflow: hidden;">
                                 <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{self.player_tag}</div>
                                 <div id="p-name-{deck_id}" style="font-family: 'Krona One', sans-serif; font-size: 0.95em; color: #fff; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{player_name}</div>
                                 <div id="p-clan-{deck_id}" style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800;">{player_clan or 'Sem Clã'}</div>
                             </div>
-                            <div style="text-align: center;">
-                                <div id="score-{deck_id}" style="font-size: 2.2em; font-weight: 950; color: #fff; letter-spacing: -2px;">{first_b.get('coroas_jogador', 0)} - {first_b.get('coroas_oponente', 0)}</div>
+                            <div style="text-align: center; min-width: 140px; flex-shrink: 0;">
+                                <div id="score-{deck_id}" style="font-size: 2.2em; font-weight: 950; color: #fff; letter-spacing: -1px; white-space: nowrap; line-height: 1;">{first_b.get('coroas_jogador', 0)} - {first_b.get('coroas_oponente', 0)}</div>
                                 <div id="mode-{deck_id}" style="font-size: 0.45em; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase;">{first_b.get('modo_jogo', 'Batalha')}</div>
                             </div>
                             <div style="text-align: right; overflow: hidden;">
@@ -2456,11 +2456,14 @@ class GitHubPagesHTMLGenerator:
                                     </div>
                                 </div>
                                 <div id="p-grid-{deck_id}" style="margin-top: 55px;">{self._generate_deck_grid_html_simple(first_b.get('my_deck', deck['deck_cards']))}</div>
+                                <div id="player-metrics-{deck_id}" style="margin-top: 12px; display: flex; gap: 10px; justify-content: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 10px;">
+                                    {self._generate_metrics_panel_html_simple(my_m_f)}
+                                </div>
                             </div>
 
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
                                 <div id="o-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 1;">
-                                    <img id="o-tower-img-{deck_id}" src="{opp_m_f['tower_url']}" class="cr-tower-img-large cr-mirror-opponent" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
+                                    <img id="o-tower-img-{deck_id}" src="{opp_m_f['tower_url']}" class="cr-tower-img-large" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
                                     <span id="o-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if opp_m_f['level'] == 'N/A' else '' }">LV {opp_m_f['level']}</span>
                                     <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="o-tower-bar-{deck_id}" style="width: 100%; height: 100%; background: #f87171;"></div></div>
@@ -2468,21 +2471,15 @@ class GitHubPagesHTMLGenerator:
                                     </div>
                                 </div>
                                 <div id="o-grid-{deck_id}" style="margin-top: 55px;">{self._generate_deck_grid_html_simple(first_b.get('opp_deck', ''))}</div>
+                                <div id="opp-metrics-{deck_id}" style="margin-top: 12px; display: flex; gap: 10px; justify-content: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 10px;">
+                                    {self._generate_metrics_panel_html_simple(opp_m_f)}
+                                </div>
                             </div>
 
                         </div>
 
                         <!-- Footer Metrics -->
-                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 10px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                            <div style="display: grid; grid-template-columns: 1fr 1px 1fr; gap: 10px; align-items: center;">
-                                <div id="player-metrics-{deck_id}" style="display: flex; gap: 8px; justify-content: center;">
-                                    {self._generate_metrics_panel_html_simple(my_m_f)}
-                                </div>
-                                <div style="width: 1px; background: rgba(255,255,255,0.1); height: 15px;"></div>
-                                <div id="opp-metrics-{deck_id}" style="display: flex; gap: 8px; justify-content: center;">
-                                    {self._generate_metrics_panel_html_simple(opp_m_f)}
-                                </div>
-                            </div>
+                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 10px; background: transparent; border: none;">
                             <!-- Botoes de Copia -->
                             <div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px;">
                                 <button id="p-copy-{deck_id}" onclick="copyToClipboardDeckDirect({[c.strip() for c in first_b.get('my_deck', deck['deck_cards']).replace(' | ','|').split('|') if c.strip()]})" 
@@ -2987,9 +2984,6 @@ class GitHubPagesHTMLGenerator:
                     transform: scale(1.1) translateY(-5px) !important;
                     filter: brightness(1.15) drop-shadow(0 10px 20px rgba(0,0,0,0.4)) !important;
                 }
-                .cr-mirror-opponent:hover {
-                    transform: scale(-1.1, 1.1) translateY(-5px) !important;
-                }
                 .cr-opp-card-row {
                     padding-bottom: 5px !important;
                 }
@@ -3060,21 +3054,21 @@ class GitHubPagesHTMLGenerator:
         leak_icon = local_leak_icon if leaked > 0.1 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
         
         return f"""
-            <div class="cr-metric-inline" title="Elixir" style="display: flex; align-items: center; gap: 4px;">
-                <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 14px; height: 14px;">
-                <span style="font-weight: 800; font-size: 0.9em; color: #fff;">{metrics['avg']}</span>
+            <div class="cr-metric-inline" title="Elixir" style="display: flex; align-items: center; gap: 5px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 18px; height: 18px;">
+                <span style="font-weight: 800; font-size: 1.1em; color: #fff;">{metrics['avg']}</span>
             </div>
-            <div class="cr-metric-inline" title="Ciclo" style="display: flex; align-items: center; gap: 4px;">
-                <img src="https://cdn.royaleapi.com/static/img/ui/deck-cycle.png" style="width: 14px; height: 14px; filter: brightness(1.2);">
-                <span style="font-weight: 800; font-size: 0.9em; color: #fff;">{metrics['cycle']}</span>
+            <div class="cr-metric-inline" title="Ciclo" style="display: flex; align-items: center; gap: 5px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/deck-cycle.png" style="width: 18px; height: 18px; filter: brightness(1.2);">
+                <span style="font-weight: 800; font-size: 1.1em; color: #fff;">{metrics['cycle']}</span>
             </div>
-            <div class="cr-metric-inline {leak_class}" title="Leak" style="display: flex; align-items: center; gap: 4px;">
-                <img src="{leak_icon}" style="width: 14px; height: 14px; opacity: {0.5 if leaked <= 0.1 else 1}; filter: { 'drop-shadow(0 0 8px rgba(255,0,0,0.8))' if leaked > 0.1 else 'none' };">
-                <span style="font-weight: 800; font-size: 0.9em; color: {metrics.get('leaked_color', '#fff')};">{metrics.get('leaked_label', 'N/A')}</span>
+            <div class="cr-metric-inline {leak_class}" title="Leak" style="display: flex; align-items: center; gap: 5px;">
+                <img src="{leak_icon}" style="width: 18px; height: 18px; opacity: {0.5 if leaked <= 0.1 else 1}; filter: { 'drop-shadow(0 0 8px rgba(255,0,0,0.8))' if leaked > 0.1 else 'none' };">
+                <span style="font-weight: 800; font-size: 1.1em; color: {metrics.get('leaked_color', '#fff')};">{metrics.get('leaked_label', 'N/A')}</span>
             </div>
-            <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 4px;">
-                <img src="https://cdn.royaleapi.com/static/img/ui/king-tower.png" style="width: 14px; height: 14px;">
-                <span style="font-weight: 800; font-size: 0.9em; color: #fff;">{t_hp}</span>
+            <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 5px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/king-tower.png" style="width: 18px; height: 18px;">
+                <span style="font-weight: 800; font-size: 1.1em; color: #fff;">{t_hp}</span>
             </div>
         """
 
@@ -3118,7 +3112,7 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 0 12px 4px 12px !important; min-height: 0 !important; height: auto !important;">
                     <div class="cr-vs-stage-v2" style="height: auto !important; min-height: 0 !important;">
                         <!-- Amostragem da Batalha Premium v2 -->
-                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.8fr 0.4fr 1.8fr; align-items: center; gap: 10px; padding: 15px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
+                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.5fr 1fr 1.5fr; align-items: center; gap: 10px; padding: 15px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
                             <!-- Lado Esquerdo: Player Style -->
                             <div style="text-align: left; display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
                                 <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{self.player_tag}</div>
@@ -3130,7 +3124,7 @@ class GitHubPagesHTMLGenerator:
 
                             <!-- Centro: Placar e Modo -->
                             <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                                <div id="score-{i}" style="font-size: 2.8em; font-weight: 950; color: #fff; letter-spacing: -3px; line-height: 0.9; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                                <div id="score-{i}" style="font-size: 2.8em; font-weight: 950; color: #fff; letter-spacing: -1px; line-height: 1; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">
                                     {first_b.get('crowns', 0)} - {first_b.get('opponent_crowns', 0)}
                                 </div>
                                 <div id="mode-{i}" style="background: rgba(15, 23, 42, 0.8); padding: 2px 10px; border-radius: 6px; font-size: 0.5em; font-weight: 900; color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.08); text-transform: uppercase; white-space: nowrap;">
@@ -3162,11 +3156,14 @@ class GitHubPagesHTMLGenerator:
                                     </div>
                                 </div>
                                 <div id="p-grid-{i}" style="margin-top: 45px;">{self._generate_deck_grid_html_simple(first_b['my_deck'])}</div>
+                                <div id="player-metrics-{i}" style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 8px;">
+                                    {self._generate_metrics_panel_html_simple(my_metrics_f)}
+                                </div>
                             </div>
 
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 130px !important; height: auto !important; background: transparent; padding: 0;">
                                 <div id="o-tower-container-{i}" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; z-index: 1;">
-                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); filter: drop-shadow(0 0 12px rgba(248, 113, 113, 0.4));">
+                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 12px rgba(248, 113, 113, 0.4));">
                                     <div style="margin-top: -10px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="o-tower-bar-{i}" style="width: 100%; height: 100%; background: #f87171;"></div></div>
                                         <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
@@ -3176,22 +3173,14 @@ class GitHubPagesHTMLGenerator:
                                     </div>
                                 </div>
                                 <div id="o-grid-{i}" style="margin-top: 45px;">{self._generate_deck_grid_html_simple(first_b['opp_deck'])}</div>
+                                <div id="opp-metrics-{i}" style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 8px;">
+                                    {self._generate_metrics_panel_html_simple(opp_metrics_f)}
+                                </div>
                             </div>
                         </div>
 
                         <!-- Footer Premium v2 - Estrutura de Paridade com Imagem -->
-                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 12px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative;">
-                            <!-- Linha 1: Metricas (Dados da Luta) -->
-                            <div style="display: grid; grid-template-columns: 1fr 1px 1fr; gap: 10px; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.03);">
-                                <div id="player-metrics-{i}" style="display: flex; gap: 10px; justify-content: center;">
-                                    {self._generate_metrics_panel_html_simple(my_metrics_f)}
-                                </div>
-                                <div style="width: 1px; background: rgba(255,255,255,0.1); height: 15px;"></div>
-                                <div id="opp-metrics-{i}" style="display: flex; gap: 10px; justify-content: center;">
-                                    {self._generate_metrics_panel_html_simple(opp_metrics_f)}
-                                </div>
-                            </div>
-                            
+                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 12px; background: transparent; border: none; position: relative;">
                             <!-- Linha 2: Botoes de Acao (Copia de Decks) -->
                             <div style="margin-top: 10px; display: flex; justify-content: center; gap: 12px;">
                                 <button id="p-copy-{i}" onclick="copyToClipboardDeckDirect({[c.strip() for c in first_b.get('my_deck','').split('|') if c.strip()]})" 
@@ -3259,7 +3248,7 @@ class GitHubPagesHTMLGenerator:
                             <div class="cr-side-container" style="position: relative; display: flex; flex-direction: column; align-items: center; background: transparent; padding: 0; min-height: auto; overflow: visible;">
                                 <!-- Torre Flutuante Premium v2 -->
                                 <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 95px; height: 95px; z-index: 10;">
-                                    <img src="{tower_url}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.6)); transform: scaleX(-1);">
+                                    <img src="{tower_url}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.6));">
                                     <div style="margin-top: -15px; display: flex; flex-direction: column; align-items: center; gap: 2px;">
                                         <div class="cr-hp-bar-mini" style="width: 50px; height: 3px; background: rgba(0,0,0,0.5); border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
                                             <div style="width: 100%; height: 100%; background: #f87171;"></div>
@@ -3278,11 +3267,9 @@ class GitHubPagesHTMLGenerator:
                                 </div>
                             </div>
                         </div>
-                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 12px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; width: 100%; max-width: 400px;">
-                            <div style="display: flex; justify-content: center; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.03);">
-                                <div style="display: flex; gap: 10px; justify-content: center;">
-                                    {self._generate_metrics_panel_html_simple(metrics)}
-                                </div>
+                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 12px; background: transparent; border: none; position: relative; width: 100%; max-width: 400px;">
+                            <div style="margin-top: -5px; margin-bottom: 15px; display: flex; gap: 10px; justify-content: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 10px;">
+                                {self._generate_metrics_panel_html_simple(metrics)}
                             </div>
                             <div style="margin-top: 10px; display: flex; justify-content: center;">
                                 <button onclick="copyToClipboardDeckDirect({cards_for_copy})" 
@@ -4797,7 +4784,7 @@ class GitHubPagesHTMLGenerator:
             align-items: center;
             justify-content: center;
             gap: 2px;
-            flex: 0 0 90px;
+            flex: 0 0 140px;
         }
 
         .cr-vs-score-main {
@@ -4952,14 +4939,6 @@ class GitHubPagesHTMLGenerator:
             transform: translateY(-8px) scale(1.06);
             filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.8));
             z-index: 5;
-        }
-
-        .cr-mirror-opponent {
-            transform: scaleX(-1);
-        }
-        
-        .cr-mirror-opponent:hover {
-            transform: translateY(-8px) scale(-1.06, 1.06);
         }
 
         .cr-modal-score-center {
