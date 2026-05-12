@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class MemberPageGenerator(GitHubPagesHTMLGenerator):
-    def __init__(self, db_path: str = None):
+    def __init__(self, output_path: str = './'):
         super().__init__()
+        self.output_path = output_path
     
     def get_member_deck_history(self, player_tag: str) -> List[Dict]:
         """Get complete deck change history for a member, consolidating consecutive identical decks"""
@@ -180,90 +181,80 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
         return self.generate_member_full_html(member_info, deck_history)
     
     def generate_member_error_page(self) -> str:
-        """Generate error page when member data is not available"""
-        return """
+        """Gerar página de erro quando os dados do membro não estão disponíveis"""
+        return f"""
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Member Profile - No Data</title>
+    <title>Perfil do Membro - Sem Dados</title>
     <style>
-        @font-face {
-            font-family: 'Clash-Regular';
-            src: url('assets/fonts/Clash_Regular.otf') format('opentype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
-        @font-face {
-            font-family: 'Supercell-Magic';
-            src: url('assets/fonts/Supercell-Magic Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
-        body { 
-            font-family: 'Clash-Regular', 'Supercell-Magic', Arial, sans-serif; 
-            text-align: center; 
-            padding: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .error-container {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 40px;
+        {self.get_base_css_styles()}
+        .error-container {{
             max-width: 600px;
-            margin: 0 auto;
-        }
-        .back-link {
-            color: #4299e1;
-            text-decoration: none;
-            font-weight: bold;
-        }
+            margin: 100px auto;
+            text-align: center;
+            padding: 60px;
+        }}
+        .error-icon {{
+            font-size: 5em;
+            margin-bottom: 20px;
+            display: block;
+        }}
     </style>
 </head>
 <body>
-    <div class="error-container">
-        <h1>👤 Member Profile</h1>
-        <h2>No Member Data Available</h2>
-        <p>Member data is being generated. Please check back in a few minutes.</p>
-        <p><a href="clan.html" class="back-link">← Back to Clan Analytics</a></p>
+    <div class="container">
+        <div class="glass-panel error-container">
+            <span class="error-icon">👤</span>
+            <h1 class="clash-font">Perfil não encontrado</h1>
+            <p style="color: #94a3b8; margin: 20px 0;">Os dados deste membro estão sendo processados ou o jogador não foi encontrado no clã atualmente.</p>
+            <div style="margin-top: 30px;">
+                <a href="clan.html" class="back-link" style="display: inline-block; background: var(--primary); color: white; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">← Voltar ao Clã</a>
+            </div>
+        </div>
     </div>
 </body>
 </html>
         """
     
     def generate_deck_timeline_html(self, deck_history: List[Dict]) -> str:
-        """Generate HTML timeline of deck changes"""
+        """Gerar linha do tempo HTML das mudanças de deck"""
         if not deck_history:
-            return "<p>No deck history available yet.</p>"
+            return '<div class="glass-panel" style="padding: 30px; text-align: center; color: #94a3b8;">Nenhum histórico de deck disponível ainda.</div>'
         
         timeline_html = '<div class="deck-timeline">'
         
         for i, deck in enumerate(deck_history):
-            is_current = i == 0  # First item is most recent
+            is_current = i == 0  # Primeiro item é o mais recente
             timeline_class = "timeline-current" if is_current else "timeline-past"
+            status_badge = '<span class="status-badge current">Atual</span>' if is_current else '<span class="status-badge past">Anterior</span>'
             
             deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
+            copy_link = self.get_copy_deck_link(deck['deck_cards'].split(','))
             
             timeline_html += f'''
-                <div class="timeline-item {timeline_class}">
+                <div class="timeline-item {timeline_class} glass-panel">
                     <div class="timeline-marker">
                         <div class="timeline-date">{self.format_date(deck['first_seen'])}</div>
                         <div class="timeline-duration">{deck['duration']}</div>
                     </div>
                     <div class="timeline-content">
-                        <div class="deck-header">
-                            <h3>{'Current Deck' if is_current else 'Previous Deck'}</h3>
-                            <div class="deck-stats">
-                                <span class="stat">⭐ {deck['favorite_card'] or 'None'}</span>
-                                <span class="stat">🏆 {deck['trophies']:,}</span>
-                                <span class="stat">🏟️ {deck['arena_name'] or 'Unknown'}</span>
+                        <div class="deck-header-row">
+                            <div class="deck-title-group">
+                                <h3 class="clash-font">{status_badge} Histórico de Deck</h3>
+                                <div class="deck-meta">
+                                    <span class="meta-item">🏆 {deck['trophies']:,}</span>
+                                    <span class="meta-item">🏟️ {deck['arena_name'] or 'Desconhecida'}</span>
+                                    <span class="meta-item">⭐ {deck['favorite_card'] or 'Nenhuma'}</span>
+                                </div>
                             </div>
+                            <a href="{copy_link}" class="copy-btn">Copiar Deck</a>
                         </div>
-                        {deck_cards_html}
+                        <div class="timeline-deck-grid">
+                            {deck_cards_html}
+                        </div>
                     </div>
                 </div>
             '''
@@ -272,7 +263,7 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
         return timeline_html
     
     def generate_member_full_html(self, member_info: Dict, deck_history: List[Dict]) -> str:
-        """Generate the complete member page HTML"""
+        """Gerar o HTML completo da página do membro"""
         
         role_class = {
             'leader': 'leader',
@@ -281,227 +272,263 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
             'member': 'member'
         }.get(member_info['role'], 'member')
         
-        role_display = member_info['role'].replace('coLeader', 'Co-Leader')
+        # Tradução de cargos
+        role_display = {
+            'leader': 'Líder',
+            'coLeader': 'Co-Líder',
+            'elder': 'Veterano',
+            'member': 'Membro'
+        }.get(member_info['role'], 'Membro')
         
         deck_timeline_html = self.generate_deck_timeline_html(deck_history)
         
         css_styles = self.get_base_css_styles() + """
-        
-        /* Member Page Specific Styles */
-        .page-header {
+        /* Member Page Specific Styles - Premium v2 */
+        .member-profile-header {
+            padding: 60px 40px;
+            margin-bottom: 40px;
             text-align: center;
-            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
         }
-        
-        .back-link {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
+
+        .member-avatar {
+            font-size: 4em;
+            background: rgba(255,255,255,0.05);
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .member-name-tag {
+            font-size: 3.5em;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .role-badge {
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .role-leader { background: linear-gradient(135deg, #f6e05e 0%, #d69e2e 100%); color: #000; }
+        .role-co-leader { background: linear-gradient(135deg, #63b3ed 0%, #3182ce 100%); color: #fff; }
+        .role-elder { background: linear-gradient(135deg, #68d391 0%, #38a169 100%); color: #fff; }
+        .role-member { background: linear-gradient(135deg, #a0aec0 0%, #718096 100%); color: #fff; }
+
+        .member-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .deck-timeline {
+            position: relative;
+            padding-left: 20px;
+            margin-top: 40px;
+        }
+
+        .timeline-item {
+            margin-bottom: 40px;
+            padding: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            border-color: var(--primary);
+            transform: translateX(10px);
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -100px;
+            top: 30px;
+            width: 80px;
+            text-align: right;
+        }
+
+        .timeline-date {
+            font-size: 0.85em;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .timeline-duration {
+            font-size: 0.75em;
+            color: #64748b;
+        }
+
+        .deck-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .deck-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            font-size: 0.85em;
+            background: rgba(255,255,255,0.05);
+            padding: 5px 12px;
+            border-radius: 8px;
+            color: #cbd5e0;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .status-badge.current { background: var(--success); color: #fff; }
+        .status-badge.past { background: rgba(255,255,255,0.1); color: #94a3b8; }
+
+        .copy-btn {
+            background: var(--primary);
             color: white;
             text-decoration: none;
             padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            transition: background 0.3s ease;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--primary-glow);
         }
-        
-        .back-link:hover {
-            background: rgba(255, 255, 255, 0.3);
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--primary-glow);
         }
-        
-        .member-header {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            text-align: center;
-        }
-        
-        .member-header h1 {
-            color: #4a5568;
-            margin-bottom: 15px;
-            font-size: 2.5em;
-        }
-        
-        .member-role {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-        
-        .role-leader { background: #d69e2e; color: white; }
-        .role-co-leader { background: #3182ce; color: white; }
-        .role-elder { background: #38a169; color: white; }
-        .role-member { background: #718096; color: white; }
-        
-        .member-stats {
+
+        .timeline-deck-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
         }
-        
-        .member-stat {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        
-        .member-stat .value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4299e1;
-        }
-        
-        .member-stat .label {
-            color: #666;
-            font-size: 0.9em;
-        }
-        
-        /* Timeline Styles */
-        .deck-timeline {
-            position: relative;
-            padding-left: 30px;
-        }
-        
-        .deck-timeline::before {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e2e8f0;
-        }
-        
-        .timeline-item {
-            position: relative;
+
+        .back-btn-container {
             margin-bottom: 30px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        
-        .timeline-current {
-            border-left: 4px solid #38a169;
+
+        .back-btn {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        .timeline-past {
-            border-left: 4px solid #cbd5e0;
+
+        .back-btn:hover {
+            color: var(--primary);
         }
-        
-        .timeline-marker {
-            position: absolute;
-            left: -45px;
-            top: 20px;
-            text-align: center;
-            background: white;
-            padding: 5px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .timeline-date {
-            font-size: 0.8em;
-            color: #4299e1;
-            font-weight: bold;
-        }
-        
-        .timeline-duration {
-            font-size: 0.7em;
-            color: #718096;
-        }
-        
-        .deck-header {
-            margin-bottom: 15px;
-        }
-        
-        .deck-header h3 {
-            color: #2d3748;
-            margin-bottom: 8px;
-        }
-        
-        .deck-stats {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .stat {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.9em;
-        }
-        
-        @media (max-width: 768px) {
-            .member-stats { grid-template-columns: 1fr; }
-            .deck-stats { flex-direction: column; gap: 8px; }
-            .timeline-marker { left: -35px; }
+
+        @media (max-width: 900px) {
+            .timeline-marker {
+                position: static;
+                width: 100%;
+                text-align: left;
+                margin-bottom: 15px;
+            }
+            .timeline-deck-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .deck-header-row {
+                flex-direction: column;
+            }
         }
         """
         
         return f"""
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Member Profile - {member_info['name']}</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <title>Perfil de Membro - {member_info['name']}</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>{css_styles}</style>
 </head>
 <body>
     <div class="container">
-        <div class="page-header">
-            <a href="clan.html" class="back-link">← Back to Clan Analytics</a>
+        <div class="back-btn-container">
+            <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
         </div>
         
-        <div class="member-header">
-            <h1>👤 {member_info['name']}</h1>
-            <div class="member-role role-{role_class}">{role_display}</div>
-            <div class="member-stats">
-                <div class="member-stat">
-                    <div class="value">{member_info['trophies']:,}</div>
-                    <div class="label">Current Trophies</div>
+        <header class="glass-panel member-profile-header">
+            <div class="member-avatar">👤</div>
+            <div class="member-info-group">
+                <h1 class="clash-font member-name-tag">{member_info['name']}</h1>
+                <span class="role-badge role-{role_class}">{role_display}</span>
+            </div>
+            
+            <div class="member-stats-grid">
+                <div class="stat-card">
+                    <h3>Troféus Atuais</h3>
+                    <div class="value">🏆 {member_info['trophies']:,}</div>
                 </div>
-                <div class="member-stat">
-                    <div class="value">{member_info['donations']}</div>
-                    <div class="label">Donations Given</div>
+                <div class="stat-card">
+                    <h3>Doações Dadas</h3>
+                    <div class="value">↑ {member_info['donations']}</div>
                 </div>
-                <div class="member-stat">
-                    <div class="value">{member_info['donations_received']}</div>
-                    <div class="label">Donations Received</div>
+                <div class="stat-card">
+                    <h3>Doações Recebidas</h3>
+                    <div class="value">↓ {member_info['donations_received']}</div>
                 </div>
-                <div class="member-stat">
-                    <div class="value">{len(deck_history)}</div>
-                    <div class="label">Deck Changes</div>
+                <div class="stat-card">
+                    <h3>Mudanças de Deck</h3>
+                    <div class="value">🔄 {len(deck_history)}</div>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="section">
-            <h2>🃏 Deck Change Timeline</h2>
-            <p style="color: #666; margin-bottom: 15px; font-style: italic;">
-                Complete history of deck changes and favorite card preferences.
+        <section class="section">
+            <h2 class="clash-font">🃏 Linha do Tempo de Decks</h2>
+            <p style="color: #94a3b8; margin-bottom: 30px; font-style: italic;">
+                Histórico completo de trocas de decks e evolução de cartas favoritas.
             </p>
             {deck_timeline_html}
-        </div>
+        </section>
 
-        <div class="footer">
-            <p>Member profile generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p>Last seen: {self.format_time_ago(member_info['last_seen'])}</p>
-            <p><a href="clan.html" class="back-link">← Back to Clan Analytics</a></p>
-        </div>
+        <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
+            <p>Perfil gerado em {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</p>
+            <p>Visto por último: {self.format_time_ago(member_info['last_seen'])}</p>
+            <div style="margin-top: 20px;">
+                <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
+            </div>
+        </footer>
     </div>
 </body>
 </html>
@@ -509,7 +536,11 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
 
 def main():
     """Generate member pages for all clan members"""
-    generator = MemberPageGenerator()
+    # Get the repository root directory (one level up from src)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.dirname(script_dir)
+    
+    generator = MemberPageGenerator(output_path=root_dir)
     generated_pages = []
     
     # Tenta obter membros via SQL ou fallback para Cache de CSV
@@ -527,20 +558,18 @@ def main():
         print("No clan members found")
         return []
     
-    # Ensure docs directory exists
-    os.makedirs('../docs', exist_ok=True)
-    
     # Save in root directory
     for player_tag, name in members:
         html_content = generator.generate_member_page(player_tag)
-        filename = f"member_{generator.safe_filename(name)}.html"
-        filepath = f"../{filename}"
+        safe_name = generator.safe_filename(name)
+        filename = f"member_{safe_name}.html"
+        filepath = os.path.join(root_dir, filename)
         
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(html_content)
         
         generated_pages.append((name, filename))
-        print(f"Generated: ../{filename}")
+        print(f"Generated: {filepath}")
     
     print(f"Generated {len(generated_pages)} member pages")
     return generated_pages
