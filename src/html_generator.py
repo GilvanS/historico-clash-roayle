@@ -2795,6 +2795,16 @@ class GitHubPagesHTMLGenerator:
                 if (scoreEl) scoreEl.innerText = `${data.crowns || 0} - ${data.o_crowns || 0}`;
                 if (modeEl) modeEl.innerText = data.mode || 'Batalha';
                 
+                // Update names and tags
+                const pNameEl = document.getElementById(`p-name-${oppId}`);
+                const oNameEl = document.getElementById(`o-name-${oppId}`);
+                const pTagEl = document.getElementById(`p-tag-${oppId}`);
+                const oTagEl = document.getElementById(`o-tag-${oppId}`);
+                if (pNameEl && data.p_name) pNameEl.innerText = data.p_name;
+                if (oNameEl && data.o_name) oNameEl.innerText = data.o_name;
+                if (pTagEl && data.p_tag) pTagEl.innerText = `#${data.p_tag}`;
+                if (oTagEl && data.o_tag) oTagEl.innerText = `#${data.o_tag}`;
+                
                 // Update metrics
                 const pMetricsEl = document.getElementById(`player-metrics-${oppId}`);
                 const oMetricsEl = document.getElementById(`opp-metrics-${oppId}`);
@@ -3032,7 +3042,11 @@ class GitHubPagesHTMLGenerator:
                 "p_hp": my_m.get('hp', '--'),
                 "o_hp": opp_m.get('hp', '--'),
                 "p_deck_list": [c.strip() for c in b.get('my_deck','').split('|') if c.strip()],
-                "o_deck_list": [c.strip() for c in b.get('opp_deck','').split('|') if c.strip()]
+                "o_deck_list": [c.strip() for c in b.get('opp_deck','').split('|') if c.strip()],
+                "p_name": p_name,
+                "p_tag": self.player_tag,
+                "o_name": o_name,
+                "o_tag": o_tag
             }
             
             data_attr = json.dumps(battle_data).replace('"', '&quot;')
@@ -3120,8 +3134,8 @@ class GitHubPagesHTMLGenerator:
                         <div class="cr-vs-top-row" style="padding: 10px 20px; margin-bottom: 0;">
                             <div class="cr-tower-stage-p">
                                 <div style="text-align: center; margin-bottom: 8px;">
-                                    <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{self.player_tag}</div>
-                                    <div style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #fff; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{player_name}</div>
+                                    <div id="p-tag-{i}" style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{self.player_tag}</div>
+                                    <div id="p-name-{i}" style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #fff; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{player_name}</div>
                                 </div>
                                 <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
                                     <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" class="cr-tower-img-large" style="width: 110px; height: 110px; margin-bottom: 0;">
@@ -3135,14 +3149,14 @@ class GitHubPagesHTMLGenerator:
                                     {first_b.get('crowns', 0)} - {first_b.get('opponent_crowns', 0)}
                                 </div>
                                 <div id="mode-{i}" style="background: rgba(15, 23, 42, 0.9); padding: 3px 12px; border-radius: 8px; font-size: 0.55em; font-weight: 900; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.12); text-transform: uppercase; letter-spacing: 1px;">
-                                    {first_b.get('modo_jogo', 'Batalha')}
+                                    {first_b.get('game_mode', 'Batalha')}
                                 </div>
                             </div>
 
                             <div class="cr-tower-stage-p">
                                 <div style="text-align: center; margin-bottom: 8px;">
-                                    <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{opp['opponent_tag']}</div>
-                                    <div style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #f87171; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{opp['opponent_name']}</div>
+                                    <div id="o-tag-{i}" style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{opp['opponent_tag']}</div>
+                                    <div id="o-name-{i}" style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #f87171; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{opp['opponent_name']}</div>
                                 </div>
                                 <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
                                     <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-tower-img-large" style="width: 110px; height: 110px; margin-bottom: 0;">
@@ -3203,14 +3217,13 @@ class GitHubPagesHTMLGenerator:
         return html + "</div>"
 
     def generate_lethal_decks_html(self, lethal_decks: List[Dict]) -> str:
-        """Gera HTML para os decks que mais causam derrotas com layout Premium v2."""
+        """Gera HTML para os decks que mais causam derrotas com layout Premium v2 (Towers on Top)."""
         if not lethal_decks: return '<div class="cr-empty-state">Dados insuficientes para mapear decks letais.</div>'
         
         html = '<div class="cr-decks-list">'
         for i, ld in enumerate(lethal_decks, 1):
             deck_str = ld['deck']
             losses = ld['losses_caused'] 
-            opponents = ld['opponents_list']
             last = ld['last_encounter'][:16].replace('T', ' ')
             c_list = ld['cards']
             
@@ -3222,7 +3235,7 @@ class GitHubPagesHTMLGenerator:
             cards_for_copy = [c.strip() for c in deck_str.split('|') if c.strip()]
             
             html += f'''
-            <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-left: 4px solid #f87171; min-height: auto; margin-bottom: 20px; padding-bottom: 12px; overflow: visible;">
+            <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-left: 4px solid #f87171; min-height: auto; margin-bottom: 20px; padding: 0 !important; overflow: visible;">
                 <div class="cr-deck-header" style="padding: 8px 15px; background: rgba(248, 113, 113, 0.08); border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 10px; width: 100%;">
                         <span class="cr-deck-rank" style="background:#f87171; color: #fff; padding: 2px 8px; border-radius: 5px; font-weight: 900; font-size: 0.75em;">#{i} LETHAL</span>
@@ -3230,42 +3243,45 @@ class GitHubPagesHTMLGenerator:
                         <span style="margin-left: auto; font-size: 0.65em; color: rgba(255,255,255,0.3); font-weight: 700;">VISTO EM: {last}</span>
                     </div>
                 </div>
-                <div class="cr-deck-body cr-lethal-body" style="padding: 10px 15px; background: transparent; overflow: visible;">
-                    <div class="cr-lethal-layout" style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
+                
+                <div class="cr-main-vs-stage" style="padding: 15px 20px 10px 20px !important;">
+                    <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
                         
-                        <div class="cr-vs-decks-grid-v2" style="display: block; position: relative; width: 100%; max-width: 400px; margin: 45px auto 0 auto; overflow: visible;">
-                            <div class="cr-side-container" style="position: relative; display: flex; flex-direction: column; align-items: center; background: transparent; padding: 0; min-height: auto; overflow: visible;">
-                                <!-- Torre Flutuante Premium v2 -->
-                                <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 95px; height: 95px; z-index: 10;">
-                                    <img src="{tower_url}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.6));">
-                                    <div style="margin-top: -15px; display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                                        <div class="cr-hp-bar-mini" style="width: 50px; height: 3px; background: rgba(0,0,0,0.5); border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-                                            <div style="width: 100%; height: 100%; background: #f87171;"></div>
-                                        </div>
-                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                                            <span class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 8px; padding: 1px 5px; background: #000; border: 1px solid #f87171; color: #fff; border-radius: 4px; font-weight: 900; { 'display: none;' if metrics.get('level') == 'N/A' else '' }">LV {metrics.get('level')}</span>
-                                            <span style="font-size: 8px; color: #f87171; font-weight: 900; line-height: 1;">{metrics.get('hp', '--')} HP</span>
-                                        </div>
-                                    </div>
+                        <!-- Linha 1: Cabeçalho com Torre (Towers on Top) -->
+                        <div class="cr-vs-top-row" style="padding: 5px 20px; margin-bottom: 0; justify-content: center;">
+                            <div class="cr-tower-stage-o" style="display: flex; flex-direction: column; align-items: center;">
+                                <div style="text-align: center; margin-bottom: 8px;">
+                                    <div style="font-size: 0.55em; color: rgba(248, 113, 113, 0.4); font-weight: 800; letter-spacing: 1px;">OPONENTE LETHAL</div>
+                                    <div style="font-family: 'Krona One', sans-serif; font-size: 0.8em; color: #fca5a5; font-weight: 900;">Causal Deck</div>
                                 </div>
-                                <!-- Grid -->
-                                <div class="cr-grid-wrapper-premium" style="position: relative; z-index: 2; margin-top: 50px; width: 100%;">
-                                    <div class="cr-grid-4x2" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                                        {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in c_list[:8])}
-                                    </div>
+                                <div style="position: relative; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;">
+                                    <img src="{tower_url}" class="cr-tower-img-large" style="width: 100px; height: 100px; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
+                                    <span class="cr-tower-lv-badge" style="background: #000; border: 1px solid #f87171; color: #fff; font-size: 10px; padding: 2px 6px;">LV {metrics.get('level')}</span>
+                                    <span class="cr-tower-hp-text" style="color: #f87171; bottom: -5px;">{metrics.get('hp', '--')} HP</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 12px; background: transparent; border: none; position: relative; width: 100%; max-width: 400px;">
-                            <div style="margin-top: -5px; margin-bottom: 15px; display: flex; gap: 10px; justify-content: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 10px;">
+
+                        <!-- Linha 2: Grid do Deck -->
+                        <div class="cr-row-grid-v2" style="width: 100%; max-width: 450px;">
+                             <div class="cr-grid-wrapper-premium">
+                                  {self._generate_deck_grid_html_simple(deck_str)}
+                             </div>
+                        </div>
+
+                        <!-- Linha 3: Métricas e Ação -->
+                        <div class="cr-row-metrics-v2" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 5px;">
+                            <div class="cr-vs-footer-v2" style="display: flex; gap: 15px; justify-content: center; background: rgba(0,0,0,0.15); padding: 10px 20px; border-radius: 12px; width: 100%; max-width: 450px;">
                                 {self._generate_metrics_panel_html_simple(metrics)}
                             </div>
-                            <div style="margin-top: 10px; display: flex; justify-content: center;">
-                                <button onclick="copyToClipboardDeckDirect({cards_for_copy})" 
-                                        style="background: rgba(248, 113, 113, 0.2); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; padding: 6px 15px; border-radius: 8px; font-size: 0.7em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
-                                    <i class="far fa-copy"></i> COPIAR DECK LETAL
-                                </button>
-                            </div>
+                            
+                            <button onclick="copyToClipboardDeckDirect({cards_for_copy})" 
+                                    style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); color: #fca5a5; padding: 8px 20px; border-radius: 10px; font-size: 0.75em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s;"
+                                    onmouseover="this.style.background='rgba(248, 113, 113, 0.2)'; this.style.transform='translateY(-2px)';"
+                                    onmouseout="this.style.background='rgba(248, 113, 113, 0.1)'; this.style.transform='translateY(0)';"
+                                    class="cr-copy-btn-premium">
+                                <i class="far fa-copy"></i> COPIAR DECK LETAL
+                            </button>
                         </div>
                     </div>
                 </div>
