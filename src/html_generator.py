@@ -2430,7 +2430,7 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-body" style="padding: 10px 15px; background: transparent; overflow: visible;">
                     <div class="cr-main-vs-stage" style="padding: 0; min-height: 0;">
                         <!-- Amostragem da Batalha Premium v2 -->
-                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.5fr 1fr 1.5fr; align-items: center; gap: 10px; padding: 10px 0 15px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
+                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.5fr 1fr 1.5fr; align-items: center; gap: 10px; padding: 10px 0 15px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 1;">
                             <div style="text-align: left; overflow: hidden;">
                                 <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{self.player_tag}</div>
                                 <div id="p-name-{deck_id}" style="font-family: 'Krona One', sans-serif; font-size: 0.95em; color: #fff; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{player_name}</div>
@@ -2450,7 +2450,7 @@ class GitHubPagesHTMLGenerator:
                         <!-- Decks e Torres -->
                         <div class="cr-vs-decks-grid-v2" style="gap: 10px; margin-top: 15px;">
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
-                                <div id="p-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 1;">
+                                <div id="p-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 5;">
                                     <img id="p-tower-img-{deck_id}" src="{my_m_f['tower_url']}" class="cr-tower-img-large" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
                                     <span id="p-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if my_m_f['level'] == 'N/A' else '' }">LV {my_m_f['level']}</span>
                                     <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
@@ -2465,7 +2465,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
 
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
-                                <div id="o-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 1;">
+                                <div id="o-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 5;">
                                     <img id="o-tower-img-{deck_id}" src="{opp_m_f['tower_url']}" class="cr-tower-img-large" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
                                     <span id="o-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if opp_m_f['level'] == 'N/A' else '' }">LV {opp_m_f['level']}</span>
                                     <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
@@ -3121,7 +3121,7 @@ class GitHubPagesHTMLGenerator:
                 <span style="font-weight: 900; font-size: 1.3em; color: #fff;">{metrics['avg']}</span>
             </div>
             <div class="cr-metric-inline" title="Ciclo" style="display: flex; align-items: center; gap: 8px;">
-                <img src="https://cdn.royaleapi.com/static/img/ui/deck-cycle.png" style="width: 22px; height: 22px; filter: brightness(1.2);">
+                <img src="docs/ciclo4.png" style="width: 22px; height: 22px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
                 <span style="font-weight: 900; font-size: 1.3em; color: #fff;">{metrics['cycle']}</span>
             </div>
             <div class="cr-metric-inline {leak_class}" title="Leak" style="display: flex; align-items: center; gap: 8px;">
@@ -4981,21 +4981,21 @@ class GitHubPagesHTMLGenerator:
 
         .cr-tower-lv-badge {
             position: absolute;
-            top: -8px;
+            top: -6px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(180deg, #1e293b, #020617);
             color: #fbbf24;
-            font-size: 0.78em;
+            font-size: 0.65em;
             font-weight: 950;
-            padding: 3px 10px;
-            border-radius: 7px;
-            border: 1.5px solid #fbbf24;
+            padding: 2px 6px;
+            border-radius: 6px;
+            border: 1px solid #fbbf24;
             z-index: 10;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.85);
-            border-bottom: 3.5px solid #b45309;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.85);
+            border-bottom: 2px solid #b45309;
             text-shadow: 0 1px 2px rgba(0,0,0,1);
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
             pointer-events: none;
             white-space: nowrap;
         }

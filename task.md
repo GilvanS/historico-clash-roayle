@@ -16,3 +16,10 @@
 - [x] Garantir a visibilidade dos botões de seleção de batalha (dots) no footer.
 - [x] Eliminar o vácuo no final do modal container.
 - [x] Validar a sintaxe do arquivo `html_generator.py` e gerar o dashboard local.
+
+### Feature: Suporte a Múltiplas Contas (Conta Secundária)
+- [ ] **Configuração do Ambiente**: Adicionar `CR_PLAYER_TAG_SEC` no arquivo `.env` e Actions.
+- [ ] **Coleta de Batalhas**: Refatorar `collect_battles_csv.py` para iterar sobre ambas as tags e salvar os dados da secundária em `oponentes_ano_2026_sec.csv`.
+- [ ] **Geração do HTML**: Modificar `html_generator.py` para gerar um arquivo separado (ex: `index_sec.html`) focado apenas em batalhas (sem clã/guerra).
+- [ ] **Navegação UI**: Adicionar um menu de "Abas" no topo do Dashboard (`index.html` e `index_sec.html`) para alternar entre as contas.
+- [ ] **Orquestração da Sincronização**: Atualizar `main_sync.py` para rodar a coleta e geração de ambas as contas na pipeline de 30 min.
