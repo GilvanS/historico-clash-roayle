@@ -1,0 +1,191 @@
+<html><head><style>
+                .war-intel-section {{ border-left: 5px solid #ef4444 !important; background: rgba(30, 20, 20, 0.9) !important; }}
+                .war-grid {{ display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; margin-top: 20px; }}
+                
+                .war-intel-table {{ width: 100%; border-collapse: collapse; }}
+                .war-intel-table th {{ text-align: left; padding: 12px; color: #94a3b8; font-size: 0.8em; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); }}
+                .war-intel-table td {{ padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }}
+                
+                .clan-fame-info {{ display: flex; flex-direction: column; gap: 5px; }}
+                .fame-progress-bar {{ height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; width: 100%; max-width: 200px; }}
+                .fame-progress-fill {{ height: 100%; transition: width 1s ease-out; }}
+                
+                .intel-summary-cards {{ display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 25px; }}
+                .intel-card {{ background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }}
+                .intel-card .label {{ display: block; font-size: 0.75em; color: #94a3b8; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }}
+                .intel-card .value {{ font-size: 1.3em; font-weight: 800; }}
+                
+                .intel-alerts-box {{ display: flex; flex-direction: column; gap: 8px; }}
+                .intel-alert {{ font-size: 0.85em; padding: 8px 12px; border-radius: 6px; border-left: 3px solid transparent; }}
+                .intel-alert.positive {{ background: rgba(72, 187, 120, 0.1); color: #48bb78; border-left-color: #48bb78; }}
+                .intel-alert.negative {{ background: rgba(248, 113, 113, 0.1); color: #f87171; border-left-color: #f87171; }}
+                
+                /* Estilos Copiador de Decks */
+                .deck-label-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }}
+                .copy-deck-btn {{ 
+                    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+                    color: white;
+                    text-decoration: none;
+                    font-size: 0.7em;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    transition: all 0.2s;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }}
+                .copy-deck-btn:hover {{ transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); opacity: 0.9; }}
+                
+                .highlight-row {{ background: rgba(59, 130, 246, 0.1) !important; }}
+                .highlight-row strong {{ color: #60a5fa; }}
+                
+                .rival-cards-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }}
+                .rival-mini-card {{ background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }}
+                .rival-mini-card h4 {{ font-size: 0.85em; color: #f87171; margin-bottom: 8px; border-bottom: 1px solid rgba(248, 113, 113, 0.2); padding-bottom: 4px; }}
+                .rival-mini-card ul {{ list-style: none; padding: 0; margin: 0; }}
+                .rival-mini-card li {{ font-size: 0.8em; margin-bottom: 5px; display: flex; justify-content: space-between; }}
+                .rival-name {{ color: #e2e8f0; }}
+                .rival-fame {{ color: #48bb78; font-weight: bold; font-family: monospace; }}
+                
+                @media (max-width: 1000px) {{ .war-grid {{ grid-template-columns: 1fr; }} }}
+            </style></head><body style='background: #0f172a; padding: 50px;'><div class="cr-opponents-list">
+            <div class="cr-deck-card cr-opp-card-row cr-glass-premium" id="opp-section-1" style="height: auto !important; min-height: 0 !important; margin-bottom: 8px !important; padding-bottom: 2px !important; display: block; overflow: visible; position: relative;">
+                <div class="cr-deck-header cr-opp-header-premium" style="padding: 4px 12px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div class="cr-opp-header-content-v2" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                        <span class="cr-opp-rank" style="background: #fbbf24; color: #000; padding: 1px 5px; border-radius: 4px; font-weight: 900; font-size: 0.7em;">#1</span>
+                        <span style="font-weight: 900; font-size: 0.95em; color: #f8fafc;"><span style="opacity: 0.5; font-size: 0.8em; margin-right: 4px;">OPONENTE:</span>Test Opponent</span>
+                        <span class="rival-badge rival-badge" style="margin-left: auto; font-size: 0.6em; padding: 2px 6px;">Rival</span>
+                        <span class="cr-wr-badge" style="background:#48bb78; font-weight: 900; font-size: 0.7em; padding: 2px 6px;">100% WR</span>
+                    </div>
+                </div>
+
+                <div class="cr-main-vs-stage" id="main-vs-1" style="padding: 15px 20px 10px 20px !important; min-height: 0 !important; height: auto !important;">
+                    <div class="cr-vs-stage-v2" style="height: auto !important; min-height: 0 !important; display: flex; flex-direction: column; gap: 15px;">
+                        
+                        <!-- Linha 1: Torres e Placar (Towers on Top) -->
+                        <div class="cr-vs-top-row" style="padding: 10px 20px; margin-bottom: 0;">
+                            <div class="cr-tower-stage-p">
+                                <div style="text-align: center; margin-bottom: 8px;">
+                                    <div id="p-tag-1" style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">##2QR292P</div>
+                                    <div id="p-name-1" style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #fff; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">ツ ︻デ═一⟿ΔЯ₡λↁΣ☯︎</div>
+                                    <div id="p-clan-1" style="font-size: 0.6em; color: rgba(255,255,255,0.4); font-weight: 700; margin-top: 2px;">Tropa Do Bruxo</div>
+                                </div>
+                                <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
+                                    <img id="p-tower-img-1" src="./docs/torreDoRei.png" class="cr-tower-img-large" style="width: 110px; height: 110px; margin-bottom: 0;">
+                                    <span id="p-tower-lv-1" class="cr-tower-lv-badge" style="top: -5px; font-size: 0.65em; ">LV 15</span>
+                                </div>
+                                <div id="p-tower-hp-1" style="font-size: 0.7em; color: #4ade80; font-weight: 950; margin-top: 5px; text-shadow: 0 0 10px rgba(74,222,128,0.3);">7032 HP</div>
+                            </div>
+
+                            <div class="cr-modal-score-center">
+                                <div id="score-1" style="font-size: 3.2em; font-weight: 950; color: #fff; letter-spacing: -2px; line-height: 1; text-shadow: 0 4px 15px rgba(0,0,0,0.6); white-space: nowrap !important;">
+                                    3 - 1
+                                </div>
+                                <div id="mode-1" style="background: rgba(15, 23, 42, 0.9); padding: 3px 12px; border-radius: 8px; font-size: 0.55em; font-weight: 900; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.12); text-transform: uppercase; letter-spacing: 1px;">
+                                    Ladder
+                                </div>
+                            </div>
+
+                            <div class="cr-tower-stage-p">
+                                <div style="text-align: center; margin-bottom: 8px;">
+                                    <div id="o-tag-1" style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#TEST123</div>
+                                    <div id="o-name-1" style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #f87171; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">Test Opponent</div>
+                                    <div id="o-clan-1" style="font-size: 0.6em; color: rgba(255,255,255,0.4); font-weight: 700; margin-top: 2px;">Test Clan</div>
+                                </div>
+                                <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
+                                    <img id="o-tower-img-1" src="./docs/canhoneiro-clash-royale-render-3d-cannonier.png" class="cr-tower-img-large" style="width: 110px; height: 110px; margin-bottom: 0;">
+                                    <span id="o-tower-lv-1" class="cr-tower-lv-badge" style="top: -5px; font-size: 0.65em; ">LV 14</span>
+                                </div>
+                                <div id="o-tower-hp-1" style="font-size: 0.7em; color: #f87171; font-weight: 950; margin-top: 5px; text-shadow: 0 0 10px rgba(248,113,113,0.3);">6408 HP</div>
+                            </div>
+                        </div>
+
+                        <!-- Linha 2: Decks 4x2 -->
+                        <div class="cr-vs-decks-grid-v2" style="padding: 0; gap: 15px;">
+                            <div id="p-grid-1" class="cr-grid-wrapper-premium"><div class="cr-grid-4x2"><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/_iDwuDLexHPFZ_x4_a0eP-rxCS6vwWgTs6DLauwwoaY.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/bAwMcqp9EKVIKH3ZLm_m0MqZFSG72zG-vKxpx8aKoVs.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/NHflxzVAQT4oAz7eDfdueqpictb5vrWezn1nuqFhE4w.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/Ie07nQNK9CjhKOa4-arFAewi4EroqaA-86Xo7r5tx94.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cardheroes/300/jAj1Q5rclXxU9kVImGqSJxa4wEMfEhvwNQ_4jiGUuqg.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/GSHY_wrooMMLET6bG_WJB8redtwx66c4i80ipi4gYOM.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/CoZdp5PpsTH858l212lAMeJxVJ0zxv9V-f5xC8Bvj5g.png" class="cr-card-img"></div></div></div>
+                            <div id="o-grid-1" class="cr-grid-wrapper-premium"><div class="cr-grid-4x2"><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/_uChZkNHAMq6tPb3v6A49xinOe3CnhjstOhG6OZbPYc.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/12n1CesxKIcqVYntjxcF36EFA-ONw7Z-DoL0_rQrbdo.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/WJd207D0O1sN-l1FTb8P9KhYL2oF5jY26vRUfTUW3FQ.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/nZK1y-beLxO5vnlyUhK6-2zH2NzXJwqykcosqQ1cmZ8.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/QJB-QK1QJHdw4hjpAwVSyZBozc2ZWAR9pQ-SMUyKaT0.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/fpnESbYqe5GyZmaVVYe-SEu7tE0Kxh_HZyVigzvLjks.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png" class="cr-card-img"></div><div class="cr-card-wrap-premium"><img src="https://api-assets.clashroyale.com/cards/300/wC6Cm9rKLEOk72zTsukVwxewKIoO4ZcMJun54zCPWvA.png" class="cr-card-img"></div></div></div>
+                        </div>
+
+                        <!-- Linha 3: Métricas Horizontais Unificadas -->
+                        <div class="cr-vs-metrics-unified" style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 12px; border: 1px solid rgba(255,255,255,0.03);">
+                            <div class="cr-vs-footer-metrics">
+                                <div id="player-metrics-1" style="display: flex; gap: 12px; justify-content: center;">
+                                    
+            <div class="cr-metric-inline" title="Elixir" style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 22px; height: 22px;">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">3.3</span>
+            </div>
+            <div class="cr-metric-inline" title="Ciclo" style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/deck-cycle.png" style="width: 22px; height: 22px; filter: brightness(1.2);">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">9</span>
+            </div>
+            <div class="cr-metric-inline cr-leak-warning" title="Leak" style="display: flex; align-items: center; gap: 8px;">
+                <img src="docs/ElixirVazado.png" style="width: 22px; height: 22px; opacity: 1; filter: drop-shadow(0 0 10px rgba(255,0,0,0.8));">
+                <span style="font-weight: 900; font-size: 1.3em; color: #f56565;">0.5</span>
+            </div>
+            <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 8px;">
+                <img src="docs/torreDoRei.png" style="width: 18px; height: 18px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">7032</span>
+            </div>
+        
+                                </div>
+                                <div class="cr-vs-divider-light" style="width: 1px; height: 30px; background: rgba(255,255,255,0.1); margin: 0;"></div>
+                                <div id="opp-metrics-1" style="display: flex; gap: 12px; justify-content: center;">
+                                    
+            <div class="cr-metric-inline" title="Elixir" style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 22px; height: 22px;">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">3.7</span>
+            </div>
+            <div class="cr-metric-inline" title="Ciclo" style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/deck-cycle.png" style="width: 22px; height: 22px; filter: brightness(1.2);">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">9</span>
+            </div>
+            <div class="cr-metric-inline cr-leak-warning" title="Leak" style="display: flex; align-items: center; gap: 8px;">
+                <img src="docs/ElixirVazado.png" style="width: 22px; height: 22px; opacity: 1; filter: drop-shadow(0 0 10px rgba(255,0,0,0.8));">
+                <span style="font-weight: 900; font-size: 1.3em; color: #f56565;">2.1</span>
+            </div>
+            <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 8px;">
+                <img src="docs/torreDoRei.png" style="width: 18px; height: 18px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">6408</span>
+            </div>
+        
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer: Ações e Info Temporal -->
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 5px;">
+                            <div style="display: flex; justify-content: center; gap: 10px;">
+                                <button id="p-copy-1" onclick="copyToClipboardDeckDirect(['The Log', 'Princess', 'Goblin Gang', 'Rocket', 'Knight', 'Ice Spirit', 'Inferno Tower', 'Goblin Barrel'])" 
+                                        style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.25); color: #93c5fd; padding: 6px 14px; border-radius: 8px; font-size: 0.6em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                                    <i class="far fa-copy"></i> COPIAR MEU
+                                </button>
+                                <button id="o-copy-1" onclick="copyToClipboardDeckDirect(['Electro Giant', 'Bomber', 'Golden Knight', 'Cannon', 'Tornado', 'Lightning', 'Electro Spirit', 'Mirror'])" 
+                                        style="background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.25); color: #fca5a5; padding: 6px 14px; border-radius: 8px; font-size: 0.6em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                                    <i class="far fa-copy"></i> COPIAR OPONENTE
+                                </button>
+                            </div>
+                            <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.6em; color: rgba(255,255,255,0.25); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                                <span id="date-1"><i class="far fa-calendar-alt"></i> 12/05/2026</span>
+                                <span id="time-1"><i class="far fa-clock"></i> 15:30</span>
+                            </div>
+                        </div>
+
+                        <!-- Histórico (History Dots) -->
+                        <div style="margin-top: 5px; padding: 10px 15px; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.02);">
+                            <span style="font-size: 0.55em; font-weight: 950; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 2px;">HISTÓRICO:</span>
+                            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                
+            <div class="cr-history-dot active" 
+                 style="border-bottom: 2px solid #48bb78;"
+                 data-battle="{&quot;crowns&quot;: 3, &quot;o_crowns&quot;: 1, &quot;mode&quot;: &quot;Ladder&quot;, &quot;date&quot;: &quot;12/05/2026&quot;, &quot;time&quot;: &quot;15:30&quot;, &quot;p_metrics&quot;: &quot;\n            <div class=\&quot;cr-metric-inline\&quot; title=\&quot;Elixir\&quot; style=\&quot;display: flex; align-items: center; gap: 8px;\&quot;>\n                <img src=\&quot;https://cdn.royaleapi.com/static/img/ui/elixir.png\&quot; style=\&quot;width: 22px; height: 22px;\&quot;>\n                <span style=\&quot;font-weight: 900; font-size: 1.3em; color: #fff;\&quot;>3.3</span>\n            </div>\n            <div class=\&quot;cr-metric-inline\&quot; title=\&quot;Ciclo\&quot; style=\&quot;display: flex; align-items: center; gap: 8px;\&quot;>\n                <img src=\&quot;https://cdn.royaleapi.com/static/img/ui/deck-cycle.png\&quot; style=\&quot;width: 22px; height: 22px; filter: brightness(1.2);\&quot;>\n                <span style=\&quot;font-weight: 900; font-size: 1.3em; color: #fff;\&quot;>9</span>\n            </div>\n            <div class=\&quot;cr-metric-inline cr-leak-warning\&quot; title=\&quot;Leak\&quot; style=\&quot;display: flex; align-items: center; gap: 8px;\&quot;>\n                <img src=\&quot;docs/ElixirVazado.png\&quot; style=\&quot;width: 22px; height: 22px; opacity: 1; filter: drop-shadow(0 0 10px rgba(255,0,0,0.8));\&quot;>\n                <span style=\&quot;font-weight: 900; font-size: 1.3em; color: #f56565;\&quot;>0.5</span>\n            </div>\n            <div class=\&quot;cr-metric-inline\&quot; title=\&quot;HP Torre\&quot; style=\&quot;display: flex; align-items: center; gap: 8px;\&quot;>\n                <img src=\&quot;docs/torreDoRei.png\&quot; style=\&quot;width: 18px; height: 18px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));\&quot;>\n                <span style=\&quot;font-weight: 900; font-size: 1.3em; color: #fff;\&quot;>7032</span>\n            </div>\n        &quot;, &quot;o_metrics&quot;: &quot;\n            <div class=\&quot;cr-metric-inline\&quot; title=\&quot;Elixir\&quot; style=\&quot;display: flex; align-items: center; gap: 8px;\&quot;>\n                <img src=\&quot;https://cdn.royaleapi.com/static/img/ui/elixir.png\&quot; style=\&quot;width: 22px; height: 22px;\&quot;>\n                <span style=\&quot;font-weight: 900; font-size: 1.3em; color: #fff;\&quot;>3.7</span>\n            </div>\n            <div class=\&quot;cr-metric-inline\&quot; title=\&quot;Ciclo\&quot; style=\&quot;display: flex; align-items: center; gap: 8px;\&quot;>\n                <img src=\&quot;https://cdn.royaleapi.com/static/img/ui/deck-cycle.png\&quot; style=\&quot;width: 22px; height: 22px; filter: brightness(1.2);\&quot;>\n                <span style=\&quot;font-weight: 900; font-size: 1.3em; color: #fff;\&quot;>9</span>\n            </div>\n            <div class=\&quot;cr-metric-inline cr-leak-warning\&quot; title=\&quot;Leak\&quot; style=\&quot;display: flex; align-items: center; gap: 8px;\&quot;>\n                <img src=\&quot;docs/ElixirVazado.png\&quot; style=\&quot;width: 22px; height: 22px; opacity: 1; filter: drop-shadow(0 0 10px rgba(255,0,0,0.8));\&quot;>\n                <span style=\&quot;font-weight: 900; font-size: 1.3em; color: #f56565;\&quot;>2.1</span>\n            </div>\n            <div class=\&quot;cr-metric-inline\&quot; title=\&quot;HP Torre\&quot; style=\&quot;display: flex; align-items: center; gap: 8px;\&quot;>\n                <img src=\&quot;docs/torreDoRei.png\&quot; style=\&quot;width: 18px; height: 18px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));\&quot;>\n                <span style=\&quot;font-weight: 900; font-size: 1.3em; color: #fff;\&quot;>6408</span>\n            </div>\n        &quot;, &quot;p_grid&quot;: &quot;<div class=\&quot;cr-grid-4x2\&quot;><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/_iDwuDLexHPFZ_x4_a0eP-rxCS6vwWgTs6DLauwwoaY.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/bAwMcqp9EKVIKH3ZLm_m0MqZFSG72zG-vKxpx8aKoVs.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/NHflxzVAQT4oAz7eDfdueqpictb5vrWezn1nuqFhE4w.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/Ie07nQNK9CjhKOa4-arFAewi4EroqaA-86Xo7r5tx94.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cardheroes/300/jAj1Q5rclXxU9kVImGqSJxa4wEMfEhvwNQ_4jiGUuqg.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/GSHY_wrooMMLET6bG_WJB8redtwx66c4i80ipi4gYOM.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/CoZdp5PpsTH858l212lAMeJxVJ0zxv9V-f5xC8Bvj5g.png\&quot; class=\&quot;cr-card-img\&quot;></div></div>&quot;, &quot;o_grid&quot;: &quot;<div class=\&quot;cr-grid-4x2\&quot;><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/_uChZkNHAMq6tPb3v6A49xinOe3CnhjstOhG6OZbPYc.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/12n1CesxKIcqVYntjxcF36EFA-ONw7Z-DoL0_rQrbdo.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/WJd207D0O1sN-l1FTb8P9KhYL2oF5jY26vRUfTUW3FQ.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/nZK1y-beLxO5vnlyUhK6-2zH2NzXJwqykcosqQ1cmZ8.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/QJB-QK1QJHdw4hjpAwVSyZBozc2ZWAR9pQ-SMUyKaT0.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/fpnESbYqe5GyZmaVVYe-SEu7tE0Kxh_HZyVigzvLjks.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/WKd4-IAFsgPpMo7dDi9sujmYjRhOMEWiE07OUJpvD9g.png\&quot; class=\&quot;cr-card-img\&quot;></div><div class=\&quot;cr-card-wrap-premium\&quot;><img src=\&quot;https://api-assets.clashroyale.com/cards/300/wC6Cm9rKLEOk72zTsukVwxewKIoO4ZcMJun54zCPWvA.png\&quot; class=\&quot;cr-card-img\&quot;></div></div>&quot;, &quot;p_tower_url&quot;: &quot;./docs/torreDoRei.png&quot;, &quot;o_tower_url&quot;: &quot;./docs/canhoneiro-clash-royale-render-3d-cannonier.png&quot;, &quot;p_level&quot;: 15, &quot;o_level&quot;: 14, &quot;p_hp&quot;: 7032, &quot;o_hp&quot;: 6408, &quot;p_deck_list&quot;: [&quot;The Log&quot;, &quot;Princess&quot;, &quot;Goblin Gang&quot;, &quot;Rocket&quot;, &quot;Knight&quot;, &quot;Ice Spirit&quot;, &quot;Inferno Tower&quot;, &quot;Goblin Barrel&quot;], &quot;o_deck_list&quot;: [&quot;Electro Giant&quot;, &quot;Bomber&quot;, &quot;Golden Knight&quot;, &quot;Cannon&quot;, &quot;Tornado&quot;, &quot;Lightning&quot;, &quot;Electro Spirit&quot;, &quot;Mirror&quot;], &quot;p_name&quot;: &quot;\u30c4 \ufe3b\u30c7\u2550\u4e00\u27ff\u0394\u042f\u20a1\u03bb\u2181\u03a3\u262f\ufe0e&quot;, &quot;p_tag&quot;: &quot;#2QR292P&quot;, &quot;p_clan&quot;: &quot;Tropa Do Bruxo&quot;, &quot;o_name&quot;: &quot;Test Opponent&quot;, &quot;o_tag&quot;: &quot;TEST123&quot;, &quot;o_clan&quot;: &quot;Test Clan&quot;}"
+                 onclick="updateOpponentView(1, this)"
+                 title="12/05/2026 15:30 - W">
+                <span class="dot-res" style="color: #48bb78">W</span>
+                <span class="dot-time">15:30</span>
+            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div></body></html>

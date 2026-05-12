@@ -407,7 +407,7 @@ class GitHubPagesHTMLGenerator:
     def get_tower_image_path(self, tower_name: str) -> str:
         """Retorna o caminho local da imagem da torre"""
         if not tower_name or tower_name == 'N/D':
-            return "./docs/princesa-tropa-de-torre-clash-royale.png"
+            return "docs/torreDoRei.png"
         
         # Mapeamento para arquivos locais na pasta docs
         tower_mapping = {
@@ -415,19 +415,22 @@ class GitHubPagesHTMLGenerator:
             'Cannoneer': 'canhoneiro-clash-royale-render-3d-cannonier',
             'Dagger Duchess': 'tudo-sobre-duquesa-das-adagas-clash-royale-knives-thrower',
             'Royal Chef': 'tudo-sobre-cozinheiro-real-clash-royale-royal-chef-FylAY7',
-            'King Tower': 'princesa-tropa-de-torre-clash-royale'
+            'King Tower': 'torreDoRei',
+            'King': 'torreDoRei'
         }
         
         slug = tower_mapping.get(tower_name)
         if not slug:
             # Tenta busca parcial caso o nome venha diferente da API
-            if 'Dagger' in tower_name: slug = 'tudo-sobre-duquesa-das-adagas-clash-royale-knives-thrower'
-            elif 'Cannon' in tower_name: slug = 'canhoneiro-clash-royale-render-3d-cannonier'
-            elif 'Princess' in tower_name: slug = 'princesa-tropa-de-torre-clash-royale'
-            elif 'Chef' in tower_name: slug = 'tudo-sobre-cozinheiro-real-clash-royale-royal-chef-FylAY7'
-            else: slug = 'princesa-tropa-de-torre-clash-royale'
+            t_name_lower = tower_name.lower()
+            if 'dagger' in t_name_lower: slug = 'tudo-sobre-duquesa-das-adagas-clash-royale-knives-thrower'
+            elif 'cannon' in t_name_lower: slug = 'canhoneiro-clash-royale-render-3d-cannonier'
+            elif 'princess' in t_name_lower: slug = 'princesa-tropa-de-torre-clash-royale'
+            elif 'chef' in t_name_lower: slug = 'tudo-sobre-cozinheiro-real-clash-royale-royal-chef-FylAY7'
+            elif 'king' in t_name_lower: slug = 'torreDoRei'
+            else: slug = 'torreDoRei'
             
-        return f"./docs/{slug}.png"
+        return f"docs/{slug}.png"
 
     def get_card_image_path(self, card_name: str) -> str:
         """Retorna a URL da imagem da carta usando o cards_master_icons.csv"""
@@ -2506,7 +2509,7 @@ class GitHubPagesHTMLGenerator:
         return html + "</div>"
 
     def generate_winning_decks_html(self, winning_data: List[Dict]) -> str:
-        """Gera HTML para a aba de melhores decks da semana (Meta/Global)."""
+        """Gera HTML para a aba de melhores decks da semana (Meta/Global) no padrao Premium v2."""
         if not winning_data: return '<div class="cr-empty-state">Dados globais insuficientes para o Top Vencedores.</div>'
         
         html = '<div class="cr-decks-list">'
@@ -2517,39 +2520,49 @@ class GitHubPagesHTMLGenerator:
             cards_list = [c.strip() for c in deck['deck_cards'].split(' | ')]
             metrics = self._get_deck_metrics(deck['deck_cards'])
             
-            grid_h = f'''
-            <div class="cr-deck-side" style="flex:1; width:100%;">
-                <div class="cr-grid-4x2">
-                    {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in cards_list)}
-                </div>
-                <div class="cr-deck-metrics-premium" style="margin-top:15px; justify-content:center; background: rgba(0,0,0,0.5); border-radius:15px; padding:10px; border:1px solid rgba(255,255,255,0.05);">
-                    <div class="cr-metric-item-p" style="color:#fff;"><span class="cr-metric-icon">💧</span> {metrics["avg"]}</div>
-                    <div class="cr-metric-item-p" style="color:#fff;"><span class="cr-metric-icon">🔄</span> {metrics["cycle"]}</div>
-                </div>
-            </div>'''
-
+            # Formatar para copy button
+            cards_for_copy = [c for c in cards_list if c]
+            
             source_label = deck.get('source', 'Dados do Clã')
             is_global = source_label == 'Global Meta'
             game_mode = "Ranked" if is_global else "Guerra/Desafio"
             
-            wr_c = '#48bb78' if win_rate >= 55 else ('#4299e1' if win_rate >= 50 else '#718096')
+            wr_c = '#48bb78' if win_rate >= 55 else ('#4299e1' if win_rate >= 50 else '#f87171')
+            
             html += f'''
-            <div class="cr-deck-card" style="border-top: 4px solid {wr_c};">
-                <div class="cr-deck-header">
+            <div class="cr-deck-card cr-glass-premium" style="border-top: 4px solid {wr_c}; min-height: auto; margin-bottom: 20px; padding: 0 !important; overflow: visible;">
+                <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <span class="cr-deck-rank" style="background:{wr_c};">#{i} {source_label.upper()}</span>
                         <div class="cr-mode-badge" style="background:{wr_c}; position: static; margin: 0;">{game_mode}</div>
-                        <span class="cr-deck-label">Taxa de Vitoria: {win_rate}%</span>
+                        <span class="cr-wr-badge" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">{total} Partidas</span>
+                        <span style="margin-left: auto; color: {wr_c}; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">TAXA DE VITÓRIA: {win_rate}%</span>
                     </div>
-                    <span class="cr-wr-badge" style="background:#edf2f7; color:#4a5568; border:1px solid #e2e8f0;">{total} Partidas</span>
                 </div>
-                <div class="cr-deck-body">
-                    {grid_h}
-                    <div class="cr-stats-panel" style="flex:1; display:flex; align-items:center; justify-content:center;">
-                        <div style="text-align:center; padding:10px; background:#f7fafc; border-radius:12px; width:100%;">
-                            <div style="font-size:0.7em; color:#718096; font-weight:700; text-transform:uppercase; margin-bottom:5px;">Performance Global</div>
-                            <div style="font-size:1.5em; font-weight:900; color:{wr_c};">{win_rate}%</div>
-                            <div style="font-size:0.6em; color:#a0aec0;">Baseado em dados {"mundiais" if is_global else "de todos os jogadores do cla"}</div>
+                
+                <div class="cr-main-vs-stage" style="padding: 15px 20px 10px 20px !important;">
+                    <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                        
+                        <!-- Grid do Deck -->
+                        <div class="cr-row-grid-v2" style="width: 100%; max-width: 450px;">
+                             <div class="cr-grid-wrapper-premium">
+                                  {self._generate_deck_grid_html_simple(deck['deck_cards'])}
+                             </div>
+                        </div>
+
+                        <!-- Métricas e Ação -->
+                        <div class="cr-row-metrics-v2" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 5px;">
+                            <div class="cr-vs-footer-v2" style="display: flex; gap: 15px; justify-content: center; background: rgba(0,0,0,0.15); padding: 10px 20px; border-radius: 12px; width: 100%; max-width: 450px;">
+                                {self._generate_metrics_panel_html_simple(metrics)}
+                            </div>
+                            
+                            <button onclick="copyToClipboardDeckDirect({cards_for_copy})" 
+                                    style="background: rgba(72, 187, 120, 0.1); border: 1px solid rgba(72, 187, 120, 0.3); color: #9ae6b4; padding: 8px 20px; border-radius: 10px; font-size: 0.75em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s;"
+                                    onmouseover="this.style.background='rgba(72, 187, 120, 0.2)'; this.style.transform='translateY(-2px)';"
+                                    onmouseout="this.style.background='rgba(72, 187, 120, 0.1)'; this.style.transform='translateY(0)';"
+                                    class="cr-copy-btn-premium">
+                                <i class="far fa-copy"></i> COPIAR MELHOR DECK
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -2795,6 +2808,23 @@ class GitHubPagesHTMLGenerator:
                 if (scoreEl) scoreEl.innerText = `${data.crowns || 0} - ${data.o_crowns || 0}`;
                 if (modeEl) modeEl.innerText = data.mode || 'Batalha';
                 
+                // Update Metadata Row
+                const arenaEl = document.getElementById(`arena-${oppId}`);
+                const trophyEl = document.getElementById(`trophy-change-${oppId}`);
+                const rankPEl = document.getElementById(`rank-p-${oppId}`);
+                const rankOEl = document.getElementById(`rank-o-${oppId}`);
+
+                if (arenaEl) arenaEl.innerHTML = `<i class="fas fa-map-marker-alt" style="color: var(--primary); opacity: 0.7;"></i> ${data.arena || 'Arena'}`;
+                if (trophyEl) {
+                    const val = parseInt(data.trophy_change || 0);
+                    const color = val > 0 ? '#48bb78' : (val < 0 ? '#f56565' : '#94a3b8');
+                    const sign = val > 0 ? '+' : '';
+                    trophyEl.innerText = `${sign}${val} Troféus`;
+                    trophyEl.style.color = color;
+                }
+                if (rankPEl) rankPEl.innerHTML = `<i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank P: ${data.rank_p || 'N/A'}`;
+                if (rankOEl) rankOEl.innerHTML = `<i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank O: ${data.rank_o || 'N/A'}`;
+
                 // Update names and tags
                 const pNameEl = document.getElementById(`p-name-${oppId}`);
                 const oNameEl = document.getElementById(`o-name-${oppId}`);
@@ -2804,6 +2834,11 @@ class GitHubPagesHTMLGenerator:
                 if (oNameEl && data.o_name) oNameEl.innerText = data.o_name;
                 if (pTagEl && data.p_tag) pTagEl.innerText = `#${data.p_tag}`;
                 if (oTagEl && data.o_tag) oTagEl.innerText = `#${data.o_tag}`;
+                
+                const pClanEl = document.getElementById(`p-clan-${oppId}`);
+                const oClanEl = document.getElementById(`o-clan-${oppId}`);
+                if (pClanEl) pClanEl.innerText = data.p_clan || '';
+                if (oClanEl) oClanEl.innerText = data.o_clan || '';
                 
                 // Update metrics
                 const pMetricsEl = document.getElementById(`player-metrics-${oppId}`);
@@ -2877,6 +2912,7 @@ class GitHubPagesHTMLGenerator:
                 element.classList.add('active');
             } catch(e) { console.error("[RoyaleAnalytics] Error updating view:", e); }
         }
+
 
 
         function showCopyToast(e) {
@@ -3045,8 +3081,16 @@ class GitHubPagesHTMLGenerator:
                 "o_deck_list": [c.strip() for c in b.get('opp_deck','').split('|') if c.strip()],
                 "p_name": p_name,
                 "p_tag": self.player_tag,
+                "p_clan": p_clan,
                 "o_name": o_name,
-                "o_tag": o_tag
+                "o_tag": o_tag,
+                "o_clan": o_clan,
+                "trophy_change": b.get('trophy_change', 0),
+                "arena": b.get('arena_name', 'Arena'),
+                "t_ini": b.get('trofes_iniciais_jogador', '0'),
+                "t_fin": b.get('trofes_finais_jogador', '0'),
+                "rank_p": b.get('posicao_global_jogador', 'N/A'),
+                "rank_o": b.get('posicao_global_oponente', 'N/A')
             }
             
             data_attr = json.dumps(battle_data).replace('"', '&quot;')
@@ -3085,7 +3129,7 @@ class GitHubPagesHTMLGenerator:
                 <span style="font-weight: 900; font-size: 1.3em; color: {metrics.get('leaked_color', '#fff')};">{metrics.get('leaked_label', 'N/A')}</span>
             </div>
             <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 8px;">
-                <img src="https://cdn.royaleapi.com/static/img/ui/king-tower.png" style="width: 22px; height: 22px;">
+                <img src="docs/torreDoRei.png" style="width: 22px; height: 22px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
                 <span style="font-weight: 900; font-size: 1.3em; color: #fff;">{t_hp}</span>
             </div>
         """
@@ -3117,96 +3161,117 @@ class GitHubPagesHTMLGenerator:
             opp_metrics_f = self._get_battle_deck_metrics(first_b['opp_deck'], first_b, is_opponent=True)
 
             html += f'''
-            <div class="cr-deck-card cr-opp-card-row cr-glass-premium" id="opp-section-{i}" style="height: auto !important; min-height: 0 !important; margin-bottom: 8px !important; padding-bottom: 2px !important; display: block; overflow: visible; position: relative;">
-                <div class="cr-deck-header cr-opp-header-premium" style="padding: 4px 12px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div class="cr-opp-header-content-v2" style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                        <span class="cr-opp-rank" style="background: #fbbf24; color: #000; padding: 1px 5px; border-radius: 4px; font-weight: 900; font-size: 0.7em;">#{i}</span>
-                        <span style="font-weight: 900; font-size: 0.95em; color: #f8fafc;"><span style="opacity: 0.5; font-size: 0.8em; margin-right: 4px;">OPONENTE:</span>{opp['opponent_name']}</span>
-                        <span class="rival-badge {cat_class}-badge" style="margin-left: auto; font-size: 0.6em; padding: 2px 6px;">{category}</span>
-                        <span class="cr-wr-badge" style="background:{wr_c}; font-weight: 900; font-size: 0.7em; padding: 2px 6px;">{wr}% WR</span>
+            <div class="cr-deck-card cr-opp-card-row cr-glass-premium" id="opp-section-{i}" style="height: auto !important; min-height: 0 !important; margin-bottom: 12px !important; padding-bottom: 5px !important; display: block; overflow: visible; position: relative;">
+                <div class="cr-deck-header cr-opp-header-premium" style="padding: 6px 15px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div class="cr-opp-header-content-v2" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                        <span class="cr-opp-rank" style="background: #fbbf24; color: #000; padding: 2px 8px; border-radius: 6px; font-weight: 900; font-size: 0.75em; box-shadow: 0 0 10px rgba(251,191,36,0.3);">#{i}</span>
+                        <span style="font-weight: 900; font-size: 1em; color: #f8fafc; letter-spacing: -0.3px;"><span style="opacity: 0.5; font-size: 0.8em; margin-right: 6px; font-weight: 600;">RIVAL:</span>{opp['opponent_name']}</span>
+                        <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                            <span class="rival-badge {cat_class}-badge" style="font-size: 0.65em; padding: 3px 8px; border-radius: 6px; font-weight: 900;">{category}</span>
+                            <span class="cr-wr-badge" style="background:{wr_c}; font-weight: 950; font-size: 0.75em; padding: 3px 10px; border-radius: 6px; color: #fff; box-shadow: 0 0 15px {wr_c}33;">{wr}% WR</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 15px 20px 10px 20px !important; min-height: 0 !important; height: auto !important;">
-                    <div class="cr-vs-stage-v2" style="height: auto !important; min-height: 0 !important; display: flex; flex-direction: column; gap: 15px;">
+                <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 20px !important; min-height: 0 !important; height: auto !important; background: radial-gradient(circle at center, rgba(30,41,59,0.2) 0%, transparent 70%);">
+                    <div class="cr-vs-stage-v2" style="height: auto !important; min-height: 0 !important; display: flex; flex-direction: column; gap: 20px;">
                         
                         <!-- Linha 1: Torres e Placar (Towers on Top) -->
-                        <div class="cr-vs-top-row" style="padding: 10px 20px; margin-bottom: 0;">
-                            <div class="cr-tower-stage-p">
-                                <div style="text-align: center; margin-bottom: 8px;">
-                                    <div id="p-tag-{i}" style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{self.player_tag}</div>
-                                    <div id="p-name-{i}" style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #fff; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{player_name}</div>
+                        <div class="cr-vs-top-row" style="padding: 0; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center;">
+                            <div class="cr-tower-stage-p" style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="text-align: center; margin-bottom: 12px;">
+                                    <div id="p-tag-{i}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; letter-spacing: 1px; margin-bottom: 2px;">#{self.player_tag}</div>
+                                    <div id="p-name-{i}" style="font-family: 'Krona One', sans-serif; font-size: 0.95em; color: #fff; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">{player_name}</div>
+                                    <div id="p-clan-{i}" style="font-size: 0.65em; color: rgba(255,255,255,0.4); font-weight: 700; margin-top: 2px;">{player_clan}</div>
                                 </div>
-                                <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
-                                    <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" class="cr-tower-img-large" style="width: 110px; height: 110px; margin-bottom: 0;">
-                                    <span id="p-tower-lv-{i}" class="cr-tower-lv-badge" style="top: -5px; font-size: 0.65em; { 'display: none;' if my_metrics_f['level'] == 'N/A' else '' }">LV {my_metrics_f['level']}</span>
+                                <div style="position: relative; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;">
+                                    <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" class="cr-tower-img-large cr-tower-zoom" style="width: 100px; height: 100px; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
+                                    <span id="p-tower-lv-{i}" class="cr-tower-lv-badge" style="bottom: 0; top: auto; font-size: 0.65em; { 'display: none;' if my_metrics_f['level'] == 'N/A' else '' }">LV {my_metrics_f['level']}</span>
                                 </div>
-                                <div id="p-tower-hp-{i}" style="font-size: 0.7em; color: #4ade80; font-weight: 950; margin-top: 5px; text-shadow: 0 0 10px rgba(74,222,128,0.3);">{my_metrics_f.get('hp', '--')} HP</div>
+                                <div id="p-tower-hp-{i}" style="font-size: 0.75em; color: #4ade80; font-weight: 950; margin-top: 8px; text-shadow: 0 0 10px rgba(74,222,128,0.3); letter-spacing: 0.5px;">{my_metrics_f.get('hp', '--')} HP</div>
                             </div>
 
-                            <div class="cr-modal-score-center">
-                                <div id="score-{i}" style="font-size: 3.2em; font-weight: 950; color: #fff; letter-spacing: -2px; line-height: 1; text-shadow: 0 4px 15px rgba(0,0,0,0.6); white-space: nowrap !important;">
+                            <div class="cr-modal-score-center" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                <div id="score-{i}" style="font-size: 3.5em; font-weight: 950; color: #fff; letter-spacing: -3px; line-height: 0.9; text-shadow: 0 8px 25px rgba(0,0,0,0.7); white-space: nowrap !important;">
                                     {first_b.get('crowns', 0)} - {first_b.get('opponent_crowns', 0)}
                                 </div>
-                                <div id="mode-{i}" style="background: rgba(15, 23, 42, 0.9); padding: 3px 12px; border-radius: 8px; font-size: 0.55em; font-weight: 900; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.12); text-transform: uppercase; letter-spacing: 1px;">
+                                <div id="mode-{i}" style="background: rgba(15, 23, 42, 0.95); padding: 4px 15px; border-radius: 10px; font-size: 0.6em; font-weight: 900; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 1.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                                     {first_b.get('game_mode', 'Batalha')}
                                 </div>
                             </div>
 
-                            <div class="cr-tower-stage-p">
-                                <div style="text-align: center; margin-bottom: 8px;">
-                                    <div id="o-tag-{i}" style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{opp['opponent_tag']}</div>
-                                    <div id="o-name-{i}" style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #f87171; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{opp['opponent_name']}</div>
+                            <div class="cr-tower-stage-p" style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="text-align: center; margin-bottom: 12px;">
+                                    <div id="o-tag-{i}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; letter-spacing: 1px; margin-bottom: 2px;">#{opp['opponent_tag']}</div>
+                                    <div id="o-name-{i}" style="font-family: 'Krona One', sans-serif; font-size: 0.95em; color: #f87171; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">{opp['opponent_name']}</div>
+                                    <div id="o-clan-{i}" style="font-size: 0.65em; color: rgba(255,255,255,0.4); font-weight: 700; margin-top: 2px;">{opp.get('opp_clan', '')}</div>
                                 </div>
-                                <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
-                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-tower-img-large" style="width: 110px; height: 110px; margin-bottom: 0;">
-                                    <span id="o-tower-lv-{i}" class="cr-tower-lv-badge" style="top: -5px; font-size: 0.65em; { 'display: none;' if opp_metrics_f['level'] == 'N/A' else '' }">LV {opp_metrics_f['level']}</span>
+                                <div style="position: relative; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;">
+                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-tower-img-large cr-tower-zoom" style="width: 100px; height: 100px; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
+                                    <span id="o-tower-lv-{i}" class="cr-tower-lv-badge" style="bottom: 0; top: auto; font-size: 0.65em; { 'display: none;' if opp_metrics_f['level'] == 'N/A' else '' }">LV {opp_metrics_f['level']}</span>
                                 </div>
-                                <div id="o-tower-hp-{i}" style="font-size: 0.7em; color: #f87171; font-weight: 950; margin-top: 5px; text-shadow: 0 0 10px rgba(248,113,113,0.3);">{opp_metrics_f.get('hp', '--')} HP</div>
+                            </div>
+                        </div>
+
+                        <!-- Linha Intermediária: Metadados (Arena, Troféus, Rank) -->
+                        <div class="cr-vs-metadata-row" style="display: flex; justify-content: center; align-items: center; gap: 30px; margin: -10px 0 5px 0; background: rgba(15, 23, 42, 0.4); padding: 5px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
+                            <div id="arena-{i}" style="font-size: 0.65em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-map-marker-alt" style="color: var(--primary); opacity: 0.7;"></i> {first_b.get('arena_name', 'Arena')}
+                            </div>
+                            <div id="trophy-change-{i}" style="font-size: 0.75em; font-weight: 900; color: { '#48bb78' if int(first_b.get('trophy_change', 0)) > 0 else ('#f56565' if int(first_b.get('trophy_change', 0)) < 0 else '#94a3b8') };">
+                                { '+' if int(first_b.get('trophy_change', 0)) > 0 else '' }{first_b.get('trophy_change', 0)} Troféus
+                            </div>
+                            <div style="display: flex; gap: 15px; font-size: 0.65em; font-weight: 800; color: #fbbf24;">
+                                <span id="rank-p-{i}"><i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank P: {first_b.get('posicao_global_jogador', 'N/A')}</span>
+                                <span id="rank-o-{i}"><i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank O: {first_b.get('posicao_global_oponente', 'N/A')}</span>
                             </div>
                         </div>
 
                         <!-- Linha 2: Decks 4x2 -->
-                        <div class="cr-vs-decks-grid-v2" style="padding: 0; gap: 15px;">
-                            <div id="p-grid-{i}" class="cr-grid-wrapper-premium">{self._generate_deck_grid_html_simple(first_b['my_deck'])}</div>
-                            <div id="o-grid-{i}" class="cr-grid-wrapper-premium">{self._generate_deck_grid_html_simple(first_b['opp_deck'])}</div>
+                        <div class="cr-vs-decks-grid-v2" style="display: flex; gap: 20px; padding: 0;">
+                            <div id="p-grid-{i}" style="flex: 1; background: rgba(255,255,255,0.02); border-radius: 15px; padding: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                                {self._generate_deck_grid_html_simple(first_b['my_deck'])}
+                            </div>
+                            <div id="o-grid-{i}" style="flex: 1; background: rgba(255,255,255,0.02); border-radius: 15px; padding: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                                {self._generate_deck_grid_html_simple(first_b['opp_deck'])}
+                            </div>
                         </div>
 
                         <!-- Linha 3: Métricas Horizontais Unificadas -->
-                        <div class="cr-vs-metrics-unified" style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                            <div class="cr-vs-footer-metrics">
-                                <div id="player-metrics-{i}" style="display: flex; gap: 12px; justify-content: center;">
+                        <div class="cr-vs-metrics-unified" style="background: rgba(0,0,0,0.4); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);">
+                            <div class="cr-vs-footer-metrics" style="display: flex; align-items: center; justify-content: space-around;">
+                                <div id="player-metrics-{i}" style="display: flex; gap: 15px; justify-content: center; flex: 1;">
                                     {self._generate_metrics_panel_html_simple(my_metrics_f)}
                                 </div>
-                                <div class="cr-vs-divider-light" style="width: 1px; height: 30px; background: rgba(255,255,255,0.1); margin: 0;"></div>
-                                <div id="opp-metrics-{i}" style="display: flex; gap: 12px; justify-content: center;">
+                                <div class="cr-vs-divider-light" style="width: 1px; height: 40px; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent); margin: 0 10px;"></div>
+                                <div id="opp-metrics-{i}" style="display: flex; gap: 15px; justify-content: center; flex: 1;">
                                     {self._generate_metrics_panel_html_simple(opp_metrics_f)}
                                 </div>
                             </div>
                         </div>
 
                         <!-- Footer: Ações e Info Temporal -->
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 5px;">
-                            <div style="display: flex; justify-content: center; gap: 10px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                            <div style="display: flex; justify-content: center; gap: 12px;">
                                 <button id="p-copy-{i}" onclick="copyToClipboardDeckDirect({[c.strip() for c in first_b.get('my_deck','').split('|') if c.strip()]})" 
-                                        style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.25); color: #93c5fd; padding: 6px 14px; border-radius: 8px; font-size: 0.6em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                                    <i class="far fa-copy"></i> COPIAR MEU
+                                        style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2)); border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; padding: 8px 18px; border-radius: 10px; font-size: 0.65em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <i class="far fa-copy"></i> MEU DECK
                                 </button>
                                 <button id="o-copy-{i}" onclick="copyToClipboardDeckDirect({[c.strip() for c in first_b.get('opp_deck','').split('|') if c.strip()]})" 
-                                        style="background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.25); color: #fca5a5; padding: 6px 14px; border-radius: 8px; font-size: 0.6em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                                    <i class="far fa-copy"></i> COPIAR OPONENTE
+                                        style="background: linear-gradient(135deg, rgba(248, 113, 113, 0.2), rgba(220, 38, 38, 0.2)); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; padding: 8px 18px; border-radius: 10px; font-size: 0.65em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <i class="far fa-copy"></i> OPONENTE
                                 </button>
                             </div>
-                            <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.6em; color: rgba(255,255,255,0.25); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                                <span id="date-{i}"><i class="far fa-calendar-alt"></i> {first_b.get('data_str','--/--').split(' ')[0]}</span>
-                                <span id="time-{i}"><i class="far fa-clock"></i> {first_b.get('data_str','--/--').split(' ')[1] if ' ' in first_b.get('data_str','') else '--:--'}</span>
+                            <div style="display: flex; justify-content: center; gap: 20px; font-size: 0.65em; color: rgba(255,255,255,0.3); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+                                <span id="date-{i}"><i class="far fa-calendar-alt" style="margin-right: 5px;"></i> {first_b.get('data_str','--/--').split(' ')[0]}</span>
+                                <span id="time-{i}"><i class="far fa-clock" style="margin-right: 5px;"></i> {first_b.get('data_str','--/--').split(' ')[1] if ' ' in first_b.get('data_str','') else '--:--'}</span>
                             </div>
                         </div>
 
                         <!-- Histórico (History Dots) -->
-                        <div style="margin-top: 5px; padding: 10px 15px; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.02);">
-                            <span style="font-size: 0.55em; font-weight: 950; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 2px;">HISTÓRICO:</span>
-                            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <div style="margin-top: 5px; padding: 12px 18px; background: rgba(0,0,0,0.3); border-radius: 15px; display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.03); box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);">
+                            <span style="font-size: 0.6em; font-weight: 950; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 2px;">RECENTES:</span>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                 {self._generate_history_dots(i, stats_list, player_name, player_clan, opp["opponent_name"], opp.get('opp_clan', ''), opp['opponent_tag'])}
                             </div>
                         </div>
@@ -3235,12 +3300,13 @@ class GitHubPagesHTMLGenerator:
             cards_for_copy = [c.strip() for c in deck_str.split('|') if c.strip()]
             
             html += f'''
-            <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-left: 4px solid #f87171; min-height: auto; margin-bottom: 20px; padding: 0 !important; overflow: visible;">
-                <div class="cr-deck-header" style="padding: 8px 15px; background: rgba(248, 113, 113, 0.08); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                        <span class="cr-deck-rank" style="background:#f87171; color: #fff; padding: 2px 8px; border-radius: 5px; font-weight: 900; font-size: 0.75em;">#{i} LETHAL</span>
-                        <span style="color: #fca5a5; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">{losses} DERROTAS CAUSADAS</span>
-                        <span style="margin-left: auto; font-size: 0.65em; color: rgba(255,255,255,0.3); font-weight: 700;">VISTO EM: {last}</span>
+            <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-top: 4px solid #f87171; min-height: auto; margin-bottom: 20px; padding: 0 !important; overflow: visible;">
+                <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <span class="cr-deck-rank" style="background:#f87171; color: #fff;">#{i} LETHAL</span>
+                        <div class="cr-mode-badge" style="background:#f87171; position: static; margin: 0;">Deck Algoz</div>
+                        <span class="cr-wr-badge" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">{losses} Derrotas Causadas</span>
+                        <span style="margin-left: auto; color: rgba(255,255,255,0.5); font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">VISTO EM: {last}</span>
                     </div>
                 </div>
                 
@@ -3250,14 +3316,9 @@ class GitHubPagesHTMLGenerator:
                         <!-- Linha 1: Cabeçalho com Torre (Towers on Top) -->
                         <div class="cr-vs-top-row" style="padding: 5px 20px; margin-bottom: 0; justify-content: center;">
                             <div class="cr-tower-stage-o" style="display: flex; flex-direction: column; align-items: center;">
-                                <div style="text-align: center; margin-bottom: 8px;">
-                                    <div style="font-size: 0.55em; color: rgba(248, 113, 113, 0.4); font-weight: 800; letter-spacing: 1px;">OPONENTE LETHAL</div>
-                                    <div style="font-family: 'Krona One', sans-serif; font-size: 0.8em; color: #fca5a5; font-weight: 900;">Causal Deck</div>
-                                </div>
                                 <div style="position: relative; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;">
                                     <img src="{tower_url}" class="cr-tower-img-large" style="width: 100px; height: 100px; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
-                                    <span class="cr-tower-lv-badge" style="background: #000; border: 1px solid #f87171; color: #fff; font-size: 10px; padding: 2px 6px;">LV {metrics.get('level')}</span>
-                                    <span class="cr-tower-hp-text" style="color: #f87171; bottom: -5px;">{metrics.get('hp', '--')} HP</span>
+                                    <span class="cr-tower-lv-badge" style="background: #000; border: 1px solid #f87171; color: #fff; font-size: 10px; padding: 2px 6px;">LV {metrics.get('level', 14)}</span>
                                 </div>
                             </div>
                         </div>
@@ -3276,7 +3337,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
                             
                             <button onclick="copyToClipboardDeckDirect({cards_for_copy})" 
-                                    style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); color: #fca5a5; padding: 8px 20px; border-radius: 10px; font-size: 0.75em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s;"
+                                    style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; padding: 8px 20px; border-radius: 10px; font-size: 0.75em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s;"
                                     onmouseover="this.style.background='rgba(248, 113, 113, 0.2)'; this.style.transform='translateY(-2px)';"
                                     onmouseout="this.style.background='rgba(248, 113, 113, 0.1)'; this.style.transform='translateY(0)';"
                                     class="cr-copy-btn-premium">
@@ -4907,12 +4968,12 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-tower-img-large {
-            width: 155px;
-            height: 155px;
+            width: 100px;
+            height: 100px;
             object-fit: contain;
             filter: drop-shadow(0 15px 35px rgba(0,0,0,0.7));
             transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
-            margin-bottom: -30px;
+            margin-bottom: -10px;
             position: relative;
             z-index: 1;
         }
