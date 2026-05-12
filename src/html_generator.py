@@ -2976,13 +2976,17 @@ class GitHubPagesHTMLGenerator:
                 .cr-tower-zoom {
                     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s ease !important;
                     cursor: pointer;
-                    transform-origin: center bottom;
+                    transform-origin: bottom center !important;
                     will-change: transform;
-                    backface-visibility: hidden;
+                    image-rendering: auto;
                 }
                 .cr-tower-zoom:hover {
-                    transform: scale(1.1) translateY(-5px) !important;
-                    filter: brightness(1.15) drop-shadow(0 10px 20px rgba(0,0,0,0.4)) !important;
+                    transform: scale(1.15) translateY(-8px) !important;
+                    filter: brightness(1.2) drop-shadow(0 12px 24px rgba(0,0,0,0.5)) !important;
+                    z-index: 100 !important;
+                }
+                .cr-battle-preview-v2 div {
+                    white-space: nowrap !important;
                 }
                 .cr-opp-card-row {
                     padding-bottom: 5px !important;
@@ -3054,21 +3058,21 @@ class GitHubPagesHTMLGenerator:
         leak_icon = local_leak_icon if leaked > 0.1 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
         
         return f"""
-            <div class="cr-metric-inline" title="Elixir" style="display: flex; align-items: center; gap: 5px;">
-                <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 18px; height: 18px;">
-                <span style="font-weight: 800; font-size: 1.1em; color: #fff;">{metrics['avg']}</span>
+            <div class="cr-metric-inline" title="Elixir" style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 22px; height: 22px;">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">{metrics['avg']}</span>
             </div>
-            <div class="cr-metric-inline" title="Ciclo" style="display: flex; align-items: center; gap: 5px;">
-                <img src="https://cdn.royaleapi.com/static/img/ui/deck-cycle.png" style="width: 18px; height: 18px; filter: brightness(1.2);">
-                <span style="font-weight: 800; font-size: 1.1em; color: #fff;">{metrics['cycle']}</span>
+            <div class="cr-metric-inline" title="Ciclo" style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/deck-cycle.png" style="width: 22px; height: 22px; filter: brightness(1.2);">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">{metrics['cycle']}</span>
             </div>
-            <div class="cr-metric-inline {leak_class}" title="Leak" style="display: flex; align-items: center; gap: 5px;">
-                <img src="{leak_icon}" style="width: 18px; height: 18px; opacity: {0.5 if leaked <= 0.1 else 1}; filter: { 'drop-shadow(0 0 8px rgba(255,0,0,0.8))' if leaked > 0.1 else 'none' };">
-                <span style="font-weight: 800; font-size: 1.1em; color: {metrics.get('leaked_color', '#fff')};">{metrics.get('leaked_label', 'N/A')}</span>
+            <div class="cr-metric-inline {leak_class}" title="Leak" style="display: flex; align-items: center; gap: 8px;">
+                <img src="{leak_icon}" style="width: 22px; height: 22px; opacity: {0.5 if leaked <= 0.1 else 1}; filter: { 'drop-shadow(0 0 10px rgba(255,0,0,0.8))' if leaked > 0.1 else 'none' };">
+                <span style="font-weight: 900; font-size: 1.3em; color: {metrics.get('leaked_color', '#fff')};">{metrics.get('leaked_label', 'N/A')}</span>
             </div>
-            <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 5px;">
-                <img src="https://cdn.royaleapi.com/static/img/ui/king-tower.png" style="width: 18px; height: 18px;">
-                <span style="font-weight: 800; font-size: 1.1em; color: #fff;">{t_hp}</span>
+            <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://cdn.royaleapi.com/static/img/ui/king-tower.png" style="width: 22px; height: 22px;">
+                <span style="font-weight: 900; font-size: 1.3em; color: #fff;">{t_hp}</span>
             </div>
         """
 
@@ -3109,101 +3113,86 @@ class GitHubPagesHTMLGenerator:
                     </div>
                 </div>
 
-                <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 0 12px 4px 12px !important; min-height: 0 !important; height: auto !important;">
-                    <div class="cr-vs-stage-v2" style="height: auto !important; min-height: 0 !important;">
-                        <!-- Amostragem da Batalha Premium v2 -->
-                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.5fr 1fr 1.5fr; align-items: center; gap: 10px; padding: 15px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
-                            <!-- Lado Esquerdo: Player Style -->
-                            <div style="text-align: left; display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
-                                <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{self.player_tag}</div>
-                                <div style="font-family: 'Krona One', sans-serif, system-ui; font-size: 1.1em; color: #fff; line-height: 1.2; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    {player_name}
+                <div class="cr-main-vs-stage" id="main-vs-{i}" style="padding: 15px 20px 10px 20px !important; min-height: 0 !important; height: auto !important;">
+                    <div class="cr-vs-stage-v2" style="height: auto !important; min-height: 0 !important; display: flex; flex-direction: column; gap: 15px;">
+                        
+                        <!-- Linha 1: Torres e Placar (Towers on Top) -->
+                        <div class="cr-vs-top-row" style="padding: 10px 20px; margin-bottom: 0;">
+                            <div class="cr-tower-stage-p">
+                                <div style="text-align: center; margin-bottom: 8px;">
+                                    <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{self.player_tag}</div>
+                                    <div style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #fff; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{player_name}</div>
                                 </div>
-                                <div style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase;">{player_clan or 'Sem Clã'}</div>
+                                <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
+                                    <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" class="cr-tower-img-large" style="width: 110px; height: 110px; margin-bottom: 0;">
+                                    <span id="p-tower-lv-{i}" class="cr-tower-lv-badge" style="top: -5px; font-size: 0.65em; { 'display: none;' if my_metrics_f['level'] == 'N/A' else '' }">LV {my_metrics_f['level']}</span>
+                                </div>
+                                <div id="p-tower-hp-{i}" style="font-size: 0.7em; color: #4ade80; font-weight: 950; margin-top: 5px; text-shadow: 0 0 10px rgba(74,222,128,0.3);">{my_metrics_f.get('hp', '--')} HP</div>
                             </div>
 
-                            <!-- Centro: Placar e Modo -->
-                            <div style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                                <div id="score-{i}" style="font-size: 2.8em; font-weight: 950; color: #fff; letter-spacing: -1px; line-height: 1; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                            <div class="cr-modal-score-center">
+                                <div id="score-{i}" style="font-size: 3.2em; font-weight: 950; color: #fff; letter-spacing: -2px; line-height: 1; text-shadow: 0 4px 15px rgba(0,0,0,0.6); white-space: nowrap !important;">
                                     {first_b.get('crowns', 0)} - {first_b.get('opponent_crowns', 0)}
                                 </div>
-                                <div id="mode-{i}" style="background: rgba(15, 23, 42, 0.8); padding: 2px 10px; border-radius: 6px; font-size: 0.5em; font-weight: 900; color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.08); text-transform: uppercase; white-space: nowrap;">
+                                <div id="mode-{i}" style="background: rgba(15, 23, 42, 0.9); padding: 3px 12px; border-radius: 8px; font-size: 0.55em; font-weight: 900; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.12); text-transform: uppercase; letter-spacing: 1px;">
                                     {first_b.get('modo_jogo', 'Batalha')}
                                 </div>
                             </div>
 
-                            <!-- Lado Direito: Opponent Style -->
-                            <div style="text-align: right; display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
-                                <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{opp['opponent_tag']}</div>
-                                <div style="font-size: 1.25em; font-weight: 950; color: #f87171; text-transform: uppercase; letter-spacing: -0.5px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    <span style="opacity: 0.4; font-size: 0.6em; vertical-align: middle; margin-right: 2px;">OPONENTE:</span>{opp['opponent_name']}
+                            <div class="cr-tower-stage-p">
+                                <div style="text-align: center; margin-bottom: 8px;">
+                                    <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{opp['opponent_tag']}</div>
+                                    <div style="font-family: 'Krona One', sans-serif; font-size: 0.9em; color: #f87171; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">{opp['opponent_name']}</div>
                                 </div>
-                                <div style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase;">{opp.get('opp_clan', 'Sem Clã')}</div>
+                                <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
+                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-tower-img-large" style="width: 110px; height: 110px; margin-bottom: 0;">
+                                    <span id="o-tower-lv-{i}" class="cr-tower-lv-badge" style="top: -5px; font-size: 0.65em; { 'display: none;' if opp_metrics_f['level'] == 'N/A' else '' }">LV {opp_metrics_f['level']}</span>
+                                </div>
+                                <div id="o-tower-hp-{i}" style="font-size: 0.7em; color: #f87171; font-weight: 950; margin-top: 5px; text-shadow: 0 0 10px rgba(248,113,113,0.3);">{opp_metrics_f.get('hp', '--')} HP</div>
                             </div>
                         </div>
 
-                        <!-- Decks e Torres -->
-                        <div class="cr-vs-decks-grid-v2" style="gap: 10px; margin-top: 15px; height: auto !important; min-height: 0 !important;">
-                            <div class="cr-side-container" style="position: relative; flex: 1; min-height: 130px !important; height: auto !important; background: transparent; padding: 0;">
-                                <div id="p-tower-container-{i}" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; z-index: 1;">
-                                    <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" class="cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.4));">
-                                    <div style="margin-top: -10px; display: flex; flex-direction: column; align-items: center;">
-                                        <div class="cr-hp-bar-mini" style="width: 45px;"><div id="p-tower-bar-{i}" style="width: 100%; height: 100%; background: #4ade80;"></div></div>
-                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                                            <span id="p-tower-lv-{i}" class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 8px; padding: 1px 5px; background: #000; border: 1px solid #fbbf24; color: #fff; border-radius: 4px; font-weight: 900; { 'display: none;' if my_metrics_f['level'] == 'N/A' else '' }">LV {my_metrics_f['level']}</span>
-                                            <span id="p-tower-hp-{i}" style="font-size: 7px; color: #4ade80; font-weight: 900; line-height: 1;">{my_metrics_f.get('hp', '--')} HP</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="p-grid-{i}" style="margin-top: 45px;">{self._generate_deck_grid_html_simple(first_b['my_deck'])}</div>
-                                <div id="player-metrics-{i}" style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 8px;">
+                        <!-- Linha 2: Decks 4x2 -->
+                        <div class="cr-vs-decks-grid-v2" style="padding: 0; gap: 15px;">
+                            <div id="p-grid-{i}" class="cr-grid-wrapper-premium">{self._generate_deck_grid_html_simple(first_b['my_deck'])}</div>
+                            <div id="o-grid-{i}" class="cr-grid-wrapper-premium">{self._generate_deck_grid_html_simple(first_b['opp_deck'])}</div>
+                        </div>
+
+                        <!-- Linha 3: Métricas Horizontais Unificadas -->
+                        <div class="cr-vs-metrics-unified" style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 12px; border: 1px solid rgba(255,255,255,0.03);">
+                            <div class="cr-vs-footer-metrics">
+                                <div id="player-metrics-{i}" style="display: flex; gap: 12px; justify-content: center;">
                                     {self._generate_metrics_panel_html_simple(my_metrics_f)}
                                 </div>
-                            </div>
-
-                            <div class="cr-side-container" style="position: relative; flex: 1; min-height: 130px !important; height: auto !important; background: transparent; padding: 0;">
-                                <div id="o-tower-container-{i}" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; z-index: 1;">
-                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 12px rgba(248, 113, 113, 0.4));">
-                                    <div style="margin-top: -10px; display: flex; flex-direction: column; align-items: center;">
-                                        <div class="cr-hp-bar-mini" style="width: 45px;"><div id="o-tower-bar-{i}" style="width: 100%; height: 100%; background: #f87171;"></div></div>
-                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                                            <span id="o-tower-lv-{i}" class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 8px; padding: 1px 5px; background: #000; border: 1px solid #fbbf24; color: #fff; border-radius: 4px; font-weight: 900; { 'display: none;' if opp_metrics_f['level'] == 'N/A' else '' }">LV {opp_metrics_f['level']}</span>
-                                            <span id="o-tower-hp-{i}" style="font-size: 7px; color: #f87171; font-weight: 900; line-height: 1;">{opp_metrics_f.get('hp', '--')} HP</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="o-grid-{i}" style="margin-top: 45px;">{self._generate_deck_grid_html_simple(first_b['opp_deck'])}</div>
-                                <div id="opp-metrics-{i}" style="margin-top: 10px; display: flex; gap: 8px; justify-content: center; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 8px;">
+                                <div class="cr-vs-divider-light" style="width: 1px; height: 30px; background: rgba(255,255,255,0.1); margin: 0;"></div>
+                                <div id="opp-metrics-{i}" style="display: flex; gap: 12px; justify-content: center;">
                                     {self._generate_metrics_panel_html_simple(opp_metrics_f)}
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Footer Premium v2 - Estrutura de Paridade com Imagem -->
-                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 12px; background: transparent; border: none; position: relative;">
-                            <!-- Linha 2: Botoes de Acao (Copia de Decks) -->
-                            <div style="margin-top: 10px; display: flex; justify-content: center; gap: 12px;">
+                        <!-- Footer: Ações e Info Temporal -->
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 5px;">
+                            <div style="display: flex; justify-content: center; gap: 10px;">
                                 <button id="p-copy-{i}" onclick="copyToClipboardDeckDirect({[c.strip() for c in first_b.get('my_deck','').split('|') if c.strip()]})" 
-                                        style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; padding: 5px 12px; border-radius: 6px; font-size: 0.65em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                                    <i class="far fa-copy"></i> COPIAR MEU DECK
+                                        style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.25); color: #93c5fd; padding: 6px 14px; border-radius: 8px; font-size: 0.6em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                                    <i class="far fa-copy"></i> COPIAR MEU
                                 </button>
                                 <button id="o-copy-{i}" onclick="copyToClipboardDeckDirect({[c.strip() for c in first_b.get('opp_deck','').split('|') if c.strip()]})" 
-                                        style="background: rgba(248, 113, 113, 0.2); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; padding: 5px 12px; border-radius: 6px; font-size: 0.65em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                                        style="background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.25); color: #fca5a5; padding: 6px 14px; border-radius: 8px; font-size: 0.6em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
                                     <i class="far fa-copy"></i> COPIAR OPONENTE
                                 </button>
                             </div>
-
-                            <!-- Linha 3: Data e Hora -->
-                            <div style="margin-top: 8px; display: flex; justify-content: center; gap: 15px; font-size: 0.65em; color: rgba(255,255,255,0.2); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                            <div style="display: flex; justify-content: center; gap: 15px; font-size: 0.6em; color: rgba(255,255,255,0.25); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
                                 <span id="date-{i}"><i class="far fa-calendar-alt"></i> {first_b.get('data_str','--/--').split(' ')[0]}</span>
                                 <span id="time-{i}"><i class="far fa-clock"></i> {first_b.get('data_str','--/--').split(' ')[1] if ' ' in first_b.get('data_str','') else '--:--'}</span>
                             </div>
                         </div>
 
-                        <!-- Secao de Historico (History Dots) -->
-                        <div style="margin-top: 6px; padding: 8px 12px; background: rgba(0,0,0,0.25); border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.03);">
-                            <span style="font-size: 0.6em; font-weight: 950; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 1.5px; flex-shrink: 0;">HISTÓRICO:</span>
-                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <!-- Histórico (History Dots) -->
+                        <div style="margin-top: 5px; padding: 10px 15px; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.02);">
+                            <span style="font-size: 0.55em; font-weight: 950; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 2px;">HISTÓRICO:</span>
+                            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                                 {self._generate_history_dots(i, stats_list, player_name, player_clan, opp["opponent_name"], opp.get('opp_clan', ''), opp['opponent_tag'])}
                             </div>
                         </div>
