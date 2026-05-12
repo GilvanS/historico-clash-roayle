@@ -103,7 +103,7 @@ class ClanAnalyticsGenerator(GitHubPagesHTMLGenerator):
         """Generate error page when no clan data is available"""
         return """
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -385,7 +385,7 @@ class ClanAnalyticsGenerator(GitHubPagesHTMLGenerator):
         
         return f"""
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -522,17 +522,19 @@ class ClanAnalyticsGenerator(GitHubPagesHTMLGenerator):
 
 def main():
     """Generate clan analytics HTML report"""
+    # Get the repository root directory (one level up from src)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.dirname(script_dir)
+    
     generator = ClanAnalyticsGenerator()
     html_content = generator.generate_clan_html_report()
     
-    # Ensure docs directory exists
-    os.makedirs('../docs', exist_ok=True)
-    
-    # Save as clan.html for GitHub Pages in root directory
-    with open('../clan.html', 'w', encoding='utf-8') as f:
+    # Save as clan.html in root directory
+    filepath = os.path.join(root_dir, 'clan.html')
+    with open(filepath, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print("Clan analytics HTML report generated: ../clan.html")
+    print(f"Clan analytics HTML report generated: {filepath}")
 
 if __name__ == "__main__":
     main()
