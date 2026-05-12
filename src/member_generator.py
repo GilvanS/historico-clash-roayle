@@ -6,9 +6,13 @@ Generates detailed member pages with deck change tracking
 
 import os
 import re
+import logging
 from datetime import datetime
 from typing import List, Dict, Optional
 from html_generator import GitHubPagesHTMLGenerator
+
+logger = logging.getLogger(__name__)
+
 
 class MemberPageGenerator(GitHubPagesHTMLGenerator):
     def __init__(self, db_path: str = None):
@@ -16,6 +20,12 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
     
     def get_member_deck_history(self, player_tag: str) -> List[Dict]:
         """Get complete deck change history for a member, consolidating consecutive identical decks"""
+        if not hasattr(self.csv_manager, 'conn') or self.csv_manager.conn is None:
+            # Em modo 100% CSV, o historico de decks para a linha do tempo e carregado
+            # via arquivos players.csv ou clan_members.csv se disponivel.
+            # Por enquanto, retornamos vazio para evitar quebra do build.
+            return []
+            
         conn = self.csv_manager.conn
         cursor = conn.cursor()
 
@@ -112,6 +122,21 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
     
     def get_member_info(self, player_tag: str) -> Optional[Dict]:
         """Get member basic info"""
+        if not hasattr(self.csv_manager, 'conn') or self.csv_manager.conn is None:
+            # Modo Fallback CSV: Procura no clan_members_cache
+            for m in self.clan_members_cache:
+                if m.get('player_tag') == player_tag:
+                    return {
+                        'player_tag': player_tag,
+                        'name': m.get('name', 'Desconhecido'),
+                        'role': m.get('role', 'member'),
+                        'trophies': int(m.get('trophies', 0) or 0),
+                        'donations': int(m.get('donations', 0) or 0),
+                        'donations_received': int(m.get('donations_received', 0) or 0),
+                        'last_seen': m.get('last_seen', '')
+                    }
+            return None
+            
         conn = self.csv_manager.conn
         cursor = conn.cursor()
 
@@ -485,17 +510,22 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
 def main():
     """Generate member pages for all clan members"""
     generator = MemberPageGenerator()
+    generated_pages = []
     
-    # Use the connection from the generator's manager
-    conn = generator.csv_manager.conn
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT DISTINCT player_tag, name FROM clan_members")
-    members = cursor.fetchall()
+    # Tenta obter membros via SQL ou fallback para Cache de CSV
+    if hasattr(generator.csv_manager, 'conn') and generator.csv_manager.conn:
+        conn = generator.csv_manager.conn
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT player_tag, name FROM clan_members")
+        members = cursor.fetchall()
+    else:
+        # Modo Fallback: Usa o cache ja carregado do clan_members.csv no HTMLGenerator
+        logger.info("Modo SQL indisponivel. Usando cache de membros do CSV.")
+        members = [(m['player_tag'], m['name']) for m in generator.clan_members_cache]
     
     if not members:
         print("No clan members found")
-        return
+        return []
     
     # Ensure docs directory exists
     os.makedirs('../docs', exist_ok=True)

@@ -2336,9 +2336,13 @@ class GitHubPagesHTMLGenerator:
         return final_list[:10]
 
     def generate_weekly_decks_html(self, weekly_data: List[Dict]) -> str:
-        """Gera HTML da aba 'Meus Decks' com timeline interativa e preview."""
-        if not weekly_data: return '<p>Nenhum dado encontrado para os últimos 7 dias.</p>'
+        """Gera HTML da aba 'Meus Decks' com timeline interativa e layout Premium v2."""
+        if not weekly_data: return '<div class="cr-empty-state">Nenhum dado encontrado para os últimos 7 dias.</div>'
         import json, urllib.parse
+        
+        player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
+        player_clan = next((p.get('clan_name', '') for p in self.players_cache if p.get('player_tag') == self.player_tag), '')
+
         html = '<div class="cr-decks-list">'
         for i, deck in enumerate(weekly_data, 1):
             total = deck['total']
@@ -2346,177 +2350,163 @@ class GitHubPagesHTMLGenerator:
             wins_pct = round((deck['wins']/total*100), 1) if total > 0 else 0
             losses_pct = round((deck['losses']/total*100), 1) if total > 0 else 0
             draws_pct = round(max(0, 100 - wins_pct - losses_pct), 1)
-            deck_id = f"deck-{i}"
+            deck_id = f"weekly-{i}"
             
-            cards_list = [c.strip() for c in deck['deck_cards'].replace(' | ', '|').split('|')]
-            metrics = self._get_deck_metrics(deck['deck_cards'])
+            # Primeira batalha para o preview inicial
+            first_b = deck['battles'][0] if deck['battles'] else {}
+            my_m_f = self._get_battle_deck_metrics(first_b['my_deck'], first_b, is_opponent=False)
+            opp_m_f = self._get_battle_deck_metrics(first_b['opp_deck'], first_b, is_opponent=True)
             
-            # Pega o primeiro combate para extrair o modo de jogo
-            first_battle = deck['battles'][0] if deck['battles'] else {}
-            game_mode = first_battle.get('modo_jogo', 'Batalha')
-            
-            # Card da Torre
-            tower_name = first_battle.get('torre_jogador') or 'Tower Princess'
-            fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
-            tower_card_html = f'''
-                <div class="cr-tower-card-premium" title="{tower_name}" style="margin: 0 auto 15px auto;">
-                    <img src="{self.get_card_image_path(tower_name)}" class="cr-tower-card-img" onerror="this.src='{fallback_tower}'">
-                    <span class="cr-card-level-badge" style="bottom: -2px; right: -2px; font-size: 0.5em; padding: 1px 4px;">Lv {metrics.get('level', 14)}</span>
-                </div>'''
-
-            grid_h = f'''
-            <div class="cr-deck-side" style="flex:1; width:100%;">
-                <div class="cr-game-mode-badge" style="margin-bottom:10px;">{game_mode}</div>
-                <div class="cr-side-container" style="min-height: auto;">
-                    <div class="cr-tower-overlap" style="opacity: 0.15;">
-                        <img src="{self.get_tower_image_path(tower_name)}" class="cr-tower-img-premium" style="max-height: 120px;">
-                    </div>
-                    <div class="cr-grid-wrapper-premium" style="width: 100%;">
-                        <div class="cr-grid-4x2">
-                            {"".join(f'<div class="cr-card-wrap" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in cards_list)}
-                        </div>
-                    </div>
-                </div>
-                <div class="cr-deck-metrics" style="margin-top:10px; justify-content:center;">
-                    <div class="cr-metric-item"><span class="cr-elixir-icon">💧</span> {metrics["avg"]}</div>
-                    <div class="cr-metric-item"><span class="cr-elixir-icon">🔄</span> {metrics["cycle"]}</div>
-                </div>
-            </div>'''
-
-
-            # Timeline com data e hora
+            # Timeline HTML
             timeline_h = ""
             for idx, b in enumerate(deck['battles'][:15]):
-                # Calcula metricas completas para cada lado via metodo centralizado
                 my_m = self._get_battle_deck_metrics(b['my_deck'], b, is_opponent=False)
                 opp_m = self._get_battle_deck_metrics(b['opp_deck'], b, is_opponent=True)
                 
-                b_json = urllib.parse.quote(json.dumps({
-                    'my_deck': b['my_deck'], 
-                    'opp_deck': b['opp_deck'],
-                    'my_icons': [self.get_card_image_path(c) for c in b['my_deck'].replace(' | ', '|').split('|') if c.strip()],
-                    'opp_icons': [self.get_card_image_path(c) for c in b['opp_deck'].replace(' | ', '|').split('|') if c.strip()],
-                    'player_name': self.players_cache[0].get('name', 'Jogador') if self.players_cache else 'Jogador',
-                    'opp_name': b.get('nome_oponente', 'Oponente'),
-                    'my_metrics': my_m,
-                    'opp_metrics': opp_m,
-                    'game_mode': b.get('modo_jogo', 'Batalha'),
-                    'crowns': b.get('coroas_jogador', 0),
-                    'opponent_crowns': b.get('coroas_oponente', 0),
-                    'trophy_change': b.get('trofeus', 0),
-                    'date': b['data'],
-                    'player_clan': b.get('player_clan', ''),
-                    'opp_clan': b.get('opp_clan', '')
-                }))
-                active = "box-shadow: 0 0 0 3px #4299e1; transform: scale(1.1);" if idx == 0 else ""
+                # Dados para o JS
+                b_data = {
+                    "crowns": b.get('coroas_jogador', 0),
+                    "o_crowns": b.get('coroas_oponente', 0),
+                    "mode": b.get('modo_jogo', 'Batalha'),
+                    "date": b['dt_obj'].strftime('%d/%m'),
+                    "time": b['dt_obj'].strftime('%H:%M'),
+                    "p_metrics": self._generate_metrics_panel_html_simple(my_m),
+                    "o_metrics": self._generate_metrics_panel_html_simple(opp_m),
+                    "p_grid": self._generate_deck_grid_html_simple(b['my_deck']),
+                    "o_grid": self._generate_deck_grid_html_simple(b['opp_deck']),
+                    "p_tower_url": my_m['tower_url'],
+                    "o_tower_url": opp_m['tower_url'],
+                    "p_level": my_m['level'],
+                    "o_level": opp_m['level'],
+                    "p_hp": my_m.get('hp', '--'),
+                    "o_hp": opp_m.get('hp', '--'),
+                    "p_name": player_name,
+                    "o_name": b.get('nome_oponente', 'Oponente'),
+                    "p_clan": player_clan,
+                    "o_clan": b.get('opp_clan', 'Sem Clã'),
+                    "p_tag": self.player_tag,
+                    "o_tag": b.get('tag_oponente', '000000'),
+                    "p_deck_list": [c.strip() for c in b['my_deck'].replace(' | ', '|').split('|') if c.strip()],
+                    "o_deck_list": [c.strip() for c in b['opp_deck'].replace(' | ', '|').split('|') if c.strip()]
+                }
                 
-                # Formata data para a timeline usando o objeto datetime
-                d_short = b['dt_obj'].strftime('%d/%m')
-                h_short = b['dt_obj'].strftime('%H:%M')
-                
+                data_attr = json.dumps(b_data).replace('"', '&quot;')
                 res = b['resultado'].lower()
-                cor = '#48bb78' if res in ['vitoria','victory', 'vitória'] else ('#f56565' if res in ['derrota','defeat'] else '#ed8936')
-                ic = 'V' if res in ['vitoria','victory', 'vitória'] else ('D' if res in ['derrota','defeat'] else 'E')
+                res_char = 'V' if any(x in res for x in ['vitoria', 'victory', 'vitória']) else ('D' if any(x in res for x in ['derrota', 'defeat']) else 'E')
+                res_color = '#48bb78' if res_char == 'V' else ('#f56565' if res_char == 'D' else '#718096')
+                active_class = "active" if idx == 0 else ""
                 
                 timeline_h += f'''
-                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;" onclick="updateBattlePreview('{deck_id}', {idx}, '{b_json}')">
-                    <span class="cr-battle-badge" style="background:{cor};{active}" title="{b["data"]}">{ic}</span>
-                    <span style="font-size:0.6em;color:#4a5568;font-weight:bold;">{d_short}</span>
+                <div class="cr-history-dot {active_class}" 
+                     style="border-bottom: 2px solid {res_color};"
+                     data-battle="{data_attr}"
+                     onclick="updateOpponentView('{deck_id}', this)"
+                     title="{b["data"]} - {res_char}">
+                    <span class="dot-res" style="color: {res_color}">{res_char}</span>
+                    <span class="dot-time">{b['dt_obj'].strftime('%H:%M')}</span>
                 </div>'''
 
-            # Preview VS aprimorado
-            my_deck_init = first_battle.get('my_deck', deck['deck_cards'])
-            opp_deck_init = first_battle.get('opp_deck', '')
+            wr_c = '#48bb78' if win_rate >= 60 else ('#f56565' if win_rate <= 40 else '#718096')
             
-            def get_preview_grid(d_str, side_class, p_name="Jogador", is_opponent=False, battle_ctx=None):
-                if not d_str: return f'<div class="{side_class} cr-empty-grid">N/D</div>'
-                cards = [c.strip() for c in d_str.replace(' | ','|').split('|') if c.strip()][:8]
-
-                if battle_ctx:
-                    metrics = self._get_battle_deck_metrics(d_str, battle_ctx, is_opponent=is_opponent)
-                else:
-                    metrics = self._get_deck_metrics(d_str)
-
-                # Metricas extraidas centralizadamente
-                leaked  = metrics.get('leaked', 0)
-                t_level = metrics.get('level', 14)
-                t_hp    = metrics.get('hp', self._get_tower_hp(t_level))
-
-                leaked_color = '#f56565' if float(leaked) > 0 else '#48bb78'
-                leaked_label = f"{leaked:.1f}" if float(leaked) > 0 else '0.0'
-
-                # Card da Torre (No Topo conforme novo layout)
-                tower_name = metrics.get('tower_name', 'Tower Princess')
-                fallback_tower = "https://static.wikia.nocookie.net/character-catalogue/images/c/cf/Tower_Princess.png/revision/latest?cb=20231217222258"
+            html += f'''
+            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 15px; overflow: visible;">
+                <div class="cr-deck-header" style="padding: 8px 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                        <span class="cr-deck-rank" style="background:#4299e1; color: #fff; padding: 2px 8px; border-radius: 5px; font-weight: 900; font-size: 0.75em;">#{i}</span>
+                        <span style="color: #fff; font-size: 0.85em; font-weight: 900;">WR: {win_rate}% <span style="opacity: 0.5; font-size: 0.8em; font-weight: 400;">({deck['recent_total']} partidas na semana)</span></span>
+                        <span class="cr-wr-badge" style="margin-left: auto; background:{wr_c}; font-weight: 900; font-size: 0.7em; padding: 2px 6px;">{total} TOTAL</span>
+                    </div>
+                </div>
                 
-                tower_card_html = f'''
-                    <div class="cr-tower-card-premium" title="{tower_name}">
-                        <img src="{self.get_card_image_path(tower_name)}" class="cr-tower-card-img" onerror="this.src='{fallback_tower}'">
-                        <span class="cr-card-level-badge">Lv {t_level}</span>
-                    </div>'''
+                <div class="cr-progress-bar" style="height: 4px; background: rgba(0,0,0,0.3); display: flex;">
+                    <div class="cr-bar-wins" style="width:{wins_pct}%; background: #48bb78;"></div>
+                    <div class="cr-bar-draws" style="width:{draws_pct}%; background: #718096;"></div>
+                    <div class="cr-bar-losses" style="width:{losses_pct}%; background: #f56565;"></div>
+                </div>
 
-                grid_html = f'''
-                    <div class="cr-grid-4x2">
-                        {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img"><span class="cr-card-level-badge">Lv {t_level}</span></div>' for c in cards)}
-                    </div>'''
-
-                # Metricas Horizontais
-                footer_html = f'''
-                    <div class="cr-deck-metrics-horizontal">
-                        <div class="cr-metric-inline" title="Media de Elixir">
-                            <span class="cr-icon">💧</span> <span class="cr-val">{metrics["avg"]}</span>
-                        </div>
-                        <div class="cr-metric-inline" title="Ciclo de 4 Cartas">
-                            <span class="cr-icon">🔄</span> <span class="cr-val">{metrics["cycle"]}</span>
-                        </div>
-                        <div class="cr-metric-inline" title="Elixir Vazado" style="color:{leaked_color}">
-                            <img src="https://cdn-icons-png.flaticon.com/512/3168/3168716.png" class="cr-leak-icon-small"> <span class="cr-val">{leaked_label}</span>
-                        </div>
-                    </div>'''
-
-                p_clan = ''
-                if battle_ctx:
-                    p_clan = battle_ctx.get('opp_clan', '') if is_opponent else ''
-                clan_line = f'<div class="cr-player-clan">{p_clan}</div>' if p_clan else ''
-                hp_display = f'{t_hp:,}' if isinstance(t_hp, int) else str(t_hp)
-
-                return f'''
-                    <div class="{side_class} cr-deck-side-v2">
-                        <div class="cr-player-header-v2">
-                            {tower_card_html}
-                            <div class="cr-player-info-v2">
-                                <div class="cr-player-name-v2">{p_name}</div>
-                                {clan_line}
-                                <div class="cr-tower-hp-v2">🏰 {hp_display} HP</div>
+                <div class="cr-deck-body" style="padding: 10px 15px; background: transparent; overflow: visible;">
+                    <div class="cr-main-vs-stage" style="padding: 0; min-height: 0;">
+                        <!-- Amostragem da Batalha Premium v2 -->
+                        <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.8fr 0.4fr 1.8fr; align-items: center; gap: 10px; padding: 10px 0 15px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
+                            <div style="text-align: left; overflow: hidden;">
+                                <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{self.player_tag}</div>
+                                <div id="p-name-{deck_id}" style="font-family: 'Krona One', sans-serif; font-size: 0.95em; color: #fff; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{player_name}</div>
+                                <div id="p-clan-{deck_id}" style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800;">{player_clan or 'Sem Clã'}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div id="score-{deck_id}" style="font-size: 2.2em; font-weight: 950; color: #fff; letter-spacing: -2px;">{first_b.get('coroas_jogador', 0)} - {first_b.get('coroas_oponente', 0)}</div>
+                                <div id="mode-{deck_id}" style="font-size: 0.45em; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase;">{first_b.get('modo_jogo', 'Batalha')}</div>
+                            </div>
+                            <div style="text-align: right; overflow: hidden;">
+                                <div id="o-tag-{deck_id}" style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{first_b.get('tag_oponente', '000000')}</div>
+                                <div id="o-name-{deck_id}" style="font-size: 1.1em; font-weight: 950; color: #f87171; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{first_b.get('nome_oponente', 'Oponente')}</div>
+                                <div id="o-clan-{deck_id}" style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800;">{first_b.get('opp_clan', 'Sem Clã')}</div>
                             </div>
                         </div>
-                        {grid_html}
-                        {footer_html}
-                    </div>'''
 
+                        <!-- Decks e Torres -->
+                        <div class="cr-vs-decks-grid-v2" style="gap: 10px; margin-top: 15px;">
+                            <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
+                                <div id="p-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 1;">
+                                    <img id="p-tower-img-{deck_id}" src="{my_m_f['tower_url']}" class="cr-tower-img-large" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
+                                    <span id="p-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if my_m_f['level'] == 'N/A' else '' }">LV {my_m_f['level']}</span>
+                                    <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
+                                        <div class="cr-hp-bar-mini" style="width: 45px;"><div id="p-tower-bar-{deck_id}" style="width: 100%; height: 100%; background: #4ade80;"></div></div>
+                                        <span id="p-tower-hp-{deck_id}" style="font-size: 7px; color: #4ade80; font-weight: 900; line-height: 1; margin-top: 2px;">{my_m_f.get('hp', '--')} HP</span>
+                                    </div>
+                                </div>
+                                <div id="p-grid-{deck_id}" style="margin-top: 55px;">{self._generate_deck_grid_html_simple(first_b.get('my_deck', deck['deck_cards']))}</div>
+                            </div>
 
-            wr_c = '#48bb78' if win_rate >= 50 else '#f56565'
-            html += f'''
-            <div class="cr-deck-card">
-                <div class="cr-deck-header">
-                    <div class="cr-deck-meta">
-                        <span class="cr-deck-rank">#{i}</span>
-                        <span class="cr-deck-label">WR: {win_rate}% ({deck['recent_total']} partidas na semana)</span>
-                    </div>
-                    <span class="cr-wr-badge" style="background:{wr_c};">{total} Total</span>
-                </div>
-                <div class="cr-progress-bar"><div class="cr-bar-wins" style="width:{wins_pct}%;"></div><div class="cr-bar-draws" style="width:{draws_pct}%;"></div><div class="cr-bar-losses" style="width:{losses_pct}%;"></div></div>
-                <div class="cr-deck-body">
-                    {grid_h}
-                    <div class="cr-stats-panel" style="flex:1;">
-                        <div class="cr-modal-trigger-msg" style="text-align:center; padding:15px; background:rgba(66,153,225,0.1); border-radius:12px; margin-bottom:10px; border:1px dashed rgba(66,153,225,0.3);">
-                            <span style="font-size:0.8em; color:#4299e1; font-weight:700;">💡 Clique nos badges abaixo para abrir o replay VS</span>
+                            <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
+                                <div id="o-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 1;">
+                                    <img id="o-tower-img-{deck_id}" src="{opp_m_f['tower_url']}" class="cr-tower-img-large cr-mirror-opponent" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
+                                    <span id="o-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if opp_m_f['level'] == 'N/A' else '' }">LV {opp_m_f['level']}</span>
+                                    <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
+                                        <div class="cr-hp-bar-mini" style="width: 45px;"><div id="o-tower-bar-{deck_id}" style="width: 100%; height: 100%; background: #f87171;"></div></div>
+                                        <span id="o-tower-hp-{deck_id}" style="font-size: 7px; color: #f87171; font-weight: 900; line-height: 1; margin-top: 2px;">{opp_m_f.get('hp', '--')} HP</span>
+                                    </div>
+                                </div>
+                                <div id="o-grid-{deck_id}" style="margin-top: 55px;">{self._generate_deck_grid_html_simple(first_b.get('opp_deck', ''))}</div>
+                            </div>
+
                         </div>
-                        <div class="cr-battles-timeline"><div class="cr-timeline-badges timeline-{deck_id}" style="display:flex; gap:8px; overflow-x:auto; padding:5px 0;">{timeline_h}</div></div>
+
+                        <!-- Footer Metrics -->
+                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 10px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: grid; grid-template-columns: 1fr 1px 1fr; gap: 10px; align-items: center;">
+                                <div id="player-metrics-{deck_id}" style="display: flex; gap: 8px; justify-content: center;">
+                                    {self._generate_metrics_panel_html_simple(my_m_f)}
+                                </div>
+                                <div style="width: 1px; background: rgba(255,255,255,0.1); height: 15px;"></div>
+                                <div id="opp-metrics-{deck_id}" style="display: flex; gap: 8px; justify-content: center;">
+                                    {self._generate_metrics_panel_html_simple(opp_m_f)}
+                                </div>
+                            </div>
+                            <!-- Botoes de Copia -->
+                            <div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px;">
+                                <button id="p-copy-{deck_id}" onclick="copyToClipboardDeckDirect({[c.strip() for c in first_b.get('my_deck', deck['deck_cards']).replace(' | ','|').split('|') if c.strip()]})" 
+                                        style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; padding: 4px 10px; border-radius: 6px; font-size: 0.6em; font-weight: 900; cursor: pointer;">
+                                    <i class="far fa-copy"></i> MEU DECK
+                                </button>
+                                <button id="o-copy-{deck_id}" onclick="copyToClipboardDeckDirect({[c.strip() for c in first_b.get('opp_deck', '').replace(' | ','|').split('|') if c.strip()]})" 
+                                        style="background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; padding: 4px 10px; border-radius: 6px; font-size: 0.6em; font-weight: 900; cursor: pointer;">
+                                    <i class="far fa-copy"></i> OPONENTE
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Timeline -->
+                        <div style="margin-top: 10px; padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
+                            <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;">
+                                {timeline_h}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>'''
-        return html + '</div>'
+            </div>
+            '''
+        return html + "</div>"
 
     def generate_winning_decks_html(self, winning_data: List[Dict]) -> str:
         """Gera HTML para a aba de melhores decks da semana (Meta/Global)."""
@@ -2806,7 +2796,7 @@ class GitHubPagesHTMLGenerator:
                 const scoreEl = document.getElementById(`score-${oppId}`);
                 const modeEl = document.getElementById(`mode-${oppId}`);
                 if (scoreEl) scoreEl.innerText = `${data.crowns || 0} - ${data.o_crowns || 0}`;
-                if (modeEl) modeEl.innerText = data.mode || 'RANKED1V1_NEWARENA';
+                if (modeEl) modeEl.innerText = data.mode || 'Batalha';
                 
                 // Update metrics
                 const pMetricsEl = document.getElementById(`player-metrics-${oppId}`);
@@ -2832,10 +2822,27 @@ class GitHubPagesHTMLGenerator:
                     oTowerImg.style.opacity = '0.5';
                     setTimeout(() => oTowerImg.style.opacity = '1', 50);
                 }
-                if (pTowerLv) pTowerLv.innerText = `LV ${data.p_level || '--'}`;
-                if (oTowerLv) oTowerLv.innerText = `LV ${data.o_level || '--'}`;
+                
+                if (pTowerLv) {
+                    if (data.p_level && data.p_level !== 'N/A') {
+                        pTowerLv.innerText = `LV ${data.p_level}`;
+                        pTowerLv.style.display = 'block';
+                    } else {
+                        pTowerLv.style.display = 'none';
+                    }
+                }
+                if (oTowerLv) {
+                    if (data.o_level && data.o_level !== 'N/A') {
+                        oTowerLv.innerText = `LV ${data.o_level}`;
+                        oTowerLv.style.display = 'block';
+                    } else {
+                        oTowerLv.style.display = 'none';
+                    }
+                }
+                
                 if (pHpEl) pHpEl.innerText = `${data.p_hp || '--'} HP`;
                 if (oHpEl) oHpEl.innerText = `${data.o_hp || '--'} HP`;
+
                 
                 // Update grids
                 const pGridEl = document.getElementById(`p-grid-${oppId}`);
@@ -2857,13 +2864,6 @@ class GitHubPagesHTMLGenerator:
                 
                 // Update active dot
                 const container = element.closest('.cr-history-dots-row-inline') || element.parentElement;
-                if (container) {
-                    container.querySelectorAll('.cr-history-dot').forEach(el => el.classList.remove('active'));
-                }
-                element.classList.add('active');
-                
-                // Update active dot
-                const container = element.closest('.cr-history-dots-row-inline');
                 if (container) {
                     container.querySelectorAll('.cr-history-dot').forEach(el => el.classList.remove('active'));
                 }
@@ -3054,8 +3054,10 @@ class GitHubPagesHTMLGenerator:
         leaked = float(metrics.get('leaked', 0))
         leak_class = "cr-leak-warning" if leaked > 0.1 else ""
         t_hp = metrics.get('hp', '--')
-        # Escolhe o icone baseado no vazamento
-        leak_icon = "https://cdn.royaleapi.com/static/img/ui/elixir-leak.png" if leaked > 0.1 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
+        
+        # Caminho relativo para garantir funcionamento em diferentes ambientes
+        local_leak_icon = "docs/ElixirVazado.png"
+        leak_icon = local_leak_icon if leaked > 0.1 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
         
         return f"""
             <div class="cr-metric-inline" title="Elixir" style="display: flex; align-items: center; gap: 4px;">
@@ -3067,7 +3069,7 @@ class GitHubPagesHTMLGenerator:
                 <span style="font-weight: 800; font-size: 0.9em; color: #fff;">{metrics['cycle']}</span>
             </div>
             <div class="cr-metric-inline {leak_class}" title="Leak" style="display: flex; align-items: center; gap: 4px;">
-                <img src="{leak_icon}" style="width: 14px; height: 14px; opacity: {0.5 if leaked <= 0.1 else 1};">
+                <img src="{leak_icon}" style="width: 14px; height: 14px; opacity: {0.5 if leaked <= 0.1 else 1}; filter: { 'drop-shadow(0 0 8px rgba(255,0,0,0.8))' if leaked > 0.1 else 'none' };">
                 <span style="font-weight: 800; font-size: 0.9em; color: {metrics.get('leaked_color', '#fff')};">{metrics.get('leaked_label', 'N/A')}</span>
             </div>
             <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 4px;">
@@ -3119,10 +3121,11 @@ class GitHubPagesHTMLGenerator:
                         <div class="cr-battle-preview-v2" style="display: grid; grid-template-columns: 1.8fr 0.4fr 1.8fr; align-items: center; gap: 10px; padding: 15px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.03); margin-bottom: 15px; position: relative; z-index: 2;">
                             <!-- Lado Esquerdo: Player Style -->
                             <div style="text-align: left; display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
+                                <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800; letter-spacing: 1px;">#{self.player_tag}</div>
                                 <div style="font-family: 'Krona One', sans-serif, system-ui; font-size: 1.1em; color: #fff; line-height: 1.2; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     {player_name}
                                 </div>
-                                <div style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">{player_clan}</div>
+                                <div style="font-size: 0.55em; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase;">{player_clan or 'Sem Clã'}</div>
                             </div>
 
                             <!-- Centro: Placar e Modo -->
@@ -3131,7 +3134,7 @@ class GitHubPagesHTMLGenerator:
                                     {first_b.get('crowns', 0)} - {first_b.get('opponent_crowns', 0)}
                                 </div>
                                 <div id="mode-{i}" style="background: rgba(15, 23, 42, 0.8); padding: 2px 10px; border-radius: 6px; font-size: 0.5em; font-weight: 900; color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.08); text-transform: uppercase; white-space: nowrap;">
-                                    {first_b.get('modo_jogo', 'RANKED1V1_NEWARENA')}
+                                    {first_b.get('modo_jogo', 'Batalha')}
                                 </div>
                             </div>
 
@@ -3149,11 +3152,11 @@ class GitHubPagesHTMLGenerator:
                         <div class="cr-vs-decks-grid-v2" style="gap: 10px; margin-top: 15px; height: auto !important; min-height: 0 !important;">
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 130px !important; height: auto !important; background: transparent; padding: 0;">
                                 <div id="p-tower-container-{i}" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; z-index: 1;">
-                                    <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" class="cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain;">
+                                    <img id="p-tower-img-{i}" src="{my_metrics_f['tower_url']}" class="cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.4));">
                                     <div style="margin-top: -10px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="p-tower-bar-{i}" style="width: 100%; height: 100%; background: #4ade80;"></div></div>
                                         <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                                            <span id="p-tower-lv-{i}" class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 7px; padding: 1px 4px; background: rgba(0,0,0,0.8); border: 1px solid rgba(255,191,36,0.4);">LV {my_metrics_f['level']}</span>
+                                            <span id="p-tower-lv-{i}" class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 8px; padding: 1px 5px; background: #000; border: 1px solid #fbbf24; color: #fff; border-radius: 4px; font-weight: 900; { 'display: none;' if my_metrics_f['level'] == 'N/A' else '' }">LV {my_metrics_f['level']}</span>
                                             <span id="p-tower-hp-{i}" style="font-size: 7px; color: #4ade80; font-weight: 900; line-height: 1;">{my_metrics_f.get('hp', '--')} HP</span>
                                         </div>
                                     </div>
@@ -3163,11 +3166,11 @@ class GitHubPagesHTMLGenerator:
 
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 130px !important; height: auto !important; background: transparent; padding: 0;">
                                 <div id="o-tower-container-{i}" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; z-index: 1;">
-                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-mirror-opponent cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain;">
+                                    <img id="o-tower-img-{i}" src="{opp_metrics_f['tower_url']}" class="cr-tower-zoom" style="width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); filter: drop-shadow(0 0 12px rgba(248, 113, 113, 0.4));">
                                     <div style="margin-top: -10px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="o-tower-bar-{i}" style="width: 100%; height: 100%; background: #f87171;"></div></div>
                                         <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
-                                            <span id="o-tower-lv-{i}" class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 7px; padding: 1px 4px; background: rgba(0,0,0,0.8); border: 1px solid rgba(255,191,36,0.4);">LV {opp_metrics_f['level']}</span>
+                                            <span id="o-tower-lv-{i}" class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 8px; padding: 1px 5px; background: #000; border: 1px solid #fbbf24; color: #fff; border-radius: 4px; font-weight: 900; { 'display: none;' if opp_metrics_f['level'] == 'N/A' else '' }">LV {opp_metrics_f['level']}</span>
                                             <span id="o-tower-hp-{i}" style="font-size: 7px; color: #f87171; font-weight: 900; line-height: 1;">{opp_metrics_f.get('hp', '--')} HP</span>
                                         </div>
                                     </div>
@@ -3218,13 +3221,8 @@ class GitHubPagesHTMLGenerator:
                     </div>
                 </div>
             </div>
-
-
-
             '''
         return html + "</div>"
-
-
 
     def generate_lethal_decks_html(self, lethal_decks: List[Dict]) -> str:
         """Gera HTML para os decks que mais causam derrotas com layout Premium v2."""
@@ -3242,50 +3240,55 @@ class GitHubPagesHTMLGenerator:
             metrics = self._get_deck_metrics(deck_str)
             tower_url = metrics.get('tower_url', 'https://cdn.royaleapi.com/static/img/cards-75/tower-princess.png')
             
+            # Formatar lista de cartas para o botão de cópia
+            cards_for_copy = [c.strip() for c in deck_str.split('|') if c.strip()]
+            
             html += f'''
-            <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-left: 4px solid #f56565; min-height: auto; margin-bottom: 12px; padding-bottom: 10px;">
-                <div class="cr-deck-header" style="padding: 8px 15px; background: rgba(245, 101, 101, 0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-left: 4px solid #f87171; min-height: auto; margin-bottom: 20px; padding-bottom: 12px; overflow: visible;">
+                <div class="cr-deck-header" style="padding: 8px 15px; background: rgba(248, 113, 113, 0.08); border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                        <span class="cr-deck-rank" style="background:#f56565; color: #fff; padding: 2px 8px; border-radius: 5px; font-weight: 900; font-size: 0.75em;">#{i} LETHAL</span>
-                        <span style="color: #94a3b8; font-size: 0.75em; font-weight: 800;">{losses} derrotas</span>
-                        <span style="margin-left: auto; font-size: 0.65em; color: rgba(255,255,255,0.3); font-weight: 700;">ÚLTIMO: {last}</span>
+                        <span class="cr-deck-rank" style="background:#f87171; color: #fff; padding: 2px 8px; border-radius: 5px; font-weight: 900; font-size: 0.75em;">#{i} LETHAL</span>
+                        <span style="color: #fca5a5; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">{losses} DERROTAS CAUSADAS</span>
+                        <span style="margin-left: auto; font-size: 0.65em; color: rgba(255,255,255,0.3); font-weight: 700;">VISTO EM: {last}</span>
                     </div>
                 </div>
-                <div class="cr-deck-body cr-lethal-body" style="padding: 10px 15px; background: transparent;">
-                    <div class="cr-lethal-layout" style="display: flex; flex-direction: column; gap: 5px;">
+                <div class="cr-deck-body cr-lethal-body" style="padding: 10px 15px; background: transparent; overflow: visible;">
+                    <div class="cr-lethal-layout" style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
                         
-                        <div class="cr-vs-decks-grid-v2" style="display: block; position: relative; width: 100%; max-width: 400px; margin: 40px auto 0 auto;">
-                            <div class="cr-side-container" style="position: relative; display: flex; flex-direction: column; align-items: center; background: transparent; padding: 0; min-height: auto;">
-                                <!-- Torre Compacta -->
-                                <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; z-index: 1; display: flex; flex-direction: column; align-items: center;">
-                                    <img src="{tower_url}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0,0,0,0.8));">
-                                    <div class="cr-tower-info-overlay" style="margin-top: -18px; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                        <div class="cr-vs-decks-grid-v2" style="display: block; position: relative; width: 100%; max-width: 400px; margin: 45px auto 0 auto; overflow: visible;">
+                            <div class="cr-side-container" style="position: relative; display: flex; flex-direction: column; align-items: center; background: transparent; padding: 0; min-height: auto; overflow: visible;">
+                                <!-- Torre Flutuante Premium v2 -->
+                                <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 95px; height: 95px; z-index: 10;">
+                                    <img src="{tower_url}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.6)); transform: scaleX(-1);">
+                                    <div style="margin-top: -15px; display: flex; flex-direction: column; align-items: center; gap: 2px;">
                                         <div class="cr-hp-bar-mini" style="width: 50px; height: 3px; background: rgba(0,0,0,0.5); border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-                                            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #f87171, #ef4444);"></div>
+                                            <div style="width: 100%; height: 100%; background: #f87171;"></div>
                                         </div>
-                                        <span class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 8px; padding: 1px 5px;">LV {metrics.get('level', 14)}</span>
-                                        <span style="font-size: 8px; color: #f87171; font-weight: 900; margin-top: 1px; line-height: 1;">{metrics.get('hp', '--')} HP</span>
+                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 1px;">
+                                            <span class="cr-tower-lv-badge" style="position: static; transform: none; font-size: 8px; padding: 1px 5px; background: #000; border: 1px solid #f87171; color: #fff; border-radius: 4px; font-weight: 900; { 'display: none;' if metrics.get('level') == 'N/A' else '' }">LV {metrics.get('level')}</span>
+                                            <span style="font-size: 8px; color: #f87171; font-weight: 900; line-height: 1;">{metrics.get('hp', '--')} HP</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Grid -->
                                 <div class="cr-grid-wrapper-premium" style="position: relative; z-index: 2; margin-top: 50px; width: 100%;">
-                                    <div class="cr-grid-4x2">
+                                    <div class="cr-grid-4x2" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
                                         {"".join(f'<div class="cr-card-wrap-premium" title="{c}"><img src="{self.get_card_image_path(c)}" class="cr-card-img" loading="lazy"></div>' for c in c_list[:8])}
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="cr-vs-metrics-unified" style="margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.05); background: transparent;">
-                            <div class="cr-deck-metrics-horizontal" style="display: flex; justify-content: center; gap: 15px;">
-                                <div class="cr-metric-inline" title="Custo Medio"><img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width:12px;"> <span style="font-weight: 800; font-size: 0.85em;">{metrics["avg"]}</span></div>
-                                <div class="cr-metric-inline" title="Ciclo"><span style="font-size: 0.9em;">🔄</span> <span style="font-weight: 800; font-size: 0.85em;">{metrics["cycle"]}</span></div>
-                                <div class="cr-metric-inline" title="HP Torre"><span style="font-size: 0.9em;">🏰</span> <span style="font-weight: 800; font-size: 0.85em;">{metrics.get('hp', '--')}</span></div>
+                        <div class="cr-vs-footer-v2" style="margin-top: 15px; padding: 12px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; width: 100%; max-width: 400px;">
+                            <div style="display: flex; justify-content: center; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                <div style="display: flex; gap: 10px; justify-content: center;">
+                                    {self._generate_metrics_panel_html_simple(metrics)}
+                                </div>
                             </div>
-                            
-                            <div class="cr-stats-panel" style="margin-top: 8px; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
-                                <div class="cr-lethal-info" style="font-size: 0.75em; line-height: 1.2;">
-                                    <span style="color:#94a3b8; font-weight: 700;">USUÁRIOS:</span> <span style="color: #e2e8f0;">{opponents}</span>
+                            <div style="margin-top: 10px; display: flex; justify-content: center;">
+                                <button onclick="copyToClipboardDeckDirect({cards_for_copy})" 
+                                        style="background: rgba(248, 113, 113, 0.2); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5; padding: 6px 15px; border-radius: 8px; font-size: 0.7em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                                    <i class="far fa-copy"></i> COPIAR DECK LETAL
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -3753,7 +3756,7 @@ class GitHubPagesHTMLGenerator:
         """
 
     def generate_war_decks_html(self, war_players):
-        """Gera o HTML para a seção de Decks de Elite (Guerra) e Meta Brasil."""
+        """Gera o HTML para a seção de Decks de Elite (Guerra) e Meta Brasil com padrão Premium v2."""
         meta_br = self.get_meta_brasil_data()
         
         if not war_players['clan'] and not war_players['global'] and not meta_br:
@@ -3774,7 +3777,7 @@ class GitHubPagesHTMLGenerator:
             </div>
 
             <div id="tab-clan-war" class="tab-content active">
-                <div class="cr-decks-list">
+                <div class="cr-decks-list-premium">
         """
 
         # Aba 1: Nossos Heróis
@@ -3786,36 +3789,42 @@ class GitHubPagesHTMLGenerator:
                 copy_link = self.get_copy_deck_link(deck)
                 
                 decks_html += f"""
-                    <div class="deck-row" style="margin-bottom: 25px; position: relative; padding: 10px;">
-                        <div class="deck-label-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <span class="deck-label" style="color:#94a3b8; font-weight:800; font-size:0.8em; text-transform:uppercase; z-index: 10;">Deck {i+1}</span>
-                            <a href="{copy_link}" class="cr-copy-deck-btn" style="padding: 4px 12px; font-size:0.75em; z-index: 10;">Copiar</a>
-                        </div>
-                        <div class="cr-side-container" style="min-height: auto;">
-                            <div class="cr-tower-overlap" style="opacity: 0.15;">
-                                <img src="./docs/princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-premium" style="max-height: 120px;">
-                            </div>
-                            <div class="cr-grid-wrapper-premium" style="width: 100%;">
-                                <div class="cr-grid-4x2" style="margin:0; padding:10px; gap:8px;">{cards_html}</div>
-                            </div>
-                        </div>
+                <div class="deck-row-premium-v2">
+                    <div class="deck-meta-header">
+                        <span class="deck-index">DECK {i+1}</span>
+                        <a href="{copy_link}" class="cr-copy-btn-v2">
+                            <i class="fas fa-copy"></i> Copiar
+                        </a>
                     </div>
-                """
-
-
-            html += f"""
-                <div class="cr-deck-card war-player-card">
-                    <div class="cr-deck-header">
-                        <div class="player-info">
-                            <span class="cr-player-name">{player['name']}</span>
-                            <span class="cr-wr-badge">{player['win_rate']:.1f}% WR</span>
+                    <div class="cr-side-container">
+                        <div class="cr-tower-floating left">
+                            <div class="cr-tower-badge">LV 15</div>
+                            <img src="./docs/princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-v2">
+                            <div class="cr-hp-bar-v2"><div class="cr-hp-fill-v2" style="width: 100%;"></div></div>
                         </div>
-                        <span class="cr-deck-rank">Pos #{player['pos']} | {player['total_battles']} Lutas</span>
-                    </div>
-                    <div class="cr-deck-body">
-                        {decks_html}
+                        <div class="cr-grid-wrapper-premium">
+                            <div class="cr-grid-4x2">{cards_html}</div>
+                        </div>
                     </div>
                 </div>
+                """
+
+            html += f"""
+            <div class="cr-glass-card-v2 war-card">
+                <div class="war-card-header">
+                    <div class="player-main-info">
+                        <span class="player-rank">#{player['pos']}</span>
+                        <span class="player-name">{player['name']}</span>
+                    </div>
+                    <div class="player-stats-badges">
+                        <span class="stat-badge wr">{player['win_rate']:.1f}% WR</span>
+                        <span class="stat-badge battles">{player['total_battles']} Lutas</span>
+                    </div>
+                </div>
+                <div class="war-card-body">
+                    {decks_html}
+                </div>
+            </div>
             """
 
         html += """
@@ -3823,7 +3832,7 @@ class GitHubPagesHTMLGenerator:
             </div>
 
             <div id="tab-global-war" class="tab-content">
-                <div class="cr-decks-list">
+                <div class="cr-decks-list-premium">
         """
 
         # Aba 2: Meta Global (Guerra)
@@ -3835,28 +3844,41 @@ class GitHubPagesHTMLGenerator:
                 copy_link = self.get_copy_deck_link(deck)
 
                 decks_html += f"""
-                    <div class="deck-row" style="margin-bottom: 20px;">
-                        <div class="deck-label-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <span class="deck-label" style="color:#94a3b8; font-weight:800; font-size:0.8em; text-transform:uppercase;">Deck {i+1}</span>
-                            <a href="{copy_link}" class="cr-copy-deck-btn" style="padding: 4px 12px; font-size:0.75em;">Copiar</a>
-                        </div>
-                        <div class="cr-grid-4x2" style="margin:0; padding:10px; gap:8px;">{cards_html}</div>
+                <div class="deck-row-premium-v2">
+                    <div class="deck-meta-header">
+                        <span class="deck-index">DECK {i+1}</span>
+                        <a href="{copy_link}" class="cr-copy-btn-v2">
+                            <i class="fas fa-copy"></i> Copiar
+                        </a>
                     </div>
+                    <div class="cr-side-container">
+                        <div class="cr-tower-floating left">
+                            <div class="cr-tower-badge">LV 15</div>
+                            <img src="./docs/princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-v2">
+                            <div class="cr-hp-bar-v2"><div class="cr-hp-fill-v2" style="width: 100%;"></div></div>
+                        </div>
+                        <div class="cr-grid-wrapper-premium">
+                            <div class="cr-grid-4x2">{cards_html}</div>
+                        </div>
+                    </div>
+                </div>
                 """
 
             html += f"""
-                <div class="cr-deck-card war-player-card">
-                    <div class="cr-deck-header">
-                        <div class="player-info">
-                            <span class="cr-player-name">{player['name']}</span>
-                            <span class="cr-wr-badge">{player['win_rate']:.1f}% WR</span>
-                        </div>
-                        <span class="cr-deck-rank">RANK GLOBAL</span>
+            <div class="cr-glass-card-v2 war-card">
+                <div class="war-card-header">
+                    <div class="player-main-info">
+                        <span class="player-rank">GLOBAL</span>
+                        <span class="player-name">{player['name']}</span>
                     </div>
-                    <div class="cr-deck-body">
-                        {decks_html}
+                    <div class="player-stats-badges">
+                        <span class="stat-badge wr">{player['win_rate']:.1f}% WR</span>
                     </div>
                 </div>
+                <div class="war-card-body">
+                    {decks_html}
+                </div>
+            </div>
             """
 
         html += """
@@ -3864,63 +3886,164 @@ class GitHubPagesHTMLGenerator:
             </div>
 
             <div id="tab-meta-br" class="tab-content">
-                <div class="meta-br-container">
-                    <table class="meta-br-table">
-                        <thead>
-                            <tr>
-                                <th>Pos</th>
-                                <th>Jogador</th>
-                                <th>Clã</th>
-                                <th>Troféus/Medalhas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="meta-br-grid-v2">
         """
         
-        for p in meta_br[:50]: # Mostra top 50 para não ficar muito longo
+        for p in meta_br[:40]: # Top 40 para grid visual
             rank = p.get('rank', '-')
             name = p.get('name', 'N/D')
             clan = p.get('clan', {}).get('name', '-')
             score = p.get('trophies') or p.get('score') or '-'
             
             html += f"""
-                <tr>
-                    <td><strong>#{rank}</strong></td>
-                    <td><span class="player-name-cell">{name}</span></td>
-                    <td><span class="clan-name-cell">{clan}</span></td>
-                    <td><span class="score-cell">{score} 🏆</span></td>
-                </tr>
+            <div class="meta-br-item-v2">
+                <div class="rank-circle">#{rank}</div>
+                <div class="meta-info">
+                    <span class="meta-name">{name}</span>
+                    <span class="meta-clan">{clan}</span>
+                </div>
+                <div class="meta-score">{score} 🏆</div>
+            </div>
             """
             
         html += """
-                        </tbody>
-                    </table>
                 </div>
             </div>
             
             <style>
-                .war-player-card { width: 100% !important; }
-                .deck-row { margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
-                .deck-row:last-child { border-bottom: none; margin-bottom: 0; }
-                .deck-label { font-size: 0.7em; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
-                .cr-decks-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px; }
+                .cr-decks-list-premium {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+                    gap: 25px;
+                    padding: 10px 0;
+                }
                 
-                /* Estilo Meta BR */
-                .meta-br-container { background: #0f172a; border-radius: 15px; padding: 20px; margin-top: 10px; border: 1px solid #1e293b; }
-                .meta-br-table { width: 100%; border-collapse: collapse; color: #e2e8f0; }
-                .meta-br-table th { text-align: left; padding: 12px; border-bottom: 2px solid #1e293b; color: #94a3b8; }
-                .meta-br-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-                .player-name-cell { color: #f6e05e; font-weight: bold; }
-                .score-cell { color: #63b3ed; font-weight: 800; }
+                .cr-glass-card-v2 {
+                    background: rgba(30, 41, 59, 0.4);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 20px;
+                    overflow: hidden;
+                    transition: all 0.3s ease;
+                }
                 
-                @media (max-width: 600px) {
-                    .cr-decks-list { grid-template-columns: 1fr; }
-                    .war-player-card { max-width: 100%; }
+                .cr-glass-card-v2:hover {
+                    transform: translateY(-5px);
+                    background: rgba(30, 41, 59, 0.6);
+                    border-color: rgba(255, 255, 255, 0.15);
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                }
+                
+                .war-card-header {
+                    padding: 15px 20px;
+                    background: rgba(255,255,255,0.03);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                }
+                
+                .player-rank {
+                    font-size: 0.8em;
+                    font-weight: 900;
+                    color: #63b3ed;
+                    background: rgba(99, 179, 237, 0.1);
+                    padding: 2px 8px;
+                    border-radius: 6px;
+                    margin-right: 10px;
+                }
+                
+                .player-name {
+                    font-size: 1.1em;
+                    font-weight: 700;
+                    color: #f8fafc;
+                }
+                
+                .stat-badge {
+                    font-size: 0.75em;
+                    font-weight: 700;
+                    padding: 3px 10px;
+                    border-radius: 20px;
+                    margin-left: 5px;
+                }
+                
+                .stat-badge.wr { background: rgba(72, 187, 120, 0.15); color: #68d391; }
+                .stat-badge.battles { background: rgba(160, 174, 192, 0.15); color: #cbd5e0; }
+                
+                .war-card-body { padding: 15px; }
+                
+                .deck-row-premium-v2 {
+                    background: rgba(15, 23, 42, 0.3);
+                    border-radius: 15px;
+                    padding: 12px;
+                    margin-bottom: 15px;
+                }
+                
+                .deck-meta-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 10px;
+                }
+                
+                .deck-index { font-size: 0.7em; font-weight: 800; color: #94a3b8; letter-spacing: 1px; }
+                
+                .cr-copy-btn-v2 {
+                    font-size: 0.7em;
+                    color: #f6e05e;
+                    text-decoration: none;
+                    background: rgba(246, 224, 94, 0.1);
+                    padding: 4px 12px;
+                    border-radius: 8px;
+                    transition: all 0.2s;
+                }
+                
+                .cr-copy-btn-v2:hover { background: rgba(246, 224, 94, 0.2); }
+                
+                /* Meta BR Grid */
+                .meta-br-grid-v2 {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                    gap: 15px;
+                    padding: 10px 0;
+                }
+                
+                .meta-br-item-v2 {
+                    background: rgba(30, 41, 59, 0.3);
+                    border: 1px solid rgba(255,255,255,0.05);
+                    border-radius: 12px;
+                    padding: 12px 15px;
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+                
+                .rank-circle {
+                    width: 35px;
+                    height: 35px;
+                    background: #2d3748;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.8em;
+                    font-weight: 900;
+                    color: #f6e05e;
+                    flex-shrink: 0;
+                }
+                
+                .meta-info { flex-grow: 1; display: flex; flex-direction: column; }
+                .meta-name { font-weight: 700; color: #f8fafc; font-size: 0.9em; }
+                .meta-clan { font-size: 0.75em; color: #94a3b8; }
+                .meta-score { font-weight: 900; color: #63b3ed; font-size: 0.9em; }
+
+                @media (max-width: 768px) {
+                    .cr-decks-list-premium { grid-template-columns: 1fr; }
+                    .meta-br-grid-v2 { grid-template-columns: 1fr; }
                 }
             </style>
         </div>
         """
-        return html
         return html
 
     
@@ -4795,36 +4918,40 @@ class GitHubPagesHTMLGenerator:
             width: 155px;
             height: 155px;
             object-fit: contain;
-            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6));
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: -35px;
+            filter: drop-shadow(0 15px 35px rgba(0,0,0,0.7));
+            transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+            margin-bottom: -30px;
             position: relative;
             z-index: 1;
         }
 
+
         .cr-tower-lv-badge {
             position: absolute;
-            top: 15px;
+            top: -8px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(180deg, #1e293b, #020617);
             color: #fbbf24;
-            font-size: 0.85em;
+            font-size: 0.78em;
             font-weight: 950;
-            padding: 4px 12px;
-            border-radius: 8px;
+            padding: 3px 10px;
+            border-radius: 7px;
             border: 1.5px solid #fbbf24;
-            z-index: 5;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.9);
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.85);
             border-bottom: 3.5px solid #b45309;
-            text-shadow: 0 1px 3px rgba(0,0,0,1);
-            letter-spacing: 0.8px;
+            text-shadow: 0 1px 2px rgba(0,0,0,1);
+            letter-spacing: 0.6px;
+            pointer-events: none;
+            white-space: nowrap;
         }
 
+
         .cr-tower-img-large:hover {
-            transform: translateY(-10px) scale(1.05);
-            filter: drop-shadow(0 20px 40px rgba(var(--primary-rgb), 0.4));
-            z-index: 2;
+            transform: translateY(-8px) scale(1.06);
+            filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.8));
+            z-index: 5;
         }
 
         .cr-mirror-opponent {
@@ -4832,7 +4959,7 @@ class GitHubPagesHTMLGenerator:
         }
         
         .cr-mirror-opponent:hover {
-            transform: translateY(-10px) scale(-1.05, 1.05);
+            transform: translateY(-8px) scale(-1.06, 1.06);
         }
 
         .cr-modal-score-center {
