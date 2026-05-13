@@ -1,0 +1,160 @@
+237:                         'player_level': self._safe_int(row.get('player_level') or row.get('nivel_jogador'), 0),
+238:                         'opponent_level': self._safe_int(row.get('opponent_level') or row.get('nivel_oponente'), 0),
+565:     def _get_tower_hp(self, level: int) -> int:
+572:         return hp_map.get(int(level), 0)
+574:     def _get_deck_metrics(self, deck_str: str, leaked: float = 0, tower_level: int = 14) -> Dict:
+580:             tower_level: Nivel da torre do rei para calculo de HP.
+582:             Dict com avg, cycle, leaked, level e hp da torre.
+585:             return {'avg': 0, 'cycle': 0, 'leaked': leaked, 'level': tower_level, 'hp': self._get_tower_hp(tower_level)}
+595:             return {'avg': 0, 'cycle': 0, 'leaked': leaked, 'level': tower_level, 'hp': self._get_tower_hp(tower_level)}
+601:         safe_level = max(1, min(15, int(tower_level) if str(tower_level).isdigit() else 14))
+607:             'level': safe_level,
+608:             'hp': self._get_tower_hp(safe_level)
+621:             Dict completo com avg, cycle, leaked, level e hp.
+625:             level_raw = battle.get('nivel_torre_oponente') or battle.get('nivel_oponente') or battle.get('opponent_level') or battle.get('opp_tower_level', 14)
+628:             level_raw = battle.get('nivel_torre_jogador') or battle.get('player_level') or battle.get('player_tower_level', 14)
+636:             # Garante que level_raw seja tratado como string para isdigit, mas converte para int
+637:             s_level = str(level_raw).strip()
+638:             tower_level = int(s_level) if s_level.isdigit() and int(s_level) > 0 else 14
+640:             tower_level = 14
+642:         metrics = self._get_deck_metrics(deck_str, leaked=leaked, tower_level=tower_level)
+682:                 (player_tag, name, trophies, best_trophies, level, clan_tag, clan_name, last_updated)
+689:                 player_data.get('expLevel', 0),
+835:             'level': int(player_row.get('level', 0) or 0),
+893:     def get_deck_performance_same_level(self, limit: int = 10, player_tag: str = None) -> List[Dict]:
+894:         """Get deck performance data from clan members with same trophies level (>=10K) as user using CSV caches"""
+910:         same_level_members = [
+915:         active_tags = {m['player_tag'] for m in same_level_members}
+963:             m_name = next((m['name'] for m in same_level_members if m['player_tag'] == p_tag), 'Usuario' if p_tag == player_tag else 'Membro')
+1230:     def get_card_level_analytics(self) -> Dict:
+1231:         """Get card level analytics from CSV cache"""
+1236:         total_player_level = 0
+1237:         total_opponent_level = 0
+1238:         level_advantage_wins = 0
+1239:         level_disadvantage_wins = 0
+1240:         total_with_levels = 0
+1246:             p_lvl = b.get('player_level', 0)
+1247:             o_lvl = b.get('opponent_level', 0)
+1251:                 total_player_level += p_lvl
+1252:                 total_opponent_level += o_lvl
+1253:                 total_with_levels += 1
+1257:                         level_advantage_wins += 1
+1259:                         level_disadvantage_wins += 1
+1261:         if total_with_levels > 0:
+1262:             analytics['avg_player_level'] = round(total_player_level / total_with_levels, 1)
+1263:             analytics['avg_opponent_level'] = round(total_opponent_level / total_with_levels, 1)
+1264:             analytics['level_advantage_wins'] = level_advantage_wins
+1265:             analytics['level_disadvantage_wins'] = level_disadvantage_wins
+1266:             analytics['total_with_levels'] = total_with_levels
+1840:     def generate_card_level_analytics_html(self, analytics: Dict) -> str:
+1841:         """Generate HTML for card level and opponent analytics"""
+1850:         # Player vs Opponent Level Analysis
+1851:         if 'avg_player_level' in analytics:
+1853:             html += '<h3>⚖️ Level Matchmaking Analysis</h3>'
+1855:                 <div class="level-comparison">
+1856:                     <div class="level-stat">
+1857:                         <span class="level-label">Your Avg Level:</span>
+1858:                         <span class="level-value">{analytics['avg_player_level']}</span>
+1860:                     <div class="level-stat">
+1861:                         <span class="level-label">Opponent Avg Level:</span>
+1862:                         <span class="level-value">{analytics['avg_opponent_level']}</span>
+1865:                 <div class="level-win-stats">
+1867:                         <span class="win-label">Wins with Level Advantage:</span>
+1868:                         <span class="win-count">{analytics['level_advantage_wins']}</span>
+1871:                         <span class="win-label">Wins with Level Disadvantage:</span>
+1872:                         <span class="win-count">{analytics['level_disadvantage_wins']}</span>
+1975:                 # Check if deck has member info (from same_level query)
+1977:                     # This is a clan member's deck from same_level query
+2078:     def generate_deck_performance_with_tabs(self, decks: List[Dict], decks_same_level: List[Dict],
+2382:                     "p_level": my_m['level'],
+2383:                     "o_level": opp_m['level'],
+2415:             <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 15px; overflow: visible;">
+2430:                 <div class="cr-deck-body" style="padding: 10px 15px; background: transparent; overflow: visible;">
+2434:                             <div style="text-align: left; overflow: hidden;">
+2436:                                 <div id="p-name-{deck_id}" style="font-family: 'Krona One', sans-serif; font-size: 0.95em; color: #fff; font-weight: 950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{player_name}</div>
+2443:                             <div style="text-align: right; overflow: hidden;">
+2445:                                 <div id="o-name-{deck_id}" style="font-size: 1.1em; font-weight: 950; color: #f87171; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{first_b.get('nome_oponente', 'Oponente')}</div>
+2455:                                     <span id="p-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if my_m_f['level'] == 'N/A' else '' }">LV {my_m_f['level']}</span>
+2470:                                     <span id="o-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if opp_m_f['level'] == 'N/A' else '' }">LV {opp_m_f['level']}</span>
+2501:                             <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;">
+2533:             <div class="cr-deck-card cr-glass-premium" style="border-top: 4px solid {wr_c}; min-height: auto; margin-bottom: 20px; padding: 0 !important; overflow: visible;">
+2647:                 'player_tower_level': b.get('nivel_torre_jogador') or b.get('player_tower_level', 14),
+2648:                 'opp_tower_level': b.get('nivel_torre_oponente') or b.get('opp_tower_level', 14),
+2756:             const tLevel = metrics ? (metrics.level || 14) : 14;
+2771:                 tLevel,
+2796:             document.body.style.overflow = '';
+2849:                 // Update towers and levels
+2869:                     if (data.p_level && data.p_level !== 'N/A') {
+2870:                         pTowerLv.innerText = `LV ${data.p_level}`;
+2877:                     if (data.o_level && data.o_level !== 'N/A') {
+2878:                         oTowerLv.innerText = `LV ${data.o_level}`;
+3012:                 .cr-tower-card-premium {
+3022:                 .cr-tower-zoom {
+3029:                 .cr-tower-zoom:hover {
+3076:                 "p_level": my_m['level'],
+3077:                 "o_level": opp_m['level'],
+3164:             <div class="cr-deck-card cr-opp-card-row cr-glass-premium" id="opp-section-{i}" style="height: auto !important; min-height: 0 !important; margin-bottom: 12px !important; padding-bottom: 5px !important; display: block; overflow: visible; position: relative;">
+3184:                                     <div id="p-name-{i}" style="font-family: 'Krona One', sans-serif; font-size: 0.95em; color: #fff; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">{player_name}</div>
+3189:                                     <span id="p-tower-lv-{i}" class="cr-tower-lv-badge" style="bottom: 0; top: auto; font-size: 0.65em; { 'display: none;' if my_metrics_f['level'] == 'N/A' else '' }">LV {my_metrics_f['level']}</span>
+3206:                                     <div id="o-name-{i}" style="font-family: 'Krona One', sans-serif; font-size: 0.95em; color: #f87171; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">{opp['opponent_name']}</div>
+3211:                                     <span id="o-tower-lv-{i}" class="cr-tower-lv-badge" style="bottom: 0; top: auto; font-size: 0.65em; { 'display: none;' if opp_metrics_f['level'] == 'N/A' else '' }">LV {opp_metrics_f['level']}</span>
+3303:             <div class="cr-deck-card cr-glass-premium cr-lethal-card" style="border-top: 4px solid #f87171; min-height: auto; margin-bottom: 20px; padding: 0 !important; overflow: visible;">
+3321:                                     <span class="cr-tower-lv-badge" style="background: #000; border: 1px solid #f87171; color: #fff; font-size: 10px; padding: 2px 6px;">LV {metrics.get('level', 14)}</span>
+3767:                 .fame-progress-bar {{ height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; width: 100%; max-width: 200px; }}
+3979:                     overflow: hidden;
+4122:             'Overflowing Gold Crate': 'https://royaleapi.github.io/cr-api-assets/chests/chest-goldcrate-overflowing.png',
+4165:             .chest-card img {{ width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; }}
+4406:             overflow: hidden;
+4522:             overflow: hidden;
+4535:             object-fit: cover;
+4564:             overflow-x: auto;
+4622:             overflow-x: auto;
+4792:             overflow: visible;
+4822:             overflow: hidden;
+4830:             overflow: visible;
+4843:             overflow: hidden;
+4844:             text-overflow: ellipsis;
+4883:         .cr-tower-overlap {
+4899:         .cr-tower-img-premium {
+4901:             object-fit: contain;
+4905:         .cr-tower-overlap .cr-card-level-badge {
+4912:         .cr-tower-overlap:hover {
+4960:         .cr-tower-stage-p {
+4970:         .cr-tower-img-large {
+4973:             object-fit: contain;
+4982:         .cr-tower-lv-badge {
+5004:         .cr-tower-img-large:hover {
+5098:             .cr-tower-stage-p {
+5118:         .cr-tower-card-premium {
+5132:         .cr-tower-card-premium:hover {
+5138:         .cr-tower-img-premium {
+5141:             object-fit: contain;
+5145:         .cr-card-level-badge {
+5180:             overflow: hidden;
+5195:             object-fit: cover;
+5265:             object-fit: contain;
+5272:             object-fit: contain;
+5280:             object-fit: contain;
+5411:             overflow-x: auto;
+5597:             overflow-y: auto;
+5654:             overflow: visible;
+5685:             overflow: hidden;
+5698:             .cr-tower-img-premium { width: 90px; height: 90px; }
+5699:             .cr-tower-card-premium { width: 110px; height: 140px; }
+5751:             .cr-tower-img-premium {
+5756:             .cr-tower-card-premium {
+5923:         .cr-tower-slot {
+5936:         .cr-tower-slot img {
+5939:             object-fit: contain;
+5943:         .cr-tower-label {
+5964:         .cr-card-level-badge {
+5990:             overflow: hidden;
+5991:             text-overflow: ellipsis;
+6019:             .cr-card-level-badge {
+6027:                 overflow-x: auto;
+6049:             .cr-tower-info-premium  { font-size: 0.7em; }
+6101:             overflow-y: auto;
+6153:             overflow-x: auto;
+6271:                 <p>Clã: {stats['clan_name'] or 'Nenhum'} | Nível: {stats['level']}</p>
+6351:                 Enhanced analytics including card levels, opponent analysis, and matchmaking fairness.
+6353:             CARD_LEVEL_ANALYTICS_HTML

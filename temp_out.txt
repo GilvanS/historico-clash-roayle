@@ -1,0 +1,58 @@
+80:         """Carrega o ciclo de baús do JSON oficial"""
+246:                         'vida_torre_rei_jogador': row.get('vida_torre_rei_jogador') or '0',
+247:                         'vida_torre_rei_oponente': row.get('vida_torre_rei_oponente') or '0',
+248:                         'vida_torres_princesa_jogador': row.get('vida_torres_princesa_jogador') or '0',
+249:                         'vida_torres_princesa_oponente': row.get('vida_torres_princesa_oponente') or '0',
+254:                         'nivel_torre_oponente': row.get('nivel_torre_oponente') or '0',
+255:                         'torre_jogador': row.get('torre_jogador') or '',
+256:                         'torre_oponente': row.get('torre_oponente') or ''
+408:         """Retorna o caminho local da imagem da torre"""
+410:             return "docs/torreDoRei.png"
+414:             'Tower Princess': 'princesa-tropa-de-torre-clash-royale',
+418:             'King Tower': 'torreDoRei',
+419:             'King': 'torreDoRei'
+428:             elif 'princess' in t_name_lower: slug = 'princesa-tropa-de-torre-clash-royale'
+430:             elif 'king' in t_name_lower: slug = 'torreDoRei'
+431:             else: slug = 'torreDoRei'
+433:         return f"docs/{slug}.png"
+566:         """Retorna o HP da Torre do Rei baseado no nivel."""
+575:         """Calcula media de elixir, ciclo de 4 cartas, nivel da torre e elixir vazado.
+580:             tower_level: Nivel da torre do rei para calculo de HP.
+582:             Dict com avg, cycle, leaked, level e hp da torre.
+585:             return {'avg': 0, 'cycle': 0, 'leaked': leaked, 'level': tower_level, 'hp': self._get_tower_hp(tower_level)}
+595:             return {'avg': 0, 'cycle': 0, 'leaked': leaked, 'level': tower_level, 'hp': self._get_tower_hp(tower_level)}
+598:         # Ciclo de 4 cartas: soma das 4 cartas mais baratas do deck
+599:         cycle = sum(sorted(costs)[:4])
+605:             'cycle': cycle,
+621:             Dict completo com avg, cycle, leaked, level e hp.
+625:             level_raw = battle.get('nivel_torre_oponente') or battle.get('nivel_oponente') or battle.get('opponent_level') or battle.get('opp_tower_level', 14)
+628:             level_raw = battle.get('nivel_torre_jogador') or battle.get('player_level') or battle.get('player_tower_level', 14)
+645:         metrics['tower_name'] = battle.get('torre_oponente' if is_opponent else 'torre_jogador') or 'Tower Princess'
+2231:                     'nivel_torre_oponente':  row.get('nivel_torre_oponente', '0'),
+2232:                     'nivel_torre_jogador':   row.get('nivel_torre_jogador', '14'),
+2237:                     'vida_torre_rei_jogador':row.get('vida_torre_rei_jogador', '0'),
+2238:                     'vida_torre_rei_oponente':row.get('vida_torre_rei_oponente', '0'),
+2450:                         <!-- Decks e Torres -->
+2645:                 'torre_jogador': b.get('torre_jogador') or b.get('player_tower_name', 'Tower Princess'),
+2646:                 'torre_oponente': b.get('torre_oponente') or b.get('opp_tower_name', 'Tower Princess'),
+2647:                 'player_tower_level': b.get('nivel_torre_jogador') or b.get('player_tower_level', 14),
+2648:                 'opp_tower_level': b.get('nivel_torre_oponente') or b.get('opp_tower_level', 14),
+2754:             const cycle = metrics ? metrics.cycle : '--';
+2781:                     <div class="cr-metric-inline" title="HP Torre">
+3115:         local_leak_icon = "docs/ElixirVazado.png"
+3123:             <div class="cr-metric-inline" title="Ciclo" style="display: flex; align-items: center; gap: 8px;">
+3124:                 <img src="https://cdn.royaleapi.com/static/img/ui/deck-cycle.png" style="width: 22px; height: 22px; filter: brightness(1.2);">
+3125:                 <span style="font-weight: 900; font-size: 1.3em; color: #fff;">{metrics['cycle']}</span>
+3131:             <div class="cr-metric-inline" title="HP Torre" style="display: flex; align-items: center; gap: 8px;">
+3132:                 <img src="docs/torreDoRei.png" style="width: 22px; height: 22px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
+3179:                         <!-- Linha 1: Torres e Placar (Towers on Top) -->
+3316:                         <!-- Linha 1: Cabeçalho com Torre (Towers on Top) -->
+3855:                             <img src="./docs/princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-v2">
+3910:                             <img src="./docs/princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-v2">
+4224:                 hp_p = battle.get('vida_torre_rei_jogador', '0')
+4225:                 hp_o = battle.get('vida_torre_rei_oponente', '0')
+4226:                 hp_pri_p = battle.get('vida_torres_princesa_jogador', '0')
+4227:                 hp_pri_o = battle.get('vida_torres_princesa_oponente', '0')
+4235:                 # Nível do Oponente (Torre)
+4236:                 opp_tower_lv = battle.get('nivel_torre_oponente', '0')
+6329:                     <thead><tr><th>Horário</th><th>Resultado</th><th>Oponente</th><th>Coroas</th><th>Troféus Δ</th><th>💧 Elixir</th><th>🏰 HP Torre</th><th style="display: none;">👤 Rank</th><th>Arena</th></tr></thead>
