@@ -1618,43 +1618,42 @@
             padding: 0;
         }
 
-        /* Tabs System Premium v2 */
-        .deck-tabs-container { margin-top: 20px; }
-        .deck-tabs {
+        /* ===== TABS DE SELEÇÃO DE CONTA (Multi-Account) ===== */
+        .cr-account-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 12px;
+            margin: 20px 0 30px 0;
             padding: 8px;
             background: rgba(15, 23, 42, 0.4);
-            border-radius: 16px;
+            border-radius: 20px;
             border: 1px solid var(--glass-border);
-            overflow-x: auto;
-            scrollbar-width: none;
+            width: fit-content;
         }
-        .deck-tabs::-webkit-scrollbar { display: none; }
 
-        .tab-button {
+        .cr-tab {
             padding: 12px 24px;
             background: transparent;
             border: 1px solid transparent;
-            border-radius: 12px;
+            border-radius: 14px;
             color: #94a3b8;
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
             font-size: 0.9em;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .tab-button:hover {
+        .cr-tab:hover {
             background: rgba(255, 255, 255, 0.05);
             color: #fff;
         }
 
-        .tab-button.active {
+        .cr-tab.active {
             background: var(--primary);
             color: #fff;
             border-color: rgba(255, 255, 255, 0.2);
@@ -1662,12 +1661,12 @@
             transform: translateY(-2px);
         }
 
-        .tab-content {
+        .cr-tab-content {
             display: none;
             animation: cr-fade-in 0.5s ease;
         }
 
-        .tab-content.active {
+        .cr-tab-content.active {
             display: block;
         }
 
@@ -1906,7 +1905,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 13/05/2026 17:16:31</p>
+            <p>Perfil gerado em 13/05/2026 18:32:41</p>
             <p>Visto por último: 11 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
