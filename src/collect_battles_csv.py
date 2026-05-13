@@ -248,29 +248,19 @@ def append_new_rows(file_path: str, new_rows: list) -> int:
     return len(added)
 
 
-def main():
-    api_token = os.environ.get('CR_API_TOKEN')
-    player_tag = os.environ.get('CR_PLAYER_TAG')
-
-    if not api_token:
-        print("[ERRO] Variavel de ambiente CR_API_TOKEN nao configurada.")
-        sys.exit(1)
-    if not player_tag:
-        print("[ERRO] Variavel de ambiente CR_PLAYER_TAG nao configurada.")
-        sys.exit(1)
-
-    print("=" * 60)
-    print("Coleta de Batalhas - Clash Royale (100% CSV)")
-    print("=" * 60)
-    print(f"Jogador: {player_tag}")
-    print(f"Data/Hora UTC: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
+def collect_for_tag(api_token: str, player_tag: str, label: str = "Principal") -> int:
+    """Coleta batalhas de uma unica conta e salva no CSV anual.
+    Retorna o numero total de novas batalhas inseridas."""
+    print(f"\n{'-' * 50}")
+    print(f"  Conta {label}: {player_tag}")
+    print(f"{'-' * 50}")
 
     battles = get_battle_log(api_token, player_tag)
     if not battles:
-        print("[AVISO] Nenhuma batalha retornada pela API.")
-        sys.exit(0)
+        print(f"  [AVISO] Nenhuma batalha retornada pela API para {player_tag}.")
+        return 0
 
-    print(f"Batalhas retornadas pela API: {len(battles)}")
+    print(f"  Batalhas retornadas pela API: {len(battles)}")
 
     # Parseia todas as batalhas validas
     parsed = []
@@ -279,39 +269,67 @@ def main():
         if row:
             parsed.append(row)
 
-    print(f"Batalhas parseadas com sucesso: {len(parsed)}")
+    print(f"  Batalhas parseadas com sucesso: {len(parsed)}")
 
     if not parsed:
-        print("[AVISO] Nenhuma batalha valida para salvar.")
-        sys.exit(0)
+        print(f"  [AVISO] Nenhuma batalha valida para salvar.")
+        return 0
 
-    # Agrupa por periodo (dia, mes, ano) usando a data BRT
-    by_day = {}
-    by_month = {}
+    # Agrupa por ano usando a data BRT
     by_year = {}
-
     for row in parsed:
         dt_utc = row.pop('_dt_utc')  # Remove campo interno antes de salvar
         dt_brt = dt_utc - timedelta(hours=3)
-        day_key = dt_brt.strftime('%Y%m%d')
-        month_key = dt_brt.strftime('%Y%m')
         year_key = dt_brt.strftime('%Y')
         by_year.setdefault(year_key, []).append(row)
 
-    # Processa apenas o arquivo anual consolidado (Ano atual)
+    # Processa arquivo anual consolidado
     total_novos = 0
-    print("\n--- Processando Arquivo Anual Consolidado ---")
     for year_key, rows in sorted(by_year.items()):
         file_path = os.path.join(DATA_DIR, f"oponentes_ano_{year_key}.csv")
         novos = append_new_rows(file_path, rows)
         total_novos += novos
         print(f"  oponentes_ano_{year_key}.csv: +{novos} novas batalhas")
 
+    return total_novos
+
+
+def main():
+    api_token = os.environ.get('CR_API_TOKEN')
+    player_tag = os.environ.get('CR_PLAYER_TAG')
+    player_tag_sec = os.environ.get('CR_PLAYER_TAG_SEC')
+
+    if not api_token:
+        print("[ERRO] Variavel de ambiente CR_API_TOKEN nao configurada.")
+        sys.exit(1)
+    if not player_tag:
+        print("[ERRO] Variavel de ambiente CR_PLAYER_TAG nao configurada.")
+        sys.exit(1)
+
+    # Monta lista de contas para coletar
+    accounts = [("Principal", player_tag)]
+    if player_tag_sec:
+        accounts.append(("Secundaria", player_tag_sec))
+
+    print("=" * 60)
+    print("Coleta de Batalhas - Clash Royale (100% CSV)")
+    print("=" * 60)
+    print(f"Data/Hora UTC: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Contas configuradas: {len(accounts)}")
+    for label, tag in accounts:
+        print(f"  [{label}] {tag}")
+
+    # Coleta para cada conta
+    grand_total = 0
+    for label, tag in accounts:
+        novos = collect_for_tag(api_token, tag, label)
+        grand_total += novos
+
     print("\n" + "=" * 60)
-    print(f"Coleta concluida! Total de novas batalhas: {total_novos}")
+    print(f"Coleta concluida! Total de novas batalhas: {grand_total}")
     print("=" * 60)
 
-    if total_novos == 0:
+    if grand_total == 0:
         print("[INFO] Nenhuma batalha nova nesta coleta (todas ja existem nos CSVs).")
 
 
