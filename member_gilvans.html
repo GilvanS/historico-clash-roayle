@@ -1622,27 +1622,54 @@
         .cr-account-tabs {
             display: flex;
             gap: 12px;
-            margin: 20px 0 30px 0;
+            margin: 20px auto 30px auto;
             padding: 8px;
-            background: rgba(15, 23, 42, 0.4);
+            background: rgba(15, 23, 42, 0.6);
             border-radius: 20px;
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             width: fit-content;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(59, 130, 246, 0.2);
+            position: relative;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
         }
 
         .cr-tab {
-            padding: 12px 24px;
-            background: transparent;
-            border: 1px solid transparent;
+            padding: 12px 28px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 14px;
             color: #94a3b8;
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
-            font-size: 0.9em;
+            font-size: 0.95em;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cr-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transform: translateY(-2px);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .cr-tab.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+            color: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+
+        .cr-tab i {
+            margin-right: 10px;
+            font-size: 1.1em;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
             gap: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -1905,7 +1932,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 13/05/2026 18:56:32</p>
+            <p>Perfil gerado em 13/05/2026 19:22:00</p>
             <p>Visto por último: 11 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
