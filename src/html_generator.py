@@ -674,10 +674,10 @@ class GitHubPagesHTMLGenerator:
         """
         if is_opponent:
             leaked_raw = battle.get('elixir_vazado_oponente') or battle.get('opp_leaked') or battle.get('elixir_leaked_opponent') or battle.get('opponent_leaked', 0)
-            level_raw = battle.get('nivel_torre_oponente') or battle.get('nivel_oponente') or battle.get('opponent_level') or battle.get('opp_tower_level', 14)
+            level_raw = battle.get('nivel_torre_oponente') or battle.get('nivel_oponente') or battle.get('opponent_level') or battle.get('opp_tower_level', 0)
         else:
             leaked_raw = battle.get('elixir_vazado_jogador') or battle.get('player_leaked') or battle.get('elixir_leaked_player') or battle.get('player_leaked_elixir', 0)
-            level_raw = battle.get('nivel_torre_jogador') or battle.get('player_level') or battle.get('player_tower_level', 14)
+            level_raw = battle.get('nivel_torre_jogador') or battle.get('player_level') or battle.get('player_tower_level', 0)
         
         # Sanitizacao: converte para tipos corretos, protege contra string vazia ou None
         try:
@@ -687,9 +687,9 @@ class GitHubPagesHTMLGenerator:
         try:
             # Garante que level_raw seja tratado como string para isdigit, mas converte para int
             s_level = str(level_raw).strip()
-            tower_level = int(s_level) if s_level.isdigit() and int(s_level) > 0 else 14
+            tower_level = int(s_level) if s_level.isdigit() and int(s_level) > 0 and int(s_level) < 16 else 0
         except (ValueError, TypeError):
-            tower_level = 14
+            tower_level = 0
 
         metrics = self._get_deck_metrics(deck_str, leaked=leaked, tower_level=tower_level)
         metrics['leaked_color'] = '#f56565' if float(leaked) > 0 else '#48bb78'
@@ -2975,7 +2975,7 @@ class GitHubPagesHTMLGenerator:
                 }
                 
                 if (pTowerLv) {
-                    if (data.p_level && data.p_level !== 'N/A') {
+                    if (data.p_level && data.p_level !== 'N/A' && parseInt(data.p_level) > 0) {
                         pTowerLv.innerText = `LV ${data.p_level}`;
                         pTowerLv.style.display = 'block';
                     } else {
@@ -2983,7 +2983,7 @@ class GitHubPagesHTMLGenerator:
                     }
                 }
                 if (oTowerLv) {
-                    if (data.o_level && data.o_level !== 'N/A') {
+                    if (data.o_level && data.o_level !== 'N/A' && parseInt(data.o_level) > 0) {
                         oTowerLv.innerText = `LV ${data.o_level}`;
                         oTowerLv.style.display = 'block';
                     } else {
@@ -3330,17 +3330,17 @@ class GitHubPagesHTMLGenerator:
         <div class="cr-vs-stage-v2" id="vs-content-{section_id}">
             
             <!-- Linha 1: Info e Placar (Topo) -->
-            <div class="cr-vs-top-row-v2" style="display: grid; grid-template-columns: 1fr 140px 1fr; align-items: flex-start; gap: 15px; width: 100%; margin-bottom: 25px;">
+            <div class="cr-vs-top-row-v2" style="display: grid; grid-template-columns: 1fr 140px 1fr; align-items: flex-start; gap: 15px; width: 100%; margin-bottom: 15px;">
                 <!-- Jogador -->
                 <div class="cr-vs-side-info player" style="text-align: left;">
                     <div id="p-tag-{section_id}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{player_info['tag']}</div>
-                    <div id="p-name-{section_id}" style="font-size: 1.2em; font-weight: 950; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{player_info['name']}</div>
+                    <div id="p-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{player_info['name']}</div>
                     <div id="p-clan-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{player_info.get('clan', 'Sem Clã')}</div>
                 </div>
 
                 <!-- Centro: Placar -->
-                <div class="cr-vs-center-v2" style="text-align: center; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;">
-                    <div id="score-{section_id}" style="font-size: 2.8em; font-weight: 950; color: {res_color}; letter-spacing: -2px; line-height: 1; font-family: 'Krona One', sans-serif;">
+                <div class="cr-vs-center-v2" style="text-align: center; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;">
+                    <div id="score-{section_id}" style="font-size: 2.2em; font-weight: 950; color: {res_color}; letter-spacing: -2px; line-height: 1; font-family: 'Krona One', sans-serif;">
                         {p_crowns} - {o_crowns}
                     </div>
                     <div id="mode-{section_id}" style="font-size: 0.6em; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 4px;">
@@ -3354,7 +3354,7 @@ class GitHubPagesHTMLGenerator:
                 <!-- Oponente -->
                 <div class="cr-vs-side-info opponent" style="text-align: right;">
                     <div id="o-tag-{section_id}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{opp_info['tag']}</div>
-                    <div id="o-name-{section_id}" style="font-size: 1.2em; font-weight: 950; color: #f87171; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{opp_info['name']}</div>
+                    <div id="o-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #f87171; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{opp_info['name']}</div>
                     <div id="o-clan-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{opp_info.get('clan', 'Sem Clã')}</div>
                 </div>
             </div>
@@ -3364,12 +3364,12 @@ class GitHubPagesHTMLGenerator:
                 
                 <!-- Coluna Jogador -->
                 <div class="cr-vs-deck-column player" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
-                    <div id="p-tower-container-{section_id}" style="position: absolute; top: -45px; z-index: 10; width: 90px; transition: all 0.3s ease;">
+                    <div id="p-tower-container-{section_id}" style="position: absolute; top: -45px; z-index: 1; width: 90px; transition: all 0.3s ease;">
                         <img id="p-tower-img-{section_id}" src="{my_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
-                        <span id="p-tower-lv-{section_id}" class="cr-tower-lv-badge" style="position: absolute; top: 0; right: 0; background: #4ade80; color: #000; font-size: 0.5em; padding: 2px 5px; border-radius: 4px; font-weight: 900;">LV {my_metrics['level']}</span>
+                        <span id="p-tower-lv-{section_id}" class="cr-tower-lv-badge" style="position: absolute; top: 0; right: 0; background: #4ade80; color: #000; font-size: 0.4em; padding: 2px 5px; border-radius: 4px; font-weight: 900; display: {'block' if my_metrics['level'] > 0 else 'none'};">LV {my_metrics['level']}</span>
                         <div id="p-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #4ade80; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{my_metrics.get('hp', '--')} HP</div>
                     </div>
-                    <div id="p-grid-{section_id}" style="margin-top: 50px; width: 100%;">
+                    <div id="p-grid-{section_id}" style="margin-top: 50px; width: 100%; position: relative; z-index: 5;">
                         {self._generate_deck_grid_html_simple(battle_data['my_deck'], self.get_copy_deck_link([c.split('|')[0] for c in battle_data['my_deck'].split('|') if c]))}
                     </div>
                     <div id="player-metrics-{section_id}" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
@@ -3379,12 +3379,12 @@ class GitHubPagesHTMLGenerator:
 
                 <!-- Coluna Oponente -->
                 <div class="cr-vs-deck-column opponent" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
-                    <div id="o-tower-container-{section_id}" style="position: absolute; top: -45px; z-index: 10; width: 90px; transition: all 0.3s ease;">
+                    <div id="o-tower-container-{section_id}" style="position: absolute; top: -45px; z-index: 1; width: 90px; transition: all 0.3s ease;">
                         <img id="o-tower-img-{section_id}" src="{opp_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
-                        <span id="o-tower-lv-{section_id}" class="cr-tower-lv-badge" style="position: absolute; top: 0; right: 0; background: #f87171; color: #fff; font-size: 0.5em; padding: 2px 5px; border-radius: 4px; font-weight: 900;">LV {opp_metrics['level']}</span>
+                        <span id="o-tower-lv-{section_id}" class="cr-tower-lv-badge" style="position: absolute; top: 0; right: 0; background: #f87171; color: #fff; font-size: 0.4em; padding: 2px 5px; border-radius: 4px; font-weight: 900; display: {'block' if opp_metrics['level'] > 0 else 'none'};">LV {opp_metrics['level']}</span>
                         <div id="o-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #f87171; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{opp_metrics.get('hp', '--')} HP</div>
                     </div>
-                    <div id="o-grid-{section_id}" style="margin-top: 50px; width: 100%;">
+                    <div id="o-grid-{section_id}" style="margin-top: 50px; width: 100%; position: relative; z-index: 5;">
                         {self._generate_deck_grid_html_simple(battle_data['opp_deck'])}
                     </div>
                     <div id="opp-metrics-{section_id}" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
@@ -3394,7 +3394,7 @@ class GitHubPagesHTMLGenerator:
             </div>
 
             <!-- Linha 3: Meta Info (Rodapé) -->
-            <div class="cr-vs-footer-v2" style="margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <div class="cr-vs-footer-v2" style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); width: 100%; display: flex; justify-content: space-between; align-items: center;">
                 <div id="arena-{section_id}" style="font-size: 0.75em; color: rgba(255,255,255,0.5); font-weight: 800;">
                     <i class="fas fa-map-marker-alt" style="color: var(--primary); opacity: 0.7;"></i> {battle_data.get('arena_name', 'Arena')}
                 </div>
@@ -3424,7 +3424,7 @@ class GitHubPagesHTMLGenerator:
         player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
         player_clan = next((p.get('clan_name', '') for p in self.players_cache if p.get('player_tag') == self.player_tag), '')
         
-        html = '<div class="cr-opponents-list" style="display: grid; grid-template-columns: 1fr; gap: 30px;">'
+        html = '<div class="cr-opponents-list" style="display: grid; gap: 30px;">'
         
         for i, opp in enumerate(opponents, 1):
             wr = opp['user_win_rate']
@@ -3485,7 +3485,7 @@ class GitHubPagesHTMLGenerator:
         if not lethal_decks: return '<div class="cr-empty-state">Dados insuficientes para mapear decks letais.</div>'
         
         # Container Grid para os Decks Letais
-        html = '<div class="cr-lethal-decks-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px;">'
+        html = '<div class="cr-lethal-decks-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">'
         
         for i, ld in enumerate(lethal_decks, 1):
             deck_str = ld['deck']
@@ -6149,8 +6149,8 @@ class GitHubPagesHTMLGenerator:
         }
 
         @media (max-width: 1100px) {
-            .cr-opponents-list, .battle-cards {
-                grid-template-columns: 1fr;
+            .cr-opponents-list, .battle-cards, .cr-lethal-decks-grid {
+                grid-template-columns: 1fr !important;
             }
         }
 

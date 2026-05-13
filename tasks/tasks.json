@@ -189,7 +189,7 @@
         "description": "Ajustar o layout do relatorio de batalhas para exibir 2 itens por linha, corrigir sobreposicao de torres e badges de nivel.",
         "details": "1. Mudar display da lista de batalhas para grid 1fr 1fr. 2. Ajustar z-index da torre para ficar abaixo do deck. 3. Reduzir tamanho da badge de nivel e implementar logica de exibicao condicional.",
         "testStrategy": "Verificacao visual no index.html gerado.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": [
@@ -198,7 +198,7 @@
             "title": "Ajustar Layout de 2 Colunas na Lista de Batalhas",
             "description": "Alterar o CSS do container de batalhas para exibir duas colunas.",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 10
           },
@@ -207,7 +207,7 @@
             "title": "Corrigir Sobreposicao da Torre (Z-Index)",
             "description": "Corrigir o z-index da imagem da torre para que fique atras do deck.",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 10
           },
@@ -216,7 +216,7 @@
             "title": "Ajustar Badge de Level da Torre",
             "description": "Reduzir a badge de nivel e esconder se os dados forem imprecisos.",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 10
           }
@@ -226,7 +226,7 @@
     "metadata": {
       "created": "2026-05-09T17:17:32.833Z",
       "description": "Default tasks context",
-      "updated": "2026-05-13T23:09:42.235Z"
+      "updated": "2026-05-13T23:27:51.424Z"
     }
   }
 }
