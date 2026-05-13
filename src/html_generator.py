@@ -68,7 +68,11 @@ class GitHubPagesHTMLGenerator:
 
         # Organize battles by tag for fast lookup
         self.battles_by_tag = self._organize_battles_by_tag()
-        self.battles_cache = self.battles_by_tag.get(self.player_tag, [])
+        
+        # Battles cache now contains ALL tracked tags battles
+        self.battles_cache = []
+        for tag in self.tracked_tags:
+            self.battles_cache.extend(self.battles_by_tag.get(tag, []))
         
         self.clan_members_cache = self._load_clan_members_csv()
         self.players_cache = self._load_csv_as_list('players.csv')
@@ -209,8 +213,8 @@ class GitHubPagesHTMLGenerator:
                     
                     # Filtro de player_tag (resiliente a nomes de colunas e espaços)
                     row_tag = (row.get('player_tag') or row.get('tag_jogador') or '').strip()
-                    if player_tag and row_tag and row_tag != player_tag:
-                        continue
+                    
+                    # Normaliza data e hora
                             
                     # Normaliza data e hora
                     raw_battle_time = row.get('data') or row.get('battle_time') or ''
@@ -2888,20 +2892,18 @@ class GitHubPagesHTMLGenerator:
                 
                 if (dateEl) {
                     dateEl.innerHTML = `<i class="far fa-calendar-alt"></i> ${data.date || '--/--'}`;
-                    dateEl.style.opacity = '0';
-                    setTimeout(() => dateEl.style.opacity = '1', 50);
                 }
                 if (timeEl) {
                     timeEl.innerHTML = `<i class="far fa-clock"></i> ${data.time || '--:--'}`;
-                    timeEl.style.opacity = '0';
-                    setTimeout(() => timeEl.style.opacity = '1', 50);
                 }
 
-                // Support for additional date displays in Premium UI
+                // Support for modernized VS Stage date displays
                 const dateDisplay = document.querySelector(`#vs-stage-${oppId} .cr-battle-date-p`);
-                if (dateDisplay && data.date && data.time) {
-                    dateDisplay.innerHTML = `${data.date} às ${data.time}`;
-                }
+                const metaDateDisplay = document.querySelector(`#vs-stage-${oppId} .match-date`);
+                const dateContent = `${data.date || ''} ${data.time || ''}`.trim() || 'Data desconhecida';
+                
+                if (dateDisplay) dateDisplay.innerHTML = dateContent;
+                if (metaDateDisplay) metaDateDisplay.innerHTML = dateContent;
 
                 console.log(`[RoyaleAnalytics] Updating Opponent ${oppId}`, data);
                 
