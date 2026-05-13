@@ -7,36 +7,32 @@
     <title>Perfil de Membro - GilvanS</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap');
 
         :root {
-            --glass-bg: #0f172a; /* Solid Slate */
+            --glass-bg: rgba(15, 23, 42, 0.7);
             --glass-border: rgba(255, 255, 255, 0.08);
-            --glass-blur: 0px;
-            --primary: #4299e1;
-            --primary-glow: rgba(66, 153, 225, 0.5);
-            --accent: #f6ad55;
-            --success: #48bb78;
-            --danger: #f56565;
+            --glass-blur: 12px;
+            --primary: #60a5fa;
+            --primary-glow: rgba(96, 165, 250, 0.4);
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
             --bg-dark: #020617;
             --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
             --premium-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --evo-purple: #c026d3;
+            --elite-gold: #fbbf24;
         }
 
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; padding: 0; box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background: var(--bg-dark);
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
             color: #f8fafc;
             line-height: 1.6;
             min-height: 100vh;
@@ -48,8 +44,18 @@
             letter-spacing: 0.05em;
         }
 
+        /* Glassmorphism Refined */
+        .glass-panel, .cr-glass-premium {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
         .container {
-            max-width: 1350px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 40px 20px;
             animation: cr-fade-in-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -60,565 +66,368 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .glass-panel, .cr-glass-premium {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .header {
-            padding: 60px 40px;
-            margin-bottom: 40px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
-            box-shadow: 0 0 20px var(--primary-glow);
-        }
-
-        .header h1 {
-            font-size: 3.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
-        }
-
-        .player-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            width: 100%;
-        }
-
-        .stat-card {
-            padding: 24px;
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 20px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-8px);
-            background: rgba(30, 41, 59, 0.8);
-            border-color: var(--primary);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4), 0 0 15px var(--primary-glow);
-        }
-
-        .stat-card h3 {
-            font-size: 0.75em;
-            color: #94a3b8;
-            margin-bottom: 8px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .stat-card .value {
-            font-size: 2em;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .section {
-            padding: 40px;
-            margin-bottom: 40px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .battle-cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .section h2 {
-            font-size: 2em;
-            margin-bottom: 35px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            color: #fff;
-        }
-
-        .section h2::after {
-            content: '';
-            flex: 1;
-            height: 2px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: 0.3;
-        }
-
-        .cr-opponents-list {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 20px;
-            padding: 10px;
-            width: 100%;
-        }
-
-        @media (max-width: 900px) {
-            .cr-opponents-list {
-                grid-template-columns: 1fr !important;
-            }
-        }
-
-
-        .cr-deck-card {
-            border-radius: 20px;
-            overflow: hidden;
-            background: #0f172a;
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-            position: relative;
-            box-shadow: 0 15px 45px rgba(0,0,0,0.4);
-            height: auto !important;
-            min-height: 0 !important;
-        }
-
-        .cr-deck-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .cr-deck-card:hover {
-            transform: scale(1.01);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
-        }
-
-        .cr-timeline-container {
-            margin-top: 20px;
-            padding: 20px 30px;
-            background: rgba(0,0,0,0.2);
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .cr-timeline-header-text {
-            font-size: 0.75em;
-            color: #64748b;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-
-        .cr-timeline-scroll {
+        /* Account Tabs - Premium v2 */
+        .cr-account-tabs {
             display: flex;
             gap: 12px;
-            overflow-x: auto;
-            padding: 10px 5px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary) transparent;
+            margin: 20px 0 40px 0;
+            padding: 6px;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: fit-content;
         }
 
-        .cr-timeline-scroll::-webkit-scrollbar { height: 6px; }
-        .cr-timeline-scroll::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
-
-        .cr-date-selector {
-            flex: 0 0 auto;
-            padding: 8px 16px;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
+        .cr-tab {
+            padding: 12px 28px;
+            border-radius: 16px;
             cursor: pointer;
+            font-weight: 800;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
         }
 
-        .cr-date-selector:hover {
-            background: rgba(30, 41, 59, 0.8);
+        .cr-tab:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .cr-tab.active {
+            color: #fff;
+            background: linear-gradient(135deg, #38bdf8 0%, #1d4ed8 100%);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .cr-tab-content {
+            display: none;
+            animation: cr-tab-fade-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .cr-tab-content.active {
+            display: block;
+        }
+
+        @keyframes cr-tab-fade-in {
+            from { opacity: 0; transform: scale(0.98) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* VS Stage Premium v2 - New Hierarchy */
+        .cr-vs-stage-v2 {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: 30px;
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .cr-vs-top-row-v2 {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+        }
+
+        .cr-vs-side-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .cr-vs-side-info.player { align-items: center; }
+        .cr-vs-side-info.opponent { align-items: center; }
+
+        .cr-vs-player-meta {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .cr-vs-tag {
+            font-size: 0.65em;
+            color: rgba(255,255,255,0.3);
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .cr-vs-name {
+            font-size: 1.2em;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .cr-vs-clan {
+            font-size: 0.75em;
+            color: rgba(255,255,255,0.5);
+            font-weight: 600;
+        }
+
+        .cr-tower-display-v2 {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cr-tower-img-premium {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 25px rgba(0,0,0,0.6));
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cr-tower-img-premium:hover {
+            transform: scale(1.1) translateY(-10px);
+        }
+
+        .cr-tower-level-badge {
+            position: absolute;
+            top: -10px;
+            background: #1e293b;
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.7em;
+            font-weight: 900;
+            border: 1px solid var(--accent);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .cr-tower-hp-v2 {
+            font-size: 0.85em;
+            font-weight: 900;
+            color: var(--success);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .opponent .cr-vs-name { color: var(--danger); }
+        .opponent .cr-tower-hp-v2 { color: var(--danger); }
+
+        .cr-vs-center-v2 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cr-vs-score-v2 {
+            font-size: 4em;
+            font-weight: 950;
+            font-family: 'Outfit', sans-serif;
+            line-height: 0.8;
+            letter-spacing: -2px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .cr-vs-mode-v2 {
+            background: rgba(255,255,255,0.05);
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: 900;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .cr-vs-trophies-v2 {
+            font-size: 1.1em;
+            font-weight: 900;
+        }
+
+        /* Decks Row */
+        .cr-vs-decks-row-v2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .cr-vs-deck-wrap {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 20px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Card Premium v2 */
+        .cr-card-wrap-premium {
+            aspect-ratio: 5/6;
+            background: #1e293b;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .cr-card-wrap-premium:hover {
+            transform: scale(1.15) translateY(-8px);
+            z-index: 50;
             border-color: var(--primary);
-            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
         }
 
-        .cr-date-selector.active {
-            background: var(--primary);
+        .cr-card-img { width: 100%; height: 100%; object-fit: cover; }
+
+        .cr-card-level-badge {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background: rgba(15, 23, 42, 0.9);
+            color: #fff;
+            font-size: 0.65em;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.15);
+            z-index: 5;
+        }
+
+        .cr-card-level-badge.cr-lvl-15 {
+            background: linear-gradient(180deg, #b45309, #fbbf24);
             border-color: #fff;
-            box-shadow: 0 0 20px var(--primary-glow);
-            transform: scale(1.05);
+            color: #000;
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
         }
 
-        .cr-date-selector.active .cr-date-text-small { color: #fff; }
+        /* Evolutions Premium */
+        .cr-card-evo-premium {
+            border: 2px solid var(--evo-purple) !important;
+            box-shadow: 0 0 20px rgba(192, 38, 211, 0.4);
+        }
 
-        .cr-result-dot {
+        .cr-evo-badge-icon {
+            position: absolute;
+            top: 4px;
+            left: 4px;
             width: 18px;
             height: 18px;
+            background: var(--evo-purple);
+            border-radius: 4px;
+            border: 1px solid #fff;
+            z-index: 10;
+            box-shadow: 0 0 10px var(--evo-purple);
+            background-image: url('data:image/svg+xml;utf8,<svg fill="white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>');
+            background-size: 70%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Metrics Footer */
+        .cr-vs-metrics-footer-v2 {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 20px;
+            background: rgba(0,0,0,0.4);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .cr-vs-battle-meta-v2 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 0 30px;
+            border-left: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .cr-vs-arena-v2 {
+            font-size: 0.7em;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cr-vs-ranks-v2 {
+            display: flex;
+            gap: 15px;
+            font-size: 0.7em;
+            font-weight: 900;
+            color: var(--accent);
+        }
+
+        /* Deck Wrapper Copy Button */
+        .cr-grid-wrapper-premium {
+            position: relative;
+        }
+
+        .cr-copy-deck-btn {
+            position: absolute;
+            bottom: -15px;
+            right: 10px;
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.6em;
-            font-weight: 900;
             color: #fff;
+            border: 2px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            z-index: 60;
         }
 
-        .cr-date-text-small {
-            font-size: 0.8em;
-            color: #94a3b8;
-            font-weight: 600;
-        }
-
-        .cr-history-dots-row {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding: 10px 0;
-            justify-content: center;
-            width: 100%;
-            scrollbar-width: none;
-        }
-
-        .cr-history-dots-row::-webkit-scrollbar { display: none; }
-
-        .cr-history-dot {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-
-        .cr-history-dot .dot-res {
-            font-size: 0.7em;
-            font-weight: 900;
-            color: #fff;
-        }
-
-        .cr-history-dot .dot-time {
-            font-size: 0.5em;
-            color: #94a3b8;
-            margin-top: -2px;
-        }
-
-        .cr-history-dot:hover {
-            transform: translateY(-3px);
-            border-color: var(--primary);
-            background: rgba(30, 41, 59, 0.8);
-        }
-
-        .cr-history-dot.active {
-            background: var(--primary);
-            border-color: #fff;
-            box-shadow: 0 0 15px var(--primary-glow);
-            transform: scale(1.1);
-        }
-
-        .cr-history-dot.active .dot-time { color: rgba(255,255,255,0.8); }
-
-        /* Lethal Decks Premium v2 Styles */
-        .cr-lethal-card {
-            margin-bottom: 20px;
-        }
-
-        .cr-lethal-body {
-            flex-direction: row !important;
-            align-items: center;
-            gap: 40px !important;
-        }
-
-        .cr-lethal-grid-wrap {
-            flex: 0 0 320px;
-        }
-
-        .cr-lethal-stats {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .cr-lethal-info {
-            font-size: 1em;
-            color: #e2e8f0;
-            line-height: 1.6;
-        }
-
-        .cr-lethal-date {
-            font-size: 0.9em;
-            color: #94a3b8;
-        }
-
-        .cr-lethal-warning {
-            display: inline-block;
-            background: rgba(245, 101, 101, 0.15);
-            color: #feb2b2;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 0.8em;
-            text-transform: uppercase;
-            border: 1px solid rgba(245, 101, 101, 0.3);
-            letter-spacing: 1px;
-            animation: cr-pulse-red 3s infinite;
-        }
-
-        /* Utils */
-        .cr-toast-premium {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9);
-            border: 1px solid var(--primary);
-            color: #fff;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 700;
-            z-index: 10000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: cr-fade-in-up 0.3s ease;
-            transition: opacity 0.5s;
-        }
-
-        .cr-bg-info-style {
-            font-size: 0.8em;
-            opacity: 0.6;
-            margin-top: 10px;
-        }
-
-        .cr-bg-info-style a {
+        .cr-copy-deck-btn:hover {
+            transform: scale(1.2) rotate(15deg);
+            background: #fff;
             color: var(--primary);
-            text-decoration: none;
-        }
-
-        .cr-bg-info-style a:hover { text-decoration: underline; }
-
-        .cr-deck-header {
-            padding: 25px 35px;
-            background: linear-gradient(to right, rgba(30,41,59,0.6), rgba(15,23,42,0.9));
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .cr-deck-rank {
-            background: rgba(255,255,255,0.08);
-            color: #94a3b8;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 0.75em;
-            text-transform: uppercase;
-        }
-
-        .cr-wr-badge {
-            font-weight: 900;
-            padding: 8px 18px;
-            border-radius: 12px;
-            font-size: 0.95em;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .cr-deck-body {
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        /* VS Stage Premium v2 - Unified Layout */
-        .cr-main-vs-stage {
-            padding: 10px 5px;
-            background: transparent;
-            position: relative;
-            border-radius: 24px;
-            border: none;
-            overflow: visible;
-        }
-
-        .cr-vs-stage-v2 {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
-            max-width: none;
-            margin: 0 auto;
-        }
-
-        .cr-vs-header-compact {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 8px 20px;
-            background: transparent;
-            border: none;
-            border-radius: 20px 20px 0 0;
-            margin-bottom: 10px;
-        }
-
-        .cr-vs-player-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            flex: 1; 
-            min-width: 0;
-            overflow: hidden;
-        }
-
-        .cr-vs-player-name {
-            font-size: 0.85em;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            overflow: visible;
-            white-space: normal;
-            line-height: 1.1;
-            word-break: break-word;
-            max-width: 100%;
-        }
-
-        .cr-vs-player-clan {
-            font-size: 0.7em;
-            color: #94a3b8;
-            opacity: 0.7;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .cr-vs-score-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            flex: 0 0 140px;
-        }
-
-        .cr-vs-score-main {
-            font-size: 1.2em;
-            font-weight: 900;
-            font-family: 'Outfit', sans-serif;
-            color: #fff;
-            letter-spacing: 1px;
-            text-shadow: 0 0 15px rgba(255,255,255,0.2);
-        }
-
-        .cr-vs-decks-grid-v2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 0 20px;
-            width: 100%;
-            position: relative;
-        }
-
-        .cr-side-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            min-height: auto !important;
-            justify-content: flex-end;
-        }
-
-        .cr-tower-overlap {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1;
-            opacity: 0.25;
-            transition: all 0.3s ease;
-            pointer-events: none;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .cr-tower-img-premium {
-            max-height: 150px;
-            object-fit: contain;
-            filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
-        }
-
-        .cr-tower-overlap .cr-card-level-badge {
-            position: absolute;
-            bottom: 20px;
-            right: 20%;
-            z-index: 2;
-        }
-
-        .cr-tower-overlap:hover {
-            opacity: 0.4;
-        }
-
-
-        .cr-grid-wrapper-premium {
-            position: relative;
-            width: 100%;
-            max-width: 420px;
-            margin: 0 auto;
-            z-index: 20; /* Increased to ensure it is above tower */
         }
 
         .cr-grid-4x2 {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            padding: 12px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
-            width: 100%;
-            box-shadow: inset 0 4px 15px rgba(0,0,0,0.3);
+            gap: 12px;
         }
 
-        /* Top Row: Towers & Score */
-        .cr-vs-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 40px;
-            margin-bottom: 10px;
+        /* Responsividade */
+        @media (max-width: 900px) {
+            .cr-vs-top-row-v2 {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            .cr-vs-decks-row-v2 {
+                grid-template-columns: 1fr;
+            }
+            .cr-vs-metrics-footer-v2 {
+                grid-template-columns: 1fr;
+            }
+            .cr-vs-battle-meta-v2 {
+                border: none;
+                padding: 15px 0;
+                border-top: 1px solid rgba(255,255,255,0.05);
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
         }
-
-        /* New Modal & Static Layout Premium v2 */
-        .cr-modal-top-stage, .cr-vs-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
             padding: 20px 40px;
             background: transparent;
             border: none;
@@ -2097,7 +1906,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 13/05/2026 16:41:40</p>
+            <p>Perfil gerado em 13/05/2026 17:16:31</p>
             <p>Visto por último: 11 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
