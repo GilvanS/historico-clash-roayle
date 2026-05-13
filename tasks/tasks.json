@@ -39,12 +39,102 @@
             "parentTaskId": 1
           }
         ]
+      },
+      {
+        "id": 2,
+        "title": "[Skill: Pipeline & Automation] Coleta Multi-Conta",
+        "description": "Refinar e manter o sistema de coleta automatizada de 30 em 30 minutos via GitHub Actions para as contas principal e secundária.",
+        "details": "- Garantir deduplicação robusta em collect_battles_csv.py.\n- Monitorar limites da API.\n- Validar sincronização via GitHub Actions.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Validar deduplicação robusta",
+            "description": "Garantir que a lógica de normalização de tags evite duplicatas no CSV oficial.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 2,
+            "title": "Monitorar logs do GitHub Actions",
+            "description": "Verificar se o workflow do GitHub está puxando corretamente CR_PLAYER_TAG e CR_PLAYER_TAG_SEC.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 2
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "[Skill: UI/UX & Frontend] Dashboard com Abas Premium v2",
+        "description": "Implementar o sistema de abas no dashboard para visualização independente de cada conta e garantir design Premium v2.",
+        "details": "- Refatorar html_generator.py para suportar múltiplas fontes de dados.\n- Criar interface de abas com Vanilla CSS.\n- Aplicar glassmorphism e micro-animações.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Refatorar lógica de dados no html_generator.py",
+            "description": "Alterar _load_all_battles_from_csv para organizar dados por tag de jogador.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 2,
+            "title": "Implementar Interface de Abas (HTML/CSS)",
+            "description": "Criar estrutura de navegação por abas com estilos Premium v2.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 3,
+            "title": "Integrar Lógica switchTab (JS)",
+            "description": "Garantir que a troca de abas oculte/exiba o conteúdo correto sem recarregar a página.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 3
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "[Skill: Data Engineering] Geração de Perfis Multi-Conta",
+        "description": "Garantir que todas as páginas de perfil sejam geradas corretamente, incluindo contas secundárias e perfis fora do clã principal.",
+        "details": "- Atualizar member_generator.py para iterar sobre todas as tags no CSV.\n- Validar geração de perfis individuais em members/.",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Detecção Dinâmica de Tags no member_generator.py",
+            "description": "Permitir que o gerador processe tags que não estão na lista fixa do clã.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 4
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2026-05-09T17:17:32.833Z",
       "description": "Default tasks context",
-      "updated": "2026-05-10T18:00:18.807Z"
+      "updated": "2026-05-13T02:47:04.342Z"
     }
   }
 }

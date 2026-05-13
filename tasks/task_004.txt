@@ -1,0 +1,20 @@
+# Task ID: 4
+# Title: [Skill: Data Engineering] Geração de Perfis Multi-Conta
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Garantir que todas as páginas de perfil sejam geradas corretamente, incluindo contas secundárias e perfis fora do clã principal.
+# Details:
+- Atualizar member_generator.py para iterar sobre todas as tags no CSV.
+- Validar geração de perfis individuais em members/.
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Detecção Dinâmica de Tags no member_generator.py [pending]
+### Dependencies: None
+### Description: Permitir que o gerador processe tags que não estão na lista fixa do clã.
+### Details:
+
+

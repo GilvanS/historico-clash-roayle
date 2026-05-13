@@ -11,19 +11,19 @@
 
 
 # Subtasks:
-## 1. Atualizar CSS Glassmorphism v2 [pending]
+## 1. Atualizar CSS Glassmorphism v2 [done]
 ### Dependencies: None
 ### Description: Atualizar get_base_css_styles com as classes para layout v2, badges laterais e container de 1800px.
 ### Details:
 
 
-## 2. Refatorar Estrutura HTML VS Row [pending]
+## 2. Refatorar Estrutura HTML VS Row [done]
 ### Dependencies: None
 ### Description: Refatorar get_preview_grid para inverter a hierarquia (Torres -> Score -> Decks -> Metricas).
 ### Details:
 
 
-## 3. Implementar Modal de Detalhes da Batalha [pending]
+## 3. Implementar Modal de Detalhes da Batalha [done]
 ### Dependencies: None
 ### Description: Implementar logicade JS para abertura de Modal ao clicar em uma batalha na lista.
 ### Details:
