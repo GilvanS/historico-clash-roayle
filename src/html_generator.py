@@ -2890,6 +2890,7 @@ class GitHubPagesHTMLGenerator:
                 const dateEl = document.getElementById(`date-${oppId}`);
                 const timeEl = document.getElementById(`time-${oppId}`);
                 
+                // Alteração: 2026-05-13 - Correção de seletores para atualização de data/hora
                 if (dateEl) {
                     dateEl.innerHTML = `<i class="far fa-calendar-alt"></i> ${data.date || '--/--'}`;
                 }
@@ -2898,14 +2899,17 @@ class GitHubPagesHTMLGenerator:
                 }
 
                 // Support for modernized VS Stage date displays
-                const dateDisplay = document.querySelector(`#vs-stage-${oppId} .cr-battle-date-p`);
-                const metaDateDisplay = document.querySelector(`#vs-stage-${oppId} .match-date`);
-                const dateContent = `${data.date || ''} ${data.time || ''}`.trim() || 'Data desconhecida';
-                
-                if (dateDisplay) dateDisplay.innerHTML = dateContent;
-                if (metaDateDisplay) metaDateDisplay.innerHTML = dateContent;
+                const vsContainer = document.getElementById(`vs-stage-${oppId}`);
+                if (vsContainer) {
+                    const dateDisplay = vsContainer.querySelector('.cr-battle-date-p');
+                    const metaDateDisplay = vsContainer.querySelector('.match-date');
+                    const dateContent = `${data.date || ''} ${data.time || ''}`.trim() || 'Data desconhecida';
+                    
+                    if (dateDisplay) dateDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> ${dateContent}`;
+                    if (metaDateDisplay) metaDateDisplay.innerHTML = `<i class="far fa-calendar-alt"></i> ${dateContent}`;
+                }
 
-                console.log(`[RoyaleAnalytics] Updating Opponent ${oppId}`, data);
+                console.log(`[RoyaleAnalytics] Updating Opponent ${oppId} details...`, data);
                 
                 // Update scores and mode
                 const scoreEl = document.getElementById(`score-${oppId}`);
@@ -4374,7 +4378,8 @@ class GitHubPagesHTMLGenerator:
                     
                     # Tab Header
                     label = "CONTA PRINCIPAL" if idx == 0 else "CONTA SECUNDÁRIA"
-                    account_tabs_html += f'<div class="cr-tab {active_class}" onclick="switchAccountTab(\'{tag}\', this)"><span>{label}</span><small style="opacity: 0.7; font-size: 0.8em; margin-left: 8px;">({stats["name"]})</small></div>'
+                    icon = "fa-user-shield" if idx == 0 else "fa-user-ninja"
+                    account_tabs_html += f'<div class="cr-tab {active_class}" onclick="switchAccountTab(\'{tag}\', this)"><i class="fas {icon}"></i> <span>{label}</span><small style="opacity: 0.7; font-size: 0.8em; margin-left: 8px;">({stats["name"]})</small></div>'
                     
                     # Tab Content
                     content_html = self._generate_account_content_html(tag, stats)
@@ -6237,27 +6242,54 @@ class GitHubPagesHTMLGenerator:
         .cr-account-tabs {
             display: flex;
             gap: 12px;
-            margin: 20px 0 30px 0;
+            margin: 20px auto 30px auto;
             padding: 8px;
-            background: rgba(15, 23, 42, 0.4);
+            background: rgba(15, 23, 42, 0.6);
             border-radius: 20px;
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             width: fit-content;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(59, 130, 246, 0.2);
+            position: relative;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
         }
 
         .cr-tab {
-            padding: 12px 24px;
-            background: transparent;
-            border: 1px solid transparent;
+            padding: 12px 28px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 14px;
             color: #94a3b8;
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
-            font-size: 0.9em;
+            font-size: 0.95em;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cr-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transform: translateY(-2px);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        .cr-tab.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+            color: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+
+        .cr-tab i {
+            margin-right: 10px;
+            font-size: 1.1em;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
             gap: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -6350,9 +6382,12 @@ class GitHubPagesHTMLGenerator:
 
     <div class="container">
         <div class="cr-dashboard-main-header">
-            <h1 class="clash-font">&#9876; Royale Analytics Dashboard</h1>
-            <p style="color: #94a3b8; margin-bottom: 20px;">Painel Inteligente de Desempenho e Estratégia</p>
-            {account_tabs_html}
+            <h1 class="clash-font" style="text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);">&#9876; Royale Analytics Dashboard</h1>
+            <p style="color: #94a3b8; margin-bottom: 25px; font-weight: 500;">Painel Inteligente de Desempenho e Estratégia</p>
+            <!-- Injeção Crítica: Seletor de Contas -->
+            <div style="display: flex; justify-content: center; width: 100%;">
+                {account_tabs_html}
+            </div>
         </div>
 
         {coach_html}
