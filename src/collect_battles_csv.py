@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 FIELDNAMES = [
+    'player_tag',
     'data', 'nome_oponente', 'tag_oponente', 'nivel_oponente',
     'trofes_oponente', 'clan_oponente', 'resultado',
     'coroas_jogador', 'coroas_oponente', 'mudanca_trofes',
@@ -124,6 +125,7 @@ def extract_battle_row(battle: dict, player_tag: str):
 
     return {
         '_dt_utc': dt_utc,  # campo interno, removido antes de salvar
+        'player_tag': player_tag,
         'data': format_date_brt(dt_utc),
         'nome_oponente': sanitize(opponent_team.get('name', 'Desconhecido')),
         'tag_oponente': opponent_team.get('tag', ''),
@@ -186,8 +188,9 @@ def write_csv(file_path: str, rows: list):
 
 
 def make_dedup_key(row: dict) -> tuple:
-    """Chave de deduplicacao: (data, tag_oponente, deck_jogador, deck_oponente)."""
+    """Chave de deduplicacao: (player_tag, data, tag_oponente, deck_jogador, deck_oponente)."""
     return (
+        str(row.get('player_tag', '')).strip().upper(),
         str(row.get('data', '')).strip(),
         str(row.get('tag_oponente', '')).strip().upper(),
         str(row.get('deck_jogador', '')).strip(),
