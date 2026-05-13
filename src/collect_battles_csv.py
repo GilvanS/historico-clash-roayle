@@ -33,7 +33,8 @@ DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data_csv_of
 
 def get_battle_log(api_token: str, player_tag: str):
     """Busca o historico de batalhas da API Clash Royale."""
-    clean_tag = player_tag.replace('#', '')
+    # Garante tag limpa para a URL
+    clean_tag = player_tag.strip().replace('#', '').upper()
     url = f"https://proxy.royaleapi.dev/v1/players/%23{clean_tag}/battlelog"
     headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
     try:
@@ -44,7 +45,7 @@ def get_battle_log(api_token: str, player_tag: str):
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
-        print(f"[ERRO] Falha ao buscar batalhas: {e}")
+        print(f"[ERRO] Falha ao buscar batalhas para {player_tag}: {e}")
         return None
 
 
@@ -72,8 +73,20 @@ def format_deck(cards: list) -> str:
 
 def extract_battle_row(battle: dict, player_tag: str):
     """Extrai dados de uma batalha no formato do CSV oficial. Retorna None se invalido."""
+    # Normaliza a tag para comparacao
+    search_tag = player_tag.strip().upper()
+    if not search_tag.startswith('#'):
+        search_tag = f"#{search_tag}"
+
     teams = battle.get('team', [])
-    player_team = next((t for t in teams if t.get('tag') == player_tag), None)
+    # Comparacao insensivel a caso e espacos
+    player_team = next((t for t in teams if t.get('tag', '').strip().upper() == search_tag), None)
+    
+    if not player_team:
+        # Tenta sem o # caso a API retorne diferente (raro)
+        alt_tag = search_tag.replace('#', '')
+        player_team = next((t for t in teams if t.get('tag', '').strip().upper() == alt_tag), None)
+        
     if not player_team:
         return None
 
@@ -125,7 +138,7 @@ def extract_battle_row(battle: dict, player_tag: str):
 
     return {
         '_dt_utc': dt_utc,  # campo interno, removido antes de salvar
-        'player_tag': player_tag,
+        'player_tag': search_tag,
         'data': format_date_brt(dt_utc),
         'nome_oponente': sanitize(opponent_team.get('name', 'Desconhecido')),
         'tag_oponente': opponent_team.get('tag', ''),
@@ -307,15 +320,24 @@ def main():
         sys.exit(1)
 
     # Monta lista de contas para coletar
-    accounts = [("Principal", player_tag)]
+    accounts = []
+    if player_tag:
+        accounts.append(("Principal", player_tag.strip().upper()))
+    
     if player_tag_sec:
-        accounts.append(("Secundaria", player_tag_sec))
+        tag_sec = player_tag_sec.strip().upper()
+        if tag_sec and tag_sec != "NONE" and tag_sec != "":
+            accounts.append(("Secundaria", tag_sec))
+
+    if not accounts:
+        print("[ERRO] Nenhuma conta configurada (CR_PLAYER_TAG / CR_PLAYER_TAG_SEC).")
+        sys.exit(1)
 
     print("=" * 60)
     print("Coleta de Batalhas - Clash Royale (100% CSV)")
     print("=" * 60)
     print(f"Data/Hora UTC: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"Contas configuradas: {len(accounts)}")
+    print(f"Contas detectadas: {len(accounts)}")
     for label, tag in accounts:
         print(f"  [{label}] {tag}")
 

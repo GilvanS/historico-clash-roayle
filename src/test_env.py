@@ -14,7 +14,8 @@ def load_env():
 def test():
     load_env()
     token = os.getenv('CR_API_TOKEN')
-    tag = os.getenv('CR_PLAYER_TAG')
+    tag_pri = os.getenv('CR_PLAYER_TAG')
+    tag_sec = os.getenv('CR_PLAYER_TAG_SEC')
     
     print("=== RAIO-X DA CONEXAO (LOCAL/GITHUB) ===")
     
@@ -27,33 +28,42 @@ def test():
     if token:
         print(f"SUCESSO: CR_API_TOKEN carregado (Tamanho: {len(token)})")
     else:
-        print("ERRO: CR_API_TOKEN nao encontrado no .env ou no sistema.")
+        print("ERRO: CR_API_TOKEN nao encontrado.")
         return
 
-    tag_clean = tag.replace("#", "%23")
-    endpoints = {
-        "Proxy RoyaleAPI": f"https://proxy.royaleapi.dev/v1/players/{tag_clean}/battlelog",
-        "API Oficial Supercell": f"https://api.clashroyale.com/v1/players/{tag_clean}/battlelog"
-    }
+    accounts = [("Principal", tag_pri)]
+    if tag_sec:
+        accounts.append(("Secundaria", tag_sec))
+    else:
+        print("AVISO: CR_PLAYER_TAG_SEC nao encontrada nos segredos/env.")
 
     headers = {
         "Authorization": f"Bearer {token}",
         "Accept": "application/json"
     }
 
-    for name, url in endpoints.items():
-        print(f"\n--- Testando: {name} ---")
+    for name, tag in accounts:
+        if not tag:
+            print(f"ERRO: Tag para {name} esta vazia.")
+            continue
+            
+        print(f"\n--- Testando Conta: {name} ({tag}) ---")
+        tag_clean = tag.strip().replace("#", "%23")
+        url = f"https://proxy.royaleapi.dev/v1/players/{tag_clean}/battlelog"
+        
         try:
             response = requests.get(url, headers=headers, timeout=10)
             print(f"Status Code: {response.status_code}")
             if response.status_code == 200:
-                print(f"VITORIA: Conexao estabelecida com {name}!")
+                print(f"VITORIA: Dados recebidos com sucesso!")
+                data = response.json()
+                print(f"Batalhas no log: {len(data)}")
             elif response.status_code == 403:
-                print(f"BLOQUEIO (403): O IP {ip_externo} esta bloqueado para {name}.")
+                print(f"BLOQUEIO (403): O IP {ip_externo} esta bloqueado ou o Token e invalido.")
             else:
                 print(f"AVISO ({response.status_code}): {response.text[:100]}")
         except Exception as e:
-            print(f"FALHA: Erro ao conectar com {name}: {e}")
+            print(f"FALHA: Erro ao conectar: {e}")
 
 if __name__ == "__main__":
     test()
