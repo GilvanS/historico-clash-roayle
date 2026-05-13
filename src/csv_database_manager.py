@@ -37,7 +37,7 @@ class CSVManager:
         """Generic CSV reader with delimiter detection"""
         data = []
         try:
-            delimiter = ';' # Default para o projeto oficial
+            delimiter = ';' # Default for official project
             with open(file_path, 'r', encoding='utf-8-sig') as f:
                 sample = f.read(2048)
                 if sample.count(',') > sample.count(';'):
@@ -46,12 +46,12 @@ class CSVManager:
             with open(file_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f, delimiter=delimiter)
                 for row in reader:
-                    # Filtra linhas vazias
+                    # Filter empty rows
                     if not any(row.values()):
                         continue
                     data.append(row)
         except Exception as e:
-            logger.error(f"Erro ao ler CSV {file_path}: {e}")
+            logger.error(f"Error reading CSV {file_path}: {e}")
         return data
 
     @staticmethod
@@ -60,11 +60,11 @@ class CSVManager:
         if not date_str: return None
         date_str = str(date_str).strip().strip('"').strip("'")
         
-        # Formato ISO
+        # ISO format
         if len(date_str) >= 10 and date_str[4] == '-' and date_str[7] == '-':
             return date_str.replace('T', ' ')
             
-        # Formato Brasileiro (DD/MM/YYYY HH:MM)
+        # BR format (DD/MM/YYYY HH:MM)
         formats = ['%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y']
         for fmt in formats:
             try:
@@ -75,9 +75,9 @@ class CSVManager:
         return date_str
 
 if __name__ == "__main__":
-    # Teste de carregamento
+    # Loading test
     manager = CSVManager()
     battles = manager.load_battles()
-    print(f"Total de batalhas carregadas via CSV: {len(battles)}")
+    logger.info(f"Total battles loaded via CSV: {len(battles)}")
     if battles:
-        print(f"Exemplo de registro: {battles[0].get('data')} - {battles[0].get('nome_oponente')}")
+        logger.info(f"Sample record: {battles[0].get('opponent_name')} - {battles[0].get('result')}")

@@ -7,7 +7,7 @@
         "description": "Redesenhar o componente VS Battle no html_generator.py para seguir o estilo RoyaleAPI Premium v2 (Torres no topo, Score central, Grid 4x2 e Metricas horizontais).",
         "details": "1. Atualizar CSS para suporte a 1800px e Glassmorphism. 2. Implementar a aba Victory/Defeat lateral. 3. Configurar os icones de elixir e leak conforme a referencia.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": [
@@ -85,7 +85,7 @@
             "title": "Refatorar lógica de dados no html_generator.py",
             "description": "Alterar _load_all_battles_from_csv para organizar dados por tag de jogador.",
             "details": "",
-            "status": "pending",
+            "status": "in-progress",
             "dependencies": [],
             "parentTaskId": 3
           },
@@ -134,7 +134,7 @@
     "metadata": {
       "created": "2026-05-09T17:17:32.833Z",
       "description": "Default tasks context",
-      "updated": "2026-05-13T02:47:04.342Z"
+      "updated": "2026-05-13T14:29:20.681Z"
     }
   }
 }
