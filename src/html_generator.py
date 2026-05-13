@@ -6269,6 +6269,12 @@ class GitHubPagesHTMLGenerator:
             align-items: center;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            gap: 10px;
+        }
+
+        .cr-tab i {
+            font-size: 1.1em;
+            filter: drop-shadow(0 0 5px currentColor);
         }
 
         .cr-tab:hover {
@@ -6279,32 +6285,10 @@ class GitHubPagesHTMLGenerator:
         }
 
         .cr-tab.active {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(37, 99, 235, 0.4));
             color: #fff;
             border-color: #3b82f6;
             box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2);
-        }
-
-        .cr-tab i {
-            margin-right: 10px;
-            font-size: 1.1em;
-            filter: drop-shadow(0 0 5px currentColor);
-        }
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .cr-tab:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-        }
-
-        .cr-tab.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 20px var(--primary-glow);
             transform: translateY(-2px);
         }
 
@@ -6409,24 +6393,50 @@ class GitHubPagesHTMLGenerator:
     
     <script>
     // Tab switching for multiple accounts (Main vs Secondary)
+    /**
+     * @description Gerencia a troca de abas principais (Contas)
+     * @author Especialista em QA/Dev
+     */
     function switchAccountTab(tag, element) {{
-        // Remove active class from all main tabs
-        document.querySelectorAll('.cr-dashboard-main-header .cr-tab').forEach(t => t.classList.remove('active'));
-        // Add active class to clicked tab
-        element.classList.add('active');
+        console.log('Solicitando troca para conta:', tag);
         
-        // Hide all account contents
-        document.querySelectorAll('.cr-dashboard-content > .cr-tab-content').forEach(c => c.classList.remove('active'));
+        // 1. Limpeza de estados de abas
+        const allTabs = document.querySelectorAll('.cr-dashboard-main-header .cr-tab');
+        allTabs.forEach(t => t.classList.remove('active'));
         
-        // Show target account content
+        // 2. Ativação da aba clicada
+        if (element) {{
+            element.classList.add('active');
+        }} else {{
+            // Fallback caso o clique venha de outro lugar
+            const cleanTagForSearch = tag.replace('#', '');
+            const tabToActivate = document.querySelector(`.cr-tab[onclick*="${{cleanTagForSearch}}"]`);
+            if (tabToActivate) tabToActivate.classList.add('active');
+        }}
+        
+        // 3. Gerenciamento de Conteúdo
+        const allContents = document.querySelectorAll('.cr-dashboard-content > .cr-tab-content');
+        allContents.forEach(c => {{
+            c.classList.remove('active');
+            c.style.display = 'none'; // Garantia extra
+        }});
+        
         const cleanTag = tag.replace('#', '');
         const targetId = 'account-tab-' + cleanTag;
         const targetContent = document.getElementById(targetId);
+        
         if (targetContent) {{
             targetContent.classList.add('active');
+            targetContent.style.display = 'block';
+            console.info('Conteúdo da conta ativado com sucesso: ' + targetId);
+            
+            // Trigger para redimensionar gráficos se houver
+            window.dispatchEvent(new Event('resize'));
+        }} else {{
+            console.error('ERRO CRÍTICO: Container de conta não encontrado no DOM: ' + targetId);
+            const availableIds = Array.from(allContents).map(c => c.id);
+            console.debug('IDs disponíveis no DOM:', availableIds);
         }}
-        
-        console.log('Switched to account:', tag);
     }}
 
     // Tab switching for INNER sections (VS Stage, Decks, etc)

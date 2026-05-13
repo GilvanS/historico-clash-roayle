@@ -1,0 +1,13 @@
+# Task ID: 5
+# Title: Bug Fix & Estabilização Premium v2
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Corrigir falhas de interatividade e implementar a seleção de conta secundária.
+# Details:
+1. Corrigir atualização dinâmica de data no VS Stage.
+2. Implementar interface de abas para troca de conta.
+3. Validar consistência dos dados após a troca.
+
+# Test Strategy:
+

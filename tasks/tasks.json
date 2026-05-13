@@ -149,12 +149,84 @@
         "dependencies": [],
         "priority": "high",
         "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Corrigir Lógica de Alternância de Abas de Conta",
+        "description": "Depurar a função switchAccountTab no html_generator.py para garantir a alternância correta entre as abas da conta primária e secundária.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Corrigir Atualização de Data em Batalhas Repetidas",
+        "description": "Ajustar a lógica que atualiza a visualização da batalha (updateOpponentView) para garantir que a data e o horário sejam atualizados corretamente ao selecionar diferentes partidas com o mesmo oponente.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Auditoria de Layout e Interatividade (Z-Index/Overlays)",
+        "description": "Revisar o CSS e a estrutura do modal para garantir que nenhum elemento esteja bloqueando a interatividade das abas (overlays ou z-index inadequado).",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Refino Estetico e Funcional do Battle Report v2",
+        "description": "Ajustar o layout do relatorio de batalhas para exibir 2 itens por linha, corrigir sobreposicao de torres e badges de nivel.",
+        "details": "1. Mudar display da lista de batalhas para grid 1fr 1fr. 2. Ajustar z-index da torre para ficar abaixo do deck. 3. Reduzir tamanho da badge de nivel e implementar logica de exibicao condicional.",
+        "testStrategy": "Verificacao visual no index.html gerado.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Ajustar Layout de 2 Colunas na Lista de Batalhas",
+            "description": "Alterar o CSS do container de batalhas para exibir duas colunas.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 2,
+            "title": "Corrigir Sobreposicao da Torre (Z-Index)",
+            "description": "Corrigir o z-index da imagem da torre para que fique atras do deck.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 3,
+            "title": "Ajustar Badge de Level da Torre",
+            "description": "Reduzir a badge de nivel e esconder se os dados forem imprecisos.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 10
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2026-05-09T17:17:32.833Z",
       "description": "Default tasks context",
-      "updated": "2026-05-13T18:27:28.517Z"
+      "updated": "2026-05-13T23:09:42.235Z"
     }
   }
 }
