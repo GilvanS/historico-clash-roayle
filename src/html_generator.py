@@ -2157,32 +2157,36 @@ class GitHubPagesHTMLGenerator:
         winning_data = self.get_top_winning_decks_weekly()
         winning_decks_html = self.generate_winning_decks_html(winning_data)
 
+        # Prefixo único por conta para evitar conflitos de IDs no DOM entre Conta Principal e Secundária
+        p_prefix = f"acc-{player_tag.replace('#', '')}" if player_tag else "acc-main"
+
         return f"""
-        <div class="deck-tabs-container">
-            <div class="deck-tabs">
-                <button class="tab-button active" onclick="switchTab(event, 'repeated-opponents')">Oponentes Repetidos</button>
-                <button class="tab-button" onclick="switchTab(event, 'weekly-decks')">Meus Decks da Semana</button>
-                <button class="tab-button" onclick="switchTab(event, 'lethal-decks')">Decks Inimigos Letais</button>
-                <button class="tab-button" onclick="switchTab(event, 'winning-decks')">Melhores Decks (Semana)</button>
+        <div class="cr-inner-tabs-container">
+            <div class="cr-account-tabs" style="margin-bottom: 20px; background: rgba(255,255,255,0.02);">
+                <button class="cr-tab active" onclick="switchInnerTab(event, '{p_prefix}-repeated-opponents')">VS Stage</button>
+                <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-weekly-decks')">Meus Decks</button>
+                <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-lethal-decks')">Decks Letais</button>
+                <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-winning-decks')">Top Global</button>
             </div>
 
-            <div id="tab-repeated-opponents" class="tab-content active">
-                {repeated_opponents_html if repeated_opponents_html else '<p>Nenhum oponente encontrado que voce enfrentou mais de uma vez.</p>'}
+            <div id="{p_prefix}-repeated-opponents" class="cr-tab-content active">
+                {repeated_opponents_html if repeated_opponents_html else '<p style="padding: 40px; text-align: center; color: #64748b;">Nenhum oponente repetido encontrado para esta conta.</p>'}
             </div>
 
-            <div id="tab-weekly-decks" class="tab-content">
+            <div id="{p_prefix}-weekly-decks" class="cr-tab-content">
                 {weekly_decks_html}
             </div>
             
-            <div id="tab-lethal-decks" class="tab-content">
-                {lethal_decks_html if lethal_decks_html else '<p>Analise de decks letais pendente de mais derrotas.</p>'}
+            <div id="{p_prefix}-lethal-decks" class="cr-tab-content">
+                {lethal_decks_html if lethal_decks_html else '<p style="padding: 40px; text-align: center; color: #64748b;">Dados insuficientes para análise de decks letais.</p>'}
             </div>
             
-            <div id="tab-winning-decks" class="tab-content">
+            <div id="{p_prefix}-winning-decks" class="cr-tab-content">
                 {winning_decks_html}
             </div>
         </div>
         """
+
     def load_all_data_rows(self, player_tag: str = None) -> List[Dict]:
         """Processes and unifies data from memory cache. Fast, no disk I/O."""
         # Use filtered cache if tag is provided, else use master cache
@@ -2877,6 +2881,28 @@ class GitHubPagesHTMLGenerator:
             try {
                 const dataRaw = element.getAttribute('data-battle');
                 const data = JSON.parse(dataRaw);
+                
+                // Update date and time (Premium v2 Selectors)
+                const dateEl = document.getElementById(`date-${oppId}`);
+                const timeEl = document.getElementById(`time-${oppId}`);
+                
+                if (dateEl) {
+                    dateEl.innerHTML = `<i class="far fa-calendar-alt"></i> ${data.date || '--/--'}`;
+                    dateEl.style.opacity = '0';
+                    setTimeout(() => dateEl.style.opacity = '1', 50);
+                }
+                if (timeEl) {
+                    timeEl.innerHTML = `<i class="far fa-clock"></i> ${data.time || '--:--'}`;
+                    timeEl.style.opacity = '0';
+                    setTimeout(() => timeEl.style.opacity = '1', 50);
+                }
+
+                // Support for additional date displays in Premium UI
+                const dateDisplay = document.querySelector(`#vs-stage-${oppId} .cr-battle-date-p`);
+                if (dateDisplay && data.date && data.time) {
+                    dateDisplay.innerHTML = `${data.date} às ${data.time}`;
+                }
+
                 console.log(`[RoyaleAnalytics] Updating Opponent ${oppId}`, data);
                 
                 // Update scores and mode
@@ -2975,13 +3001,9 @@ class GitHubPagesHTMLGenerator:
                 if (pCopyEl) pCopyEl.onclick = () => copyToClipboardDeckDirect(data.p_deck_list);
                 if (oCopyEl) oCopyEl.onclick = () => copyToClipboardDeckDirect(data.o_deck_list);
                 
-                // Update date and time
-                const dateEl = document.getElementById(`date-${oppId}`);
-                const timeEl = document.getElementById(`time-${oppId}`);
-                if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar-alt"></i> ${data.date || '--/--'}`;
-                if (timeEl) timeEl.innerHTML = `<i class="far fa-clock"></i> ${data.time || '--:--'}`;
-                
+
                 // Update active dot
+
                 const container = element.closest('.cr-history-dots-row-inline') || element.parentElement;
                 if (container) {
                     container.querySelectorAll('.cr-history-dot').forEach(el => el.classList.remove('active'));
@@ -4349,7 +4371,8 @@ class GitHubPagesHTMLGenerator:
                     clean_tag = tag.replace('#', '')
                     
                     # Tab Header
-                    account_tabs_html += f'<div class="cr-tab {active_class}" onclick="switchAccountTab(\'{tag}\', this)">👤 {stats["name"]}</div>'
+                    label = "CONTA PRINCIPAL" if idx == 0 else "CONTA SECUNDÁRIA"
+                    account_tabs_html += f'<div class="cr-tab {active_class}" onclick="switchAccountTab(\'{tag}\', this)"><span>{label}</span><small style="opacity: 0.7; font-size: 0.8em; margin-left: 8px;">({stats["name"]})</small></div>'
                     
                     # Tab Content
                     content_html = self._generate_account_content_html(tag, stats)
@@ -6208,43 +6231,42 @@ class GitHubPagesHTMLGenerator:
             padding: 0;
         }
 
-        /* Tabs System Premium v2 */
-        .deck-tabs-container { margin-top: 20px; }
-        .deck-tabs {
+        /* ===== TABS DE SELEÇÃO DE CONTA (Multi-Account) ===== */
+        .cr-account-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 12px;
+            margin: 20px 0 30px 0;
             padding: 8px;
             background: rgba(15, 23, 42, 0.4);
-            border-radius: 16px;
+            border-radius: 20px;
             border: 1px solid var(--glass-border);
-            overflow-x: auto;
-            scrollbar-width: none;
+            width: fit-content;
         }
-        .deck-tabs::-webkit-scrollbar { display: none; }
 
-        .tab-button {
+        .cr-tab {
             padding: 12px 24px;
             background: transparent;
             border: 1px solid transparent;
-            border-radius: 12px;
+            border-radius: 14px;
             color: #94a3b8;
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
             font-size: 0.9em;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .tab-button:hover {
+        .cr-tab:hover {
             background: rgba(255, 255, 255, 0.05);
             color: #fff;
         }
 
-        .tab-button.active {
+        .cr-tab.active {
             background: var(--primary);
             color: #fff;
             border-color: rgba(255, 255, 255, 0.2);
@@ -6252,12 +6274,12 @@ class GitHubPagesHTMLGenerator:
             transform: translateY(-2px);
         }
 
-        .tab-content {
+        .cr-tab-content {
             display: none;
             animation: cr-fade-in 0.5s ease;
         }
 
-        .tab-content.active {
+        .cr-tab-content.active {
             display: block;
         }
 
@@ -6285,7 +6307,7 @@ class GitHubPagesHTMLGenerator:
                     coach_html = f"""
                     <div class="cr-coach-card">
                         <div class="cr-coach-header">
-                            <div class="cr-coach-icon">🧠</div>
+                            <div class="cr-coach-icon">&#129504;</div>
                             <div class="cr-coach-title">Treinador AI Insights</div>
                         </div>
                         <div class="cr-coach-tips">
@@ -6315,7 +6337,7 @@ class GitHubPagesHTMLGenerator:
 <body>
     <div id="cr-battle-modal" class="cr-modal-overlay">
         <div class="cr-modal-container">
-            <button class="cr-modal-close" onclick="closeBattleModal()">×</button>
+            <button class="cr-modal-close" onclick="closeBattleModal()">x</button>
             <div id="battle-modal-content">
                 <div style="text-align: center; padding: 40px; color: #94a3b8;">
                     <p>Carregando visualização de batalha...</p>
@@ -6326,7 +6348,7 @@ class GitHubPagesHTMLGenerator:
 
     <div class="container">
         <div class="cr-dashboard-main-header">
-            <h1 class="clash-font">⚔️ Royale Analytics Dashboard</h1>
+            <h1 class="clash-font">&#9876; Royale Analytics Dashboard</h1>
             <p style="color: #94a3b8; margin-bottom: 20px;">Painel Inteligente de Desempenho e Estratégia</p>
             {account_tabs_html}
         </div>
@@ -6349,17 +6371,17 @@ class GitHubPagesHTMLGenerator:
     </div>
     
     <script>
-    // Tab switching for multiple accounts
+    // Tab switching for multiple accounts (Main vs Secondary)
     function switchAccountTab(tag, element) {{
-        // Remove active class from all tabs
-        document.querySelectorAll('.cr-tab').forEach(t => t.classList.remove('active'));
+        // Remove active class from all main tabs
+        document.querySelectorAll('.cr-dashboard-main-header .cr-tab').forEach(t => t.classList.remove('active'));
         // Add active class to clicked tab
         element.classList.add('active');
         
-        // Hide all tab contents
-        document.querySelectorAll('.cr-tab-content').forEach(c => c.classList.remove('active'));
+        // Hide all account contents
+        document.querySelectorAll('.cr-dashboard-content > .cr-tab-content').forEach(c => c.classList.remove('active'));
         
-        // Show target tab content
+        // Show target account content
         const cleanTag = tag.replace('#', '');
         const targetId = 'account-tab-' + cleanTag;
         const targetContent = document.getElementById(targetId);
@@ -6370,10 +6392,32 @@ class GitHubPagesHTMLGenerator:
         console.log('Switched to account:', tag);
     }}
 
+    // Tab switching for INNER sections (VS Stage, Decks, etc)
+    function switchInnerTab(event, targetId) {{
+        const container = event.currentTarget.closest('.cr-inner-tabs-container');
+        if (!container) return;
+
+        // Remove active from sibling tabs in THIS container only
+        container.querySelectorAll('.cr-account-tabs .cr-tab').forEach(t => t.classList.remove('active'));
+        // Add active to current
+        event.currentTarget.classList.add('active');
+
+        // Hide all contents in THIS container
+        container.querySelectorAll('> .cr-tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Show target
+        const target = document.getElementById(targetId);
+        if (target) {{
+            target.classList.add('active');
+        }}
+    }}
+
+
+
     // Table sorting functionality
     document.addEventListener('DOMContentLoaded', function() {{
         var table = document.getElementById('clan-members-table');
-        if (!table) return; // Exit if table doesn't exist
+        if (!table) return;
         
         var headers = table.querySelectorAll('th.sortable');
         var currentSort = {{ column: '', direction: '' }};
@@ -6383,20 +6427,15 @@ class GitHubPagesHTMLGenerator:
                 var column = this.getAttribute('data-column');
                 var direction = currentSort.column === column && currentSort.direction === 'asc' ? 'desc' : 'asc';
                 
-                // Remove existing sort classes
                 headers.forEach(function(h) {{ h.classList.remove('sort-asc', 'sort-desc'); }});
-                
-                // Add sort class to current header
                 this.classList.add('sort-' + direction);
-                
-                // Sort the table
                 sortTable(column, direction);
-                
                 currentSort = {{ column: column, direction: direction }};
             }});
         }});
         
         function sortTable(column, direction) {{
+
             var tbody = table.querySelector('tbody');
             var rows = Array.from(tbody.querySelectorAll('tr'));
             

@@ -76,7 +76,7 @@
         "description": "Implementar o sistema de abas no dashboard para visualização independente de cada conta e garantir design Premium v2.",
         "details": "- Refatorar html_generator.py para suportar múltiplas fontes de dados.\n- Criar interface de abas com Vanilla CSS.\n- Aplicar glassmorphism e micro-animações.",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": [
@@ -85,7 +85,7 @@
             "title": "Refatorar lógica de dados no html_generator.py",
             "description": "Alterar _load_all_battles_from_csv para organizar dados por tag de jogador.",
             "details": "",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 3
           },
@@ -94,7 +94,7 @@
             "title": "Implementar Interface de Abas (HTML/CSS)",
             "description": "Criar estrutura de navegação por abas com estilos Premium v2.",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 3
           },
@@ -103,7 +103,7 @@
             "title": "Integrar Lógica switchTab (JS)",
             "description": "Garantir que a troca de abas oculte/exiba o conteúdo correto sem recarregar a página.",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 3
           }
@@ -129,12 +129,32 @@
             "parentTaskId": 4
           }
         ]
+      },
+      {
+        "id": 5,
+        "title": "Bug Fix & Estabilização Premium v2",
+        "description": "Corrigir falhas de interatividade e implementar a seleção de conta secundária.",
+        "details": "1. Corrigir atualização dinâmica de data no VS Stage.\n2. Implementar interface de abas para troca de conta.\n3. Validar consistência dos dados após a troca.",
+        "status": "done",
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Depurar Dados Conta Secundária (0 Battles)",
+        "description": "Investigar o motivo de 0 batalhas carregadas para a conta secundária e validar presença da TAG no CSV.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2026-05-09T17:17:32.833Z",
       "description": "Default tasks context",
-      "updated": "2026-05-13T14:29:20.681Z"
+      "updated": "2026-05-13T18:27:28.517Z"
     }
   }
 }
