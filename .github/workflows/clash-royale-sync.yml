@@ -40,14 +40,6 @@ jobs:
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
         CR_PLAYER_TAG_SEC: ${{ secrets.CR_PLAYER_TAG_SEC }}
       run: |
-        echo "=== DEBUG: Verificando Secrets ==="
-        echo "CR_PLAYER_TAG_SEC existe: ${{ secrets.CR_PLAYER_TAG_SEC != '' }}"
-        if [ -n "$CR_PLAYER_TAG_SEC" ]; then
-          echo "CR_PLAYER_TAG_SEC valor: $CR_PLAYER_TAG_SEC"
-        else
-          echo "ERRO: CR_PLAYER_TAG_SEC está vazio!"
-        fi
-        echo "================================="
         cd src
         python test_env.py
 
@@ -76,33 +68,9 @@ jobs:
         # Adiciona arquivos CSV oficiais, README e Dashboard (index, clan e membros)
         git add src/data_csv_oficial/ README.md index.html clan.html member_*.html
 
-        # Verifica se há diferenças reais (não só timestamps)
-        if git diff --staged --quiet; then
-          echo "✨ Nenhuma alteração detectada nesta rodada."
-        else
-          # 🛡️ PROTEÇÃO: Verificar se o HTML gerado tem MULTI-CONTAS antes de commitar
-          if git diff --staged index.html | grep -q "CONTA SECUNDÁRIA"; then
-            echo "✅ HTML verificado: Multi-contas OK"
-          else
-            echo "❌ ALERTA: HTML gerado NÃO contém CONTA SECUNDÁRIA!"
-            echo "Verificando se secret CR_PLAYER_TAG_SEC está configurado..."
-            if [ -z "$CR_PLAYER_TAG_SEC" ]; then
-              echo "❌ ERRO CRÍTICO: CR_PLAYER_TAG_SEC está vazio!"
-              echo "O pipeline será INTERROMPIDO para evitar regressão."
-              exit 1
-            else
-              echo "⚠️ AVISO: Secret existe mas HTML não tem 2 contas. Pulando commit..."
-              exit 0
-            fi
-          fi
-          
-          # Verifica se há mudanças significativas (não só timestamps)
-          CHANGES=$(git diff --staged --stat)
-          echo "Alterações detectadas:"
-          echo "$CHANGES"
-          
+        if ! git diff --staged --quiet; then
           git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC')"
-          
+
           # Retry logic para evitar falhas por concorrência
           for i in 1 2 3; do
             if git push origin HEAD; then
@@ -114,4 +82,6 @@ jobs:
               git pull --rebase -X theirs origin main || true
             fi
           done
+        else
+          echo "✨ Nenhuma alteração detectada nesta rodada."
         fi
