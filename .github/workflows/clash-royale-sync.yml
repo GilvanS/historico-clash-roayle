@@ -48,6 +48,15 @@ jobs:
         cd src
         python test_env.py
 
+    - name: 🔍 DEBUG TEST COMMIT - Run This
+      run: |
+        echo "=================================================="
+        echo "🔍 DEBUG TEST: If you see CR_PLAYER_TAG_SEC below, secret IS working"
+        echo "=================================================="
+        echo "CR_PLAYER_TAG_SEC = '${{ secrets.CR_PLAYER_TAG_SEC }}'"
+        echo "CR_PLAYER_TAG_SEC length = ${{ secrets.CR_PLAYER_TAG_SEC | length }}"
+        echo "=================================================="
+
     - name: 1. Rodar Pipeline de Sincronização (Coleta -> README -> HTML)
       env:
         CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
