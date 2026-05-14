@@ -24,9 +24,27 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
 
+    # Carrega variaveis de ambiente de forma robusta (raiz do projeto)
+    from dotenv import load_dotenv
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(src_dir)
+    dotenv_path = os.path.join(project_root, '.env')
+    
+    if os.path.exists(dotenv_path):
+        load_dotenv(dotenv_path)
+        logger.info(f"OK: Arquivo .env carregado de: {dotenv_path}")
+    else:
+        logger.warning(f"AVISO: Arquivo .env nao encontrado em: {dotenv_path}")
+
     logger.info("=" * 60)
-    logger.info("INICIANDO SINCRONIZAÇÃO CLASH ROYALE (PIPELINE ÚNICO)")
+    logger.info("INICIANDO SINCRONIZACAO CLASH ROYALE (PIPELINE UNICO)")
     logger.info("=" * 60)
+    
+    # Debug de Tags
+    tag_pri = os.environ.get("CR_PLAYER_TAG")
+    tag_sec = os.environ.get("CR_PLAYER_TAG_SEC")
+    logger.info(f"Tags detectadas: Principal={tag_pri}, Secundaria={tag_sec}")
+
     
     # Validação de Integridade (Segurança para o Dashboard Multi-Conta)
     # Se estiver no GitHub Actions, a tag secundária é OBRIGATÓRIA para evitar regressão do UI.

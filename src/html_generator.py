@@ -27,7 +27,8 @@ from dotenv import load_dotenv
 from csv_database_manager import CSVManager
 
 # Carrega variaveis de ambiente
-load_dotenv()
+# load_dotenv() removido daqui para evitar conflitos de path. Centralizado no main_sync.py
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +56,13 @@ class GitHubPagesHTMLGenerator:
         self.tracked_tags = [self.player_tag]
         if self.player_tag_sec:
             self.tracked_tags.append(self.player_tag_sec)
+        
+        logger.info(f"HTML Generator inicializado. Tags rastreadas: {self.tracked_tags}")
+        if not self.player_tag_sec:
+            logger.warning("AVISO: Tag secundaria (CR_PLAYER_TAG_SEC) nao detectada pelo gerador.")
             
         self.player_name_override = os.getenv('CR_PLAYER_NAME')
+
         self.failed_tags = set()
         
         # Phase 2 Performance Optimization: Centralized Memory Cache
