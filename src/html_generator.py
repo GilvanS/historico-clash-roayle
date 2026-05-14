@@ -129,7 +129,7 @@ class GitHubPagesHTMLGenerator:
             logger.warning(f"Aviso: {path} não encontrado")
             return []
         try:
-            with open(path, mode='r', encoding='utf-8') as f:
+            with open(path, mode='r', encoding='utf-8-sig') as f:
                 return list(csv.DictReader(f, delimiter=';'))
         except Exception as e:
             logger.error(f"Erro ao ler {filename}: {e}")
