@@ -28,7 +28,19 @@ def main():
     logger.info("INICIANDO SINCRONIZAÇÃO CLASH ROYALE (PIPELINE ÚNICO)")
     logger.info("=" * 60)
     
-    # 1. Coletar Batalhas e Consolidar no CSV 2026
+    # Validação de Integridade (Segurança para o Dashboard Multi-Conta)
+    # Se estiver no GitHub Actions, a tag secundária é OBRIGATÓRIA para evitar regressão do UI.
+    is_github = os.environ.get("GITHUB_ACTIONS") == "true"
+    player_tag_sec = os.environ.get("CR_PLAYER_TAG_SEC")
+    
+    if is_github and not player_tag_sec:
+        logger.error("❌ ERRO CRÍTICO: A variável CR_PLAYER_TAG_SEC não foi encontrada!")
+        logger.error("Para evitar que o dashboard seja sobrescrito no formato de conta única, o pipeline será interrompido.")
+        logger.error("Ação necessária: Configure o 'Secret' CR_PLAYER_TAG_SEC no seu repositório GitHub.")
+        sys.exit(1) # Interrompe o pipeline com erro
+    elif not player_tag_sec:
+        logger.warning("⚠️ Aviso: Rodando sem a Tag Secundária. O dashboard local será gerado apenas com a conta principal.")
+
     try:
         logger.info("FASE 1: Coletando batalhas da API e atualizando CSVs...")
         collect_main()
