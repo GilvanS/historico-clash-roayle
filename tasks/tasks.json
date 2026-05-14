@@ -228,5 +228,80 @@
       "description": "Default tasks context",
       "updated": "2026-05-13T23:27:51.424Z"
     }
+  },
+  "correcoes": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Ocultar Badge de Nível da Torre (LV 0)",
+        "description": "Garantir que a badge 'LV 0' seja escondida no backend (html_generator.py) e via JS dinâmico quando o valor for 0.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Sincronizar Data no Histórico de Batalhas",
+        "description": "Atualizar a função updateOpponentView no JS para injetar a data/hora correta da batalha selecionada.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Auditoria e Correção de Ícones de Elixir Leak",
+        "description": "Validar o mapeamento de ícones de vazamento de elixir no _get_battle_deck_metrics e garantir consistência visual.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Habilitar Interatividade das Abas de Conta",
+        "description": "Corrigir a função switchAccountTab e remover potenciais overlays CSS que impedem o clique nas abas de conta.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Restaurar Layout de 2 Colunas nas Batalhas",
+        "description": "Ajustar o CSS para que a lista de batalhas volte a exibir 2 colunas, reduzindo a altura da página.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Integrar Dados da Conta Secundária (Daily Activity)",
+        "description": "Garantir que o Daily Activity e outros gráficos mostrem dados da conta secundária ao trocar de aba.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2026-05-13T23:50:00.560Z",
+      "updated": "2026-05-13T23:50:36.886Z",
+      "description": "Tag created on 13/05/2026"
+    }
   }
 }
