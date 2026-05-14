@@ -40,6 +40,11 @@ jobs:
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
         CR_PLAYER_TAG_SEC: ${{ secrets.CR_PLAYER_TAG_SEC }}
       run: |
+        echo "=== VERIFICAÇÃO DE SECRETS ==="
+        echo "CR_API_TOKEN: $([ -n '$CR_API_TOKEN' ] && echo 'OK (length: ${#CR_API_TOKEN})' || echo 'VAZIO')"
+        echo "CR_PLAYER_TAG: $([ -n '$CR_PLAYER_TAG' ] && echo '$CR_PLAYER_TAG' || echo 'VAZIO')"
+        echo "CR_PLAYER_TAG_SEC: $([ -n '$CR_PLAYER_TAG_SEC' ] && echo '$CR_PLAYER_TAG_SEC' || echo 'VAZIO')"
+        echo "================================="
         cd src
         python test_env.py
 
@@ -50,6 +55,15 @@ jobs:
         CR_PLAYER_TAG_SEC: ${{ secrets.CR_PLAYER_TAG_SEC }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: |
+        echo "=== DEBUG: Verificando variáveis de ambiente ==="
+        echo "CR_PLAYER_TAG_SEC = '$CR_PLAYER_TAG_SEC'"
+        echo "CR_PLAYER_TAG_SEC length = ${#CR_PLAYER_TAG_SEC}"
+        if [ -z "$CR_PLAYER_TAG_SEC" ]; then
+          echo "❌ CR_PLAYER_TAG_SEC está VAZIO!"
+        else
+          echo "✅ CR_PLAYER_TAG_SEC tem valor: $CR_PLAYER_TAG_SEC"
+        fi
+        echo "============================================"
         cd src
         python main_sync.py
 
