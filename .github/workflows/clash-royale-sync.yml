@@ -69,7 +69,16 @@ jobs:
         git add src/data_csv_oficial/ README.md index.html clan.html member_*.html
 
         if ! git diff --staged --quiet; then
-          git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC')"
+          # 🛡️ PROTEÇÃO CRÍTICA: Verificar se HTML tem MULTI-CONTAS
+          if git diff --staged index.html | grep -q "CONTA SECUNDÁRIA"; then
+            echo "✅ HTML verificado: Multi-contas OK - Commitando..."
+            git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC')"
+          else
+            echo "❌ ALERTA CRÍTICO: HTML gerado NÃO contém CONTA SECUNDÁRIA!"
+            echo "O pipeline será INTERROMPIDO para evitar regressão."
+            echo "CR_PLAYER_TAG_SEC parece não estar funcionando no Actions."
+            exit 1
+          fi
 
           # Retry logic para evitar falhas por concorrência
           for i in 1 2 3; do
