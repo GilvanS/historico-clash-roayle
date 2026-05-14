@@ -1,6 +1,6 @@
 # Task ID: 1
 # Title: Ocultar Badge de Nível da Torre (LV 0)
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: high
 # Description: Garantir que a badge 'LV 0' seja escondida no backend (html_generator.py) e via JS dinâmico quando o valor for 0.

@@ -2539,7 +2539,7 @@ class GitHubPagesHTMLGenerator:
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
                                 <div id="p-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 5;">
                                     <img id="p-tower-img-{deck_id}" src="{my_m_f['tower_url']}" class="cr-tower-img-large" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
-                                    <span id="p-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if my_m_f['level'] == 'N/A' else '' }">LV {my_m_f['level']}</span>
+                                    <span id="p-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if my_m_f['level'] == 'N/A' or my_m_f['level'] == 0 else '' }">LV {my_m_f['level']}</span>
                                     <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="p-tower-bar-{deck_id}" style="width: 100%; height: 100%; background: #4ade80;"></div></div>
                                         <span id="p-tower-hp-{deck_id}" style="font-size: 7px; color: #4ade80; font-weight: 900; line-height: 1; margin-top: 2px;">{my_m_f.get('hp', '--')} HP</span>
@@ -2554,7 +2554,7 @@ class GitHubPagesHTMLGenerator:
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
                                 <div id="o-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 5;">
                                     <img id="o-tower-img-{deck_id}" src="{opp_m_f['tower_url']}" class="cr-tower-img-large" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
-                                    <span id="o-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if opp_m_f['level'] == 'N/A' else '' }">LV {opp_m_f['level']}</span>
+                                    <span id="o-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if opp_m_f['level'] == 'N/A' or opp_m_f['level'] == 0 else '' }">LV {opp_m_f['level']}</span>
                                     <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="o-tower-bar-{deck_id}" style="width: 100%; height: 100%; background: #f87171;"></div></div>
                                         <span id="o-tower-hp-{deck_id}" style="font-size: 7px; color: #f87171; font-weight: 900; line-height: 1; margin-top: 2px;">{opp_m_f.get('hp', '--')} HP</span>
