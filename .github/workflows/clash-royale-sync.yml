@@ -80,6 +80,22 @@ jobs:
         if git diff --staged --quiet; then
           echo "✨ Nenhuma alteração detectada nesta rodada."
         else
+          # 🛡️ PROTEÇÃO: Verificar se o HTML gerado tem MULTI-CONTAS antes de commitar
+          if git diff --staged index.html | grep -q "CONTA SECUNDÁRIA"; then
+            echo "✅ HTML verificado: Multi-contas OK"
+          else
+            echo "❌ ALERTA: HTML gerado NÃO contém CONTA SECUNDÁRIA!"
+            echo "Verificando se secret CR_PLAYER_TAG_SEC está configurado..."
+            if [ -z "$CR_PLAYER_TAG_SEC" ]; then
+              echo "❌ ERRO CRÍTICO: CR_PLAYER_TAG_SEC está vazio!"
+              echo "O pipeline será INTERROMPIDO para evitar regressão."
+              exit 1
+            else
+              echo "⚠️ AVISO: Secret existe mas HTML não tem 2 contas. Pulando commit..."
+              exit 0
+            fi
+          fi
+          
           # Verifica se há mudanças significativas (não só timestamps)
           CHANGES=$(git diff --staged --stat)
           echo "Alterações detectadas:"
