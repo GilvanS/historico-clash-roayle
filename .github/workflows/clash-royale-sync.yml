@@ -40,6 +40,14 @@ jobs:
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
         CR_PLAYER_TAG_SEC: ${{ secrets.CR_PLAYER_TAG_SEC }}
       run: |
+        echo "=== DEBUG: Verificando Secrets ==="
+        echo "CR_PLAYER_TAG_SEC existe: ${{ secrets.CR_PLAYER_TAG_SEC != '' }}"
+        if [ -n "$CR_PLAYER_TAG_SEC" ]; then
+          echo "CR_PLAYER_TAG_SEC valor: $CR_PLAYER_TAG_SEC"
+        else
+          echo "ERRO: CR_PLAYER_TAG_SEC está vazio!"
+        fi
+        echo "================================="
         cd src
         python test_env.py
 
