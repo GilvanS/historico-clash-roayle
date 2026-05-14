@@ -3227,7 +3227,7 @@ class GitHubPagesHTMLGenerator:
         return f'''
             <div class="cr-tower-display-v2">
                 <img {id_attr} src="{metrics["tower_url"]}" class="cr-tower-img-premium" alt="{alt}">
-                <span class="cr-tower-level-badge">LV {metrics["level"]}</span>
+                {'<span class="cr-tower-level-badge">LV ' + str(metrics["level"]) + '</span>' if metrics.get("level", 0) > 0 else ''}
                 <div class="cr-tower-hp-v2">{metrics.get("hp", "--")} HP</div>
             </div>
         '''
@@ -3528,7 +3528,7 @@ class GitHubPagesHTMLGenerator:
                         <!-- Top Row: Torre do Oponente -->
                         <div class="cr-tower-display-v2" style="position: relative; display: flex; flex-direction: column; align-items: center;">
                             <img src="{metrics['tower_url']}" class="cr-tower-img-premium" style="width: 100px; height: 100px; filter: drop-shadow(0 0 25px rgba(248, 113, 113, 0.4));">
-                            <span class="cr-tower-level-badge" style="background: #000; border: 1px solid #ef4444; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 900; font-size: 0.75em; margin-top: -10px; z-index: 2;">LV {metrics['level']}</span>
+                            {'<span class="cr-tower-level-badge" style="background: #000; border: 1px solid #ef4444; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 900; font-size: 0.75em; margin-top: -10px; z-index: 2;">LV ' + str(metrics['level']) + '</span>' if metrics.get('level', 0) > 0 else ''}
                         </div>
 
                         <!-- Mid Row: Grid do Deck -->
