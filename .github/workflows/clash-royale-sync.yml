@@ -58,10 +58,25 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
+        # Verifica se há trabalho local pendente (travamento)
+        if [ -f .actions_paused ]; then
+          echo "⏸️ Trabalho em progresso detectado. Pulando sincronização automática."
+          echo "Sincronização ignorada via flag .actions_paused"
+          exit 0
+        fi
+
         # Adiciona arquivos CSV oficiais, README e Dashboard (index, clan e membros)
         git add src/data_csv_oficial/ README.md index.html clan.html member_*.html
 
-        if ! git diff --staged --quiet; then
+        # Verifica se há diferenças reais (não só timestamps)
+        if git diff --staged --quiet; then
+          echo "✨ Nenhuma alteração detectada nesta rodada."
+        else
+          # Verifica se há mudanças significativas (não só timestamps)
+          CHANGES=$(git diff --staged --stat)
+          echo "Alterações detectadas:"
+          echo "$CHANGES"
+          
           git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC')"
           
           # Retry logic para evitar falhas por concorrência
@@ -75,6 +90,4 @@ jobs:
               git pull --rebase -X theirs origin main || true
             fi
           done
-        else
-          echo "✨ Nenhuma alteração detectada nesta rodada."
         fi

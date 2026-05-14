@@ -414,4 +414,74 @@ These commands make AI calls and may take up to a minute:
 
 ---
 
+## ⚠️ Important: Sync Before Working on Tasks
+
+Since this project has GitHub Actions that auto-sync every ~30min, your local branch can fall behind. To avoid conflicts:
+
+### Before Starting New Tasks
+```bash
+# Always pull latest before making changes
+git pull --rebase
+
+# Check if you're behind
+git status
+# If "Your branch is behind", do: git pull
+```
+
+### After GitHub Actions Updates
+When you open the project and see "Your branch is behind by X commits":
+```bash
+git stash          # Save your work if any
+git pull           # Get latest from remote
+git stash pop      # Restore your work
+```
+
+### Best Practice Workflow
+1. **Start session:** `git pull` first
+2. **Make changes:** Edit files, test locally
+3. **End session:** `git add . && git commit` for your changes
+4. **Actions run:** Will auto-sync, don't worry
+
+### If Conflict Happens
+```bash
+# Your local changes are in stash, remote has newer version
+git stash
+git pull
+# Now your local is synced, and you can reapply changes
+git stash pop
+```
+
+---
+
+## Workflow para Trabalhar em Tasks (Anti-Conflito)
+
+Antes de trabalhar em tasks, **sempre** execute:
+
+```bash
+# 1. Sincronizar local com remote
+git pull
+
+# 2. (Opcional) Pausar Actions durante trabalho intenso
+./toggle_actions.sh pause
+
+# 3. Trabalhar na task normalmente
+
+# 4. Ao terminar, retomar Actions
+./toggle_actions.sh resume
+
+# 5. Commit suas mudanças
+git add . && git commit -m "feat: sua task aqui"
+
+# 6. Push
+git push
+```
+
+### Verificar Status
+```bash
+./toggle_actions.sh status
+git status
+```
+
+---
+
 _This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._
