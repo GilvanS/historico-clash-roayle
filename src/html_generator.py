@@ -2539,7 +2539,6 @@ class GitHubPagesHTMLGenerator:
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
                                 <div id="p-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 5;">
                                     <img id="p-tower-img-{deck_id}" src="{my_m_f['tower_url']}" class="cr-tower-img-large" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
-                                    <span id="p-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if my_m_f['level'] == 'N/A' or my_m_f['level'] == 0 else '' }">LV {my_m_f['level']}</span>
                                     <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="p-tower-bar-{deck_id}" style="width: 100%; height: 100%; background: #4ade80;"></div></div>
                                         <span id="p-tower-hp-{deck_id}" style="font-size: 7px; color: #4ade80; font-weight: 900; line-height: 1; margin-top: 2px;">{my_m_f.get('hp', '--')} HP</span>
@@ -2554,7 +2553,6 @@ class GitHubPagesHTMLGenerator:
                             <div class="cr-side-container" style="position: relative; flex: 1; min-height: 120px; background: transparent; padding: 0;">
                                 <div id="o-tower-container-{deck_id}" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 85px; height: 85px; z-index: 5;">
                                     <img id="o-tower-img-{deck_id}" src="{opp_m_f['tower_url']}" class="cr-tower-img-large" style="width: 100%; height: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
-                                    <span id="o-tower-lv-{deck_id}" class="cr-tower-lv-badge" style="{ 'display: none;' if opp_m_f['level'] == 'N/A' or opp_m_f['level'] == 0 else '' }">LV {opp_m_f['level']}</span>
                                     <div style="margin-top: -8px; display: flex; flex-direction: column; align-items: center;">
                                         <div class="cr-hp-bar-mini" style="width: 45px;"><div id="o-tower-bar-{deck_id}" style="width: 100%; height: 100%; background: #f87171;"></div></div>
                                         <span id="o-tower-hp-{deck_id}" style="font-size: 7px; color: #f87171; font-weight: 900; line-height: 1; margin-top: 2px;">{opp_m_f.get('hp', '--')} HP</span>
@@ -2892,11 +2890,21 @@ class GitHubPagesHTMLGenerator:
                 const dataRaw = element.getAttribute('data-battle');
                 const data = JSON.parse(dataRaw);
                 
-                // Update date and time (Premium v2 Selectors)
-                const dateEl = document.getElementById(`date-${oppId}`);
-                const timeEl = document.getElementById(`time-${oppId}`);
+                // Update date and time (usar same container logic que metrics usa)
+                const metricsContainer = document.querySelector('.cr-deck-card')?.contains(element) 
+                    ? element.closest('.cr-deck-card') 
+                    : null;
+                const dateEl = metricsContainer 
+                    ? metricsContainer.querySelector(`#date-${oppId}`) 
+                    : document.querySelector(`[id^="vs-content-"]`)?.contains(element)
+                        ? element.closest('[id^="vs-content-"]')?.querySelector(`#date-${oppId}`)
+                        : null;
+                const timeEl = metricsContainer 
+                    ? metricsContainer.querySelector(`#time-${oppId}`) 
+                    : document.querySelector(`[id^="vs-content-"]`)?.contains(element)
+                        ? element.closest('[id^="vs-content-"]')?.querySelector(`#time-${oppId}`)
+                        : null;
                 
-                // Alteração: 2026-05-13 - Correção de seletores para atualização de data/hora
                 if (dateEl) {
                     dateEl.innerHTML = `<i class="far fa-calendar-alt"></i> ${data.date || '--/--'}`;
                 }
@@ -2961,11 +2969,9 @@ class GitHubPagesHTMLGenerator:
                 if (pMetricsEl) pMetricsEl.innerHTML = data.p_metrics;
                 if (oMetricsEl) oMetricsEl.innerHTML = data.o_metrics;
 
-                // Update towers and levels
+                // Update towers
                 const pTowerImg = document.getElementById(`p-tower-img-${oppId}`);
                 const oTowerImg = document.getElementById(`o-tower-img-${oppId}`);
-                const pTowerLv = document.getElementById(`p-tower-lv-${oppId}`);
-                const oTowerLv = document.getElementById(`o-tower-lv-${oppId}`);
                 const pHpEl = document.getElementById(`p-tower-hp-${oppId}`);
                 const oHpEl = document.getElementById(`o-tower-hp-${oppId}`);
                 
@@ -2978,23 +2984,6 @@ class GitHubPagesHTMLGenerator:
                     oTowerImg.src = data.o_tower_url || oTowerImg.src;
                     oTowerImg.style.opacity = '0.5';
                     setTimeout(() => oTowerImg.style.opacity = '1', 50);
-                }
-                
-                if (pTowerLv) {
-                    if (data.p_level && data.p_level !== 'N/A' && parseInt(data.p_level) > 0) {
-                        pTowerLv.innerText = `LV ${data.p_level}`;
-                        pTowerLv.style.display = 'block';
-                    } else {
-                        pTowerLv.style.display = 'none';
-                    }
-                }
-                if (oTowerLv) {
-                    if (data.o_level && data.o_level !== 'N/A' && parseInt(data.o_level) > 0) {
-                        oTowerLv.innerText = `LV ${data.o_level}`;
-                        oTowerLv.style.display = 'block';
-                    } else {
-                        oTowerLv.style.display = 'none';
-                    }
                 }
                 
                 if (pHpEl) pHpEl.innerText = `${data.p_hp || '--'} HP`;
@@ -3371,7 +3360,6 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-vs-deck-column player" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
                     <div id="p-tower-container-{section_id}" style="position: absolute; top: -45px; z-index: 1; width: 90px; transition: all 0.3s ease;">
                         <img id="p-tower-img-{section_id}" src="{my_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
-                        <span id="p-tower-lv-{section_id}" class="cr-tower-lv-badge" style="position: absolute; top: 0; right: 0; background: #4ade80; color: #000; font-size: 0.4em; padding: 2px 5px; border-radius: 4px; font-weight: 900; display: {'block' if my_metrics['level'] > 0 else 'none'};">LV {my_metrics['level']}</span>
                         <div id="p-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #4ade80; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{my_metrics.get('hp', '--')} HP</div>
                     </div>
                     <div id="p-grid-{section_id}" style="margin-top: 50px; width: 100%; position: relative; z-index: 5;">
@@ -3386,7 +3374,6 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-vs-deck-column opponent" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
                     <div id="o-tower-container-{section_id}" style="position: absolute; top: -45px; z-index: 1; width: 90px; transition: all 0.3s ease;">
                         <img id="o-tower-img-{section_id}" src="{opp_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
-                        <span id="o-tower-lv-{section_id}" class="cr-tower-lv-badge" style="position: absolute; top: 0; right: 0; background: #f87171; color: #fff; font-size: 0.4em; padding: 2px 5px; border-radius: 4px; font-weight: 900; display: {'block' if opp_metrics['level'] > 0 else 'none'};">LV {opp_metrics['level']}</span>
                         <div id="o-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #f87171; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{opp_metrics.get('hp', '--')} HP</div>
                     </div>
                     <div id="o-grid-{section_id}" style="margin-top: 50px; width: 100%; position: relative; z-index: 5;">
