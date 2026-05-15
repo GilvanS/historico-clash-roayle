@@ -1,11 +1,6 @@
 name: Clash Royale Sync (30min)
 
-# Workflow unificado: Coleta -> Analytics (README) -> Dashboard (HTML)
-# Executa a cada 30 minutos para manter o histórico atualizado e a página web sincronizada.
-
 on:
-  push:
-    branches: [ main ]
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
@@ -30,80 +25,45 @@ jobs:
         python-version: '3.11'
 
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
-        pip install requests python-dotenv google-genai
+      run: pip install requests
 
-    - name: 🔍 Debug Segredos (Teste de Variáveis)
+    - name: 1. Coletar Batalhas (API -> CSV)
       env:
         CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
-        CR_PLAYER_TAG_SEC: ${{ secrets.CR_PLAYER_TAG_SEC }}
       run: |
-        echo "=== VERIFICAÇÃO DE SECRETS ==="
-        echo "CR_API_TOKEN: $([ -n '$CR_API_TOKEN' ] && echo 'OK (length: ${#CR_API_TOKEN})' || echo 'VAZIO')"
-        echo "CR_PLAYER_TAG: $([ -n '$CR_PLAYER_TAG' ] && echo '$CR_PLAYER_TAG' || echo 'VAZIO')"
-        echo "CR_PLAYER_TAG_SEC: $([ -n '$CR_PLAYER_TAG_SEC' ] && echo '$CR_PLAYER_TAG_SEC' || echo 'VAZIO')"
-        echo "================================="
         cd src
-        python test_env.py
+        python collect_battles_csv.py
 
-    - name: 🔍 DEBUG TEST COMMIT - Run This
+    - name: 2. Sanitizar Dados (Segurança)
       run: |
-        echo "=================================================="
-        echo "🔍 DEBUG TEST: If you see CR_PLAYER_TAG_SEC below, secret IS working"
-        echo "=================================================="
-        echo "CR_PLAYER_TAG_SEC = '${{ secrets.CR_PLAYER_TAG_SEC }}'"
-        echo "CR_PLAYER_TAG_SEC length = ${{ secrets.CR_PLAYER_TAG_SEC | length }}"
-        echo "=================================================="
+        cd src
+        python sanitize_csvs.py
+        python deduplicate_csvs.py
 
-    - name: 1. Rodar Pipeline de Sincronização (Coleta -> README -> HTML)
+    - name: 3. Atualizar README (Analytics)
+      run: |
+        cd src
+        python update_readme_from_csv.py
+
+    - name: 4. Gerar Dashboard HTML
       env:
         CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
         CR_PLAYER_TAG: ${{ secrets.CR_PLAYER_TAG }}
-        CR_PLAYER_TAG_SEC: ${{ secrets.CR_PLAYER_TAG_SEC }}
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: |
-        echo "=== DEBUG: Verificando variáveis de ambiente ==="
-        echo "CR_PLAYER_TAG_SEC = '$CR_PLAYER_TAG_SEC'"
-        echo "CR_PLAYER_TAG_SEC length = ${#CR_PLAYER_TAG_SEC}"
-        if [ -z "$CR_PLAYER_TAG_SEC" ]; then
-          echo "❌ CR_PLAYER_TAG_SEC está VAZIO!"
-        else
-          echo "✅ CR_PLAYER_TAG_SEC tem valor: $CR_PLAYER_TAG_SEC"
-        fi
-        echo "============================================"
         cd src
-        python main_sync.py
+        python html_generator.py
 
-    - name: 2. Commit & Push
+    - name: 5. Commit & Push
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        # Verifica se há trabalho local pendente (travamento)
-        if [ -f .actions_paused ]; then
-          echo "⏸️ Trabalho em progresso detectado. Pulando sincronização automática."
-          echo "Sincronização ignorada via flag .actions_paused"
-          exit 0
-        fi
-
-        # Adiciona arquivos CSV oficiais, README e Dashboard (index, clan e membros)
-        git add src/data_csv_oficial/ README.md index.html clan.html member_*.html
+        git add src/data_csv_oficial/ README.md docs/index.html
 
         if ! git diff --staged --quiet; then
-          # 🛡️ PROTEÇÃO CRÍTICA: Verificar se HTML tem MULTI-CONTAS
-          if git diff --staged index.html | grep -q "CONTA SECUNDÁRIA"; then
-            echo "✅ HTML verificado: Multi-contas OK - Commitando..."
-            git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC')"
-          else
-            echo "❌ ALERTA CRÍTICO: HTML gerado NÃO contém CONTA SECUNDÁRIA!"
-            echo "O pipeline será INTERROMPIDO para evitar regressão."
-            echo "CR_PLAYER_TAG_SEC parece não estar funcionando no Actions."
-            exit 1
-          fi
+          git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
 
-          # Retry logic para evitar falhas por concorrência
           for i in 1 2 3; do
             if git push origin HEAD; then
               echo "✅ Push realizado com sucesso."
