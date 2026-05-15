@@ -6559,7 +6559,8 @@ class GitHubPagesHTMLGenerator:
             if (savedInnerTabId) {{
                 const savedTab = targetContent.querySelector(`.cr-tab[onclick*="${{savedInnerTabId}}"]`);
                 if (savedTab) {{
-                    savedTab.click();
+                    // Simula o click diretamente
+                    savedTab.dispatchEvent(new Event('click', {{ bubbles: true }}));
                 }}
             }}
             
