@@ -2546,38 +2546,39 @@ class GitHubPagesHTMLGenerator:
             wr_c = '#48bb78' if win_rate >= 55 else ('#4299e1' if win_rate >= 50 else '#f87171')
             
             html += f'''
-            <div class="cr-deck-card cr-glass-premium" style="border-top: 4px solid {wr_c}; min-height: auto; margin-bottom: 20px; padding: 0 !important; overflow: visible;">
-                <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                        <span class="cr-deck-rank" style="background:{wr_c};">#{i} {source_label.upper()}</span>
-                        <div class="cr-mode-badge" style="background:{wr_c}; position: static; margin: 0;">{game_mode}</div>
-                        <span class="cr-wr-badge" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);">{total} Partidas</span>
-                        <span style="margin-left: auto; color: {wr_c}; font-size: 0.85em; font-weight: 900; letter-spacing: 0.5px;">TAXA DE VITÓRIA: {win_rate}%</span>
+            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 20px; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
+                <div class="cr-deck-header" style="padding: 15px 25px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 24px 24px 0 0;">
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 20px; width: 100%; flex-wrap: wrap;">
+                        <div style="background:{wr_c}; color: #fff; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 950; font-size: 1.1em; font-family: 'Krona One', sans-serif;">#{i}</div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.75em; color: rgba(255,255,255,0.4); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">{source_label.upper()}</div>
+                            <div style="font-size: 1em; font-weight: 900; color: #fff; margin-top: 2px;">{game_mode}</div>
+                        </div>
+                        <span style="background: rgba(255,255,255,0.1); color: #fff; padding: 6px 15px; border-radius: 10px; font-weight: 900; font-size: 0.8em;">{total} Partidas</span>
+                        <div style="background:{wr_c}22; border: 1px solid {wr_c}44; color: {wr_c}; padding: 8px 20px; border-radius: 12px; font-weight: 950; font-size: 1.1em; font-family: 'Krona One', sans-serif;">{win_rate}% WR</div>
                     </div>
                 </div>
-                
-                <div class="cr-main-vs-stage" style="padding: 15px 20px 10px 20px !important;">
-                    <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+
+                <div class="cr-deck-body" style="padding: 30px !important; background: transparent;">
+                    <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 25px; align-items: center;">
                         
                         <!-- Grid do Deck -->
-                        <div class="cr-row-grid-v2" style="width: 100%; max-width: 450px;">
+                        <div style="width: 100%; max-width: 500px; padding: 25px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
                              <div class="cr-grid-wrapper-premium">
                                   {self._generate_deck_grid_html_simple(deck['deck_cards'])}
                              </div>
                         </div>
 
-                        <!-- Métricas e Ação -->
-                        <div class="cr-row-metrics-v2" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 5px;">
-                            <div class="cr-vs-footer-v2" style="display: flex; gap: 15px; justify-content: center; background: rgba(0,0,0,0.15); padding: 10px 20px; border-radius: 12px; width: 100%; max-width: 450px;">
-                                {self._generate_metrics_panel_html_simple(metrics)}
-                            </div>
-                            
+                        <!-- Métricas -->
+                        <div style="width: 100%; max-width: 500px; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
+                            {self._generate_metrics_panel_html_simple(metrics)}
+                        </div>
+                        
+                        <!-- Botão Copiar -->
+                        <div style="display: flex; gap: 15px;">
                             <button onclick="copyToClipboardDeckDirect({cards_for_copy})" 
-                                    style="background: rgba(72, 187, 120, 0.1); border: 1px solid rgba(72, 187, 120, 0.3); color: #9ae6b4; padding: 8px 20px; border-radius: 10px; font-size: 0.75em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s;"
-                                    onmouseover="this.style.background='rgba(72, 187, 120, 0.2)'; this.style.transform='translateY(-2px)';"
-                                    onmouseout="this.style.background='rgba(72, 187, 120, 0.1)'; this.style.transform='translateY(0)';"
-                                    class="cr-copy-btn-premium">
-                                <i class="far fa-copy"></i> COPIAR MELHOR DECK
+                                    style="background: rgba(72, 187, 120, 0.1); border: 1px solid rgba(72, 187, 120, 0.3); color: #9ae6b4; padding: 10px 25px; border-radius: 12px; font-size: 0.8em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s;">
+                                <i class="far fa-copy"></i> COPIAR DECK
                             </button>
                         </div>
                     </div>
