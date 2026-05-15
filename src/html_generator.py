@@ -188,9 +188,9 @@ class GitHubPagesHTMLGenerator:
         for file_path in files:
             file_battles_count = 0
             try:
-                # Tenta encodings em ordem de probabilidade
+                # Tenta encodings em ordem de probabilidade (inclui UTF-16-LE sem BOM)
                 data = []
-                for encoding in ['utf-8-sig', 'utf-8', 'latin1', 'utf-16']:
+                for encoding in ['utf-8-sig', 'utf-8', 'utf-16-le', 'latin1', 'cp1252']:
                     try:
                         with open(file_path, mode='r', encoding=encoding) as f:
                             first_line = f.readline()
@@ -198,14 +198,23 @@ class GitHubPagesHTMLGenerator:
                             if not first_line:
                                 continue
                             
+                            # Verifica se parece UTF-16 (caracteres nulos indicam UTF-16-LE sem BOM)
+                            if '\x00' in first_line[:50] and encoding not in ['utf-16-le', 'utf-16']:
+                                continue  # Skip this encoding, let UTF-16 handle it
+                            
                             # Detecta delimitador
                             delimiter = ';' if ';' in first_line else ','
                             reader = csv.DictReader(f, delimiter=delimiter)
                             data = list(reader)
                             
-                        if data and len(data[0]) > 1: # Garante que leu mais de uma coluna
-                            logger.info(f"Arquivo {os.path.basename(file_path)} lido com sucesso ({encoding}, '{delimiter}').")
-                            break
+                            # Valida: verifica se colunas não são gibberish (caracteres nulos)
+                            if data and len(data[0]) > 1:
+                                first_key = list(data[0].keys())[0] if data[0] else ''
+                                if '\x00' in first_key or len(data[0].keys()[0] if data[0] else '') > 50:
+                                    data = []  # Invalid encoding, try next
+                                    continue
+                                logger.info(f"Arquivo {os.path.basename(file_path)} lido com sucesso ({encoding}, '{delimiter}').")
+                                break
                     except Exception:
                         continue
                 

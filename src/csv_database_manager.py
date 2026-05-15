@@ -34,22 +34,51 @@ class CSVManager:
         return self._read_csv(file_path)
 
     def _read_csv(self, file_path: str) -> List[Dict]:
-        """Generic CSV reader with delimiter detection"""
+        """Generic CSV reader with delimiter and encoding detection"""
         data = []
         try:
             delimiter = ';' # Default for official project
-            with open(file_path, 'r', encoding='utf-8-sig') as f:
+            
+            # Detect encoding by reading BOM
+            enc = 'utf-8-sig'
+            with open(file_path, 'rb') as f:
+                first_bytes = f.read(4)
+                if first_bytes[:3] == b'\xef\xbb\xbf':
+                    enc = 'utf-8-sig'
+                elif first_bytes[:2] == b'\xff\xfe':
+                    # Check for UTF-32
+                    if len(first_bytes) >= 4 and first_bytes[2:4] == b'\x00\x00':
+                        enc = 'utf-32-le'
+                    else:
+                        enc = 'utf-16-le'
+                elif first_bytes[:2] == b'\xfe\xff':
+                    enc = 'utf-16-be'
+                else:
+                    # No BOM - try utf-8 first, then latin1
+                    enc = 'utf-8'
+            
+            # If utf-8 fails, fall back to latin1
+            try:
+                with open(file_path, 'r', encoding=enc) as f:
+                    sample = f.read(2048)
+                    if '\x00' in sample[:100]:  # UTF-16 chars detected
+                        enc = 'utf-16-le'
+            except:
+                enc = 'latin1'
+            
+            with open(file_path, 'r', encoding=enc) as f:
                 sample = f.read(2048)
                 if sample.count(',') > sample.count(';'):
                     delimiter = ','
             
-            with open(file_path, 'r', encoding='utf-8-sig') as f:
+            with open(file_path, 'r', encoding=enc) as f:
                 reader = csv.DictReader(f, delimiter=delimiter)
                 for row in reader:
                     # Filter empty rows
                     if not any(row.values()):
                         continue
                     data.append(row)
+            logger.info(f"CSV lido com sucesso ({enc}, '{delimiter}'). Total: {len(data)} registros")
         except Exception as e:
             logger.error(f"Error reading CSV {file_path}: {e}")
         return data
