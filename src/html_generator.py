@@ -6500,12 +6500,26 @@ class GitHubPagesHTMLGenerator:
     
     <script>
     // Tab switching for multiple accounts (Main vs Secondary)
-    /**
+/**
      * @description Gerencia a troca de abas principais (Contas)
+     * e restaura a aba interna selecionada anteriormente para cada conta
      * @author Especialista em QA/Dev
      */
     function switchAccountTab(tag, element) {{
         console.log('Solicitando troca para conta:', tag);
+        
+        // 0. Salva o estado da aba interna atual ANTES de trocar
+        const activeAccountContent = document.querySelector('.cr-dashboard-content > .cr-tab-content.active');
+        if (activeAccountContent) {{
+            const currentInnerTab = activeAccountContent.querySelector('.cr-inner-tabs-container .cr-tab.active');
+            if (currentInnerTab) {{
+                const currentAccountTag = activeAccountContent.id.replace('account-tab-', '');
+                const match = currentInnerTab.getAttribute('onclick').match(/'([^']+)'/);
+                if (match) {{
+                    localStorage.setItem('cr_inner_tab_' + currentAccountTag, match[1]);
+                }}
+            }}
+        }}
         
         // 1. Limpeza de estados de abas
         const allTabs = document.querySelectorAll('.cr-dashboard-main-header .cr-tab');
@@ -6537,6 +6551,18 @@ class GitHubPagesHTMLGenerator:
             targetContent.style.display = 'block';
             console.info('Conteúdo da conta ativado com sucesso: ' + targetId);
             
+            // 4. Salva a conta ativa no localStorage
+            localStorage.setItem('cr_active_account', cleanTag);
+            
+            // 5. Restaura a aba interna que estava selecionada para esta conta
+            const savedInnerTabId = localStorage.getItem('cr_inner_tab_' + cleanTag);
+            if (savedInnerTabId) {{
+                const savedTab = targetContent.querySelector(`.cr-tab[onclick*="${{savedInnerTabId}}"]`);
+                if (savedTab) {{
+                    savedTab.click();
+                }}
+            }}
+            
             // Trigger para redimensionar gráficos se houver
             window.dispatchEvent(new Event('resize'));
         }} else {{
@@ -6564,9 +6590,25 @@ class GitHubPagesHTMLGenerator:
         if (target) {{
             target.classList.add('active');
         }}
+        
+        // Salva a aba interna ativa no localStorage para persistência entre contas
+        const activeAccount = document.querySelector('.cr-dashboard-content > .cr-tab-content.active');
+        if (activeAccount) {{
+            const accountId = activeAccount.id.replace('account-tab-', '');
+            localStorage.setItem('cr_inner_tab_' + accountId, targetId);
+        }}
     }}
 
-
+    // Restore last selected account tab on page load
+    document.addEventListener('DOMContentLoaded', function() {{
+        const savedAccount = localStorage.getItem('cr_active_account');
+        if (savedAccount) {{
+            const savedTab = document.querySelector(`.cr-tab[onclick*="${{savedAccount}}"]`);
+            if (savedTab) {{
+                savedTab.click();
+            }}
+        }}
+    }});
 
     // Table sorting functionality
     document.addEventListener('DOMContentLoaded', function() {{
