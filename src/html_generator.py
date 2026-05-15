@@ -2157,12 +2157,12 @@ class GitHubPagesHTMLGenerator:
         """Generate HTML for deck performance section with 4 tabs: 
         Oponentes Repetidos + Meus Decks da Semana + Decks Inimigos Letais + Mais Vencedores"""
 
-        # Aba 1: Meus Decks da Semana - le CSVs diarios
-        weekly_data = self.get_weekly_decks_from_csv()
+        # Aba 1: Meus Decks da Semana - le CSVs diarios com filtro por conta
+        weekly_data = self.get_weekly_decks_from_csv(player_tag=player_tag)
         weekly_decks_html = self.generate_weekly_decks_html(weekly_data)
 
         # Aba 2: Oponentes Repetidos - usa estatisticas consolidadas do cache CSV com deduplicacao
-        csv_repeated = self.get_repeated_opponents_from_csv()
+        csv_repeated = self.get_repeated_opponents_from_csv(player_tag=player_tag)
         repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated)
         
         # Aba 4: Decks Mais Vencedores (Global/Clã)
@@ -6145,6 +6145,130 @@ class GitHubPagesHTMLGenerator:
             .cr-deck-layout { flex-direction: column; }
             /* Player name menor em mobile */
             .cr-player-name-premium { font-size: 1em; }
+        }
+
+        /* Battle Cards - Mobile Cards for Recent Battles */
+        .battle-cards {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .battle-cards {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                padding: 10px 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .battle-cards {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+        
+        .battle-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border-left: 4px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .battle-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .battle-card.battle-victory {
+            border-left-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+        }
+        
+        .battle-card.battle-defeat {
+            border-left-color: #ef4444;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+        }
+        
+        .battle-card.battle-draw {
+            border-left-color: #f59e0b;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+        }
+        
+        .battle-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .battle-result {
+            font-size: 0.75em;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .result-victory {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .result-defeat {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .result-draw {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .battle-time {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75em;
+        }
+        
+        .battle-card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .battle-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .battle-info strong {
+            font-size: 0.95em;
+            color: #fff;
+        }
+        
+        .battle-info span {
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .battle-stats {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .crown-count {
+            font-size: 0.9em;
+        }
+        
+        .trophy-change {
+            font-size: 0.9em;
+            font-weight: 600;
         }
 
         /* Modal Glassmorphism */
