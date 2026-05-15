@@ -64,7 +64,17 @@ jobs:
         git add src/data_csv_oficial/ README.md index.html
 
         if ! git diff --staged --quiet; then
-          git commit -m "chore: sincronização automática Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+          HTML_SIZE=$(wc -c < index.html)
+          MIN_SIZE=200000
+          if [ "$HTML_SIZE" -lt "$MIN_SIZE" ]; then
+            echo "AVISO: HTML parece truncado ($HTML_SIZE bytes < $MIN_SIZE). Regenerando..."
+            cd src
+            python html_generator.py
+            cd ..
+            git add index.html
+          fi
+
+          git commit -m "chore: sincronizacao automatica Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
 
           for i in 1 2 3; do
             if git push origin HEAD; then

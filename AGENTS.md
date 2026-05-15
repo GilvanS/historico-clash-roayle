@@ -1,5 +1,21 @@
 # Task Master AI - Agent Integration Guide
 
+## Regras Obrigatórias de Comunicação
+
+### Idioma
+- **TODAS** as respostas devem ser em **Português Brasileiro (pt-BR)**
+- **TODO** código escrito/modificado deve ter comentários em **pt-BR**
+- **TODO** commit message deve ser em **pt-BR**
+- **TODO** arquivo criado deve usar variáveis/comentários em **pt-BR** quando possível
+- **EXCEÇÃO**: exceções técnicas (`try`, `except`, `return`, etc.) mantidas em inglês
+
+### Tom e Estilo
+- Ser conciso, direto e objetivo
+- Evitar introduções e conclusões desnecessárias
+- Usar respostas curtas (1-3 frases) para perguntas diretas
+- Usar respostas maiores apenas quando necessário para tarefas complexas
+- Preferir tabelas, listas e código sobre texto corrido para informações técnicas
+
 ## Essential Commands
 
 ### Core Workflow Commands

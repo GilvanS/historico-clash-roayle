@@ -6821,12 +6821,19 @@ def main():
     docs_dir = os.path.join(root_dir, 'docs')
     os.makedirs(docs_dir, exist_ok=True)
     
-    # Save as index.html for GitHub Pages in root directory
+    # Salva HTML e valida tamanho minimo para evitar commits truncados
     index_path = os.path.join(root_dir, 'index.html')
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    logger.info(f"GitHub Pages HTML report generated: {index_path}")
+    html_size = len(html_content)
+    MIN_SIZE = 200000  # ~200KB e considerando que o HTML completo tem ~450KB+
+    if html_size < MIN_SIZE:
+        logger.error(f"ERRO CRITICO: HTML truncado ({html_size} bytes < {MIN_SIZE}). Regenerando...")
+        import sys
+        sys.exit(1)
+    
+    logger.info(f"GitHub Pages HTML report gerado: {index_path} ({html_size} bytes)")
 
 if __name__ == "__main__":
     main()
