@@ -369,7 +369,8 @@ class GitHubPagesHTMLGenerator:
             return None
 
         for row in self.players_cache:
-            if row.get('player_tag') == player_tag:
+            row_tag = (row.get('player_tag') or '').strip()
+            if row_tag == player_tag:
                 return row
         return None
 
@@ -2712,13 +2713,17 @@ class GitHubPagesHTMLGenerator:
             dt = b.get('dt') or self._parse_dt(b.get('battle_time', ''))
             if not dt: continue
             d_display = dt.strftime('%d/%m %H:%M')
+            d_str = dt.strftime('%d/%m')
+            t_str = dt.strftime('%H:%M')
                 
             opp_stats[tag]['stats'].append({
                 'resultado': res, 
-                'result': res, # Compatibilidade
+                'result': res,
                 'data_str': d_display,
-                'battle_time': d_display, # Compatibilidade
-                'data': d_display, # Compatibilidade
+                'battle_time': d_display,
+                'data': d_display,
+                'date_str': d_str,
+                'time_str': t_str,
                 'my_deck': " | ".join((b.get('deck_jogador') or b.get('deck_cards', '')).split(" | ")[:8]),
                 'deck_cards': " | ".join((b.get('deck_jogador') or b.get('deck_cards', '')).split(" | ")[:8]), # Compatibilidade
                 'opp_deck': " | ".join((b.get('deck_oponente') or b.get('opponent_deck_cards', '')).split(" | ")[:8]),
@@ -2890,27 +2895,13 @@ class GitHubPagesHTMLGenerator:
                 const dataRaw = element.getAttribute('data-battle');
                 const data = JSON.parse(dataRaw);
                 
-                // Update date and time (usar same container logic que metrics usa)
-                const metricsContainer = document.querySelector('.cr-deck-card')?.contains(element) 
-                    ? element.closest('.cr-deck-card') 
-                    : null;
-                const dateEl = metricsContainer 
-                    ? metricsContainer.querySelector(`#date-${oppId}`) 
-                    : document.querySelector(`[id^="vs-content-"]`)?.contains(element)
-                        ? element.closest('[id^="vs-content-"]')?.querySelector(`#date-${oppId}`)
-                        : null;
-                const timeEl = metricsContainer 
-                    ? metricsContainer.querySelector(`#time-${oppId}`) 
-                    : document.querySelector(`[id^="vs-content-"]`)?.contains(element)
-                        ? element.closest('[id^="vs-content-"]')?.querySelector(`#time-${oppId}`)
-                        : null;
+                // Update date and time (simples: subir até cr-deck-card)
+                const deckCard = element.closest('.cr-deck-card');
+                const dateEl = deckCard ? deckCard.querySelector(`#date-${oppId}`) : null;
+                const timeEl = deckCard ? deckCard.querySelector(`#time-${oppId}`) : null;
                 
-                if (dateEl) {
-                    dateEl.innerHTML = `<i class="far fa-calendar-alt"></i> ${data.date || '--/--'}`;
-                }
-                if (timeEl) {
-                    timeEl.innerHTML = `<i class="far fa-clock"></i> ${data.time || '--:--'}`;
-                }
+                if (dateEl) dateEl.innerHTML = `<i class="far fa-calendar-alt"></i> ${data.date || '--/--'}`;
+                if (timeEl) timeEl.innerHTML = `<i class="far fa-clock"></i> ${data.time || '--:--'}`;
 
                 // Support for modernized VS Stage date displays
                 const vsContainer = document.getElementById(`vs-stage-${oppId}`);
@@ -3232,12 +3223,12 @@ class GitHubPagesHTMLGenerator:
 
     def _generate_metrics_panel_html_simple(self, metrics):
         leaked = float(metrics.get('leaked', 0))
-        leak_class = "cr-leak-warning" if leaked > 0.1 else ""
+        leak_class = "cr-leak-warning" if leaked > 0 else ""
         t_hp = metrics.get('hp', '--')
         
-        # Caminho relativo para garantir funcionamento em diferentes ambientes
-        local_leak_icon = "docs/ElixirVazado.png"
-        leak_icon = local_leak_icon if leaked > 0.1 else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
+        # Ícone de leak: vermelho com glow se vazou, cinza semi-transparente se não vazou
+        has_leak = leaked > 0
+        leak_icon = "docs/ElixirVazado.png" if has_leak else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
         
         # Cor do leak: vermelho se alto, amarelo se médio, branco se zero
         leak_color = "#f87171" if leaked > 0.5 else ("#fbbf24" if leaked > 0 else "#fff")
@@ -3251,8 +3242,8 @@ class GitHubPagesHTMLGenerator:
                 <img src="docs/ciclo4.png" style="width: 20px; height: 20px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4));">
                 <span style="font-weight: 900; font-size: 1.1em; color: #fff; font-family: 'Krona One', sans-serif;">{metrics['cycle']}</span>
             </div>
-            <div class="cr-metric-inline {leak_class}" title="Elixir Vazado" style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 8px; border: 1px solid { 'rgba(248, 113, 113, 0.3)' if leaked > 0.1 else 'rgba(255,255,255,0.05)' };">
-                <img src="{leak_icon}" style="width: 20px; height: 20px; opacity: {0.5 if leaked <= 0.1 else 1}; filter: { 'drop-shadow(0 0 8px rgba(248, 113, 113, 0.8))' if leaked > 0.1 else 'none' };">
+            <div class="cr-metric-inline {leak_class}" title="Elixir Vazado" style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 8px; border: 1px solid { 'rgba(248, 113, 113, 0.3)' if leaked > 0 else 'rgba(255,255,255,0.05)' };">
+                <img src="{leak_icon}" style="width: 20px; height: 20px; opacity: {1 if has_leak else 0.4}; filter: { 'drop-shadow(0 0 8px rgba(248, 113, 113, 0.8))' if has_leak else 'none' };">
                 <span style="font-weight: 900; font-size: 1.1em; color: {leak_color}; font-family: 'Krona One', sans-serif;">{metrics.get('leaked_label', '0.0')}</span>
             </div>
             <div class="cr-metric-inline" title="HP Restante" style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
@@ -3323,33 +3314,30 @@ class GitHubPagesHTMLGenerator:
         return f"""
         <div class="cr-vs-stage-v2" id="vs-content-{section_id}">
             
-            <!-- Linha 1: Info e Placar (Topo) -->
-            <div class="cr-vs-top-row-v2" style="display: grid; grid-template-columns: 1fr 140px 1fr; align-items: flex-start; gap: 15px; width: 100%; margin-bottom: 15px;">
+            <!-- Linha 1: Info e Placar (Topo) - Layout Compacto -->
+            <div class="cr-vs-top-row-v2" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; gap: 20px;">
                 <!-- Jogador -->
-                <div class="cr-vs-side-info player" style="text-align: left;">
+                <div class="cr-vs-side-info player" style="text-align: left; flex: 1;">
                     <div id="p-tag-{section_id}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{player_info['tag']}</div>
                     <div id="p-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{player_info['name']}</div>
                     <div id="p-clan-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{player_info.get('clan', 'Sem Clã')}</div>
                 </div>
 
                 <!-- Centro: Placar -->
-                <div class="cr-vs-center-v2" style="text-align: center; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); min-width: 140px;">
-                    <div id="score-{section_id}" style="font-size: 2.2em; font-weight: 950; color: {res_color}; letter-spacing: -2px; line-height: 1; font-family: 'Krona One', sans-serif;">
+                <div class="cr-vs-center-v2" style="text-align: center; min-width: 120px;">
+                    <div id="score-{section_id}" style="font-size: 2em; font-weight: 950; color: {res_color}; letter-spacing: -2px; line-height: 1; font-family: 'Krona One', sans-serif;">
                         {p_crowns} - {o_crowns}
                     </div>
-                    <div id="mode-{section_id}" style="font-size: 0.6em; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 4px;">
+                    <div id="mode-{section_id}" style="font-size: 0.65em; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 4px;">
                         {battle_data.get('game_mode', 'Batalha')}
-                    </div>
-                    <div id="trophy-change-{section_id}" style="font-size: 0.7em; font-weight: 900; color: {trophy_color}; margin-top: 2px;">
-                        {trophy_sign}{trophy_val} Troféus
                     </div>
                 </div>
 
                 <!-- Oponente -->
-                <div class="cr-vs-side-info opponent" style="text-align: right;">
+                <div class="cr-vs-side-info opponent" style="text-align: right; flex: 1;">
                     <div id="o-tag-{section_id}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{opp_info['tag']}</div>
                     <div id="o-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #f87171; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{opp_info['name']}</div>
-                    <div id="o-clan-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{opp_info.get('clan', 'Sem Clã')}</div>
+                    <div id="o-clan-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{opp_info.get('clan', '')}</div>
                 </div>
             </div>
 
@@ -3358,11 +3346,11 @@ class GitHubPagesHTMLGenerator:
                 
                 <!-- Coluna Jogador -->
                 <div class="cr-vs-deck-column player" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
-                    <div id="p-tower-container-{section_id}" style="position: absolute; top: -45px; z-index: 1; width: 90px; transition: all 0.3s ease;">
+                    <div id="p-tower-container-{section_id}" style="width: 90px; margin-bottom: 10px; transition: all 0.3s ease;">
                         <img id="p-tower-img-{section_id}" src="{my_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
                         <div id="p-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #4ade80; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{my_metrics.get('hp', '--')} HP</div>
                     </div>
-                    <div id="p-grid-{section_id}" style="margin-top: 50px; width: 100%; position: relative; z-index: 5;">
+                    <div id="p-grid-{section_id}" style="width: 100%; position: relative; z-index: 5;">
                         {self._generate_deck_grid_html_simple(battle_data['my_deck'], self.get_copy_deck_link([c.split('|')[0] for c in battle_data['my_deck'].split('|') if c]))}
                     </div>
                     <div id="player-metrics-{section_id}" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
@@ -3372,11 +3360,11 @@ class GitHubPagesHTMLGenerator:
 
                 <!-- Coluna Oponente -->
                 <div class="cr-vs-deck-column opponent" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
-                    <div id="o-tower-container-{section_id}" style="position: absolute; top: -45px; z-index: 1; width: 90px; transition: all 0.3s ease;">
+                    <div id="o-tower-container-{section_id}" style="width: 90px; margin-bottom: 10px; transition: all 0.3s ease;">
                         <img id="o-tower-img-{section_id}" src="{opp_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
                         <div id="o-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #f87171; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{opp_metrics.get('hp', '--')} HP</div>
                     </div>
-                    <div id="o-grid-{section_id}" style="margin-top: 50px; width: 100%; position: relative; z-index: 5;">
+                    <div id="o-grid-{section_id}" style="width: 100%; position: relative; z-index: 5;">
                         {self._generate_deck_grid_html_simple(battle_data['opp_deck'])}
                     </div>
                     <div id="opp-metrics-{section_id}" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
@@ -3386,11 +3374,14 @@ class GitHubPagesHTMLGenerator:
             </div>
 
             <!-- Linha 3: Meta Info (Rodapé) -->
-            <div class="cr-vs-footer-v2" style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); width: 100%; display: flex; justify-content: space-between; align-items: center;">
-                <div id="arena-{section_id}" style="font-size: 0.75em; color: rgba(255,255,255,0.5); font-weight: 800;">
-                    <i class="fas fa-map-marker-alt" style="color: var(--primary); opacity: 0.7;"></i> {battle_data.get('arena_name', 'Arena')}
+            <div class="cr-vs-footer-v2" style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <span id="date-{section_id}" style="font-size: 0.7em; font-weight: 700; color: rgba(255,255,255,0.4);"><i class="far fa-calendar-alt" style="margin-right: 4px;"></i> {battle_data.get('date_str', '--/--')}</span>
+                    <span id="time-{section_id}" style="font-size: 0.7em; font-weight: 700; color: rgba(255,255,255,0.3);"><i class="far fa-clock" style="margin-right: 4px;"></i> {battle_data.get('time_str', '--:--')}</span>
+                    <span id="arena-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 800;"><i class="fas fa-map-marker-alt" style="margin-right: 4px; opacity: 0.7;"></i> {battle_data.get('arena_name', 'Arena')}</span>
                 </div>
-                <div style="display: flex; gap: 20px;">
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <span id="trophy-change-{section_id}" style="font-size: 0.7em; font-weight: 900; color: {trophy_color};"><i class="fas fa-trophy" style="margin-right: 4px;"></i> {trophy_sign}{trophy_val} Troféus</span>
                     <span id="rank-p-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.3); font-weight: 800;"><i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank P: {battle_data.get('posicao_global_jogador', 'N/A')}</span>
                     <span id="rank-o-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.3); font-weight: 800;"><i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank O: {battle_data.get('posicao_global_oponente', 'N/A')}</span>
                 </div>
@@ -3459,7 +3450,7 @@ class GitHubPagesHTMLGenerator:
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <span style="font-size: 0.75em; font-weight: 950; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 2px; font-family: 'Krona One', sans-serif;">Histórico de Encontros:</span>
                             <div style="display: flex; gap: 15px; font-size: 0.75em; color: rgba(255,255,255,0.5); font-weight: 800;">
-                                <span title="Data do último encontro"><i class="far fa-calendar-alt"></i> {first_b.get('data_str','--/--').split(' ')[0]}</span>
+                                <span id="history-date-{i}" title="Data do último encontro"><i class="far fa-calendar-alt"></i> {first_b.get('data_str','--/--').split(' ')[0]}</span>
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
