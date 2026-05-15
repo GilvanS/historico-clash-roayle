@@ -15050,6 +15050,60 @@
             if (savedInnerTabId) {
                 const savedTab = targetContent.querySelector(`.cr-tab[onclick*="${savedInnerTabId}"]`);
                 if (savedTab) {
+                    // Simula o click diretamente
+                    savedTab.dispatchEvent(new Event('click', { bubbles: true }));
+                }
+            }
+            
+            // Trigger para redimensionar gráficos se houver
+            window.dispatchEvent(new Event('resize'));
+        } else {
+            console.error('ERRO CRÍTICO: Container de conta não encontrado no DOM: ' + targetId);
+            const availableIds = Array.from(allContents).map(c => c.id);
+            console.debug('IDs disponíveis no DOM:', availableIds);
+        }
+    }
+            }
+        }
+        
+        // 1. Limpeza de estados de abas
+        const allTabs = document.querySelectorAll('.cr-dashboard-main-header .cr-tab');
+        allTabs.forEach(t => t.classList.remove('active'));
+        
+        // 2. Ativação da aba clicada
+        if (element) {
+            element.classList.add('active');
+        } else {
+            // Fallback caso o clique venha de outro lugar
+            const cleanTagForSearch = tag.replace('#', '');
+            const tabToActivate = document.querySelector(`.cr-tab[onclick*="${cleanTagForSearch}"]`);
+            if (tabToActivate) tabToActivate.classList.add('active');
+        }
+        
+        // 3. Gerenciamento de Conteúdo
+        const allContents = document.querySelectorAll('.cr-dashboard-content > .cr-tab-content');
+        allContents.forEach(c => {
+            c.classList.remove('active');
+            c.style.display = 'none'; // Garantia extra
+        });
+        
+        const cleanTag = tag.replace('#', '');
+        const targetId = 'account-tab-' + cleanTag;
+        const targetContent = document.getElementById(targetId);
+        
+        if (targetContent) {
+            targetContent.classList.add('active');
+            targetContent.style.display = 'block';
+            console.info('Conteúdo da conta ativado com sucesso: ' + targetId);
+            
+            // 4. Salva a conta ativa no localStorage
+            localStorage.setItem('cr_active_account', cleanTag);
+            
+            // 5. Restaura a aba interna que estava selecionada para esta conta
+            const savedInnerTabId = localStorage.getItem('cr_inner_tab_' + cleanTag);
+            if (savedInnerTabId) {
+                const savedTab = targetContent.querySelector(`.cr-tab[onclick*="${savedInnerTabId}"]`);
+                if (savedTab) {
                     savedTab.click();
                 }
             }
