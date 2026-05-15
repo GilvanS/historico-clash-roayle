@@ -2501,22 +2501,22 @@ class GitHubPagesHTMLGenerator:
             wr_c = '#48bb78' if win_rate >= 60 else ('#f56565' if win_rate <= 40 else '#718096')
             
             html += f'''
-            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 15px; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
-                <div class="cr-deck-header" style="padding: 15px 25px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 24px 24px 0 0;">
-                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 20px; width: 100%;">
-                        <span class="cr-deck-rank" style="background:#4299e1; color: #fff; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 950; font-size: 1.1em; box-shadow: 0 0 15px rgba(66, 153, 225, 0.3); font-family: 'Krona One', sans-serif;">#{i}</span>
-                        <span style="color: #fff; font-size: 1.1em; font-weight: 900;">WR: {win_rate}% <span style="opacity: 0.5; font-size: 0.8em; font-weight: 400;">({deck['recent_total']} partidas na semana)</span></span>
-                        <span class="cr-wr-badge" style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}44; color: {wr_c}; font-weight: 950; font-size: 0.9em; padding: 6px 15px; border-radius: 10px; font-family: 'Krona One', sans-serif;">{total} TOTAL</span>
+            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 12px; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
+                <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
+                    <div style="display: flex; align-items: center; gap: 15px; width: 100%; flex-wrap: wrap;">
+                        <span style="background:#4299e1; color: #fff; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 900; font-size: 0.85em;">#{i}</span>
+                        <span style="color: #fff; font-size: 0.9em; font-weight: 700;">WR: {win_rate}% <span style="opacity: 0.5; font-size: 0.75em;">({deck['recent_total']} partidas)</span></span>
+                        <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}44; color: {wr_c}; font-weight: 900; font-size: 0.75em; padding: 4px 10px; border-radius: 8px;">{total} TOTAL</span>
                     </div>
                 </div>
                 
-                <div class="cr-progress-bar" style="height: 4px; background: rgba(0,0,0,0.3); display: flex;">
-                    <div class="cr-bar-wins" style="width:{wins_pct}%; background: #48bb78;"></div>
-                    <div class="cr-bar-draws" style="width:{draws_pct}%; background: #718096;"></div>
-                    <div class="cr-bar-losses" style="width:{losses_pct}%; background: #f56565;"></div>
+                <div style="height: 3px; background: rgba(0,0,0,0.3); display: flex;">
+                    <div style="width:{wins_pct}%; background: #48bb78;"></div>
+                    <div style="width:{draws_pct}%; background: #718096;"></div>
+                    <div style="width:{losses_pct}%; background: #f56565;"></div>
                 </div>
 
-                <div class="cr-deck-body" style="padding: 30px !important; background: transparent;">
+                <div style="padding: 15px !important; background: transparent;">
                     {self._generate_deck_view_html(first_b.get('my_deck', deck['deck_cards']), first_b, player_name, player_clan, self.player_tag, i, deck_id, is_opponent=False)}
                     {self._generate_history_dots_simple(deck_id, deck['battles'][:15], player_name, player_clan)}
                 </div>
@@ -3133,19 +3133,18 @@ class GitHubPagesHTMLGenerator:
         if not battles_list:
             return ''
         
-        dots_html = '<div style="margin-top: 20px; padding: 15px; background: rgba(15,23,42,0.3); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">'
-        dots_html += '<div style="font-size: 0.7em; font-weight: 900; color: rgba(255,255,255,0.3); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 2px;">Histórico de Partidas:</div>'
-        dots_html += '<div style="display: flex; gap: 8px; overflow-x: auto; flex-wrap: wrap;">'
+        dots_html = '<div style="margin-top: 12px; padding: 10px; background: rgba(15,23,42,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.03);">'
+        dots_html += '<div style="display: flex; gap: 4px; overflow-x: auto; flex-wrap: wrap;">'
         
-        for b in battles_list[:15]:
+        for b in battles_list[:10]:
             res = b['resultado'].lower() if b.get('resultado') else 'unknown'
             res_char = 'V' if any(x in res for x in ['vitoria', 'victory', 'vitória']) else ('D' if any(x in res for x in ['derrota', 'defeat']) else 'E')
             res_color = '#48bb78' if res_char == 'V' else ('#f56565' if res_char == 'D' else '#718096')
             time_str = b['dt_obj'].strftime('%H:%M') if b.get('dt_obj') else '--:--'
             
-            dots_html += f'''<div style="flex-shrink: 0; padding: 6px 12px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid {res_color}40; text-align: center;">
-                <div style="font-size: 0.85em; font-weight: 900; color: {res_color};">{res_char}</div>
-                <div style="font-size: 0.6em; color: rgba(255,255,255,0.4);">{time_str}</div>
+            dots_html += f'''<div style="flex-shrink: 0; padding: 4px 8px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid {res_color}40; text-align: center;">
+                <div style="font-size: 0.75em; font-weight: 900; color: {res_color};">{res_char}</div>
+                <div style="font-size: 0.55em; color: rgba(255,255,255,0.4);">{time_str}</div>
             </div>'''
         
         dots_html += '</div></div>'
@@ -3262,82 +3261,59 @@ class GitHubPagesHTMLGenerator:
         trophy_sign = '+' if trophy_val > 0 else ''
         
         return f"""
-        <div class="cr-vs-stage-v2" id="vs-content-{deck_id}">
-            
-            <!-- Linha 1: Info e Placar (Topo) - Layout Compacto -->
-            <div class="cr-vs-top-row-v2" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; gap: 20px;">
+        <div style="width: 100%; max-width: 600px; margin: 0 auto;">
+            <!-- Linha 1: Info e Placar (Topo) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px; gap: 15px;">
                 <!-- Jogador -->
-                <div class="cr-vs-side-info player" style="text-align: left; flex: 1;">
-                    <div style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{player_tag}</div>
-                    <div style="font-size: 1.1em; font-weight: 950; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{player_name}</div>
-                    <div style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{player_clan or 'Sem Clã'}</div>
+                <div style="text-align: left; flex: 1;">
+                    <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{player_tag}</div>
+                    <div style="font-size: 0.9em; font-weight: 950; color: #fff; font-family: 'Outfit', sans-serif;">{player_name}</div>
                 </div>
 
                 <!-- Centro: Placar -->
-                <div class="cr-vs-center-v2" style="text-align: center; min-width: 120px;">
-                    <div style="font-size: 2em; font-weight: 950; color: {res_color}; letter-spacing: -2px; line-height: 1; font-family: 'Krona One', sans-serif;">
+                <div style="text-align: center; min-width: 80px;">
+                    <div style="font-size: 1.5em; font-weight: 950; color: {res_color}; letter-spacing: -1px; line-height: 1; font-family: 'Outfit', sans-serif;">
                         {p_crowns} - {o_crowns}
                     </div>
-                    <div style="font-size: 0.65em; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 4px;">
-                        {battle_data.get('modo_jogo', 'Batalha')}
-                    </div>
+                    <div style="font-size: 0.55em; font-weight: 800; color: rgba(255,255,255,0.4); text-transform: uppercase;">{battle_data.get('modo_jogo', 'Batalha')[:15]}</div>
                 </div>
 
                 <!-- Oponente -->
-                <div class="cr-vs-side-info opponent" style="text-align: right; flex: 1;">
-                    <div style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{battle_data.get('tag_oponente', '000000')}</div>
-                    <div style="font-size: 1.1em; font-weight: 950; color: #f87171; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{battle_data.get('nome_oponente', 'Oponente')}</div>
-                    <div style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{battle_data.get('opp_clan', '')}</div>
+                <div style="text-align: right; flex: 1;">
+                    <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{battle_data.get('tag_oponente', '000000')[:10]}</div>
+                    <div style="font-size: 0.9em; font-weight: 950; color: #f87171; font-family: 'Outfit', sans-serif;">{battle_data.get('nome_oponente', 'Oponente')[:15]}</div>
                 </div>
             </div>
 
-            <!-- Linha 2: Torres e Decks -->
-            <div class="cr-vs-decks-row-v2" style="display: flex; gap: 20px; width: 100%; position: relative;">
+            <!-- Linha 2: Torres e Decks Compacto -->
+            <div style="display: flex; gap: 12px; width: 100%; position: relative;">
                 
                 <!-- Coluna Jogador -->
-                <div class="cr-vs-deck-column player" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
-                    <div style="width: 90px; margin-bottom: 10px; transition: all 0.3s ease;">
-                        <img src="{my_metrics['tower_url']}" style="width: 100%; filter: drop-shadow(0 0 15px rgba(74, 222, 128, 0.4));">
-                        <div style="text-align: center; font-size: 0.6em; font-weight: 950; color: #4ade80; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{my_metrics.get('hp', '--')} HP</div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
+                    <div style="width: 60px; margin-bottom: 6px;">
+                        <img src="{my_metrics['tower_url']}" style="width: 100%; filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.4));">
                     </div>
                     <div style="width: 100%; position: relative; z-index: 5;">
                         {self._generate_deck_grid_html_simple(deck_str, self.get_copy_deck_link([c.split('|')[0] for c in deck_str.split('|') if c]))}
                     </div>
-                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
-                        {self._generate_metrics_panel_html_simple(my_metrics)}
-                    </div>
                 </div>
 
                 <!-- Coluna Oponente -->
-                <div class="cr-vs-deck-column opponent" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
-                    <div style="width: 90px; margin-bottom: 10px; transition: all 0.3s ease;">
-                        <img src="{opp_metrics['tower_url']}" style="width: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
-                        <div style="text-align: center; font-size: 0.6em; font-weight: 950; color: #f87171; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{opp_metrics.get('hp', '--')} HP</div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
+                    <div style="width: 60px; margin-bottom: 6px;">
+                        <img src="{opp_metrics['tower_url']}" style="width: 100%; filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.4));">
                     </div>
                     <div style="width: 100%; position: relative; z-index: 5;">
                         {self._generate_deck_grid_html_simple(battle_data.get('opp_deck', ''))}
-                    </div>
-                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
-                        {self._generate_metrics_panel_html_simple(opp_metrics)}
                     </div>
                 </div>
             </div>
 
             <!-- Linha 3: Meta Info (Rodapé) -->
-            <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <span style="font-size: 0.7em; font-weight: 700; color: rgba(255,255,255,0.4);"><i class="far fa-calendar-alt" style="margin-right: 4px;"></i> {battle_data.get('dt_obj', '').strftime('%d/%m') if battle_data.get('dt_obj') else '--/--'}</span>
-                    <span style="font-size: 0.7em; font-weight: 900; color: {trophy_color};"><i class="fas fa-trophy" style="margin-right: 4px;"></i> {trophy_sign}{trophy_val} Troféus</span>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                     <button onclick="copyToClipboardDeckDirect({[c.split('|')[0] for c in deck_str.split('|') if c]})" 
-                             style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 5px 12px; border-radius: 8px; font-size: 0.65em; font-weight: 900; cursor: pointer; transition: all 0.2s;">
-                          <i class="far fa-copy"></i> MEU DECK
-                     </button>
-                     <button onclick="copyToClipboardDeckDirect({[c.split('|')[0] for c in battle_data.get('opp_deck', '').split('|') if c]})" 
-                             style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); color: #fca5a5; padding: 5px 12px; border-radius: 8px; font-size: 0.65em; font-weight: 900; cursor: pointer; transition: all 0.2s;">
-                          <i class="far fa-copy"></i> OPONENTE
-                     </button>
+            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span style="font-size: 0.6em; font-weight: 700; color: rgba(255,255,255,0.4);">{battle_data.get('dt_obj', '').strftime('%d/%m') if battle_data.get('dt_obj') else '--/--'}</span>
+                    <span style="font-size: 0.6em; font-weight: 900; color: {trophy_color};">{trophy_sign}{trophy_val} Troféus</span>
                 </div>
             </div>
         </div>
