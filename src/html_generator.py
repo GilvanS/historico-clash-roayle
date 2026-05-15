@@ -1395,7 +1395,8 @@ class GitHubPagesHTMLGenerator:
         if not player_tag:
             player_tag = self.player_tag
             
-        battles = self._load_all_battles_from_csv(player_tag)
+        # Use cached battles organized by tag
+        battles = self.battles_by_tag.get(player_tag, [])
         
         # Aggregate by date
         from datetime import datetime, timedelta

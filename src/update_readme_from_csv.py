@@ -84,7 +84,7 @@ class ReadmeCSVUpdater:
             
             deck_stats[deck]['total_batalhas'] += 1
             resultado = row.get('resultado', '').lower()
-            if resultado in ['victory', 'vitoria']:
+            if resultado in ['victory', 'vitoria', 'vitória']:
                 deck_stats[deck]['vitorias'] += 1
             elif resultado in ['defeat', 'derrota']:
                 deck_stats[deck]['derrotas'] += 1
