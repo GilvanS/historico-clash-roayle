@@ -33,20 +33,19 @@ def clean_csv_files(data_dir):
             # Identifica o header
             header = content[0].strip()
             
+            delimiter = ';' if ';' in header else ','
+
             for line in content[1:]:
                 line = line.strip()
-                # Pula linhas de conflito do Git
                 if line.startswith('<<<<<<<') or line.startswith('=======') or line.startswith('>>>>>>>'):
                     print(f"  - Removendo linha de conflito: {line[:20]}...")
                     continue
                 
-                # Pula linhas vazias ou apenas com vírgulas
-                if not line or line.replace(',', '').strip() == '':
+                if not line or line.replace(',', '').replace(';', '').strip() == '':
                     continue
                 
                 cleaned_rows.append(line)
-                
-            # Reescreve o arquivo
+            
             with open(file_path, 'w', encoding='utf-8-sig', newline='') as f:
                 f.write(header + '\n')
                 for row in cleaned_rows:

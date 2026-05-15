@@ -3,9 +3,16 @@ from datetime import datetime
 import glob
 
 FIELDNAMES = [
+    'player_tag',
     'data','nome_oponente','tag_oponente','nivel_oponente','trofes_oponente',
     'clan_oponente','resultado','coroas_jogador','coroas_oponente','mudanca_trofes',
-    'modo_jogo','tipo_batalha','arena','deck_jogador','deck_oponente','vezes_enfrentado'
+    'modo_jogo','tipo_batalha','arena','deck_jogador','deck_oponente','vezes_enfrentado',
+    'elixir_vazado_jogador','elixir_vazado_oponente','nivel_torre_jogador',
+    'vida_torre_rei_jogador','vida_torre_rei_oponente',
+    'vida_torres_princesa_jogador','vida_torres_princesa_oponente',
+    'trofes_iniciais_jogador','trofes_finais_jogador',
+    'posicao_global_jogador','posicao_global_oponente','nivel_torre_oponente',
+    'torre_jogador','torre_oponente'
 ]
 
 def parse_date(date_str):
@@ -42,8 +49,9 @@ def deduplicate_file(file_path):
     print(f"Deduplicando {os.path.basename(file_path)}...")
     
     try:
+        delimiter = ';' if ';' in open(file_path, encoding='utf-8-sig').readline() else ','
         with open(file_path, encoding='utf-8-sig') as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(f, delimiter=delimiter)
             rows = list(reader)
     except Exception as e:
         print(f"  - Erro ao ler: {e}")
@@ -65,7 +73,8 @@ def deduplicate_file(file_path):
         dt_norm = dt.strftime('%Y-%m-%d %H:%M')
         tag = row.get('tag_oponente', '').strip().upper()
         
-        key = (dt_norm, tag)
+        # Chave: player_tag + data normalizada + tag oponente (evita dedup entre contas)
+        key = (str(row.get('player_tag', '')).strip().upper(), dt_norm, tag)
         
         current_score = get_row_score(row)
         
@@ -82,7 +91,7 @@ def deduplicate_file(file_path):
     final_rows.sort(key=lambda r: parse_date(r['data']) or datetime.min, reverse=True)
     
     with open(file_path, 'w', newline='', encoding='utf-8-sig') as f:
-        w = csv.DictWriter(f, fieldnames=FIELDNAMES)
+        w = csv.DictWriter(f, fieldnames=FIELDNAMES, delimiter=delimiter)
         w.writeheader()
         w.writerows(final_rows)
     
