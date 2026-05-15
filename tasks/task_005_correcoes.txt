@@ -1,11 +1,11 @@
 # Task ID: 5
 # Title: Restaurar Layout de 2 Colunas nas Batalhas
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: medium
 # Description: Ajustar o CSS para que a lista de batalhas volte a exibir 2 colunas, reduzindo a altura da página.
 # Details:
-
-
-# Test Strategy:
+- CSS ja contem: `.cr-opponents-list { grid-template-columns: repeat(2, 1fr); }`
+- Desktop: 2 colunas | Mobile: 1 coluna
+- Layout ja esta funcionando corretamente
 

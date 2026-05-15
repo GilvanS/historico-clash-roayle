@@ -1,11 +1,12 @@
 # Task ID: 3
 # Title: Auditoria e Correção de Ícones de Elixir Leak
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: medium
 # Description: Validar o mapeamento de ícones de vazamento de elixir no _get_battle_deck_metrics e garantir consistência visual.
 # Details:
-
-
-# Test Strategy:
+- Threshold alterado de `leaked > 0.1` para `leaked > 0`
+- Mostra docs/ElixirVazado.png com glow quando há vazamento
+- Mostra API elixir.png com opacity 0.4 quando não há vazamento
+- Borda fica vermelha com qualquer vazamento
 
