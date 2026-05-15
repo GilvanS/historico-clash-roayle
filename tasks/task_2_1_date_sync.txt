@@ -1,0 +1,24 @@
+# Task 2.1: Fix Date Sync in Battle History Dots
+
+## Problema
+Quando o usuário clica nas bolinhas de histórico de batalha, o deck atualiza corretamente, mas a **data/hora não atualiza**. O problema é que existem DOIS containers (um para cada conta) com o mesmo `id="date-1"`, e o JavaScript `getElementById` sempre retorna o PRIMEIRO elemento encontrado na página.
+
+## Causa Raiz
+- `document.getElementById('date-1')` retorna o primeiro `#date-1` encontrado (sempre da conta Principal)
+- Ao clicar em bolinha da conta Secundária, a data atualizada é a da conta Principal
+
+## Solução Necessária
+Usar `element.closest('.cr-deck-card')` para encontrar o container correto, depois `container.querySelector('#date-{oppId}')` para buscar o elemento dentro desse container específico.
+
+## Dados de Teste (src\data_csv_oficial\oponentes_ano_2026.csv)
+- Linha 87: Spaghetti vs #2QR292P em 12/05/2026 14:37 (Showdown_Friendly)
+- Linha 23: Ch4me vs #2QR292P em 13/05/2026 21:02 (Showdown_Friendly)
+- Ambos têm `"date": "12/05"` ou `"date": "13/05"` no data-battle JSON
+
+## Arquivos a Modificar
+- `index.html` - Função `updateOpponentView()`
+- `src/html_generator.py` - Same JavaScript code
+
+## Critério de Sucesso
+- Ao clicar em diferentes bolinhas, BOTH deck AND date/time devem atualizar
+- Testar com conta Secundária (#2220UQQ0UU) que tem batalhas em 12/05 e 14/05
