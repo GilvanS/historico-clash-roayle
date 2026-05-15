@@ -6575,24 +6575,36 @@ class GitHubPagesHTMLGenerator:
 
     // Tab switching for INNER sections (VS Stage, Decks, etc)
     function switchInnerTab(event, targetId) {{
+        if (!event || !event.currentTarget) return;
+        
         const container = event.currentTarget.closest('.cr-inner-tabs-container');
-        if (!container) return;
+        if (!container) {{
+            console.error('Container não encontrado');
+            return;
+        }}
 
-        // Remove active from sibling tabs in THIS container only
-        container.querySelectorAll('.cr-account-tabs .cr-tab').forEach(t => t.classList.remove('active'));
-        // Add active to current
+        // Remove active from ALL tabs in container
+        container.querySelectorAll('.cr-tab').forEach(t => t.classList.remove('active'));
+        // Add active to current tab
         event.currentTarget.classList.add('active');
 
-        // Hide all contents in THIS container
-        container.querySelectorAll('> .cr-tab-content').forEach(c => c.classList.remove('active'));
+        // Hide ALL tab contents in container
+        container.querySelectorAll('.cr-tab-content').forEach(c => {{
+            c.classList.remove('active');
+            c.style.display = 'none';
+        }});
         
-        // Show target
+        // Show target tab content
         const target = document.getElementById(targetId);
         if (target) {{
             target.classList.add('active');
+            target.style.display = 'block';
+            console.log('Tab activated:', targetId);
+        }} else {{
+            console.error('Target not found:', targetId);
         }}
         
-        // Salva a aba interna ativa no localStorage para persistência entre contas
+        // Salva a aba interna ativa no localStorage
         const activeAccount = document.querySelector('.cr-dashboard-content > .cr-tab-content.active');
         if (activeAccount) {{
             const accountId = activeAccount.id.replace('account-tab-', '');
@@ -6606,7 +6618,7 @@ class GitHubPagesHTMLGenerator:
         if (savedAccount) {{
             const savedTab = document.querySelector(`.cr-tab[onclick*="${{savedAccount}}"]`);
             if (savedTab) {{
-                savedTab.click();
+                savedTab.dispatchEvent(new Event('click', {{ bubbles: true }}));
             }}
         }}
     }});
