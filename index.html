@@ -1545,7 +1545,7 @@
             .cr-player-name-premium { font-size: 1em; }
         }
 
-        /* Battle Cards - Mobile Cards for Recent Battles */
+        /* Battle Cards - Redesigned Compact Cards */
         .battle-cards {
             display: none;
         }
@@ -1554,8 +1554,8 @@
             .battle-cards {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-                padding: 10px 0;
+                gap: 10px;
+                padding: 5px 0;
             }
         }
         
@@ -1563,110 +1563,154 @@
             .battle-cards {
                 display: flex;
                 flex-direction: column;
-                gap: 12px;
+                gap: 8px;
             }
         }
         
         .battle-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            border-left: 4px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
         .battle-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
         
         .battle-card.battle-victory {
-            border-left-color: #10b981;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border-top: 3px solid #10b981;
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.95) 30%);
         }
         
         .battle-card.battle-defeat {
-            border-left-color: #ef4444;
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border-top: 3px solid #ef4444;
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(15, 23, 42, 0.95) 30%);
         }
         
         .battle-card.battle-draw {
-            border-left-color: #f59e0b;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border-top: 3px solid #f59e0b;
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.95) 30%);
         }
         
         .battle-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         
         .battle-result {
-            font-size: 0.75em;
+            font-size: 0.7em;
             font-weight: 800;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .result-victory {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.15);
             color: #10b981;
         }
         
         .result-defeat {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.15);
             color: #ef4444;
         }
         
         .result-draw {
-            background: rgba(245, 158, 11, 0.2);
+            background: rgba(245, 158, 11, 0.15);
             color: #f59e0b;
         }
         
         .battle-time {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.65em;
         }
         
         .battle-card-content {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         
-        .battle-info {
+        .battle-opponent {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
         
-        .battle-info strong {
-            font-size: 0.95em;
-            color: #fff;
+        .opp-name {
+            font-size: 0.85em;
+            font-weight: 700;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
-        .battle-info span {
-            font-size: 0.75em;
-            color: rgba(255, 255, 255, 0.5);
+        .arena-name {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.4);
         }
         
-        .battle-stats {
+        .battle-metrics {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
         }
         
-        .crown-count {
-            font-size: 0.9em;
+        .battle-metrics .metric {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
         }
         
-        .trophy-change {
+        .battle-metrics .metric-value {
             font-size: 0.9em;
-            font-weight: 600;
+            font-weight: 800;
+        }
+        
+        .battle-metrics .metric-label {
+            font-size: 0.65em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .battle-metrics .metric.crown {
+            color: #fbbf24;
+        }
+        
+        .battle-metrics .metric.crown .metric-value::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23fbbf24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>') no-repeat center;
+            background-size: contain;
+            vertical-align: middle;
+            margin-right: 2px;
+        }
+        
+        .battle-metrics .metric.trophy {
+            color: #10b981;
+        }
+        
+        .battle-metrics .metric.trophy .metric-value::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2310b981"><path d="M12 2C9.38 2 7.25 4.13 7.25 6.75c0 1.87 1.07 3.49 2.63 4.29L9.5 14h5l-.38-3.04c1.56-.8 2.63-2.42 2.63-4.21C16.75 4.13 14.62 2 12 2zm0 2c1.52 0 2.75 1.23 2.75 2.75S13.52 9.5 12 9.5 9.25 8.27 9.25 6.75 10.48 4 12 4z"/></svg>') no-repeat center;
+            background-size: contain;
+            vertical-align: middle;
+            margin-right: 2px;
         }
 
         /* Modal Glassmorphism */
@@ -1830,7 +1874,7 @@
             <p style="color: #94a3b8; margin-bottom: 25px; font-weight: 500;">Painel Inteligente de Desempenho e Estratégia</p>
             <!-- Injeção Crítica: Seletor de Contas -->
             <div style="display: flex; justify-content: center; width: 100%;">
-                <div class="cr-account-tabs"><div class="cr-tab active" onclick="switchAccountTab('#2QR292P', this)"><i class="fas fa-user-shield"></i> <span>CONTA PRINCIPAL</span><small style="opacity: 0.7; font-size: 0.8em; margin-left: 8px;">(ツ ﹻデ═一⟿ΔЯ₡λↁΣ☯︎)</small></div></div>
+                <div class="cr-account-tabs"><div class="cr-tab active" onclick="switchAccountTab('#2QR292P', this)"><i class="fas fa-user-shield"></i> <span>CONTA PRINCIPAL</span><small style="opacity: 0.7; font-size: 0.8em; margin-left: 8px;">(ツ ︻デ═一⟿ΔЯ₡λↁΣ☯︎)</small></div><div class="cr-tab " onclick="switchAccountTab('#2220UQQ0UU', this)"><i class="fas fa-user-ninja"></i> <span>CONTA SECUNDÁRIA</span><small style="opacity: 0.7; font-size: 0.8em; margin-left: 8px;">(ツ ︻デ═一⟿ΔЯ₡λↁΣ☯︎)</small></div></div>
             </div>
         </div>
 
@@ -1853,7 +1897,7 @@
             <div id="account-tab-2QR292P" class="cr-tab-content active">
             <div class="cr-account-header glass-panel" style="padding: 30px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
                 <div class="player-info">
-                    <h2 style="margin: 0; font-size: 2em;">ツ ﹻデ═一⟿ΔЯ₡λↁΣ☯︎ <span style="font-size: 0.5em; color: rgba(255,255,255,0.3); vertical-align: middle;">#2QR292P</span></h2>
+                    <h2 style="margin: 0; font-size: 2em;">ツ ︻デ═一⟿ΔЯ₡λↁΣ☯︎ <span style="font-size: 0.5em; color: rgba(255,255,255,0.3); vertical-align: middle;">#2QR292P</span></h2>
                     <p style="margin: 5px 0 0 0; color: #94a3b8;">Clan: Tropa Do Bruxo | Level: 14</p>
                     <p style="font-size: 0.8em; color: #64748b; margin-top: 10px;">Since unknown</p>
                 </div>
@@ -2558,7 +2602,721 @@
                 <h2 class="clash-font">⚔️ Last Battles</h2>
                 <div class="desktop-table">
                     <table>
-                        <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies Δ</th><th>💧 Elixir</th><th>🏰 Tower HP</th><th>Arena</th></tr></thead>
+                        <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies</th><th>Elixir</th><th>Tower HP</th><th>Arena</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="battle-cards"></div>
+            </div>
+            </div><div id="account-tab-2220UQQ0UU" class="cr-tab-content ">
+            <div class="cr-account-header glass-panel" style="padding: 30px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+                <div class="player-info">
+                    <h2 style="margin: 0; font-size: 2em;">ツ ︻デ═一⟿ΔЯ₡λↁΣ☯︎ <span style="font-size: 0.5em; color: rgba(255,255,255,0.3); vertical-align: middle;">#2220UQQ0UU</span></h2>
+                    <p style="margin: 5px 0 0 0; color: #94a3b8;">Clan: None | Level: 0</p>
+                    <p style="font-size: 0.8em; color: #64748b; margin-top: 10px;">Since unknown</p>
+                </div>
+                <div class="player-stats" style="display: flex; gap: 20px;">
+                    <div class="stat-card" style="text-align: center; min-width: 120px;">
+                        <div class="value" style="font-size: 1.5em; font-weight: 900;">0</div>
+                        <small style="color: #94a3b8;">Trophies</small>
+                    </div>
+                    <div class="stat-card" style="text-align: center; min-width: 120px;">
+                        <div class="value" style="font-size: 1.5em; font-weight: 900; color: #10b981;">0.0%</div>
+                        <small style="color: #94a3b8;">Win Rate</small>
+                    </div>
+                    <div class="stat-card" style="text-align: center; min-width: 120px;">
+                        <div class="value" style="font-size: 1.5em; font-weight: 900;">0</div>
+                        <small style="color: #94a3b8;">Battles</small>
+                    </div>
+                </div>
+            </div>
+
+            
+        <div class="section">
+            <h2>🎁 Próximos Baús</h2>
+            <div class="chests-container">
+                
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png" alt="Tower Troop Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Tower Troop</div>
+                    <div class="chest-index">Próximo</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png" alt="Golden Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Golden</div>
+                    <div class="chest-index">+1</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-goldcrate-plentiful.png" alt="Plentiful Gold Crate" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Plentiful Gold</div>
+                    <div class="chest-index">+2</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png" alt="Golden Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Golden</div>
+                    <div class="chest-index">+3</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png" alt="Golden Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Golden</div>
+                    <div class="chest-index">+4</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-goldcrate-overflowing.png" alt="Overflowing Gold Crate" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Overflowing Gold</div>
+                    <div class="chest-index">+5</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png" alt="Golden Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Golden</div>
+                    <div class="chest-index">+6</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png" alt="Tower Troop Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Tower Troop</div>
+                    <div class="chest-index">+7</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png" alt="Royal Wild Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Royal Wild</div>
+                    <div class="chest-index">+8</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-giant.png" alt="Giant Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Giant</div>
+                    <div class="chest-index">+24</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-magical.png" alt="Magical Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Magical</div>
+                    <div class="chest-index">+43</div>
+                </div>
+            
+                <div class="chest-card">
+                    <img src="https://royaleapi.github.io/cr-api-assets/chests/chest-megalightning.png" alt="Mega Lightning Chest" onerror="this.src='https://royaleapi.github.io/cr-api-assets/chests/chest-silver.png'">
+                    <div class="chest-name">Mega Lightning</div>
+                    <div class="chest-index">+792</div>
+                </div>
+            
+            </div>
+        </div>
+        <style>
+            .chests-container {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 15px;
+                margin-top: 15px;
+            }
+            .chest-card {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 15px;
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                transition: transform 0.2s;
+            }
+            .chest-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.1); }
+            .chest-card img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; }
+            .chest-name { font-size: 0.8em; color: #94a3b8; margin-bottom: 4px; }
+            .chest-index { font-weight: bold; color: #fff; }
+        </style>
+        
+
+            <div class="section glass-panel" style="padding: 25px; margin-bottom: 30px;">
+                <h2 class="clash-font" style="margin-bottom: 20px;">📊 Daily Activity</h2>
+                
+            <div class="chart-container histogram-desktop-2220UQQ0UU">
+                <div class="stacked-histogram">
+        
+                <div class="histogram-bar" title="2026-04-16: No battles">
+                    <div class="bar-date">16</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-17: No battles">
+                    <div class="bar-date">17</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-18: No battles">
+                    <div class="bar-date">18</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-19: No battles">
+                    <div class="bar-date">19</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-20: No battles">
+                    <div class="bar-date">20</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-21: No battles">
+                    <div class="bar-date">21</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-22: No battles">
+                    <div class="bar-date">22</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-23: No battles">
+                    <div class="bar-date">23</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-24: No battles">
+                    <div class="bar-date">24</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-25: No battles">
+                    <div class="bar-date">25</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-26: No battles">
+                    <div class="bar-date">26</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-27: No battles">
+                    <div class="bar-date">27</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-28: No battles">
+                    <div class="bar-date">28</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-29: No battles">
+                    <div class="bar-date">29</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-04-30: No battles">
+                    <div class="bar-date">30</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-01: No battles">
+                    <div class="bar-date">01</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-02: No battles">
+                    <div class="bar-date">02</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-03: No battles">
+                    <div class="bar-date">03</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-04: No battles">
+                    <div class="bar-date">04</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-05: No battles">
+                    <div class="bar-date">05</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-06: No battles">
+                    <div class="bar-date">06</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-07: No battles">
+                    <div class="bar-date">07</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-08: No battles">
+                    <div class="bar-date">08</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-09: No battles">
+                    <div class="bar-date">09</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-10: No battles">
+                    <div class="bar-date">10</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-11: No battles">
+                    <div class="bar-date">11</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-12: No battles">
+                    <div class="bar-date">12</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-13: No battles">
+                    <div class="bar-date">13</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-14: No battles">
+                    <div class="bar-date">14</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-15: No battles">
+                    <div class="bar-date">15</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                </div>
+            </div>
+        
+            <div class="histogram-legend">
+                <div class="legend-item">
+                    <span class="legend-color legend-wins"></span>
+                    <span>Wins</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color legend-draws"></span>
+                    <span>Draws</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color legend-losses"></span>
+                    <span>Losses</span>
+                </div>
+            </div>
+            
+            <div class="chart-container histogram-mobile-2220UQQ0UU">
+                <div class="stacked-histogram">
+        
+                <div class="histogram-bar" title="2026-05-09: No battles">
+                    <div class="bar-date">09</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-10: No battles">
+                    <div class="bar-date">10</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-11: No battles">
+                    <div class="bar-date">11</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-12: No battles">
+                    <div class="bar-date">12</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-13: No battles">
+                    <div class="bar-date">13</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-14: No battles">
+                    <div class="bar-date">14</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                <div class="histogram-bar" title="2026-05-15: No battles">
+                    <div class="bar-date">15</div>
+                    <div class="bar-stack">
+            
+                    <div class="bar-segment bar-draws" style="height: 3px;">
+                        
+                    </div>
+                
+                    <div class="bar-segment bar-empty" style="height: 3px;">
+                    </div>
+                
+                    </div>
+                </div>
+            
+                </div>
+            </div>
+        
+            </div>
+
+            <div class="section">
+                <h2 class="clash-font">🏆 Deck Performance</h2>
+                
+        <div class="cr-inner-tabs-container">
+            <div class="cr-account-tabs" style="margin-bottom: 20px; background: rgba(255,255,255,0.02);">
+                <button class="cr-tab active" onclick="switchInnerTab(event, 'acc-2220UQQ0UU-repeated-opponents')">VS Stage</button>
+                <button class="cr-tab" onclick="switchInnerTab(event, 'acc-2220UQQ0UU-weekly-decks')">Meus Decks</button>
+                <button class="cr-tab" onclick="switchInnerTab(event, 'acc-2220UQQ0UU-lethal-decks')">Decks Letais</button>
+                <button class="cr-tab" onclick="switchInnerTab(event, 'acc-2220UQQ0UU-winning-decks')">Top Global</button>
+            </div>
+
+            <div id="acc-2220UQQ0UU-repeated-opponents" class="cr-tab-content active">
+                <div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>
+            </div>
+
+            <div id="acc-2220UQQ0UU-weekly-decks" class="cr-tab-content">
+                <div class="cr-empty-state">Nenhum dado encontrado para os últimos 7 dias.</div>
+            </div>
+            
+            <div id="acc-2220UQQ0UU-lethal-decks" class="cr-tab-content">
+                <div class="cr-empty-state">Dados insuficientes para mapear decks letais.</div>
+            </div>
+            
+            <div id="acc-2220UQQ0UU-winning-decks" class="cr-tab-content">
+                <div class="cr-empty-state">Dados globais insuficientes para o Top Vencedores.</div>
+            </div>
+        </div>
+        
+            </div>
+
+            <div class="section">
+                <h2 class="clash-font">⚔️ Last Battles</h2>
+                <div class="desktop-table">
+                    <table>
+                        <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies</th><th>Elixir</th><th>Tower HP</th><th>Arena</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -2803,7 +3561,7 @@
         </div>
 
         <div class="footer">
-            <p>Report generated on 2026-05-15 14:48:52</p>
+            <p>Report generated on 2026-05-15 12:25:44</p>
             <p>Automatically updated via GitHub Actions</p>
         </div>
     </div>
