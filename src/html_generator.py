@@ -26,8 +26,8 @@ from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from csv_database_manager import CSVManager
 
-# Carrega variaveis de ambiente
-# load_dotenv() removido daqui para evitar conflitos de path. Centralizado no main_sync.py
+# Carrega variáveis de ambiente
+load_dotenv()
 
 
 logger = logging.getLogger(__name__)
