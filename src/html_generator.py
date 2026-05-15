@@ -210,7 +210,8 @@ class GitHubPagesHTMLGenerator:
                             # Valida: verifica se colunas não são gibberish (caracteres nulos)
                             if data and len(data[0]) > 1:
                                 first_key = list(data[0].keys())[0] if data[0] else ''
-                                if '\x00' in first_key or len(data[0].keys()[0] if data[0] else '') > 50:
+                                first_key_len = len(first_key) if first_key else 0
+                                if '\x00' in first_key or first_key_len > 50:
                                     data = []  # Invalid encoding, try next
                                     continue
                                 logger.info(f"Arquivo {os.path.basename(file_path)} lido com sucesso ({encoding}, '{delimiter}').")
