@@ -4491,15 +4491,14 @@ class GitHubPagesHTMLGenerator:
                             <td>{self.format_time_ago(battle['battle_time'])}</td>
                             <td><span class="result-{result_class}">{result_display}</span></td>
                             <td>{opp_display}</td>
-                            <td>{battle['crowns']}</td>
+                            <td class="center">{battle['crowns']}</td>
                             <td style="color: {trophy_color}">
                                 <strong>{int(battle['trophy_change']):+d}</strong><br>
                                 <small style="color: #94a3b8">{t_ini} → {t_fin}</small>
                             </td>
-                            <td class="tech-metric">💧 {elixir_p} | {elixir_o}</td>
-                            <td class="tech-metric">
-                                🏰 {hp_p} | {hp_o}<br>
-                                <small>👸 {hp_pri_p} | {hp_pri_o}</small>
+                            <td class="center">{elixir_p} / {elixir_o}</td>
+                            <td class="center">
+                                <small style="color: #94a3b8">{hp_p} / {hp_o}</small>
                             </td>
                             <td>{battle['arena_name']}</td>
                         </tr>
@@ -4512,13 +4511,19 @@ class GitHubPagesHTMLGenerator:
                                 <span class="battle-time">{self.format_time_ago(battle['battle_time'])}</span>
                             </div>
                             <div class="battle-card-content">
-                                <div class="battle-info">
-                                    <strong>vs {battle['opponent_name']}</strong>
-                                    <span>{battle['arena_name']}</span>
+                                <div class="battle-opponent">
+                                    <span class="opp-name">vs {battle['opponent_name']}</span>
+                                    <span class="arena-name">{battle['arena_name']}</span>
                                 </div>
-                                <div class="battle-stats">
-                                    <span class="crown-count">👑 {battle['crowns']}</span>
-                                    <span class="trophy-change" style="color: {trophy_color}">🏆 {int(battle['trophy_change']):+d}</span>
+                                <div class="battle-metrics">
+                                    <div class="metric crown">
+                                        <span class="metric-value">{battle['crowns']}</span>
+                                        <span class="metric-label">Crowns</span>
+                                    </div>
+                                    <div class="metric trophy" style="color: {trophy_color}">
+                                        <span class="metric-value">{int(battle['trophy_change']):+d}</span>
+                                        <span class="metric-label">Trophies</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -4584,7 +4589,7 @@ class GitHubPagesHTMLGenerator:
                 <h2 class="clash-font">⚔️ Last Battles</h2>
                 <div class="desktop-table">
                     <table>
-                        <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies Δ</th><th>💧 Elixir</th><th>🏰 Tower HP</th><th>Arena</th></tr></thead>
+                        <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies</th><th>Elixir</th><th>Tower HP</th><th>Arena</th></tr></thead>
                         <tbody>{battles_table_html}</tbody>
                     </table>
                 </div>
@@ -6174,7 +6179,7 @@ class GitHubPagesHTMLGenerator:
             .cr-player-name-premium { font-size: 1em; }
         }
 
-        /* Battle Cards - Mobile Cards for Recent Battles */
+        /* Battle Cards - Redesigned Compact Cards */
         .battle-cards {
             display: none;
         }
@@ -6183,8 +6188,8 @@ class GitHubPagesHTMLGenerator:
             .battle-cards {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-                padding: 10px 0;
+                gap: 10px;
+                padding: 5px 0;
             }
         }
         
@@ -6192,110 +6197,154 @@ class GitHubPagesHTMLGenerator:
             .battle-cards {
                 display: flex;
                 flex-direction: column;
-                gap: 12px;
+                gap: 8px;
             }
         }
         
         .battle-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            border-left: 4px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
         .battle-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
         
         .battle-card.battle-victory {
-            border-left-color: #10b981;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border-top: 3px solid #10b981;
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.95) 30%);
         }
         
         .battle-card.battle-defeat {
-            border-left-color: #ef4444;
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border-top: 3px solid #ef4444;
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(15, 23, 42, 0.95) 30%);
         }
         
         .battle-card.battle-draw {
-            border-left-color: #f59e0b;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border-top: 3px solid #f59e0b;
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.95) 30%);
         }
         
         .battle-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         
         .battle-result {
-            font-size: 0.75em;
+            font-size: 0.7em;
             font-weight: 800;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .result-victory {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.15);
             color: #10b981;
         }
         
         .result-defeat {
-            background: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.15);
             color: #ef4444;
         }
         
         .result-draw {
-            background: rgba(245, 158, 11, 0.2);
+            background: rgba(245, 158, 11, 0.15);
             color: #f59e0b;
         }
         
         .battle-time {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.65em;
         }
         
         .battle-card-content {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         
-        .battle-info {
+        .battle-opponent {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
         
-        .battle-info strong {
-            font-size: 0.95em;
-            color: #fff;
+        .opp-name {
+            font-size: 0.85em;
+            font-weight: 700;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
-        .battle-info span {
-            font-size: 0.75em;
-            color: rgba(255, 255, 255, 0.5);
+        .arena-name {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.4);
         }
         
-        .battle-stats {
+        .battle-metrics {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
         }
         
-        .crown-count {
-            font-size: 0.9em;
+        .battle-metrics .metric {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
         }
         
-        .trophy-change {
+        .battle-metrics .metric-value {
             font-size: 0.9em;
-            font-weight: 600;
+            font-weight: 800;
+        }
+        
+        .battle-metrics .metric-label {
+            font-size: 0.65em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .battle-metrics .metric.crown {
+            color: #fbbf24;
+        }
+        
+        .battle-metrics .metric.crown .metric-value::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23fbbf24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>') no-repeat center;
+            background-size: contain;
+            vertical-align: middle;
+            margin-right: 2px;
+        }
+        
+        .battle-metrics .metric.trophy {
+            color: #10b981;
+        }
+        
+        .battle-metrics .metric.trophy .metric-value::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2310b981"><path d="M12 2C9.38 2 7.25 4.13 7.25 6.75c0 1.87 1.07 3.49 2.63 4.29L9.5 14h5l-.38-3.04c1.56-.8 2.63-2.42 2.63-4.21C16.75 4.13 14.62 2 12 2zm0 2c1.52 0 2.75 1.23 2.75 2.75S13.52 9.5 12 9.5 9.25 8.27 9.25 6.75 10.48 4 12 4z"/></svg>') no-repeat center;
+            background-size: contain;
+            vertical-align: middle;
+            margin-right: 2px;
         }
 
         /* Modal Glassmorphism */
