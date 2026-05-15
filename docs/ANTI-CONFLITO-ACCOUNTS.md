@@ -135,6 +135,49 @@ const allContents = document.querySelectorAll('.cr-dashboard-content > .cr-tab-c
 
 ---
 
+## CSV Encoding - Regras para não perder dados
+
+⚠️ **CRÍTICO**: O arquivo `oponentes_ano_2026.csv` DEVE manter a coluna `player_tag` para identificar de qual conta é cada batalha.
+
+### Estrutura correta do CSV
+```csv
+player_tag;data;nome_oponente;tag_oponente;...;deck_jogador;deck_oponente;...
+#2QR292P;14/05/2026 12:41;HUGO;#VC8VC02L8;...;Giant | Hogs | ...;Arrows | ...;...
+#2220UQQ0UU;14/05/2026 12:40;Opponent2;#TAG;...;Deck;Deck;...
+```
+
+### Encodings suportados
+O código tenta detectar o encoding na seguinte ordem:
+1. `utf-8-sig` (com BOM) - **PREFERIDO**
+2. `utf-8`
+3. `utf-16-le`
+4. `latin1`
+5. `cp1252`
+
+### Coluna essencial: `player_tag`
+- **SEMPRE** deve existir no CSV
+- Identifica qual conta (#2QR292P ou #2220UQQ0UU) fez a batalha
+- Sem esta coluna, o dashboard não consegue separar os dados por conta
+
+### Scripts que escrevem no CSV
+1. `collect_battles_csv.py` - Coleta da API e adiciona `player_tag`
+2. `sanitize_csvs.py` - NÃO deve remover a coluna `player_tag`
+3. `deduplicate_csvs.py` - NÃO deve remover a coluna `player_tag`
+
+### Validação local
+```bash
+cd src
+python -c "
+from html_generator import GitHubPagesHTMLGenerator
+gen = GitHubPagesHTMLGenerator()
+print('Battles by tag:', {k: len(v) for k, v in gen.battles_by_tag.items()})
+"
+# Deve mostrar:
+# Battles by tag: {'#2QR292P': X, '#2220UQQ0UU': Y}
+```
+
+---
+
 ## Logs de Debug
 
 Se a troca de contas não funcionar, verifique o console do navegador:
