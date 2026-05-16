@@ -65,7 +65,7 @@ jobs:
 
         if ! git diff --staged --quiet; then
           HTML_SIZE=$(wc -c < index.html)
-          MIN_SIZE=200000
+          MIN_SIZE=700000
           if [ "$HTML_SIZE" -lt "$MIN_SIZE" ]; then
             echo "AVISO: HTML parece truncado ($HTML_SIZE bytes < $MIN_SIZE). Regenerando..."
             cd src

@@ -1,63 +1,41 @@
 import os
-import glob
+import csv
 
-def clean_csv_files(data_dir):
-    pattern = os.path.join(data_dir, 'oponentes_*.csv')
-    files = glob.glob(pattern)
+def verify_csv_files(data_dir):
+    """Verifica integridade dos CSVs sem modificar nada."""
+    arquivo = os.path.join(data_dir, 'oponentes_ano_2026.csv')
     
-    # Adicionar outros arquivos principais se existirem
-    files.extend([
-        os.path.join(data_dir, 'ano_2026.csv'),
-        os.path.join(data_dir, 'mes_202604.csv'),
-        os.path.join(data_dir, 'oponentes_ano_2026.csv'),
-        os.path.join(data_dir, 'oponentes_mes_202604.csv')
-    ])
+    if not os.path.exists(arquivo):
+        print(f"Arquivo nao encontrado: {arquivo}")
+        return
     
-    for file_path in files:
-        if not os.path.exists(file_path):
-            continue
-            
-        print(f"Limpando {file_path}...")
+    print(f"Verificando {arquivo}...")
+    
+    try:
+        with open(arquivo, 'r', encoding='utf-8-sig', newline='') as f:
+            reader = csv.DictReader(f, delimiter=';')
+            fieldnames = reader.fieldnames
+            rows = list(reader)
         
-        cleaned_rows = []
-        header = None
+        conflitos = 0
+        vazias = 0
+        for row in rows:
+            values = list(row.values())
+            if any(str(v).startswith('<<<<<<<') or str(v).startswith('=======') or str(v).startswith('>>>>>>>') for v in values):
+                conflitos += 1
+            if not any(str(v).strip() for v in values):
+                vazias += 1
         
-        try:
-            # Tenta ler com utf-8-sig para lidar com BOM
-            with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
-                content = f.readlines()
-                
-            if not content:
-                continue
-                
-            # Identifica o header
-            header = content[0].strip()
-            
-            delimiter = ';' if ';' in header else ','
-
-            for line in content[1:]:
-                line = line.strip()
-                if line.startswith('<<<<<<<') or line.startswith('=======') or line.startswith('>>>>>>>'):
-                    print(f"  - Removendo linha de conflito: {line[:20]}...")
-                    continue
-                
-                if not line or line.replace(',', '').replace(';', '').strip() == '':
-                    continue
-                
-                cleaned_rows.append(line)
-            
-            with open(file_path, 'w', encoding='utf-8-sig', newline='') as f:
-                f.write(header + '\n')
-                for row in cleaned_rows:
-                    f.write(row + '\n')
-                    
-            print(f"  - Sucesso: {len(cleaned_rows)} linhas mantidas.")
-            
-        except Exception as e:
-            print(f"  - Erro ao processar {file_path}: {e}")
+        print(f"  - Total: {len(rows)} batalhas")
+        print(f"  - Colunas: {len(fieldnames)}")
+        print(f"  - Conflitos Git: {conflitos}")
+        print(f"  - Linhas vazias: {vazias}")
+        print(f"  - Status: OK" if conflitos == 0 and vazias == 0 else f"  - Status: PROBLEMAS DETECTADOS")
+        
+    except Exception as e:
+        print(f"  - Erro: {e}")
 
 if __name__ == "__main__":
-    # Usa o diretório do script como base (src/)
     base_dir = os.path.dirname(os.path.abspath(__file__))
     data_dir = os.path.join(base_dir, 'data_csv_oficial')
-    clean_csv_files(data_dir)
+    verify_csv_files(data_dir)

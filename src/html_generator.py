@@ -6828,7 +6828,7 @@ def main():
         f.write(html_content)
     
     html_size = len(html_content)
-    MIN_SIZE = 200000  # ~200KB e considerando que o HTML completo tem ~450KB+
+    MIN_SIZE = 700000  # ~700KB - HTML completo tem ~1.2MB mas pode variar
     if html_size < MIN_SIZE:
         logger.error(f"ERRO CRITICO: HTML truncado ({html_size} bytes < {MIN_SIZE}). Regenerando...")
         import sys
