@@ -1,0 +1,59 @@
+name: War Intelligence (Qui-Dom)
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  war-intel:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: main
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: pip install requests python-dotenv
+
+    - name: Coletar Inteligencia de Guerra
+      env:
+        CR_API_TOKEN: ${{ secrets.CR_API_TOKEN }}
+      run: |
+        cd src
+        python api_tools/save_war_intelligence.py
+
+    - name: Commit & Push
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        git add src/data_clan/
+
+        if ! git diff --staged --quiet; then
+          git commit -m "chore: atualizar inteligencia de guerra $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+
+          for i in 1 2 3; do
+            if git push origin HEAD; then
+              echo "Push realizado com sucesso."
+              break
+            else
+              echo "Tentativa $i/3 falhou, rebase..."
+              sleep 5
+              git pull --rebase -X theirs origin main || true
+            fi
+          done
+        else
+          echo "Nenhuma alteracao detectada."
+        fi
