@@ -3932,27 +3932,26 @@ class GitHubPagesHTMLGenerator:
         if not data.get('clans'):
             return ""
         
-        player_tag_clean = player_tag.replace('#', '') if player_tag else ''
-        
-        # Header dinâmico baseado no dia da semana
         weekday = datetime.now().weekday()
         war_day_map = {0: "Reset", 3: "1", 4: "2", 5: "3", 6: "4"}
         day_suffix = f": Dia {war_day_map[weekday]}" if weekday in war_day_map else ""
         
-        my_clan_name = data.get('my_clan', '')
-        
         clan_cards_html = ""
         for clan in data['clans']:
             is_me = clan.get('is_me', False)
-            me_class = "radar-clan-me" if is_me else ""
-            me_badge = " <span class='radar-me-badge'>MEU CLÃ</span>" if is_me else ""
+            me_class = "rd-clan-me" if is_me else ""
+            me_badge = "<span class='rd-me-badge'>MEU CLÃ</span>" if is_me else ""
             
-            player_rows = ""
+            player_rows_html = ""
             for p in clan.get('players', []):
                 lutou_icon = "🔴" if p.get('lutou', '').lower() == 'sim' else "⚪"
                 attacks = p.get('ataques', '0/4')
+                fame = p.get('fame', 0)
+                ranking = p.get('ranking', '-')
+                player_name = p.get('player', '')
                 
-                decks_html = ""
+                deck_rows_html = ""
+                valid_deck_count = 0
                 for d in range(1, 5):
                     deck = p.get(f'deck_{d}', '')
                     if deck and deck != 'Deck nao encontrado no log recente' and deck.strip():
@@ -3960,49 +3959,60 @@ class GitHubPagesHTMLGenerator:
                         card_imgs = ""
                         for card in cards[:8]:
                             safe_card = card.replace(' ', '_').replace("'", '')
-                            card_imgs += f'<img src="https://cdn.royaleapi.com/static/img/cards/tiles/{safe_card}.png" alt="{card}" title="{card}" width="28" height="28" style="border-radius: 4px; background: #1e293b; margin: 1px;" loading="lazy">'
-                        decks_html += f'<div class="radar-deck-row">{card_imgs}</div>'
+                            card_imgs += f'<img src="https://cdn.royaleapi.com/static/img/cards/tiles/{safe_card}.png" alt="{card}" title="{card}" width="32" height="32" style="border-radius: 4px; background: #0f172a; margin: 1px; border: 1px solid rgba(255,255,255,0.1);" loading="lazy">'
+                        deck_rows_html += f'<div class="rd-deck">{card_imgs}</div>'
+                        valid_deck_count += 1
                 
-                # Se nenhum deck foi adicionado, mostrar placeholder
-                if not decks_html.strip():
-                    decks_html = '<div class="radar-no-deck">Sem decks recentes disponiveis</div>'
+                if not deck_rows_html:
+                    deck_rows_html = '<div class="rd-no-deck">Sem decks recentes</div>'
                 
-                player_rows += f"""
-                    <div class="radar-player-row">
-                        <div class="radar-player-info">
-                            <span class="radar-rank">#{p.get('ranking', '-')}</span>
-                            <span class="radar-player-name">{p.get('player', '')}</span>
-                            <span class="radar-fame">+{p.get('fame', 0)}</span>
-                            <span class="radar-lutou" title="Lutou hoje">{lutou_icon}</span>
-                            <span class="radar-attacks">{attacks}</span>
+                player_rows_html += f"""
+                    <div class="rd-player">
+                        <div class="rd-player-header">
+                            <span class="rd-rank">#{ranking}</span>
+                            <span class="rd-name">{player_name}</span>
+                            <span class="rd-fame">+{fame}</span>
+                            <span class="rd-lutou" title="Lutou hoje">{lutou_icon}</span>
+                            <span class="rd-attacks">{attacks}</span>
                         </div>
-                        <div class="radar-player-decks">
-                            {decks_html}
+                        <div class="rd-decks">
+                            {deck_rows_html}
                         </div>
+                        <div class="rd-deck-count">{valid_deck_count}/4 decks</div>
                     </div>
                 """
             
+            total_fame = clan.get('total_fame', 0)
+            position = clan.get('position', '?')
+            clan_name = clan.get('name', '')
+            
             clan_cards_html += f"""
-                <div class="radar-clan-card {me_class}">
-                    <div class="radar-clan-header">
-                        <span class="radar-clan-pos">#{clan.get('position', '?')}</span>
-                        <span class="radar-clan-name">{clan.get('name', '')}</span>{me_badge}
-                        <span class="radar-clan-fame">{clan.get('total_fame', 0):,} ⭐</span>
+                <div class="rd-clan {me_class}">
+                    <div class="rd-clan-header">
+                        <span class="rd-pos">#{position}</span>
+                        <span class="rd-clan-name">{clan_name}</span>
+                        {me_badge}
+                        <span class="rd-clan-fame">{total_fame:,} ⭐</span>
                     </div>
-                    <div class="radar-players-list">
-                        {player_rows}
+                    <div class="rd-players">
+                        {player_rows_html}
                     </div>
                 </div>
             """
         
         return f"""
-        <div class="section war-radar-section">
-            <div class="elite-header">
-                <div class="elite-badge" style="background: linear-gradient(135deg, #dc2626, #991b1b);">WAR RADAR</div>
+        <div class="section rd-section">
+            <div class="rd-header">
+                <div class="rd-badge">RADAR DE GUERRA</div>
                 <h2>📡 Radar de Guerra{day_suffix}</h2>
-                <p>5 clãs rivais · Top 3 players · 4 decks por jogador · Ataques feitos</p>
+                <div class="rd-legend">
+                    <span class="rd-legend-item"><span class="rd-legend-dot rd-red"></span> Lutou hoje</span>
+                    <span class="rd-legend-item"><span class="rd-legend-dot rd-gray"></span> Nao lutou</span>
+                    <span class="rd-legend-item">|</span>
+                    <span class="rd-legend-item">5 clãs · Top 3 players · 4 decks</span>
+                </div>
             </div>
-            <div class="radar-grid">
+            <div class="rd-grid">
                 {clan_cards_html}
             </div>
         </div>
@@ -4183,32 +4193,39 @@ class GitHubPagesHTMLGenerator:
                 .rival-name {{ color: #e2e8f0; }}
                 .rival-fame {{ color: #48bb78; font-weight: bold; font-family: monospace; }}
                 
-                /* WAR RADAR */
-                .war-radar-section {{ border-left: 5px solid #dc2626 !important; background: rgba(20, 10, 10, 0.9) !important; }}
-                .war-radar-section .elite-header {{ border-bottom: 1px solid rgba(220, 38, 38, 0.3); margin-bottom: 25px; padding-bottom: 20px; }}
-                .war-radar-section .elite-badge {{ background: linear-gradient(135deg, #dc2626, #991b1b) !important; }}
-                .radar-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }}
-                .radar-clan-card {{ background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; transition: all 0.3s; }}
-                .radar-clan-card:hover {{ transform: translateY(-2px); border-color: rgba(220, 38, 38, 0.4); }}
-                .radar-clan-me {{ border-color: rgba(96, 165, 250, 0.5) !important; box-shadow: 0 0 20px rgba(96, 165, 250, 0.1); }}
-                .radar-clan-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }}
-                .radar-clan-pos {{ background: #ef4444; color: white; font-weight: bold; font-size: 0.75em; padding: 2px 8px; border-radius: 4px; }}
-                .radar-clan-name {{ font-weight: 800; font-size: 0.95em; flex: 1; color: #f8fafc; }}
-                .radar-clan-fame {{ font-size: 0.8em; color: #fbbf24; font-weight: bold; }}
-                .radar-me-badge {{ background: #3b82f6; color: white; font-size: 0.65em; padding: 2px 6px; border-radius: 4px; font-weight: 800; }}
-                .radar-players-list {{ display: flex; flex-direction: column; gap: 12px; }}
-                .radar-player-row {{ background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px; }}
-                .radar-player-info {{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }}
-                .radar-rank {{ font-size: 0.7em; color: #94a3b8; font-weight: bold; width: 24px; }}
-                .radar-player-name {{ font-size: 0.85em; font-weight: 600; color: #e2e8f0; flex: 1; }}
-                .radar-fame {{ font-size: 0.75em; color: #48bb78; font-weight: bold; }}
-                .radar-lutou {{ font-size: 0.9em; }}
-                .radar-attacks {{ font-size: 0.7em; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }}
-                .radar-player-decks {{ display: flex; flex-direction: column; gap: 4px; }}
-                .radar-deck-row {{ display: flex; gap: 2px; flex-wrap: wrap; min-height: 28px; }}
-                .radar-no-deck {{ color: #64748b; font-size: 0.7em; font-style: italic; }}
-
-                @media (max-width: 1000px) {{ .war-grid {{ grid-template-columns: 1fr; }} }}
+                /* WAR RADAR v2 */
+                .rd-section {{ border-left: 5px solid #dc2626 !important; background: rgba(20, 10, 10, 0.85) !important; border-radius: 16px; padding: 20px; }}
+                .rd-header {{ text-align: center; margin-bottom: 24px; }}
+                .rd-badge {{ display: inline-block; background: linear-gradient(135deg, #dc2626, #991b1b); color: white; font-weight: 900; font-size: 0.8em; letter-spacing: 2px; padding: 4px 16px; border-radius: 20px; margin-bottom: 8px; }}
+                .rd-header h2 {{ font-size: 1.5em; margin: 8px 0; }}
+                .rd-legend {{ font-size: 0.75em; color: #94a3b8; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }}
+                .rd-legend-dot {{ display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }}
+                .rd-red {{ background: #ef4444; }}
+                .rd-gray {{ background: #6b7280; }}
+                .rd-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }}
+                .rd-clan {{ background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; }}
+                .rd-clan:hover {{ transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }}
+                .rd-clan-me {{ border-color: rgba(96, 165, 250, 0.5) !important; box-shadow: 0 0 20px rgba(96, 165, 250, 0.15); }}
+                .rd-clan-header {{ display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.08); }}
+                .rd-pos {{ background: #ef4444; color: white; font-weight: 800; font-size: 0.7em; padding: 2px 7px; border-radius: 4px; min-width: 28px; text-align: center; }}
+                .rd-clan-name {{ font-weight: 800; font-size: 0.85em; flex: 1; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+                .rd-me-badge {{ background: #3b82f6; color: white; font-size: 0.6em; padding: 2px 6px; border-radius: 4px; font-weight: 800; }}
+                .rd-clan-fame {{ font-size: 0.75em; color: #fbbf24; font-weight: 700; white-space: nowrap; }}
+                .rd-players {{ display: flex; flex-direction: column; }}
+                .rd-player {{ padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }}
+                .rd-player:last-child {{ border-bottom: none; }}
+                .rd-player-header {{ display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }}
+                .rd-rank {{ font-size: 0.65em; color: #6b7280; font-weight: 700; min-width: 20px; }}
+                .rd-name {{ font-size: 0.85em; font-weight: 600; color: #e2e8f0; flex: 1; }}
+                .rd-fame {{ font-size: 0.7em; color: #4ade80; font-weight: 700; }}
+                .rd-lutou {{ font-size: 0.8em; }}
+                .rd-attacks {{ font-size: 0.65em; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; }}
+                .rd-decks {{ display: flex; flex-direction: column; gap: 4px; }}
+                .rd-deck {{ display: flex; gap: 2px; flex-wrap: wrap; min-height: 32px; align-items: center; padding: 2px 0; }}
+                .rd-deck img {{ width: 32px; height: 32px; border-radius: 4px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); }}
+                .rd-no-deck {{ color: #475569; font-size: 0.7em; font-style: italic; padding: 4px 0; }}
+                .rd-deck-count {{ font-size: 0.6em; color: #475569; text-align: right; margin-top: 2px; }}
+                @media (max-width: 768px) {{ .rd-grid {{ grid-template-columns: 1fr; }} }}
             </style>
         </div>
         """
