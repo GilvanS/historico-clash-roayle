@@ -3955,13 +3955,17 @@ class GitHubPagesHTMLGenerator:
                 decks_html = ""
                 for d in range(1, 5):
                     deck = p.get(f'deck_{d}', '')
-                    if deck:
+                    if deck and deck != 'Deck nao encontrado no log recente' and deck.strip():
                         cards = [c.strip() for c in deck.split(',') if c.strip()]
                         card_imgs = ""
                         for card in cards[:8]:
                             safe_card = card.replace(' ', '_').replace("'", '')
                             card_imgs += f'<img src="https://cdn.royaleapi.com/static/img/cards/tiles/{safe_card}.png" alt="{card}" title="{card}" width="28" height="28" style="border-radius: 4px; background: #1e293b; margin: 1px;" loading="lazy">'
                         decks_html += f'<div class="radar-deck-row">{card_imgs}</div>'
+                
+                # Se nenhum deck foi adicionado, mostrar placeholder
+                if not decks_html.strip():
+                    decks_html = '<div class="radar-no-deck">Sem decks recentes disponiveis</div>'
                 
                 player_rows += f"""
                     <div class="radar-player-row">
@@ -4201,7 +4205,8 @@ class GitHubPagesHTMLGenerator:
                 .radar-lutou {{ font-size: 0.9em; }}
                 .radar-attacks {{ font-size: 0.7em; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }}
                 .radar-player-decks {{ display: flex; flex-direction: column; gap: 4px; }}
-                .radar-deck-row {{ display: flex; gap: 2px; flex-wrap: wrap; }}
+                .radar-deck-row {{ display: flex; gap: 2px; flex-wrap: wrap; min-height: 28px; }}
+                .radar-no-deck {{ color: #64748b; font-size: 0.7em; font-style: italic; }}
 
                 @media (max-width: 1000px) {{ .war-grid {{ grid-template-columns: 1fr; }} }}
             </style>
