@@ -6506,33 +6506,6 @@ class GitHubPagesHTMLGenerator:
                           war_intel_html: str = "") -> str:
         """Generate the complete HTML document with multi-account support"""
         
-        # Carregar dicas da IA se existirem
-        coach_html = ""
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        ai_tips_path = os.path.join(base_dir, "data_csv_oficial", "ai_coach_tips.json")
-        
-        if os.path.exists(ai_tips_path):
-            try:
-                with open(ai_tips_path, 'r', encoding='utf-8') as f:
-                    ai_data = json.load(f)
-                    tips_items = "".join([f'<div class="cr-coach-tip"><h4>Dica {i+1}</h4><p>{tip}</p></div>' for i, tip in enumerate(ai_data.get('tips', []))])
-                    coach_html = f"""
-                    <div class="cr-coach-card">
-                        <div class="cr-coach-header">
-                            <div class="cr-coach-icon">&#129504;</div>
-                            <div class="cr-coach-title">Treinador AI Insights</div>
-                        </div>
-                        <div class="cr-coach-tips">
-                            {tips_items}
-                        </div>
-                        <div class="cr-coach-analysis">
-                            {ai_data.get('deck_analysis', '')}
-                        </div>
-                    </div>
-                    """
-            except Exception as e:
-                    logger.error(f"Error loading AI tips: {e}")
-
         css_styles = self.get_base_css_styles()
         
         return f"""
@@ -6568,8 +6541,6 @@ class GitHubPagesHTMLGenerator:
             </div>
         </div>
 
-        {coach_html}
-        
         <div class="cr-dashboard-content">
             {account_contents_html}
         </div>

@@ -17,7 +17,6 @@ from update_readme_from_csv import ReadmeCSVUpdater
 from html_generator import GitHubPagesHTMLGenerator
 from clan_generator import ClanAnalyticsGenerator
 from member_generator import MemberPageGenerator
-from gemini_advisor import main as gemini_main
 
 def main():
     # Setup logging
@@ -97,17 +96,6 @@ def main():
     except Exception as e:
         logger.error(f"Erro na FASE 1.5 (Guerra): {e}")
 
-    # 1.6 Gerar Dicas da IA (Gemini)
-    try:
-        if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
-            logger.info("FASE 1.6: Gerando novas dicas com Gemini AI...")
-            gemini_main()
-        else:
-            logger.info("FASE 1.6: GEMINI_API_KEY não configurada. Pulando dicas da IA.")
-    except Exception as e:
-        logger.error(f"Erro na FASE 1.6 (Gemini): {e}")
-
-        
     # 2. Atualizar README (Histograma e Estatísticas)
     try:
         logger.info("FASE 2: Atualizando README.md com novas estatísticas...")
