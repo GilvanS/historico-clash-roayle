@@ -3958,8 +3958,8 @@ class GitHubPagesHTMLGenerator:
                         cards = [c.strip() for c in deck.split(',') if c.strip()]
                         card_imgs = ""
                         for card in cards[:8]:
-                            safe_card = card.replace(' ', '_').replace("'", '')
-                            card_imgs += f'<img src="https://cdn.royaleapi.com/static/img/cards/tiles/{safe_card}.png" alt="{card}" title="{card}" width="32" height="32" style="border-radius: 4px; background: #0f172a; margin: 1px; border: 1px solid rgba(255,255,255,0.1);" loading="lazy">'
+                            card_url = self.get_card_image_path(card)
+                            card_imgs += f'<img src="{card_url}" alt="{card}" title="{card}" width="32" height="32" style="border-radius: 4px; background: #0f172a; margin: 1px; border: 1px solid rgba(255,255,255,0.1);" loading="lazy">'
                         deck_rows_html += f'<div class="rd-deck">{card_imgs}</div>'
                         valid_deck_count += 1
                 
@@ -4610,11 +4610,11 @@ class GitHubPagesHTMLGenerator:
 
             war_radar_html = ""
             try:
+                # Gerar radar para CADA conta
                 for tag in self.tracked_tags:
                     radar_data = self.get_war_radar_data(tag)
                     if radar_data.get('clans'):
                         war_radar_html += self.generate_war_radar_html(radar_data, tag)
-                        break
             except Exception as e:
                 logger.error(f"Error generating war radar: {e}")
             
