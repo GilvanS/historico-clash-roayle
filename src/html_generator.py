@@ -3835,7 +3835,174 @@ class GitHubPagesHTMLGenerator:
         else: data['difficulty'] = 'Baixa 🟢'
         
         data['summary'] = f"O clã <strong>{my_clan}</strong> está a {diff:,} pontos de fama do 1º lugar. Foco total em ataques de alto valor."
+    def get_war_radar_data(self, player_tag: str = None):
+        """Coleta dados do radar de guerra: 5 clãs, top 3 players, 4 decks cada."""
+        if not player_tag:
+            player_tag = self.player_tag
+        
+        data = {'clans': [], 'my_clan': '', 'total_clans': 0}
+        
+        # Selecionar CSV baseado na conta
+        if '2220UQQ0UU' in player_tag:
+            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_sec_*.csv"))
+        else:
+            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+            intel_files = [f for f in intel_files if '_sec_' not in f]
+        
+        if not intel_files:
+            return data
+        
+        latest_intel = max(intel_files)
+        
+        # Identificar meu clã pelo players.csv
+        my_clan = ''
+        my_clan_tag = ''
+        try:
+            players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+            if os.path.exists(players_file):
+                with open(players_file, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    for row in reader:
+                        if row.get('player_tag') == player_tag:
+                            my_clan = row.get('clan_name', '')
+                            my_clan_tag = row.get('clan_tag', '')
+                            break
+        except: pass
+        
+        data['my_clan'] = my_clan
+        
+        # Parsear CSV de inteligencia
+        try:
+            with open(latest_intel, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                all_rows = list(reader)
+            
+            if not all_rows:
+                return data
+            
+            # Agrupar por clã e ordenar por ranking/fama
+            clan_data = {}
+            for row in all_rows:
+                cla = row.get('Cla', 'Unknown')
+                ranking = int(row.get('Ranking', 99) or 99)
+                
+                if cla not in clan_data:
+                    clan_data[cla] = []
+                
+                if ranking <= 3 and len(clan_data[cla]) < 3:
+                    clan_data[cla].append({
+                        'ranking': ranking,
+                        'player': row.get('Jogador', ''),
+                        'fame': int(row.get('Fama_Hoje', 0) or 0),
+                        'lutou': row.get('Lutou_Hoje', 'Nao'),
+                        'ataques': row.get('Ataques_Feitos', '0/4'),
+                        'deck_1': row.get('Deck_1', ''),
+                        'deck_2': row.get('Deck_2', ''),
+                        'deck_3': row.get('Deck_3', ''),
+                        'deck_4': row.get('Deck_4', '')
+                    })
+            
+            # Ordenar clãs por fame (maior primero)
+            clan_list = []
+            for cla, players in clan_data.items():
+                total_fame = sum(p['fame'] for p in players)
+                clan_list.append({
+                    'name': cla,
+                    'players': sorted(players, key=lambda x: x['ranking']),
+                    'total_fame': total_fame,
+                    'is_me': cla == my_clan or cla == my_clan_tag.replace('#', '')
+                })
+            
+            clan_list.sort(key=lambda x: x['total_fame'], reverse=True)
+            
+            # Atribuir posicao
+            for i, c in enumerate(clan_list):
+                c['position'] = i + 1
+            
+            data['clans'] = clan_list
+            data['total_clans'] = len(clan_list)
+            
+        except Exception as e:
+            logger.error(f"Erro ao parsear radar de guerra: {e}")
+        
         return data
+        
+    def generate_war_radar_html(self, data, player_tag: str = None):
+        """Gera o HTML para a seção de Radar de Guerra (5 clãs × Top 3 players × 4 decks)."""
+        if not data.get('clans'):
+            return ""
+        
+        player_tag_clean = player_tag.replace('#', '') if player_tag else ''
+        
+        # Header dinâmico baseado no dia da semana
+        weekday = datetime.now().weekday()
+        war_day_map = {0: "Reset", 3: "1", 4: "2", 5: "3", 6: "4"}
+        day_suffix = f": Dia {war_day_map[weekday]}" if weekday in war_day_map else ""
+        
+        my_clan_name = data.get('my_clan', '')
+        
+        clan_cards_html = ""
+        for clan in data['clans']:
+            is_me = clan.get('is_me', False)
+            me_class = "radar-clan-me" if is_me else ""
+            me_badge = " <span class='radar-me-badge'>MEU CLÃ</span>" if is_me else ""
+            
+            player_rows = ""
+            for p in clan.get('players', []):
+                lutou_icon = "🔴" if p.get('lutou', '').lower() == 'sim' else "⚪"
+                attacks = p.get('ataques', '0/4')
+                
+                decks_html = ""
+                for d in range(1, 5):
+                    deck = p.get(f'deck_{d}', '')
+                    if deck:
+                        cards = [c.strip() for c in deck.split(',') if c.strip()]
+                        card_imgs = ""
+                        for card in cards[:8]:
+                            safe_card = card.replace(' ', '_').replace("'", '')
+                            card_imgs += f'<img src="https://cdn.royaleapi.com/static/img/cards/tiles/{safe_card}.png" alt="{card}" title="{card}" width="28" height="28" style="border-radius: 4px; background: #1e293b; margin: 1px;" loading="lazy">'
+                        decks_html += f'<div class="radar-deck-row">{card_imgs}</div>'
+                
+                player_rows += f"""
+                    <div class="radar-player-row">
+                        <div class="radar-player-info">
+                            <span class="radar-rank">#{p.get('ranking', '-')}</span>
+                            <span class="radar-player-name">{p.get('player', '')}</span>
+                            <span class="radar-fame">+{p.get('fame', 0)}</span>
+                            <span class="radar-lutou" title="Lutou hoje">{lutou_icon}</span>
+                            <span class="radar-attacks">{attacks}</span>
+                        </div>
+                        <div class="radar-player-decks">
+                            {decks_html}
+                        </div>
+                    </div>
+                """
+            
+            clan_cards_html += f"""
+                <div class="radar-clan-card {me_class}">
+                    <div class="radar-clan-header">
+                        <span class="radar-clan-pos">#{clan.get('position', '?')}</span>
+                        <span class="radar-clan-name">{clan.get('name', '')}</span>{me_badge}
+                        <span class="radar-clan-fame">{clan.get('total_fame', 0):,} ⭐</span>
+                    </div>
+                    <div class="radar-players-list">
+                        {player_rows}
+                    </div>
+                </div>
+            """
+        
+        return f"""
+        <div class="section war-radar-section">
+            <div class="elite-header">
+                <div class="elite-badge" style="background: linear-gradient(135deg, #dc2626, #991b1b);">WAR RADAR</div>
+                <h2>📡 Radar de Guerra{day_suffix}</h2>
+                <p>5 clãs rivais · Top 3 players · 4 decks por jogador · Ataques feitos</p>
+            </div>
+            <div class="radar-grid">
+                {clan_cards_html}
+            </div>
+        </div>
+        """
 
     def generate_war_intelligence_html(self, data):
         """Gera o HTML para a seção de Inteligência de Guerra."""
@@ -4012,6 +4179,30 @@ class GitHubPagesHTMLGenerator:
                 .rival-name {{ color: #e2e8f0; }}
                 .rival-fame {{ color: #48bb78; font-weight: bold; font-family: monospace; }}
                 
+                /* WAR RADAR */
+                .war-radar-section {{ border-left: 5px solid #dc2626 !important; background: rgba(20, 10, 10, 0.9) !important; }}
+                .war-radar-section .elite-header {{ border-bottom: 1px solid rgba(220, 38, 38, 0.3); margin-bottom: 25px; padding-bottom: 20px; }}
+                .war-radar-section .elite-badge {{ background: linear-gradient(135deg, #dc2626, #991b1b) !important; }}
+                .radar-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }}
+                .radar-clan-card {{ background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; transition: all 0.3s; }}
+                .radar-clan-card:hover {{ transform: translateY(-2px); border-color: rgba(220, 38, 38, 0.4); }}
+                .radar-clan-me {{ border-color: rgba(96, 165, 250, 0.5) !important; box-shadow: 0 0 20px rgba(96, 165, 250, 0.1); }}
+                .radar-clan-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }}
+                .radar-clan-pos {{ background: #ef4444; color: white; font-weight: bold; font-size: 0.75em; padding: 2px 8px; border-radius: 4px; }}
+                .radar-clan-name {{ font-weight: 800; font-size: 0.95em; flex: 1; color: #f8fafc; }}
+                .radar-clan-fame {{ font-size: 0.8em; color: #fbbf24; font-weight: bold; }}
+                .radar-me-badge {{ background: #3b82f6; color: white; font-size: 0.65em; padding: 2px 6px; border-radius: 4px; font-weight: 800; }}
+                .radar-players-list {{ display: flex; flex-direction: column; gap: 12px; }}
+                .radar-player-row {{ background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px; }}
+                .radar-player-info {{ display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }}
+                .radar-rank {{ font-size: 0.7em; color: #94a3b8; font-weight: bold; width: 24px; }}
+                .radar-player-name {{ font-size: 0.85em; font-weight: 600; color: #e2e8f0; flex: 1; }}
+                .radar-fame {{ font-size: 0.75em; color: #48bb78; font-weight: bold; }}
+                .radar-lutou {{ font-size: 0.9em; }}
+                .radar-attacks {{ font-size: 0.7em; color: #94a3b8; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }}
+                .radar-player-decks {{ display: flex; flex-direction: column; gap: 4px; }}
+                .radar-deck-row {{ display: flex; gap: 2px; flex-wrap: wrap; }}
+
                 @media (max-width: 1000px) {{ .war-grid {{ grid-template-columns: 1fr; }} }}
             </style>
         </div>
@@ -4426,9 +4617,19 @@ class GitHubPagesHTMLGenerator:
                 war_intel_html = self.generate_war_intelligence_html(war_intel_data)
             except Exception as e:
                 logger.error(f"Error generating war intel: {e}")
+
+            war_radar_html = ""
+            try:
+                for tag in self.tracked_tags:
+                    radar_data = self.get_war_radar_data(tag)
+                    if radar_data.get('clans'):
+                        war_radar_html += self.generate_war_radar_html(radar_data, tag)
+                        break
+            except Exception as e:
+                logger.error(f"Error generating war radar: {e}")
             
             return self.generate_full_html(account_tabs_html, account_contents_html, 
-                                         clan_member_activity_html, war_intel_html)
+                                         clan_member_activity_html, war_intel_html, war_radar_html)
         except Exception as e:
             logger.error(f"Error generating complete HTML report: {str(e)}")
             import traceback
@@ -6503,7 +6704,8 @@ class GitHubPagesHTMLGenerator:
     
     def generate_full_html(self, account_tabs_html: str, account_contents_html: str,
                           clan_member_activity_html: str = "",
-                          war_intel_html: str = "") -> str:
+                          war_intel_html: str = "",
+                          war_radar_html: str = "") -> str:
         """Generate the complete HTML document with multi-account support"""
         
         css_styles = self.get_base_css_styles()
@@ -6547,6 +6749,7 @@ class GitHubPagesHTMLGenerator:
 
         <div class="cr-global-sections">
             {war_intel_html}
+            {war_radar_html}
             {clan_member_activity_html}
         </div>
 
