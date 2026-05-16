@@ -51,8 +51,8 @@ class GitHubPagesHTMLGenerator:
                 "Content-Type": "application/json"
             }
         
-        self.player_tag = os.getenv('CR_PLAYER_TAG', '#2QR292P')
-        self.player_tag_sec = os.getenv('CR_PLAYER_TAG_SEC')
+        self.player_tag = os.getenv('CR_PLAYER_TAG', '#2QR292P').strip()
+        self.player_tag_sec = os.getenv('CR_PLAYER_TAG_SEC', '').strip() or None
         self.tracked_tags = [self.player_tag]
         if self.player_tag_sec:
             self.tracked_tags.append(self.player_tag_sec)
@@ -61,7 +61,7 @@ class GitHubPagesHTMLGenerator:
         if not self.player_tag_sec:
             logger.warning("AVISO: Tag secundaria (CR_PLAYER_TAG_SEC) nao detectada pelo gerador.")
             
-        self.player_name_override = os.getenv('CR_PLAYER_NAME')
+        self.player_name_override = os.getenv('CR_PLAYER_NAME') or ''
 
         self.failed_tags = set()
         
@@ -878,10 +878,8 @@ class GitHubPagesHTMLGenerator:
             
         player_row = self._load_players_csv(player_tag)
         if not player_row:
-            # Tenta com outra tag se falhar
-            player_row = self._load_players_csv('#YVJR0JLY')
-            if not player_row:
-                return None
+            logger.warning(f"Jogador {player_tag} nao encontrado em players.csv")
+            return None
         
         player_tag = player_row.get('player_tag')
         
@@ -898,7 +896,7 @@ class GitHubPagesHTMLGenerator:
         
         return {
             'player_tag': player_tag,
-            'name': self.player_name_override if self.player_name_override else player_row.get('name', 'Unknown'),
+            'name': player_row.get('name', 'Unknown'),
             'trophies': int(player_row.get('trophies', 0) or 0),
             'best_trophies': int(player_row.get('best_trophies', 0) or 0),
             'level': int(player_row.get('level', 0) or 0),
@@ -4390,7 +4388,10 @@ class GitHubPagesHTMLGenerator:
                 try:
                     stats = self.get_player_stats(tag)
                     if not stats:
+                        logger.warning(f"Conta {tag} removida do HTML: get_player_stats retornou None")
                         continue
+                    
+                    logger.info(f"Conta {tag} ({stats['name']}) processada: {stats['total_battles']} batalhas")
                     
                     is_active = (idx == 0)
                     active_class = 'active' if is_active else ''
