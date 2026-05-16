@@ -1855,6 +1855,41 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* WAR RADAR CSS - Estilos para seção de radar de guerra */
+        .rd-section { border-left: 5px solid #dc2626 !important; background: rgba(20, 10, 10, 0.85) !important; border-radius: 16px; padding: 20px; }
+        .rd-header { text-align: center; margin-bottom: 24px; }
+        .rd-badge { display: inline-block; background: linear-gradient(135deg, #dc2626, #991b1b); color: white; font-weight: 900; font-size: 0.8em; letter-spacing: 2px; padding: 4px 16px; border-radius: 20px; margin-bottom: 8px; }
+        .rd-header h2 { font-size: 1.5em; margin: 8px 0; }
+        .rd-legend { font-size: 0.75em; color: #94a3b8; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        .rd-legend-item { display: flex; align-items: center; }
+        .rd-legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+        .rd-red { background: #ef4444; }
+        .rd-gray { background: #6b7280; }
+        .rd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .rd-clan { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; }
+        .rd-clan:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .rd-clan-me { border-color: rgba(96, 165, 250, 0.5) !important; box-shadow: 0 0 20px rgba(96, 165, 250, 0.15); }
+        .rd-clan-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .rd-pos { background: #ef4444; color: white; font-weight: 800; font-size: 0.7em; padding: 2px 7px; border-radius: 4px; min-width: 28px; text-align: center; }
+        .rd-clan-name { font-weight: 800; font-size: 0.85em; flex: 1; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rd-me-badge { background: #3b82f6; color: white; font-size: 0.6em; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+        .rd-clan-fame { font-size: 0.75em; color: #fbbf24; font-weight: 700; white-space: nowrap; }
+        .rd-players { display: flex; flex-direction: column; }
+        .rd-player { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .rd-player:last-child { border-bottom: none; }
+        .rd-player-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+        .rd-rank { font-size: 0.65em; color: #6b7280; font-weight: 700; min-width: 20px; }
+        .rd-name { font-size: 0.85em; font-weight: 600; color: #e2e8f0; flex: 1; }
+        .rd-fame { font-size: 0.7em; color: #4ade80; font-weight: 700; }
+        .rd-lutou { font-size: 0.8em; }
+        .rd-attacks { font-size: 0.65em; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; }
+        .rd-decks { display: flex; flex-direction: column; gap: 4px; }
+        .rd-deck { display: flex; gap: 2px; flex-wrap: wrap; min-height: 32px; align-items: center; padding: 2px 0; }
+        .rd-deck img { width: 32px; height: 32px; border-radius: 4px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); }
+        .rd-no-deck { color: #475569; font-size: 0.7em; font-style: italic; padding: 4px 0; }
+        .rd-deck-count { font-size: 0.6em; color: #475569; text-align: right; margin-top: 2px; }
+        @media (max-width: 768px) { .rd-grid { grid-template-columns: 1fr; } }
         
         
         /* Clan Page Specific Styles - Premium v2 */
@@ -2113,7 +2148,7 @@
                     <td>13,121</td>
                     <td>500↑ 200↓</td>
                     <td>0</td>
-                    <td>13 days ago</td>
+                    <td>14 days ago</td>
                 </tr>
             </tbody>
                 </table>
@@ -2131,7 +2166,7 @@
                             <span class="deck-changes">🔄 0 deck changes</span>
                         </div>
                         <div class="member-activity">
-                            <span class="last-seen">🕒 13 days ago</span>
+                            <span class="last-seen">🕒 14 days ago</span>
                         </div>
                     </div>
                 </div>
@@ -2139,8 +2174,8 @@
         </div>
 
         <div class="footer">
-            <p>Relatório gerado em 2026-05-15 16:11:14</p>
-            <p>Última atualização dos dados: 11 days ago</p>
+            <p>Relatório gerado em 2026-05-16 12:45:30</p>
+            <p>Última atualização dos dados: 12 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="index.html" class="back-link">← Dashboard</a>
             </div>
