@@ -4029,9 +4029,8 @@ class GitHubPagesHTMLGenerator:
                 boat_attacks = row.get('boat_attacks', '0')
                 lutou = "Sim" if int(boat_attacks or 0) > 0 else "Nao"
                 
-                # FILTRAR: Apenas clãs do mesmo clan_tag da conta
-                if my_clan_tag and cla_tag and cla_tag != my_clan_tag:
-                    continue
+                # NÃO filtrar por clan_tag - mostrar TODOS os clãs competitors na corrida
+                # O CSV já está separado por conta (_pri/_sec), mas os dados incluem todos os clãs
                 
                 if cla not in clan_data:
                     clan_data[cla] = []
