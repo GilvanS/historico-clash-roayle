@@ -17,7 +17,8 @@ load_dotenv()
 # Campos para o CSV de decks de guerra
 WAR_FIELDNAMES = [
     'data_coleta', 'nome_jogador', 'tag_cla', 'nome_cla', 
-    'fama_atual', 'posicao_no_top', 'categoria_top', 'deck_1', 'deck_2', 'deck_3', 'deck_4',
+    'fama_atual', 'posicao_no_top', 'categoria_top', 
+    'deck_1', 'deck_1_tipo', 'deck_2', 'deck_2_tipo', 'deck_3', 'deck_3_tipo', 'deck_4', 'deck_4_tipo',
     'resultado_dia', 'lutou_hoje'
 ]
 
@@ -107,7 +108,8 @@ def collect_top_decks():
         p_tag_url = p_tag.replace('#', '%23')
         br = requests.get(f"https://proxy.royaleapi.dev/v1/players/{p_tag_url}/battlelog", headers={'Authorization': f'Bearer {token}'})
         
-        decks = []
+decks = []
+        deck_types = []  # Armazena o tipo de batalha de cada deck
         wins = 0
         losses = 0
         lutou = "Nao"
@@ -115,13 +117,22 @@ def collect_top_decks():
         if br.status_code == 200:
             battles = br.json()
             for b in battles:
-                # Inclui clanWarWarDay e boatBattle explicitamente
-                if b.get('type') in ['clanWarWarDay', 'boatBattle', 'riverRacePvP', 'riverRaceDuel']:
+                battle_type = b.get('type', '')
+                # Inclui todos os tipos de guerra
+                if battle_type in ['clanWarWarDay', 'boatBattle', 'riverRacePvP', 'riverRaceDuel']:
                     lutou = "Sim"
                     team = b.get('team', [{}])[0]
                     deck_str = format_deck(team.get('cards', []))
                     if deck_str and deck_str not in decks:
                         decks.append(deck_str)
+                        # Mapeia tipo de batalha para label
+                        type_label = {
+                            'clanWarWarDay': 'Guerra',
+                            'boatBattle': 'Barco',
+                            'riverRacePvP': 'Range Battle',
+                            'riverRaceDuel': 'Duelo'
+                        }.get(battle_type, battle_type)
+                        deck_types.append(type_label)
                     
                     p_crowns = team.get('crowns', 0)
                     opp_crowns = b.get('opponent', [{}])[0].get('crowns', 0)
@@ -129,10 +140,11 @@ def collect_top_decks():
                     else: losses += 1
                     
                     if len(decks) >= 4: break
-
+        
         while len(decks) < 4:
             decks.append("N/A")
-
+            deck_types.append("N/A")
+        
         results.append({
             'data_coleta': data_hoje,
             'nome_jogador': p_name,
@@ -142,9 +154,13 @@ def collect_top_decks():
             'posicao_no_top': i,
             'categoria_top': p['categoria'],
             'deck_1': decks[0],
+            'deck_1_tipo': deck_types[0] if len(deck_types) > 0 else 'N/A',
             'deck_2': decks[1],
+            'deck_2_tipo': deck_types[1] if len(deck_types) > 1 else 'N/A',
             'deck_3': decks[2],
+            'deck_3_tipo': deck_types[2] if len(deck_types) > 2 else 'N/A',
             'deck_4': decks[3],
+            'deck_4_tipo': deck_types[3] if len(deck_types) > 3 else 'N/A',
             'resultado_dia': f"{wins}V {losses}D" if lutou == "Sim" else "N/A",
             'lutou_hoje': lutou
         })

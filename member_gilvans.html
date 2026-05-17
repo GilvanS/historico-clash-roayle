@@ -1882,11 +1882,39 @@
         .rd-fame { font-size: 0.7em; color: #4ade80; font-weight: 700; }
         .rd-lutou { font-size: 0.8em; }
         .rd-attacks { font-size: 0.65em; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; }
-        .rd-decks { display: flex; flex-direction: column; gap: 4px; }
-        .rd-deck { display: flex; gap: 2px; flex-wrap: wrap; min-height: 32px; align-items: center; padding: 2px 0; }
-        .rd-deck img { width: 32px; height: 32px; border-radius: 4px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); }
+        .rd-decks { display: flex; flex-direction: column; gap: 2px; }
+        .rd-deck-row { display: flex; flex-direction: column; gap: 2px; }
+        .rd-deck-label { font-size: 0.65em; color: #60a5fa; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .rd-deck { display: flex; gap: 2px; flex-wrap: wrap; min-height: 40px; align-items: center; padding: 2px 0; }
+        .rd-deck-break { width: 100%; height: 4px; }
+        .rd-clan { border-bottom: 1px solid rgba(96, 165, 250, 0.3); padding-bottom: 15px; margin-bottom: 15px; }
+        .rd-clan:last-child { border-bottom: none; }
+        .rd-card { width: 40px; height: 40px; border-radius: 6px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+        .rd-card img { width: 100%; height: 100%; object-fit: cover; }
         .rd-no-deck { color: #475569; font-size: 0.7em; font-style: italic; padding: 4px 0; }
         .rd-deck-count { font-size: 0.6em; color: #475569; text-align: right; margin-top: 2px; }
+        .rd-tabs-container { margin-bottom: 30px; }
+        .rd-tabs-header { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; }
+        .rd-tab { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 10px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.85em; transition: all 0.3s; }
+        .rd-tab:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
+        .rd-tab.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.4); }
+        
+        /* Calendário de Dias de Guerra */
+        .rd-calendar-container { background: rgba(15, 23, 42, 0.6); border-radius: 16px; padding: 20px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.08); }
+        .rd-calendar-title { font-size: 0.9em; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-align: center; }
+        .rd-calendar-days { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .rd-calendar-day { display: flex; flex-direction: column; align-items: center; padding: 15px 20px; background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255,255,255,0.08); border-radius: 12px; cursor: pointer; transition: all 0.3s; min-width: 80px; }
+        .rd-calendar-day:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); transform: translateY(-3px); }
+        .rd-calendar-day-active { background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3)) !important; border-color: var(--primary) !important; box-shadow: 0 0 20px rgba(96, 165, 250, 0.3); }
+        .rd-calendar-day-active .rd-calendar-label { color: var(--primary); }
+        .rd-calendar-label { font-size: 0.75em; font-weight: 700; color: #94a3b8; margin-bottom: 8px; }
+        .rd-calendar-icon { font-size: 1.5em; margin-bottom: 5px; }
+        .rd-calendar-pos { font-size: 1em; font-weight: 900; color: #fff; }
+        .rd-calendar-fame { font-size: 0.65em; color: #fbbf24; font-weight: 600; }
+        .rd-calendar-gold { border-color: #fbbf24 !important; background: rgba(251, 191, 36, 0.1) !important; }
+        .rd-calendar-silver { border-color: #94a3b8 !important; background: rgba(148, 163, 184, 0.1) !important; }
+        .rd-calendar-bronze { border-color: #cd7f32 !important; background: rgba(205, 127, 50, 0.1) !important; }
+        
         @media (max-width: 768px) { .rd-grid { grid-template-columns: 1fr; } }
         
         /* Member Page Specific Styles - Premium v2 */
@@ -2119,7 +2147,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 16/05/2026 12:45:30</p>
+            <p>Perfil gerado em 17/05/2026 01:05:37</p>
             <p>Visto por último: 14 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>

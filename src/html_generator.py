@@ -4160,6 +4160,7 @@ class GitHubPagesHTMLGenerator:
                 valid_deck_count = 0
                 for d in range(1, 5):
                     deck = p.get(f'deck_{d}', '')
+                    deck_tipo = p.get(f'deck_{d}_tipo', 'Batalha')
                     if deck and deck != 'Deck nao encontrado no log recente' and deck.strip():
                         cards = [c.strip() for c in deck.split(',') if c.strip()][:8]
                         cards_row1 = cards[:4]
@@ -4170,7 +4171,14 @@ class GitHubPagesHTMLGenerator:
                         cards_imgs += '<div class="rd-deck-break"></div>'
                         for card in cards_row2:
                             cards_imgs += f'<div class="cr-card-wrap-premium rd-card"><img src="{self.get_card_image_path(card)}" alt="{card}" title="{card}"></div>'
-                        deck_label = f'<div class="rd-deck-label">🛡️ Deck {d} (Guerra)</div>'
+                        # Mapear tipo para ícone
+                        tipo_icon = {
+                            'Guerra': '⚔️',
+                            'Barco': '🚣',
+                            'Range Battle': '🎯',
+                            'Duelo': '⚡'
+                        }.get(deck_tipo, '🛡️')
+                        deck_label = f'<div class="rd-deck-label">{tipo_icon} Deck {d} ({deck_tipo})</div>'
                         deck_rows_html += f'<div class="rd-deck-row">{deck_label}<div class="rd-deck">{cards_imgs}</div></div>'
                         valid_deck_count += 1
                 
