@@ -4170,7 +4170,7 @@ class GitHubPagesHTMLGenerator:
                         cards_imgs += '<div class="rd-deck-break"></div>'
                         for card in cards_row2:
                             cards_imgs += f'<div class="cr-card-wrap-premium rd-card"><img src="{self.get_card_image_path(card)}" alt="{card}" title="{card}"></div>'
-                        deck_label = f'<div class="rd-deck-label">Deck {d}</div>'
+                        deck_label = f'<div class="rd-deck-label">🛡️ Deck {d} (Guerra)</div>'
                         deck_rows_html += f'<div class="rd-deck-row">{deck_label}<div class="rd-deck">{cards_imgs}</div></div>'
                         valid_deck_count += 1
                 
@@ -6959,7 +6959,7 @@ class GitHubPagesHTMLGenerator:
         .rd-attacks { font-size: 0.65em; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; }
         .rd-decks { display: flex; flex-direction: column; gap: 2px; }
         .rd-deck-row { display: flex; flex-direction: column; gap: 2px; }
-        .rd-deck-label { font-size: 0.6em; color: #64748b; font-weight: 600; margin-bottom: 2px; }
+        .rd-deck-label { font-size: 0.65em; color: #60a5fa; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
         .rd-deck { display: flex; gap: 2px; flex-wrap: wrap; min-height: 40px; align-items: center; padding: 2px 0; }
         .rd-deck-break { width: 100%; height: 4px; }
         .rd-clan { border-bottom: 1px solid rgba(96, 165, 250, 0.3); padding-bottom: 15px; margin-bottom: 15px; }
