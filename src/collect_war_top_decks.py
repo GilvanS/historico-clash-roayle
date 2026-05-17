@@ -107,9 +107,9 @@ def collect_top_decks():
         # Buscar battle log do jogador
         p_tag_url = p_tag.replace('#', '%23')
         br = requests.get(f"https://proxy.royaleapi.dev/v1/players/{p_tag_url}/battlelog", headers={'Authorization': f'Bearer {token}'})
-        
-decks = []
-        deck_types = []  # Armazena o tipo de batalha de cada deck
+
+        decks = []
+        deck_types = []
         wins = 0
         losses = 0
         lutou = "Nao"
