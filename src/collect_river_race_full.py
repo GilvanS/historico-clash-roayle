@@ -34,114 +34,90 @@ def format_deck(cards):
     if not cards: return ""
     return ", ".join(c.get('name', '') for c in cards)
 
-def get_clan_tag(token):
-    player_tag = os.getenv('CR_PLAYER_TAG', '#2QR292P').replace('#', '%23')
-    r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{player_tag}", headers={'Authorization': f'Bearer {token}'})
+def get_clan_tag(token, player_tag='#2QR292P'):
+    tag = os.getenv(player_tag, '#2QR292P').replace('#', '%23')
+    r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{tag}", headers={'Authorization': f'Bearer {token}'})
     if r.status_code == 200:
         return r.json().get('clan', {}).get('tag')
     return None
 
-def collect_river_race_intelligence():
-    # Carregar dotenv do projeto raiz
-    dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env')
-    load_dotenv(dotenv_path)
-    
-    token = os.getenv('CR_API_TOKEN')
-    if not token:
-        print("ERRO: CR_API_TOKEN não encontrado")
-        return
-
+def collect_river_race_for_account(token, player_tag, suffix=""):
     headers = {'Authorization': f'Bearer {token}'}
     base_url = "https://proxy.royaleapi.dev/v1"
-
-    # Pegar tag do clan principal
-    my_clan_tag = get_clan_tag(token)
+    
+    my_clan_tag = get_clan_tag(token, player_tag)
     if not my_clan_tag:
-        print("ERRO: Não foi possível obter a tag do clan")
-        return
-
-    print("=" * 60)
-    print("COLETANDO INTELIGENCIA DE GUERRA - RIVER RACE")
-    print("=" * 60)
-    print(f"Clan Tag: {my_clan_tag}")
-
-    # Buscar dados da corrida atual
+        print(f"ERRO: Nao foi possivel obter a tag do clan para {player_tag}")
+        return []
+    
+    print(f"Coletando para {player_tag} - Clan: {my_clan_tag}")
+    
     clan_url = my_clan_tag.replace('#', '%23')
     r = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers)
     if r.status_code != 200:
         print(f"ERRO ao buscar corrida: {r.status_code}")
-        return
-
+        return []
+    
     data = r.json()
     clans = data.get('clans', [])
-
+    
     if not clans:
         print("Nenhum clan encontrado na corrida")
-        return
-
-    # Ordenar clans por fame (maior primero)
+        return []
+    
     sorted_clans = sorted(clans, key=lambda x: x.get('fame', 0), reverse=True)
-    print(f"\nClans na corrida: {len(sorted_clans)}")
-
-    # Data da coleta
     data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
     results = []
-
-    # Para cada clan (top 5 clãs)
+    
     for clan_idx, clan in enumerate(sorted_clans[:5], 1):
         clan_name = clan.get('name', 'Unknown')
         clan_tag = clan.get('tag', '')
         clan_fame = clan.get('fame', 0)
-        print(f"\n[Clan {clan_idx}] {clan_name} - Fama: {clan_fame}")
-
+        
         participants = clan.get('participants', [])
         sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
         top_players = sorted_players[:5]
-        print(f"  Top 5 jogadores encontrados")
-
+        
         for player_idx, player in enumerate(top_players, 1):
             player_tag = player.get('tag', '')
             player_name = player.get('name', 'Unknown')
             player_fame = player.get('fame', 0)
             decks_used = player.get('decksUsed', 0)
             boat_attacks = player.get('boatAttacks', 0)
-
-            print(f"    [{player_idx}] {player_name} - Fama: {player_fame}, Decks: {decks_used}")
-
+            
             player_decks = {'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
                            'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''}
-
+            
             if player_tag:
                 try:
                     p_tag_url = player_tag.replace('#', '%23')
                     br = requests.get(f"{base_url}/players/{p_tag_url}/battlelog", headers=headers, timeout=10)
-
+                    
                     if br.status_code == 200:
                         battles = br.json()
                         decks_collected = []
                         deck_types = []
-
+                        
                         for b in battles:
                             battle_type = b.get('type', '')
                             if battle_type in WAR_BATTLE_TYPES:
                                 team = b.get('team', [{}])[0]
                                 cards = team.get('cards', [])
                                 deck_str = format_deck(cards)
-
+                                
                                 if deck_str and deck_str not in decks_collected:
                                     decks_collected.append(deck_str)
                                     deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
-
+                                
                                 if len(decks_collected) >= 4:
                                     break
-
+                        
                         for i, deck in enumerate(decks_collected, 1):
                             player_decks[f'deck_{i}'] = deck
                             player_decks[f'deck_{i}_tipo'] = deck_types[i-1] if i <= len(deck_types) else ''
-
-                except Exception as e:
-                    print(f"      Erro: {e}")
-
+                except:
+                    pass
+            
             results.append({
                 'data_coleta': data_hoje,
                 'clan_posicao': clan_idx,
@@ -156,37 +132,80 @@ def collect_river_race_intelligence():
                 'boat_attacks': boat_attacks,
                 **player_decks
             })
+    
+    return results
 
-    # Salvar CSV
-    filename = f"{DATA_DIR}/inteligencia_guerra_full_{data_hoje}.csv"
+def collect_river_race_intelligence():
+    # Carregar dotenv do projeto raiz
+    dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env')
+    load_dotenv(dotenv_path)
+    
+    token = os.getenv('CR_API_TOKEN')
+    if not token:
+        print("ERRO: CR_API_TOKEN nao encontrado")
+        return
+
+    print("=" * 60)
+    print("COLETANDO INTELIGENCIA DE GUERRA - RIVER RACE")
+    print("=" * 60)
+    
+    # Coletar para conta principal (#2QR292P)
+    print("\n--- CONTA PRINCIPAL ---")
+    results_pri = collect_river_race_for_account(token, 'CR_PLAYER_TAG', '_pri')
+    
+    # Coletar para conta secundaria (#2220UQQ0UU)
+    print("\n--- CONTA SECUNDARIA ---")
+    results_sec = collect_river_race_for_account(token, 'CR_PLAYER_TAG_SEC', '_sec')
+    
+    # Combinar resultados
+    all_results = results_pri + results_sec
+    data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
+    
     fieldnames = [
         'data_coleta', 'clan_posicao', 'clan_nome', 'clan_tag', 'clan_fame',
         'player_posicao', 'player_nome', 'player_tag', 'player_fame', 'decks_usados', 'boat_attacks',
         'deck_1', 'deck_1_tipo', 'deck_2', 'deck_2_tipo', 'deck_3', 'deck_3_tipo', 'deck_4', 'deck_4_tipo'
     ]
-
-    with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
+    
+    # Salvar CSVs SEPARADOS por conta
+    fieldnames = [
+        'data_coleta', 'clan_posicao', 'clan_nome', 'clan_tag', 'clan_fame',
+        'player_posicao', 'player_nome', 'player_tag', 'player_fame', 'decks_usados', 'boat_attacks',
+        'deck_1', 'deck_1_tipo', 'deck_2', 'deck_2_tipo', 'deck_3', 'deck_3_tipo', 'deck_4', 'deck_4_tipo'
+    ]
+    
+    # CSV para conta principal
+    filename_pri = f"{DATA_DIR}/inteligencia_guerra_full_pri_{data_hoje}.csv"
+    with open(filename_pri, 'w', newline='', encoding='utf-8-sig') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
         writer.writeheader()
-        writer.writerows(results)
-
-    print(f"\n\nSUCESSO! CSV gerado: {filename}")
-    print(f"Total de registros: {len(results)}")
-
+        writer.writerows(results_pri)
+    
+    # CSV para conta secundaria
+    filename_sec = f"{DATA_DIR}/inteligencia_guerra_full_sec_{data_hoje}.csv"
+    with open(filename_sec, 'w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+        writer.writeheader()
+        writer.writerows(results_sec)
+    
+    print(f"\n\nSUCESSO!")
+    print(f"Conta Principal: {filename_pri} ({len(results_pri)} jogadores)")
+    print(f"Conta Secundaria: {filename_sec} ({len(results_sec)} jogadores)")
+    
     # Resumo
     print("\n" + "=" * 60)
-    print("RESUMO - TOP 5 CLANS DA CORRIDA")
+    print("RESUMO - TOP 5 CLANS DA CORRIDA (AMBAS CONTAS)")
     print("=" * 60)
-
+    
     clans_in_results = {}
-    for r in results:
+    for r in all_results:
         cn = r['clan_nome']
         if cn not in clans_in_results:
             clans_in_results[cn] = {'posicao': r['clan_posicao'], 'fame': r['clan_fame'], 'players': 0}
         clans_in_results[cn]['players'] += 1
-
+    
     for cn, info in sorted(clans_in_results.items(), key=lambda x: x[1]['posicao']):
-        print(f"#{info['posicao']} {cn} - {info['fame']} fame - {info['players']} players no top")
+        print(f"#{info['posicao']} {cn} - {info['fame']} fame - {info['players']} players")
 
 if __name__ == "__main__":
     collect_river_race_intelligence()

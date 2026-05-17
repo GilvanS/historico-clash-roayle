@@ -3974,13 +3974,13 @@ class GitHubPagesHTMLGenerator:
         
         data = {'clans': [], 'my_clan': '', 'total_clans': 0}
         
-        # Selecionar CSV baseado na conta - 우선 full CSV 시도, 없으면旧 CSV
+        # Selecionar CSV baseado na conta
         if '2220UQQ0UU' in player_tag:
-            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_*.csv"))
+            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_sec_*.csv"))
             if not intel_files:
                 intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_sec_*.csv"))
         else:
-            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_*.csv"))
+            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_pri_*.csv"))
             if not intel_files:
                 intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
                 intel_files = [f for f in intel_files if '_sec_' not in f]
@@ -4021,12 +4021,17 @@ class GitHubPagesHTMLGenerator:
             for row in all_rows:
                 # Formato novo (inteligencia_guerra_full)
                 cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
+                cla_tag = row.get('clan_tag', '')
                 ranking = int(row.get('clan_posicao') or row.get('Ranking', 99) or 99)
                 player_name = row.get('player_nome') or row.get('Jogador', '')
                 player_fame = int(row.get('player_fame') or row.get('Fama_Hoje', 0) or 0)
                 decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
                 boat_attacks = row.get('boat_attacks', '0')
                 lutou = "Sim" if int(boat_attacks or 0) > 0 else "Nao"
+                
+                # FILTRAR: Apenas clãs do mesmo clan_tag da conta
+                if my_clan_tag and cla_tag and cla_tag != my_clan_tag:
+                    continue
                 
                 if cla not in clan_data:
                     clan_data[cla] = []
