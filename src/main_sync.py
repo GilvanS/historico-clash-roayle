@@ -89,8 +89,10 @@ def main():
             logger.info("FASE 1.5: Dia de Guerra detectado! Coletando decks dos melhores jogadores...")
             from collect_war_top_decks import collect_top_decks
             from collect_war_weekend import collect_boat_data
+            from collect_river_race_full import collect_river_race_intelligence
             collect_top_decks()
             collect_boat_data()
+            collect_river_race_intelligence()  # Inteligencia completa da corrida
         else:
             logger.info("FASE 1.5: Fora do periodo de guerra (Segunda a Quarta). Pulando coleta de decks.")
     except Exception as e:
