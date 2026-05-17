@@ -3974,12 +3974,16 @@ class GitHubPagesHTMLGenerator:
         
         data = {'clans': [], 'my_clan': '', 'total_clans': 0}
         
-        # Selecionar CSV baseado na conta
+        # Selecionar CSV baseado na conta - 우선 full CSV 시도, 없으면旧 CSV
         if '2220UQQ0UU' in player_tag:
-            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_sec_*.csv"))
+            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_*.csv"))
+            if not intel_files:
+                intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_sec_*.csv"))
         else:
-            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
-            intel_files = [f for f in intel_files if '_sec_' not in f]
+            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_*.csv"))
+            if not intel_files:
+                intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+                intel_files = [f for f in intel_files if '_sec_' not in f]
         
         if not intel_files:
             return data
@@ -4012,26 +4016,38 @@ class GitHubPagesHTMLGenerator:
             if not all_rows:
                 return data
             
-            # Agrupar por clã e ordenar por ranking/fama
+            # Agrupar por clã - suporte para formato novo e antigo
             clan_data = {}
             for row in all_rows:
-                cla = row.get('Cla', 'Unknown')
-                ranking = int(row.get('Ranking', 99) or 99)
+                # Formato novo (inteligencia_guerra_full)
+                cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
+                ranking = int(row.get('clan_posicao') or row.get('Ranking', 99) or 99)
+                player_name = row.get('player_nome') or row.get('Jogador', '')
+                player_fame = int(row.get('player_fame') or row.get('Fama_Hoje', 0) or 0)
+                decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
+                boat_attacks = row.get('boat_attacks', '0')
+                lutou = "Sim" if int(boat_attacks or 0) > 0 else "Nao"
                 
                 if cla not in clan_data:
                     clan_data[cla] = []
                 
-                if ranking <= 3 and len(clan_data[cla]) < 3:
+                # Limitar a 5 players por clan no formato full
+                max_players = 5 if row.get('clan_posicao') else 3
+                if len(clan_data[cla]) < max_players:
                     clan_data[cla].append({
                         'ranking': ranking,
-                        'player': row.get('Jogador', ''),
-                        'fame': int(row.get('Fama_Hoje', 0) or 0),
-                        'lutou': row.get('Lutou_Hoje', 'Nao'),
-                        'ataques': row.get('Ataques_Feitos', '0/4'),
-                        'deck_1': row.get('Deck_1', ''),
-                        'deck_2': row.get('Deck_2', ''),
-                        'deck_3': row.get('Deck_3', ''),
-                        'deck_4': row.get('Deck_4', '')
+                        'player': player_name,
+                        'fame': player_fame,
+                        'lutou': lutou,
+                        'ataques': f"{decks_used}/4" if decks_used else '0/4',
+                        'deck_1': row.get('deck_1', ''),
+                        'deck_1_tipo': row.get('deck_1_tipo', 'Guerra'),
+                        'deck_2': row.get('deck_2', ''),
+                        'deck_2_tipo': row.get('deck_2_tipo', ''),
+                        'deck_3': row.get('deck_3', ''),
+                        'deck_3_tipo': row.get('deck_3_tipo', ''),
+                        'deck_4': row.get('deck_4', ''),
+                        'deck_4_tipo': row.get('deck_4_tipo', '')
                     })
             
             # Ordenar clãs por fame (maior primero)
