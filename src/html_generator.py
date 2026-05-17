@@ -3762,6 +3762,138 @@ class GitHubPagesHTMLGenerator:
             logger.error(f"Error reading meta_brasil_top100.json: {e}")
             return []
 
+    def get_war_day_history(self, days_back: int = 7) -> List[Dict]:
+        """Coleta histórico de status_barcos para os últimos dias."""
+        history = []
+        import glob
+        boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
+        
+        if not boat_files:
+            return history
+        
+        # Ordena por data (mais recente primeiro)
+        sorted_files = sorted(boat_files, reverse=True)
+        
+        for filepath in sorted_files[:days_back]:
+            try:
+                filename = os.path.basename(filepath)
+                date_str = filename.replace('status_barcos_', '').replace('.csv', '')
+                
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    boats = list(reader)
+                    
+                history.append({
+                    'date': date_str,
+                    'boats': boats
+                })
+            except Exception as e:
+                logger.error(f"Erro ao ler {filepath}: {e}")
+                continue
+        
+        return history
+    
+    def get_war_calendar_data(self, my_clan: str, days_back: int = 5) -> List[Dict]:
+        """Retorna dados processados do calendário de guerra para um clã específico."""
+        days = []
+        war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
+        
+        # Buscar arquivos de status_barcos
+        import glob
+        boat_files = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv")), reverse=True)
+        
+        today = datetime.now().date()
+        
+        for filepath in boat_files[:days_back]:
+            try:
+                filename = os.path.basename(filepath)
+                date_str = filename.replace('status_barcos_', '').replace('.csv', '')
+                
+                date_parts = date_str.split('_')
+                day_date = datetime(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
+                weekday = day_date.weekday()
+                day_label = war_day_labels.get(weekday, f"D{weekday}")
+                
+                is_today = day_date.date() == today or weekday in [0, 3, 4, 5, 6]
+                
+                with open(filepath, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    clan_data = None
+                    for b in reader:
+                        if b.get('Nome_Cla') == my_clan:
+                            clan_data = {
+                                'position': int(b.get('Posicao', 0) or 0),
+                                'fame': int(b.get('Fama_Atual', 0) or 0),
+                                'points': int(b.get('Pontos_Periodo', 0) or 0)
+                            }
+                            break
+                
+                if clan_data:
+                    days.append({
+                        'date': date_str,
+                        'label': day_label,
+                        'position': clan_data['position'],
+                        'fame': clan_data['fame'],
+                        'points': clan_data['points'],
+                        'is_active': is_today
+                    })
+            except Exception as e:
+                logger.error(f"Erro ao processar {filepath}: {e}")
+                continue
+        
+        return days
+    
+    def get_war_day_status_for_clan(self, clan_name: str, history: List[Dict]) -> Dict:
+        """Retorna status do clã para cada dia no histórico."""
+        days = []
+        war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
+        
+        for entry in history:
+            date_str = entry['date']
+            boats = entry['boats']
+            
+            # Extrai dia da semana da data
+            try:
+                date_parts = date_str.split('_')
+                day_date = datetime(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
+                weekday = day_date.weekday()
+                day_label = war_day_labels.get(weekday, f"D{weekday}")
+            except:
+                day_label = date_str
+            
+            # Encontra posição do clã
+            clan_data = None
+            for b in boats:
+                if b.get('Nome_Cla') == clan_name:
+                    clan_data = {
+                        'position': int(b.get('Posicao', 0) or 0),
+                        'fame': int(b.get('Fama_Atual', 0) or 0),
+                        'points': int(b.get('Pontos_Periodo', 0) or 0)
+                    }
+                    break
+            
+            if clan_data:
+                days.append({
+                    'date': date_str,
+                    'label': day_label,
+                    'position': clan_data['position'],
+                    'fame': clan_data['fame'],
+                    'points': clan_data['points'],
+                    'is_active': self._is_today(date_str)
+                })
+        
+        return days
+    
+    def _is_today(self, date_str: str) -> bool:
+        """Verifica se a data é hoje."""
+        try:
+            date_parts = date_str.split('_')
+            day_date = datetime(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
+            today = datetime.now()
+            return day_date.date() == today.date()
+        except:
+            return False
+    
     def get_war_intelligence_data(self):
         """Coleta dados de inteligência de guerra (Dia 4)."""
         data = {
@@ -3926,15 +4058,89 @@ class GitHubPagesHTMLGenerator:
             logger.error(f"Erro ao parsear radar de guerra: {e}")
         
         return data
+    
+    def _generate_war_calendar_html(self, day_history: List[Dict], my_clan: str, tab_id: str) -> str:
+        """Gera o HTML do calendário de dias de guerra."""
+        if not day_history:
+            return ""
+        
+        days_html = ""
+        for entry in day_history[:5]:  # Limita a 5 dias
+            date = entry['date']
+            label = entry.get('label', date)
+            is_active = entry.get('is_active', False)
+            position = entry.get('position', 0)
+            fame = entry.get('fame', 0)
+            points = entry.get('points', 0)
+            
+            active_class = "rd-calendar-day-active" if is_active else ""
+            position_class = f"rd-calendar-pos-{position}" if position > 0 else ""
+            
+            # Status do dia baseado na posição
+            if position == 1:
+                status_icon = "🥇"
+                status_class = "rd-calendar-gold"
+            elif position == 2:
+                status_icon = "🥈"
+                status_class = "rd-calendar-silver"
+            elif position == 3:
+                status_icon = "🥉"
+                status_class = "rd-calendar-bronze"
+            else:
+                status_icon = f"#{position}" if position > 0 else "—"
+                status_class = ""
+            
+            days_html += f"""
+                <div class="rd-calendar-day {active_class} {position_class} {status_class}" 
+                     onclick="selectWarDay('{tab_id}', '{date}', this)"
+                     data-date="{date}">
+                    <div class="rd-calendar-label">{label}</div>
+                    <div class="rd-calendar-icon">{status_icon}</div>
+                    <div class="rd-calendar-pos">#{position if position > 0 else '—'}</div>
+                    <div class="rd-calendar-fame">{fame:,}</div>
+                </div>
+            """
+        
+        return f"""
+            <div class="rd-calendar-container" id="rd-calendar-{tab_id}">
+                <div class="rd-calendar-title">📅 Dias de Guerra</div>
+                <div class="rd-calendar-days">
+                    {days_html}
+                </div>
+            </div>
+        """
         
     def generate_war_radar_html(self, data, player_tag: str = None):
-        """Gera o HTML para a seção de Radar de Guerra (5 clãs × Top 3 players × 4 decks)."""
+        """Gera o HTML para a seção de Radar de Guerra (5 clãs × Top 3 players × 4 decks).
+        
+        Args:
+            data: Dados dos clãs e jogadores
+            player_tag: Tag do jogador para identificar conta
+        """
         if not data.get('clans'):
             return ""
         
         weekday = datetime.now().weekday()
         war_day_map = {0: "Reset", 3: "1", 4: "2", 5: "3", 6: "4"}
         day_suffix = f": Dia {war_day_map[weekday]}" if weekday in war_day_map else ""
+        
+        # Nome da conta para a tab
+        account_label = "CONTA PRINCIPAL" if player_tag and '2QR292P' in player_tag else "CONTA SECUNDÁRIA"
+        tab_id = "pri" if player_tag and '2QR292P' in player_tag else "sec"
+        
+        # Identificar clã da conta para usar no calendário
+        my_clan = data.get('my_clan', '')
+        for clan in data['clans']:
+            if clan.get('is_me', False):
+                my_clan = clan.get('name', '')
+                break
+        
+        # Gerar calendário de dias de guerra usando dados processados
+        calendar_html = ""
+        if my_clan:
+            calendar_data = self.get_war_calendar_data(my_clan, 5)
+            if calendar_data:
+                calendar_html = self._generate_war_calendar_html(calendar_data, my_clan, tab_id)
         
         clan_cards_html = ""
         for clan in data['clans']:
@@ -3955,12 +4161,16 @@ class GitHubPagesHTMLGenerator:
                 for d in range(1, 5):
                     deck = p.get(f'deck_{d}', '')
                     if deck and deck != 'Deck nao encontrado no log recente' and deck.strip():
-                        cards = [c.strip() for c in deck.split(',') if c.strip()]
-                        card_imgs = ""
-                        for card in cards[:8]:
-                            card_url = self.get_card_image_path(card)
-                            card_imgs += f'<img src="{card_url}" alt="{card}" title="{card}" width="32" height="32" style="border-radius: 4px; background: #0f172a; margin: 1px; border: 1px solid rgba(255,255,255,0.1);" loading="lazy">'
-                        deck_rows_html += f'<div class="rd-deck">{card_imgs}</div>'
+                        cards = [c.strip() for c in deck.split(',') if c.strip()][:8]
+                        cards_row1 = cards[:4]
+                        cards_row2 = cards[4:8]
+                        cards_imgs = ""
+                        for card in cards_row1:
+                            cards_imgs += f'<div class="cr-card-wrap-premium rd-card"><img src="{self.get_card_image_path(card)}" alt="{card}" title="{card}"></div>'
+                        cards_imgs += '<div class="rd-deck-break"></div>'
+                        for card in cards_row2:
+                            cards_imgs += f'<div class="cr-card-wrap-premium rd-card"><img src="{self.get_card_image_path(card)}" alt="{card}" title="{card}"></div>'
+                        deck_rows_html += f'<div class="rd-deck">{cards_imgs}</div>'
                         valid_deck_count += 1
                 
                 if not deck_rows_html:
@@ -4000,23 +4210,33 @@ class GitHubPagesHTMLGenerator:
                 </div>
             """
         
-        return f"""
-        <div class="section rd-section">
-            <div class="rd-header">
-                <div class="rd-badge">RADAR DE GUERRA</div>
-                <h2>📡 Radar de Guerra{day_suffix}</h2>
-                <div class="rd-legend">
-                    <span class="rd-legend-item"><span class="rd-legend-dot rd-red"></span> Lutou hoje</span>
-                    <span class="rd-legend-item"><span class="rd-legend-dot rd-gray"></span> Nao lutou</span>
-                    <span class="rd-legend-item">|</span>
-                    <span class="rd-legend-item">5 clãs · Top 3 players · 4 decks</span>
+        # Adicionar tab para esta conta
+        tab_html = f"""
+            <button class="rd-tab" onclick="switchRadarTab('{tab_id}', this)" data-tag="{player_tag}">
+                {account_label}
+            </button>
+        """
+        
+        content_html = f"""
+            <div id="rd-content-{tab_id}" class="rd-content" style="display: none;">
+                {calendar_html}
+                <div class="rd-header">
+                    <div class="rd-badge">RADAR DE GUERRA</div>
+                    <h2>📡 Radar de Guerra{day_suffix}</h2>
+                    <div class="rd-legend">
+                        <span class="rd-legend-item"><span class="rd-legend-dot rd-red"></span> Lutou hoje</span>
+                        <span class="rd-legend-item"><span class="rd-legend-dot rd-gray"></span> Nao lutou</span>
+                        <span class="rd-legend-item">|</span>
+                        <span class="rd-legend-item">5 clãs · Top 3 players · 4 decks</span>
+                    </div>
+                </div>
+                <div class="rd-grid">
+                    {clan_cards_html}
                 </div>
             </div>
-            <div class="rd-grid">
-                {clan_cards_html}
-            </div>
-        </div>
         """
+        
+        return {'tab': tab_html, 'content': content_html}
 
     def generate_war_intelligence_html(self, data):
         """Gera o HTML para a seção de Inteligência de Guerra."""
@@ -4609,14 +4829,31 @@ class GitHubPagesHTMLGenerator:
                 logger.error(f"Error generating war intel: {e}")
 
             war_radar_html = ""
+            war_radar_tabs = ""
             try:
                 # Gerar radar para CADA conta
+                # Buscar histórico de dias para ambas as contas
+                day_history = self.get_war_day_history(7)
+                
                 for tag in self.tracked_tags:
                     radar_data = self.get_war_radar_data(tag)
                     if radar_data.get('clans'):
-                        war_radar_html += self.generate_war_radar_html(radar_data, tag)
+                        result = self.generate_war_radar_html(radar_data, tag)
+                        war_radar_tabs += result['tab']
+                        war_radar_html += result['content']
             except Exception as e:
                 logger.error(f"Error generating war radar: {e}")
+            
+            # Se há múltiplas tabs, criar container com tabs
+            if war_radar_tabs and len(self.tracked_tags) > 1:
+                war_radar_html = f"""
+                    <div class="rd-tabs-container">
+                        <div class="rd-tabs-header">
+                            {war_radar_tabs}
+                        </div>
+                        {war_radar_html}
+                    </div>
+                """
             
             return self.generate_full_html(account_tabs_html, account_contents_html, 
                                          clan_member_activity_html, war_intel_html, war_radar_html)
@@ -6720,10 +6957,34 @@ class GitHubPagesHTMLGenerator:
         .rd-lutou { font-size: 0.8em; }
         .rd-attacks { font-size: 0.65em; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; }
         .rd-decks { display: flex; flex-direction: column; gap: 4px; }
-        .rd-deck { display: flex; gap: 2px; flex-wrap: wrap; min-height: 32px; align-items: center; padding: 2px 0; }
-        .rd-deck img { width: 32px; height: 32px; border-radius: 4px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); }
+        .rd-deck { display: flex; gap: 2px; flex-wrap: wrap; min-height: 40px; align-items: center; padding: 2px 0; }
+        .rd-deck-break { width: 100%; height: 4px; }
+        .rd-card { width: 40px; height: 40px; border-radius: 6px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+        .rd-card img { width: 100%; height: 100%; object-fit: cover; }
         .rd-no-deck { color: #475569; font-size: 0.7em; font-style: italic; padding: 4px 0; }
         .rd-deck-count { font-size: 0.6em; color: #475569; text-align: right; margin-top: 2px; }
+        .rd-tabs-container { margin-bottom: 30px; }
+        .rd-tabs-header { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; }
+        .rd-tab { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 10px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.85em; transition: all 0.3s; }
+        .rd-tab:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
+        .rd-tab.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.4); }
+        
+        /* Calendário de Dias de Guerra */
+        .rd-calendar-container { background: rgba(15, 23, 42, 0.6); border-radius: 16px; padding: 20px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.08); }
+        .rd-calendar-title { font-size: 0.9em; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-align: center; }
+        .rd-calendar-days { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .rd-calendar-day { display: flex; flex-direction: column; align-items: center; padding: 15px 20px; background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255,255,255,0.08); border-radius: 12px; cursor: pointer; transition: all 0.3s; min-width: 80px; }
+        .rd-calendar-day:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); transform: translateY(-3px); }
+        .rd-calendar-day-active { background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3)) !important; border-color: var(--primary) !important; box-shadow: 0 0 20px rgba(96, 165, 250, 0.3); }
+        .rd-calendar-day-active .rd-calendar-label { color: var(--primary); }
+        .rd-calendar-label { font-size: 0.75em; font-weight: 700; color: #94a3b8; margin-bottom: 8px; }
+        .rd-calendar-icon { font-size: 1.5em; margin-bottom: 5px; }
+        .rd-calendar-pos { font-size: 1em; font-weight: 900; color: #fff; }
+        .rd-calendar-fame { font-size: 0.65em; color: #fbbf24; font-weight: 600; }
+        .rd-calendar-gold { border-color: #fbbf24 !important; background: rgba(251, 191, 36, 0.1) !important; }
+        .rd-calendar-silver { border-color: #94a3b8 !important; background: rgba(148, 163, 184, 0.1) !important; }
+        .rd-calendar-bronze { border-color: #cd7f32 !important; background: rgba(205, 127, 50, 0.1) !important; }
+        
         @media (max-width: 768px) { .rd-grid { grid-template-columns: 1fr; } }
         """
     
@@ -6896,9 +7157,38 @@ class GitHubPagesHTMLGenerator:
             const accountId = activeAccount.id.replace('account-tab-', '');
             localStorage.setItem('cr_inner_tab_' + accountId, targetId);
         }}
+}}
+    
+    // Radar Tab switching (Conta Principal vs Secundária)
+    function switchRadarTab(tabId, element) {{
+        if (!element) return;
+        
+        // Get the parent container
+        const container = element.closest('.rd-tabs-container');
+        if (!container) return;
+        
+        // Remove active from all radar tabs
+        container.querySelectorAll('.rd-tab').forEach(t => t.classList.remove('active'));
+        element.classList.add('active');
+        
+        // Hide all radar contents
+        container.querySelectorAll('.rd-content').forEach(c => {{
+            c.classList.remove('active');
+            c.style.display = 'none';
+        }});
+        
+        // Show target radar content
+        const target = document.getElementById('rd-content-' + tabId);
+        if (target) {{
+            target.classList.add('active');
+            target.style.display = 'block';
+        }}
+        
+        // Salvar seleção no localStorage
+        localStorage.setItem('cr_radar_tab_' + tabId, tabId);
     }}
-
-    // Restore last selected account tab on page load
+    
+    // Restore last selected radar tab on page load
     document.addEventListener('DOMContentLoaded', function() {{
         const savedAccount = localStorage.getItem('cr_active_account');
         if (savedAccount) {{
