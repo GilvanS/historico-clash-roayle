@@ -3896,78 +3896,64 @@ class GitHubPagesHTMLGenerator:
             return False
     
     def get_war_intelligence_data(self):
-        """Coleta dados de inteligência de guerra (Dia 4)."""
-        data = {
-            'boats': [],
-            'rivals': {},
-            'difficulty': 'Indeterminada',
-            'summary': '',
-            'my_clan': 'Desconhecido'
-        }
-        
-        # 1. Busca status dos barcos (mais recente)
-        import glob
-        boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
-        if boat_files:
-            latest_boat = max(boat_files)
-            try:
-                with open(latest_boat, 'r', encoding='utf-8') as f:
-                    reader = csv.DictReader(f, delimiter=';')
-                    data['boats'] = list(reader)
-            except: pass
-            
-        # 2. Busca inteligência de oponentes
-        intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
-        if intel_files:
-            latest_intel = max(intel_files)
-            try:
-                with open(latest_intel, 'r', encoding='utf-8') as f:
-                    reader = csv.DictReader(f, delimiter=';')
-                    for row in reader:
-                        cla = row.get('Cla', 'Unknown')
-                        if cla not in data['rivals']:
-                            data['rivals'][cla] = []
-                        if len(data['rivals'][cla]) < 3: # Top 3 jogadores por clã
-                            data['rivals'][cla].append(row)
-            except: pass
-            
-        # 3. Identifica clã do jogador via players.csv
-        my_clan = "Tropa Do Bruxo" # Default seguro
+        """Coleta dados de inteligencia de guerra (Dia 4)."""
         try:
-            players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
-            if os.path.exists(players_file):
-                with open(players_file, 'r', encoding='utf-8-sig') as f:
-                    reader = csv.DictReader(f, delimiter=';')
-                    for row in reader:
-                        if row.get('player_tag'): # Pega o primeiro jogador válido (o dono do dashboard)
-                            my_clan = row.get('clan_name', my_clan)
-                            break
-        except: pass
-
-        # 4. Cálculo de Dificuldade
-        my_fame = 0
-        leader_fame = 0
-        for boat in data['boats']:
-            fame_val = boat.get('Fama_Atual', '0')
-            try:
-                # Remove separadores de milhar se houver
-                fame = int(fame_val.replace(',', '').replace('.', '')) if fame_val else 0
-            except:
-                fame = 0
+            data = {
+                'boats': [],
+                'rivals': {},
+                'difficulty': 'Indeterminada',
+                'summary': '',
+                'my_clan': 'Desconhecido'
+            }
+            
+            # 1. Busca status dos barcos (mais recente)
+            import glob
+            boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
+            if boat_files:
+                latest_boat = max(boat_files)
+                try:
+                    with open(latest_boat, 'r', encoding='utf-8') as f:
+                        reader = csv.DictReader(f, delimiter=';')
+                        data['boats'] = list(reader)
+                except Exception as e:
+                    logger.warning(f"Erro ao ler boats: {e}")
+            
+            # 2. Busca inteligencia de oponentes
+            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+            if intel_files:
+                latest_intel = max(intel_files)
+                try:
+                    with open(latest_intel, 'r', encoding='utf-8') as f:
+                        reader = csv.DictReader(f, delimiter=';')
+                        for row in reader:
+                            cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
+                            if cla not in data['rivals']:
+                                data['rivals'][cla] = []
+                            if len(data['rivals'][cla]) < 3:
+                                data['rivals'][cla].append(row)
+                except Exception as e:
+                    logger.warning(f"Erro ao ler intel: {e}")
                 
-            if boat.get('Nome_Cla') == my_clan:
-                my_fame = fame
-            if fame > leader_fame:
-                leader_fame = fame
-        
-        data['my_clan'] = my_clan
-        diff = leader_fame - my_fame
-        if diff > 20000: data['difficulty'] = 'Extrema 🔴'
-        elif diff > 10000: data['difficulty'] = 'Alta 🟠'
-        elif diff > 5000: data['difficulty'] = 'Moderada 🟡'
-        else: data['difficulty'] = 'Baixa 🟢'
-        
-        data['summary'] = f"O clã <strong>{my_clan}</strong> está a {diff:,} pontos de fama do 1º lugar. Foco total em ataques de alto valor."
+            # 3. Identifica clan do jogador via players.csv
+            my_clan = "Tropa Do Bruxo"
+            try:
+                players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+                if os.path.exists(players_file):
+                    with open(players_file, 'r', encoding='utf-8-sig') as f:
+                        reader = csv.DictReader(f, delimiter=';')
+                        for row in reader:
+                            if row.get('player_tag'):
+                                my_clan = row.get('clan_name', my_clan)
+                                break
+            except Exception as e:
+                logger.warning(f"Erro ao ler players: {e}")
+            
+            data['my_clan'] = my_clan
+            return data
+        except Exception as e:
+            logger.error(f"Erro em get_war_intelligence_data: {e}")
+            return {'boats': [], 'rivals': {}, 'my_clan': 'Desconhecido'}
+    
     def get_war_radar_data(self, player_tag: str = None):
         """Coleta dados do radar de guerra: 5 clãs, top 3 players, 4 decks cada."""
         if not player_tag:
@@ -4276,16 +4262,17 @@ class GitHubPagesHTMLGenerator:
 
     def generate_war_intelligence_html(self, data):
         """Gera o HTML para a seção de Inteligência de Guerra."""
-        if not data['boats']:
+        if not data.get('boats'):
             return ""
-            
+        
         # Meta de fama (ex: 50.000 para terminar a corrida)
         FAME_GOAL = 50000
         
-        # Cálculo de vantagem estratégica para alertas táticos
+        # Calculo de vantagem estrategica para alertas taticos
         my_fame = 0
+        my_clan = data.get('my_clan') or 'Desconhecido'
         for b in data['boats']:
-            if b.get('Nome_Cla') == data.get('my_clan', 'Desconhecido'):
+            if b.get('Nome_Cla') == my_clan:
                 try:
                     my_fame = int(b.get('Fama_Atual', '0').replace(',', '').replace('.', ''))
                 except: pass
@@ -4299,22 +4286,22 @@ class GitHubPagesHTMLGenerator:
 
         intel_alerts = ""
         if is_reset_day:
-            intel_alerts += f"<div class='intel-alert' style='background: #fef3c7; border-left: 4px solid #d97706; color: #92400e;'><strong>📅 DIA DE RESET:</strong> Temporada nova iniciada! Foco em subir troféus e garantir as primeiras vitórias na guerra.</div>"
+            intel_alerts += f"<div class='intel-alert' style='background: #fef3c7; border-left: 4px solid #d97706; color: #92400e;'><strong>[RESET]</strong> Temporada nova iniciada! Foco em subir trofeus e garantir as primeiras vitorias na guerra.</div>"
 
-        for b in data['boats']:
-            if b.get('Nome_Cla') != data.get('my_clan', 'Desconhecido'):
+        for b in data.get('boats', []):
+            if b.get('Nome_Cla') != my_clan:
                 try:
                     rival_fame = int(b.get('Fama_Atual', '0').replace(',', '').replace('.', ''))
                     diff_val = my_fame - rival_fame
                     if diff_val > 0:
                         intel_alerts += f"<div class='intel-alert positive'>Vantagem de <strong>{diff_val:,}</strong> sobre {b.get('Nome_Cla')}</div>"
                     else:
-                        intel_alerts += f"<div class='intel-alert negative'>Atrás de {b.get('Nome_Cla')} por <strong>{abs(diff_val):,}</strong></div>"
+                        intel_alerts += f"<div class='intel-alert negative'>Atras de {b.get('Nome_Cla')} por <strong>{abs(diff_val):,}</strong></div>"
                 except: pass
 
         boat_rows = ""
-        for b in data['boats']:
-            is_me = "highlight-row" if b.get('Nome_Cla') == data.get('my_clan', 'Desconhecido') else ""
+        for b in data.get('boats', []):
+            is_me = "highlight-row" if b.get('Nome_Cla') == my_clan else ""
             try:
                 fame_val = int(b.get('Fama_Atual', '0').replace(',', '').replace('.', ''))
             except:
@@ -4340,15 +4327,15 @@ class GitHubPagesHTMLGenerator:
                         </div>
                     </td>
                     <td style="text-align: right; font-family: monospace;">{fame_val:,}</td>
-                    <td style="text-align: center;">{"✅" if b.get('Finalizado') == 'Sim' else "⚓"}</td>
+                    <td style="text-align: center;">{"[OK]" if b.get('Finalizado') == 'Sim' else "[ ]"}</td>
                 </tr>
             """
             
         rival_cards = ""
-        for cla, players in data['rivals'].items():
-            if cla == data.get('my_clan', 'Desconhecido'): continue
+        for cla, players in data.get('rivals', {}).items():
+            if cla == my_clan: continue
             
-            player_list = "".join([f"<li><span class='rival-name'>{p['Jogador']}</span> <span class='rival-fame'>+{p['Fama_Hoje']}</span></li>" for p in players])
+            player_list = "".join([f"<li><span class='rival-name'>{p.get('Jogador', p.get('player_nome', 'N/A'))}</span> <span class='rival-fame'>+{p.get('Fama_Hoje', p.get('player_fame', 0))}</span></li>" for p in players])
             rival_cards += f"""
                 <div class="rival-mini-card">
                     <h4>{cla}</h4>
@@ -4860,9 +4847,12 @@ class GitHubPagesHTMLGenerator:
             war_intel_html = ""
             try:
                 war_intel_data = self.get_war_intelligence_data()
-                war_intel_html = self.generate_war_intelligence_html(war_intel_data)
+                if war_intel_data:
+                    war_intel_html = self.generate_war_intelligence_html(war_intel_data)
             except Exception as e:
+                import traceback
                 logger.error(f"Error generating war intel: {e}")
+                logger.error(traceback.format_exc())
 
             war_radar_html = ""
             war_radar_tabs = ""
