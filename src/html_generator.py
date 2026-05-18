@@ -3999,9 +3999,35 @@ class GitHubPagesHTMLGenerator:
                 intel_files = [f for f in intel_files if '_sec_' not in f]
         
         if not intel_files:
+            logger.warning(f"get_war_radar_data: Nenhum arquivo para player_tag={player_tag}")
             return data
         
-        latest_intel = max(intel_files)
+        # Se é conta secundária, buscar o arquivo com dados reais (não apenas o mais recente)
+        # Para guerra da secundária, usar arquivo com decks populated
+        if '2220UQQ0UU' in player_tag:
+            # Priorizar arquivos que têm decks (indicam que teve luta)
+            best_file = None
+            best_score = -1
+            for f in intel_files:
+                with open(f, 'r', encoding='utf-8-sig') as csvfile:
+                    reader = csv.DictReader(csvfile, delimiter=';')
+                    rows = list(reader)
+                    # Score: mais decks = melhor
+                    deck_count = sum(1 for r in rows if r.get('deck_1') and 'Deck nao encontrado' not in r.get('deck_1', ''))
+                    total_fame = sum(int(r.get('player_fame', 0) or 0) for r in rows)
+                    score = deck_count * 1000 + total_fame
+                    if score > best_score:
+                        best_score = score
+                        best_file = f
+            if best_file:
+                latest_intel = best_file
+                logger.info(f"get_war_radar_data: sec usando arquivo com dados: {os.path.basename(best_file)} (score={best_score})")
+            else:
+                latest_intel = max(intel_files)
+        else:
+            latest_intel = max(intel_files)
+        
+        logger.info(f"get_war_radar_data: player={player_tag}, latest_file={os.path.basename(latest_intel)}")
         
         # Identificar meu clã pelo players.csv
         my_clan = ''
@@ -4031,6 +4057,7 @@ class GitHubPagesHTMLGenerator:
             
             # Agrupar por clã - suporte para formato novo e antigo
             clan_data = {}
+            players_added = 0
             for row in all_rows:
                 # Formato novo (inteligencia_guerra_full)
                 cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
@@ -4041,6 +4068,7 @@ class GitHubPagesHTMLGenerator:
                 decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
                 boat_attacks = row.get('boat_attacks', '0')
                 lutou = "Sim" if int(boat_attacks or 0) > 0 else "Nao"
+                deck_1 = row.get('deck_1', '')
                 
                 # NÃO filtrar por clan_tag - mostrar TODOS os clãs competitors na corrida
                 # O CSV já está separado por conta (_pri/_sec), mas os dados incluem todos os clãs
@@ -4061,7 +4089,7 @@ class GitHubPagesHTMLGenerator:
                         'date': player_date,
                         'lutou': lutou,
                         'ataques': f"{decks_used}/4" if decks_used else '0/4',
-                        'deck_1': row.get('deck_1', ''),
+                        'deck_1': deck_1,
                         'deck_1_tipo': row.get('deck_1_tipo', 'Guerra'),
                         'deck_2': row.get('deck_2', ''),
                         'deck_2_tipo': row.get('deck_2_tipo', ''),
@@ -4070,6 +4098,9 @@ class GitHubPagesHTMLGenerator:
                         'deck_4': row.get('deck_4', ''),
                         'deck_4_tipo': row.get('deck_4_tipo', '')
                     })
+                    players_added += 1
+            
+            logger.info(f"get_war_radar_data: players_added={players_added}, clans={len(clan_data)}")
             
             # Ordenar clãs por fame (maior primero)
             clan_list = []
