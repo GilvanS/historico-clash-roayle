@@ -176,17 +176,47 @@ def collect_river_race_intelligence():
     
     # CSV para conta principal
     filename_pri = f"{DATA_DIR}/inteligencia_guerra_full_pri_{data_hoje}.csv"
-    with open(filename_pri, 'w', newline='', encoding='utf-8-sig') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
-        writer.writeheader()
-        writer.writerows(results_pri)
+    
+    # Verificar ANTES de escrever: se dados atuais estão vazios E existe arquivo anterior
+    # com dados reais, NÃO sobrescrever - manter histórico da guerra anterior
+    total_fame_pri = sum(r.get('player_fame', 0) for r in results_pri)
+    if total_fame_pri == 0:
+        previous_files_pri = sorted(glob.glob(f"{DATA_DIR}/inteligencia_guerra_full_pri_*.csv"))
+        previous_files_pri = [f for f in previous_files_pri if f != filename_pri]
+        if previous_files_pri:
+            latest_existing = max(previous_files_pri)
+            print(f"Aviso: Dados atuais vazios para pri. Mantendo arquivo anterior: {os.path.basename(latest_existing)}")
+            import shutil
+            shutil.copy(latest_existing, filename_pri)
+            results_pri = []  # Não escrever dados vazios
+    
+    if results_pri:  # Só escreve se tiver dados reais
+        with open(filename_pri, 'w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+            writer.writeheader()
+            writer.writerows(results_pri)
     
     # CSV para conta secundaria
     filename_sec = f"{DATA_DIR}/inteligencia_guerra_full_sec_{data_hoje}.csv"
-    with open(filename_sec, 'w', newline='', encoding='utf-8-sig') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
-        writer.writeheader()
-        writer.writerows(results_sec)
+    
+    # Verificar ANTES de escrever: se dados atuais estão vazios E existe arquivo anterior
+    # com dados reais, NÃO sobrescrever - manter histórico da guerra anterior
+    total_fame_sec = sum(r.get('player_fame', 0) for r in results_sec)
+    if total_fame_sec == 0:
+        previous_files_sec = sorted(glob.glob(f"{DATA_DIR}/inteligencia_guerra_full_sec_*.csv"))
+        previous_files_sec = [f for f in previous_files_sec if f != filename_sec]
+        if previous_files_sec:
+            latest_existing = max(previous_files_sec)
+            print(f"Aviso: Dados atuais vazios para sec. Mantendo arquivo anterior: {os.path.basename(latest_existing)}")
+            import shutil
+            shutil.copy(latest_existing, filename_sec)
+            results_sec = []  # Não escrever dados vazios
+    
+    if results_sec:  # Só escreve se tiver dados reais
+        with open(filename_sec, 'w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+            writer.writeheader()
+            writer.writerows(results_sec)
     
     print(f"\n\nSUCESSO!")
     print(f"Conta Principal: {filename_pri} ({len(results_pri)} jogadores)")

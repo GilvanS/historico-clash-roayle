@@ -1,8 +1,15 @@
 import os
+import sys
 import requests
 import csv
+import glob
 from datetime import datetime
 from dotenv import load_dotenv
+
+# Forçar UTF-8 apenas se não estiver configurado
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 load_dotenv()
 
@@ -10,35 +17,44 @@ def get_config():
     token = os.getenv('CR_API_TOKEN')
     headers = {'Authorization': f'Bearer {token}'}
     base_url = "https://proxy.royaleapi.dev/v1"
-    clan_tag = "%23QCLPL9VQ"
-    return headers, base_url, clan_tag
+    # Conta principal
+    clan_tag_pri = "%23QCLPL9VQ"
+    # Conta secundária
+    clan_tag_sec = "%23R0JVY98R"
+    return headers, base_url, clan_tag_pri, clan_tag_sec
 
-def collect_boat_data():
-    # Verifica se hoje é entre Quinta (3) e Domingo (6)
-    # 0=Segunda, 1=Terca, 2=Quarta, 3=Quinta, 4=Sexta, 5=Sabado, 6=Domingo
-    weekday = datetime.now().weekday()
-    is_war_day = weekday >= 3 
+DATA_DIR = 'src/data_clan'
 
-    if not is_war_day:
-        print("Hoje não é dia de guerra ativa (Quinta a Domingo).")
-        # Mesmo assim vamos coletar se o usuário pediu manualmente
-    
-    headers, base_url, clan_tag = get_config()
-    r = requests.get(f"{base_url}/clans/{clan_tag}/currentriverrace", headers=headers)
+def collect_boat_data_for_clan(headers, base_url, clan_tag, suffix=""):
+    """Coleta status dos barcos para um clã específico."""
+    r = requests.get(f"{base_url}/clans/{clan_tag}/currentriverrace", headers=headers, timeout=15)
     
     if r.status_code == 200:
         data = r.json()
         clans = data.get('clans', [])
-        today = datetime.now().strftime('%Y_%m_%d')
         
-        os.makedirs('src/data_clan', exist_ok=True)
-        filename = f'src/data_clan/status_barcos_{today}.csv'
+        os.makedirs(DATA_DIR, exist_ok=True)
+        today = datetime.now().strftime('%Y_%m_%d')
+        filename = f'{DATA_DIR}/status_barcos{suffix}_{today}.csv'
+        
+        # Verificar se dados atuais estão vazios
+        total_fame = sum(c.get('fame', 0) for c in clans)
+        
+        if total_fame == 0:
+            # Buscar arquivo anterior com dados
+            pattern = f'{DATA_DIR}/status_barcos{suffix}_*.csv'
+            previous_files = sorted(glob.glob(pattern))
+            if previous_files:
+                latest_existing = max(previous_files)
+                print(f"Aviso: Dados vazios. Mantendo arquivo anterior: {os.path.basename(latest_existing)}")
+                import shutil
+                shutil.copy(latest_existing, filename)
+                return filename
         
         with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
             writer = csv.writer(f, delimiter=';')
             writer.writerow(['Posicao', 'Nome_Cla', 'Fama_Atual', 'Pontos_Reparo', 'Finalizado', 'Pontos_Periodo'])
             
-            # Ordena os clãs pela fama (quem está na frente)
             sorted_clans = sorted(clans, key=lambda x: x.get('fame', 0), reverse=True)
             
             for i, clan in enumerate(sorted_clans):
@@ -51,14 +67,47 @@ def collect_boat_data():
                     clan.get('periodPoints')
                 ])
         
-        print(f"SUCESSO: Relatório dos barcos gerado: {filename}")
-        
-        # Exibe um resumo no terminal
-        print("\n=== POSIÇÃO DA CORRIDA AGORA ===")
-        for i, c in enumerate(sorted_clans):
-            print(f"{i+1}º - {c.get('name'):<20} | Fama: {c.get('fame'):<6} | Pontos: {c.get('periodPoints')}")
+        print(f"SUCESSO: status_barcos{suffix}_{today}.csv")
+        return filename
     else:
         print(f"Erro ao buscar dados da corrida: {r.status_code}")
+        return None
+
+def collect_boat_data():
+    headers, base_url, clan_tag_pri, clan_tag_sec = get_config()
+    
+    print("=" * 60)
+    print("COLETANDO STATUS BARCOS - AMBAS CONTAS")
+    print("=" * 60)
+    
+    print("\n--- CONTA PRINCIPAL ---")
+    filename_pri = collect_boat_data_for_clan(headers, base_url, clan_tag_pri, '_pri')
+    
+    print("\n--- CONTA SECUNDARIA ---")
+    filename_sec = collect_boat_data_for_clan(headers, base_url, clan_tag_sec, '_sec')
+    
+    # Se algum arquivo não foi criado por falta de dados, copiar do anterior
+    if not filename_pri or not os.path.exists(filename_pri):
+        pattern = f'{DATA_DIR}/status_barcos_pri_*.csv'
+        previous = sorted(glob.glob(pattern))
+        if previous:
+            filename = f'{DATA_DIR}/status_barcos_pri_{datetime.now().strftime("%Y_%m_%d")}.csv'
+            import shutil
+            shutil.copy(max(previous), filename)
+            print(f"Copiado status_barcos_pri do dia anterior")
+    
+    if not filename_sec or not os.path.exists(filename_sec):
+        pattern = f'{DATA_DIR}/status_barcos_sec_*.csv'
+        previous = sorted(glob.glob(pattern))
+        if previous:
+            filename = f'{DATA_DIR}/status_barcos_sec_{datetime.now().strftime("%Y_%m_%d")}.csv'
+            import shutil
+            shutil.copy(max(previous), filename)
+            print(f"Copiado status_barcos_sec do dia anterior")
+    
+    print("\n" + "=" * 60)
+    print("COLETA DE STATUS BARCOS CONCLUIDA")
+    print("=" * 60)
 
 if __name__ == "__main__":
     collect_boat_data()

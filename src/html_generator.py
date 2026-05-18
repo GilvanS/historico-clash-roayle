@@ -3794,14 +3794,30 @@ class GitHubPagesHTMLGenerator:
         
         return history
     
-    def get_war_calendar_data(self, my_clan: str, days_back: int = 5) -> List[Dict]:
-        """Retorna dados processados do calendário de guerra para um clã específico."""
+    def get_war_calendar_data(self, my_clan: str, days_back: int = 5, suffix: str = '') -> List[Dict]:
+        """Retorna dados processados do calendário de guerra para um clã específico.
+        
+        Args:
+            my_clan: Nome do clã
+            days_back: Quantos dias atrás buscar
+            suffix: Sufixo do arquivo ('_pri', '_sec' ou '' para padrão)
+        """
         days = []
         war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
         
-        # Buscar arquivos de status_barcos
+        # Buscar arquivos de status_barcos com sufixo correto
         import glob
-        boat_files = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv")), reverse=True)
+        if suffix:
+            boat_files = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", f"status_barcos{suffix}_*.csv")), reverse=True)
+        else:
+            # Arquivo padrão (sem sufixo) ou específico
+            # Tentar primeiro arquivo com sufixo, depois sem
+            boat_files_pri = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_pri_*.csv")), reverse=True)
+            boat_files_sec = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_sec_*.csv")), reverse=True)
+            boat_files_default = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv")), reverse=True)
+            # Filtrar para não incluir os _pri e _sec
+            boat_files_default = [f for f in boat_files_default if '_pri_' not in os.path.basename(f) and '_sec_' not in os.path.basename(f)]
+            boat_files = boat_files_default or boat_files_pri or boat_files_sec
         
         today = datetime.now().date()
         
@@ -4206,7 +4222,9 @@ class GitHubPagesHTMLGenerator:
         # Gerar calendário de dias de guerra usando dados processados
         calendar_html = ""
         if my_clan:
-            calendar_data = self.get_war_calendar_data(my_clan, 5)
+            # Usar suffix baseado no tab_id (_pri ou _sec)
+            suffix = f"_{tab_id}" if tab_id else ''
+            calendar_data = self.get_war_calendar_data(my_clan, 5, suffix)
             if calendar_data:
                 calendar_html = self._generate_war_calendar_html(calendar_data, my_clan, tab_id)
         
