@@ -4038,10 +4038,14 @@ class GitHubPagesHTMLGenerator:
                 # Limitar a 5 players por clan no formato full
                 max_players = 5 if row.get('clan_posicao') else 3
                 if len(clan_data[cla]) < max_players:
+                    # Data do CSV (formato YYYY-MM-DD)
+                    player_date = row.get('data_coleta', datetime.now().strftime('%Y-%m-%d')).replace('-', '_')
+                    
                     clan_data[cla].append({
                         'ranking': ranking,
                         'player': player_name,
                         'fame': player_fame,
+                        'date': player_date,
                         'lutou': lutou,
                         'ataques': f"{decks_used}/4" if decks_used else '0/4',
                         'deck_1': row.get('deck_1', ''),
@@ -4167,6 +4171,8 @@ class GitHubPagesHTMLGenerator:
             is_me = clan.get('is_me', False)
             me_class = "rd-clan-me" if is_me else ""
             me_badge = "<span class='rd-me-badge'>MEU CLÃ</span>" if is_me else ""
+            # Usar a data do calendário (hoje) se disponível
+            clan_date = clan.get('date', datetime.now().strftime('%Y_%m_%d'))
             
             player_rows_html = ""
             for p in clan.get('players', []):
@@ -4206,7 +4212,7 @@ class GitHubPagesHTMLGenerator:
                     deck_rows_html = '<div class="rd-no-deck">Sem decks recentes</div>'
                 
                 player_rows_html += f"""
-                    <div class="rd-player">
+                    <div class="rd-player" data-date="{clan_date}">
                         <div class="rd-player-header">
                             <span class="rd-rank">#{ranking}</span>
                             <span class="rd-name">{player_name}</span>
@@ -7219,6 +7225,50 @@ class GitHubPagesHTMLGenerator:
         
         // Salvar seleção no localStorage
         localStorage.setItem('cr_radar_tab_' + tabId, tabId);
+    }}
+    
+    // War Day selection - filtrar jogadores e clãs por data
+    function selectWarDay(tabId, date, element) {{
+        if (!element) return;
+        
+        var calendar = element.closest('.rd-calendar-container');
+        if (!calendar) return;
+        
+        // Remover active de todos os dias
+        calendar.querySelectorAll('.rd-calendar-day').forEach(function(d) {{ d.classList.remove('rd-calendar-day-active'); }});
+        element.classList.add('rd-calendar-day-active');
+        
+        // Encontrar o conteúdo do radar para esta tab
+        var radarContent = document.getElementById('rd-content-' + tabId);
+        if (!radarContent) return;
+        
+        // Se date é "all", mostrar todos
+        if (date === 'all') {{
+            radarContent.querySelectorAll('.rd-player').forEach(function(p) {{ p.style.display = 'block'; }});
+            radarContent.querySelectorAll('.rd-clan').forEach(function(c) {{ c.style.display = 'block'; }});
+            return;
+        }}
+        
+        // Filtrar jogadores pela data
+        var visibleCount = 0;
+        radarContent.querySelectorAll('.rd-player').forEach(function(player) {{
+            var playerDate = player.getAttribute('data-date');
+            if (playerDate === date) {{
+                player.style.display = 'block';
+                visibleCount++;
+            }} else {{
+                player.style.display = 'none';
+            }}
+        }});
+        
+        // Esconder clãs sem jogadores visíveis
+        radarContent.querySelectorAll('.rd-clan').forEach(function(clan) {{
+            var visiblePlayers = clan.querySelectorAll('.rd-player[style="block"]');
+            clan.style.display = visiblePlayers.length > 0 ? 'block' : 'none';
+        }});
+        
+        // Salvar seleção no localStorage
+        localStorage.setItem('cr_radar_day_' + tabId, date);
     }}
     
     // Restore last selected radar tab on page load
