@@ -3309,7 +3309,7 @@ class GitHubPagesHTMLGenerator:
                 <!-- Coluna Oponente -->
                 <div style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
                     <div style="width: 60px; margin-bottom: 6px;">
-                        <img src="{opp_metrics['tower_url']}" style="width: 100%; filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.4));">
+                        <img src="{opp_metrics['tower_url']}" style="width: 100%; transform: scaleX(-1); filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.4));">
                     </div>
                     <div style="width: 100%; position: relative; z-index: 5;">
                         {self._generate_deck_grid_html_simple(battle_data.get('opp_deck', ''))}
@@ -3538,9 +3538,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-body" style="padding: 30px !important; background: transparent;">
                     <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 24px; align-items: center;">
                         
-                        <!-- Top Row: Torre do Oponente -->
+                        <!-- Top Row: Torre do Oponente (espelhada para ficar de frente) -->
                         <div class="cr-tower-display-v2" style="position: relative; display: flex; flex-direction: column; align-items: center;">
-                            <img src="{metrics['tower_url']}" class="cr-tower-img-premium" style="width: 100px; height: 100px; filter: drop-shadow(0 0 25px rgba(248, 113, 113, 0.4));">
+                            <img src="{metrics['tower_url']}" class="cr-tower-img-premium" style="width: 100px; height: 100px; transform: scaleX(-1); filter: drop-shadow(0 0 25px rgba(248, 113, 113, 0.4));">
                         </div>
 
                         <!-- Mid Row: Grid do Deck -->
