@@ -4145,18 +4145,19 @@ class GitHubPagesHTMLGenerator:
         return data
     
     def _generate_war_calendar_html(self, day_history: List[Dict], my_clan: str, tab_id: str) -> str:
-        """Gera o HTML do calendário de dias de guerra."""
+        """Gera o HTML do calendário de dias de guerra com timeline horizontal."""
         if not day_history:
             return ""
         
         days_html = ""
-        for entry in day_history[:5]:  # Limita a 5 dias
+        for entry in day_history[:6]:  # Limita a 6 dias (Terça a Domingo)
             date = entry['date']
             label = entry.get('label', date)
             is_active = entry.get('is_active', False)
             position = entry.get('position', 0)
             fame = entry.get('fame', 0)
-            points = entry.get('points', 0)
+            boat_status = entry.get('boat_status', 'unknown')
+            medals = entry.get('medals', 0)
             
             active_class = "rd-calendar-day-active" if is_active else ""
             position_class = f"rd-calendar-pos-{position}" if position > 0 else ""
@@ -4175,21 +4176,37 @@ class GitHubPagesHTMLGenerator:
                 status_icon = f"#{position}" if position > 0 else "—"
                 status_class = ""
             
+            # Ícone e classe do barco
+            if boat_status == 'complete':
+                boat_icon = "🚢"
+                boat_class = "complete"
+            elif boat_status == 'repairing':
+                boat_icon = "🔧"
+                boat_class = "repairing"
+            elif boat_status == 'destroyed':
+                boat_icon = "💥"
+                boat_class = "destroyed"
+            else:
+                boat_icon = "⚓"
+                boat_class = ""
+            
             days_html += f"""
                 <div class="rd-calendar-day {active_class} {position_class} {status_class}" 
                      onclick="selectWarDay('{tab_id}', '{date}', this)"
-                     data-date="{date}">
+                     data-date="{date}" data-position="{position}">
                     <div class="rd-calendar-label">{label}</div>
                     <div class="rd-calendar-icon">{status_icon}</div>
                     <div class="rd-calendar-pos">#{position if position > 0 else '—'}</div>
-                    <div class="rd-calendar-fame">{fame:,}</div>
+                    <div class="rd-calendar-fame">⚔️ {fame:,}</div>
+                    <div class="rd-calendar-boat {boat_class}">{boat_icon}</div>
+                    {f'<div style="font-size:0.65em;color:#a78bfa;">🏅{medals}</div>' if medals > 0 else ''}
                 </div>
             """
         
         return f"""
             <div class="rd-calendar-container" id="rd-calendar-{tab_id}">
-                <div class="rd-calendar-title">[ Calendario Dias de Guerra ]</div>
-                <div class="rd-calendar-days">
+                <div class="rd-calendar-title">📅 Calendário Guerra - {my_clan}</div>
+                <div class="rd-calendar-timeline">
                     {days_html}
                 </div>
             </div>
@@ -7075,21 +7092,162 @@ class GitHubPagesHTMLGenerator:
         .rd-tab:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
         .rd-tab.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.4); }
         
-        /* Calendario de Dias de Guerra */
-        .rd-calendar-container { background: rgba(15, 23, 42, 0.6); border-radius: 16px; padding: 20px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.08); }
-        .rd-calendar-title { font-size: 0.9em; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-align: center; }
-        .rd-calendar-days { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .rd-calendar-day { display: flex; flex-direction: column; align-items: center; padding: 15px 20px; background: rgba(30, 41, 59, 0.6); border: 2px solid rgba(255,255,255,0.08); border-radius: 12px; cursor: pointer; transition: all 0.3s; min-width: 80px; }
-        .rd-calendar-day:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); transform: translateY(-3px); }
-        .rd-calendar-day-active { background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3)) !important; border-color: var(--primary) !important; box-shadow: 0 0 20px rgba(96, 165, 250, 0.3); }
-        .rd-calendar-day-active .rd-calendar-label { color: var(--primary); }
-        .rd-calendar-label { font-size: 0.75em; font-weight: 700; color: #94a3b8; margin-bottom: 8px; }
-        .rd-calendar-icon { font-size: 1.5em; margin-bottom: 5px; }
-        .rd-calendar-pos { font-size: 1em; font-weight: 900; color: #fff; }
-        .rd-calendar-fame { font-size: 0.65em; color: #fbbf24; font-weight: 600; }
-        .rd-calendar-gold { border-color: #fbbf24 !important; background: rgba(251, 191, 36, 0.1) !important; }
-        .rd-calendar-silver { border-color: #94a3b8 !important; background: rgba(148, 163, 184, 0.1) !important; }
-        .rd-calendar-bronze { border-color: #cd7f32 !important; background: rgba(205, 127, 50, 0.1) !important; }
+        /* Calendário de Dias de Guerra - NOVO LAYOUT TIMELINE HORIZONTAL */
+        .rd-calendar-container { 
+            background: rgba(15, 23, 42, 0.8); 
+            border-radius: 20px; 
+            padding: 24px; 
+            margin-bottom: 30px; 
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .rd-calendar-title { 
+            font-size: 1em; 
+            font-weight: 700; 
+            color: #94a3b8; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            margin-bottom: 20px; 
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .rd-calendar-title::before,
+        .rd-calendar-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.5), transparent);
+        }
+        
+        /* Timeline Horizontal com CSS Grid */
+        .rd-calendar-timeline {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scroll-behavior: smooth;
+        }
+        
+        /* Card de Dia - Design melhorado */
+        .rd-calendar-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 18px 12px;
+            background: rgba(30, 41, 59, 0.7);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        .rd-calendar-day::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .rd-calendar-day:hover { 
+            background: rgba(59, 130, 246, 0.15); 
+            border-color: rgba(96, 165, 250, 0.4);
+            transform: translateY(-4px); 
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+        }
+        .rd-calendar-day:hover::before {
+            opacity: 1;
+        }
+        .rd-calendar-day-active { 
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.2)) !important; 
+            border-color: #3b82f6 !important; 
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1) !important;
+        }
+        .rd-calendar-day-active::before {
+            opacity: 1;
+        }
+        
+        /* Elementos do Card de Dia */
+        .rd-calendar-label { 
+            font-size: 0.8em; 
+            font-weight: 700; 
+            color: #94a3b8; 
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .rd-calendar-icon { 
+            font-size: 1.8em; 
+            margin-bottom: 8px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .rd-calendar-pos { 
+            font-size: 1.1em; 
+            font-weight: 900; 
+            color: #fff;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .rd-calendar-fame { 
+            font-size: 0.75em; 
+            color: #fbbf24; 
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* Medalhas Coloridas */
+        .rd-calendar-gold { 
+            border-color: #fbbf24 !important; 
+            background: rgba(251, 191, 36, 0.15) !important;
+        }
+        .rd-calendar-gold .rd-calendar-icon { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6)); }
+        .rd-calendar-silver { 
+            border-color: #94a3b8 !important; 
+            background: rgba(148, 163, 184, 0.1) !important; 
+        }
+        .rd-calendar-silver .rd-calendar-icon { filter: drop-shadow(0 0 6px rgba(148, 163, 184, 0.4)); }
+        .rd-calendar-bronze { 
+            border-color: #cd7f32 !important; 
+            background: rgba(205, 127, 50, 0.1) !important; 
+        }
+        .rd-calendar-bronze .rd-calendar-icon { filter: drop-shadow(0 0 6px rgba(205, 127, 50, 0.4)); }
+        
+        /* Status de Barco */
+        .rd-calendar-boat {
+            font-size: 0.7em;
+            margin-top: 6px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+        }
+        .rd-calendar-boat.complete { color: #4ade80; }
+        .rd-calendar-boat.repairing { color: #fbbf24; }
+        .rd-calendar-boat.destroyed { color: #f87171; }
+        
+        /* Responsivo Mobile */
+        @media (max-width: 768px) { 
+            .rd-calendar-timeline {
+                grid-template-columns: repeat(6, minmax(90px, 1fr));
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+            }
+            .rd-calendar-day {
+                scroll-snap-align: start;
+                min-width: 90px;
+            }
+        }
         
         @media (max-width: 768px) { .rd-grid { grid-template-columns: 1fr; } }
         """
