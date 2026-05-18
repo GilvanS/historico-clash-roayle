@@ -4003,31 +4003,25 @@ class GitHubPagesHTMLGenerator:
         
         data = {'clans': [], 'my_clan': '', 'total_clans': 0}
         
-        # Selecionar CSV baseado na conta
-        if '2220UQQ0UU' in player_tag:
-            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_sec_*.csv"))
-            if not intel_files:
-                intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_sec_*.csv"))
-        else:
-            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_pri_*.csv"))
-            if not intel_files:
-                intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
-                intel_files = [f for f in intel_files if '_sec_' not in f]
+        # Selecionar arquivo unificado (contém dados de ambas contas com coluna player_tag_conta)
+        intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+        # Filtrar para não incluir arquivos antigos com _sec ou _pri no nome
+        intel_files = [f for f in intel_files if '_full_sec_' not in f and '_full_pri_' not in f and '_sec_' not in f and '_pri_' not in f]
         
         if not intel_files:
             logger.warning(f"get_war_radar_data: Nenhum arquivo para player_tag={player_tag}")
             return data
         
-        # Se é conta secundária, buscar o arquivo com dados reais (não apenas o mais recente)
-        # Para guerra da secundária, usar arquivo com decks populated
+        # Para conta secundária, buscar o arquivo com mais dados (score)
         if '2220UQQ0UU' in player_tag:
-            # Priorizar arquivos que têm decks (indicam que teve luta)
             best_file = None
             best_score = -1
             for f in intel_files:
                 with open(f, 'r', encoding='utf-8-sig') as csvfile:
                     reader = csv.DictReader(csvfile, delimiter=';')
                     rows = list(reader)
+                    # Filtrar apenas linhas desta conta
+                    rows = [r for r in rows if r.get('player_tag_conta') == player_tag]
                     # Score: mais decks = melhor
                     deck_count = sum(1 for r in rows if r.get('deck_1') and 'Deck nao encontrado' not in r.get('deck_1', ''))
                     total_fame = sum(int(r.get('player_fame', 0) or 0) for r in rows)
@@ -4039,9 +4033,12 @@ class GitHubPagesHTMLGenerator:
                 latest_intel = best_file
                 logger.info(f"get_war_radar_data: sec usando arquivo com dados: {os.path.basename(best_file)} (score={best_score})")
             else:
-                latest_intel = max(intel_files)
+                latest_intel = max(intel_files) if intel_files else None
         else:
-            latest_intel = max(intel_files)
+            latest_intel = max(intel_files) if intel_files else None
+        
+        if not latest_intel:
+            return data
         
         logger.info(f"get_war_radar_data: player={player_tag}, latest_file={os.path.basename(latest_intel)}")
         
@@ -4071,11 +4068,15 @@ class GitHubPagesHTMLGenerator:
             if not all_rows:
                 return data
             
-            # Agrupar por clã - suporte para formato novo e antigo
+            # Agrupar por clã - filtro por player_tag_conta
             clan_data = {}
             players_added = 0
             for row in all_rows:
-                # Formato novo (inteligencia_guerra_full)
+                # Filtrar por conta: só mostrar dados da conta especificada
+                row_account = row.get('player_tag_conta', '')
+                if row_account and row_account != player_tag:
+                    continue  # Pular linhas de outras contas
+                
                 cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
                 cla_tag = row.get('clan_tag', '')
                 ranking = int(row.get('clan_posicao') or row.get('Ranking', 99) or 99)
