@@ -4128,7 +4128,7 @@ class GitHubPagesHTMLGenerator:
         
         return f"""
             <div class="rd-calendar-container" id="rd-calendar-{tab_id}">
-                <div class="rd-calendar-title">📅 Dias de Guerra</div>
+                <div class="rd-calendar-title">[ Calendario Dias de Guerra ]</div>
                 <div class="rd-calendar-days">
                     {days_html}
                 </div>
@@ -7009,7 +7009,7 @@ class GitHubPagesHTMLGenerator:
         .rd-tab:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
         .rd-tab.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.4); }
         
-        /* Calendário de Dias de Guerra */
+        /* Calendario de Dias de Guerra */
         .rd-calendar-container { background: rgba(15, 23, 42, 0.6); border-radius: 16px; padding: 20px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.08); }
         .rd-calendar-title { font-size: 0.9em; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-align: center; }
         .rd-calendar-days { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
