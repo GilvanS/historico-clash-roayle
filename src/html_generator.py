@@ -2912,6 +2912,7 @@ class GitHubPagesHTMLGenerator:
                 }
                 if (oTowerImg) {
                     oTowerImg.src = data.o_tower_url || oTowerImg.src;
+                    oTowerImg.style.transform = 'scaleX(-1)';
                     oTowerImg.style.opacity = '0.5';
                     setTimeout(() => oTowerImg.style.opacity = '1', 50);
                 }
@@ -3397,7 +3398,7 @@ class GitHubPagesHTMLGenerator:
                 <!-- Coluna Oponente -->
                 <div class="cr-vs-deck-column opponent" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
                     <div id="o-tower-container-{section_id}" style="width: 90px; margin-bottom: 10px; transition: all 0.3s ease;">
-                        <img id="o-tower-img-{section_id}" src="{opp_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
+                        <img id="o-tower-img-{section_id}" src="{opp_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; transform: scaleX(-1); filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
                         <div id="o-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #f87171; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{opp_metrics.get('hp', '--')} HP</div>
                     </div>
                     <div id="o-grid-{section_id}" style="width: 100%; position: relative; z-index: 5;">
