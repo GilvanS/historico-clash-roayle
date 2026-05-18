@@ -3829,6 +3829,22 @@ class GitHubPagesHTMLGenerator:
                             }
                             break
                 
+                # Se o clã não foi encontrado mas tem um clã válido, ainda mostrar entrada com dados vazios
+                if not clan_data and my_clan:
+                    # Verificar se é o clã correto (mesmo que não tenha dados ainda)
+                    with open(filepath, 'r', encoding='utf-8-sig') as f:
+                        reader = csv.DictReader(f, delimiter=';')
+                        for b in reader:
+                            # Verifica por nome parcial (para clãs com caracteres especiais)
+                            if my_clan.lower() in b.get('Nome_Cla', '').lower() or b.get('Nome_Cla', '').lower() in my_clan.lower():
+                                clan_data = {
+                                    'position': int(b.get('Posicao', 0) or 0),
+                                    'fame': int(b.get('Fama_Atual', 0) or 0),
+                                    'points': int(b.get('Pontos_Periodo', 0) or 0)
+                                }
+                                break
+                
+                # Se encontrou dados do clã, adicionar ao calendário
                 if clan_data:
                     days.append({
                         'date': date_str,
@@ -3836,6 +3852,16 @@ class GitHubPagesHTMLGenerator:
                         'position': clan_data['position'],
                         'fame': clan_data['fame'],
                         'points': clan_data['points'],
+                        'is_active': is_today
+                    })
+                elif my_clan:
+                    # Clã existe mas não está no status_barcos deste dia
+                    days.append({
+                        'date': date_str,
+                        'label': day_label,
+                        'position': 0,
+                        'fame': 0,
+                        'points': 0,
                         'is_active': is_today
                     })
             except Exception as e:
