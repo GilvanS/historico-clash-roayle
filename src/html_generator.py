@@ -4039,7 +4039,7 @@ class GitHubPagesHTMLGenerator:
                     with open(latest_intel, 'r', encoding='utf-8') as f:
                         reader = csv.DictReader(f, delimiter=';')
                         for row in reader:
-                            cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
+                            cla = row.get('clan_nome') or row.get('Cla') or 'Unknown'
                             if cla not in data['rivals']:
                                 data['rivals'][cla] = []
                             if len(data['rivals'][cla]) < 3:
@@ -4281,9 +4281,12 @@ class GitHubPagesHTMLGenerator:
                 </div>
             """
         
+        # Sanitizar nome do clan para evitar caracteres corrompidos
+        my_clan_safe = ''.join(c for c in my_clan if ord(c) < 0x110000)
+        
         return f"""
             <div class="rd-calendar-container" id="rd-calendar-{tab_id}">
-                <div class="rd-calendar-title">📅 Calendário Guerra - {my_clan}</div>
+                <div class="rd-calendar-title">&#x1F4C5; Calendario Guerra - {my_clan_safe}</div>
                 <div class="rd-calendar-timeline">
                     {days_html}
                 </div>
@@ -4513,7 +4516,7 @@ class GitHubPagesHTMLGenerator:
         for cla, players in data.get('rivals', {}).items():
             if cla == my_clan: continue
             
-            player_list = "".join([f"<li><span class='rival-name'>{p.get('Jogador', p.get('player_nome', 'N/A'))}</span> <span class='rival-fame'>+{p.get('Fama_Hoje', p.get('player_fame', 0))}</span></li>" for p in players])
+            player_list = "".join([f"<li><span class='rival-name'>{p.get('Jogador') or p.get('player_nome') or 'N/A'}</span> <span class='rival-fame'>+{p.get('Fama_Hoje') or p.get('player_fame') or 0}</span></li>" for p in players])
             rival_cards += f"""
                 <div class="rival-mini-card">
                     <h4>{cla}</h4>
