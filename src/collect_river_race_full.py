@@ -4,6 +4,7 @@ Coleta Inteligência Completa da Guerra de Rio (River Race)
 - Top 5 clãs da corrida
 - Top 5 jogadores de cada clã
 - 4 decks com tipo de batalha (Guerra, Barco, RangeBattle, Duelo)
+- Estatísticas de batalhas de guerra (vitórias, derrotas, medals, torre)
 """
 
 import os
@@ -40,6 +41,68 @@ def get_clan_tag(token, player_tag='#2QR292P'):
     if r.status_code == 200:
         return r.json().get('clan', {}).get('tag')
     return None
+
+def collect_war_battles_stats(battles):
+    """Coleta estatísticas de batalhas de guerra"""
+    stats = {
+        'war_vitorias': 0,
+        'war_derrotas': 0,
+        'war_medals': 0,
+        'war_torre': 'Tower Princess',
+        'war_tipo_principal': '',
+        'war_battles_count': 0
+    }
+    
+    if not battles:
+        return stats
+    
+    war_battles = [b for b in battles if b.get('type', '') in WAR_BATTLE_TYPES]
+    stats['war_battles_count'] = len(war_battles)
+    
+    if not war_battles:
+        return stats
+    
+    # Contar vitórias e derrotas
+    tipo_counts = {}
+    for b in war_battles:
+        # Verificar se o jogador venceu (olhar team e opponent)
+        is_victory = False
+        team = b.get('team', [])
+        opponent = b.get('opponent', [])
+        
+        if team and opponent:
+            team_crowns = team[0].get('crowns', 0)
+            opp_crowns = opponent[0].get('crowns', 0) if opponent else 0
+            is_victory = team_crowns > opp_crowns
+        
+        if is_victory:
+            stats['war_vitorias'] += 1
+        else:
+            stats['war_derrotas'] += 1
+        
+        # Contar medals (3 para vitória, 1 para derrota com coroas)
+        coroas = team[0].get('crowns', 0) if team else 0
+        if is_victory:
+            stats['war_medals'] += 3  # Vitória = 3 medals
+        elif coroas > 0:
+            stats['war_medals'] += 1  # Derrota com coroa = 1 medal
+        
+        # Torre do jogador (primeira batalha)
+        if stats['war_torre'] == 'Tower Princess':
+            tower = b.get('team', [{}])[0].get('kingTower', {}).get('name', 'Tower Princess')
+            if tower and tower != 'King Tower':
+                stats['war_torre'] = tower
+        
+        # Tipo principal (mais frequente)
+        battle_type = b.get('type', '')
+        tipo_label = BATTLE_TYPE_LABELS.get(battle_type, battle_type)
+        tipo_counts[tipo_label] = tipo_counts.get(tipo_label, 0) + 1
+    
+    # Tipo mais usado
+    if tipo_counts:
+        stats['war_tipo_principal'] = max(tipo_counts, key=tipo_counts.get)
+    
+    return stats
 
 def collect_river_race_for_account(token, player_tag, suffix=""):
     headers = {'Authorization': f'Bearer {token}'}
@@ -88,6 +151,16 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
             player_decks = {'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
                            'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''}
             
+            # Inicializar stats de guerra
+            war_stats = {
+                'war_vitorias': 0,
+                'war_derrotas': 0,
+                'war_medals': 0,
+                'war_torre': 'Tower Princess',
+                'war_tipo_principal': '',
+                'war_battles_count': 0
+            }
+            
             if player_tag_player:
                 try:
                     p_tag_url = player_tag_player.replace('#', '%23')
@@ -95,6 +168,11 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
                     
                     if br.status_code == 200:
                         battles = br.json()
+                        
+                        # Coletar estatísticas de batalha de guerra
+                        war_stats = collect_war_battles_stats(battles)
+                        
+                        # Coletar decks (lógica existente)
                         decks_collected = []
                         deck_types = []
                         
@@ -121,7 +199,7 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
             # Incluir player_tag da conta (não do jogador)
             results.append({
                 'data_coleta': data_hoje,
-                'player_tag_conta': player_tag,  # Tag da conta que fez a coleta
+                'player_tag_conta': player_tag,
                 'clan_posicao': clan_idx,
                 'clan_nome': clan_name,
                 'clan_tag': clan_tag,
@@ -132,7 +210,8 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
                 'player_fame': player_fame,
                 'decks_usados': decks_used,
                 'boat_attacks': boat_attacks,
-                **player_decks
+                **player_decks,
+                **war_stats
             })
     
     return results
@@ -163,11 +242,12 @@ def collect_river_race_intelligence():
     all_results = results_pri + results_sec
     data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
     
-    # Salvar UM arquivo UNIFICADO com coluna player_tag_conta
+    # Campos do CSV (agora inclui estatísticas de guerra)
     fieldnames = [
         'data_coleta', 'player_tag_conta', 'clan_posicao', 'clan_nome', 'clan_tag', 'clan_fame',
         'player_posicao', 'player_nome', 'player_tag', 'player_fame', 'decks_usados', 'boat_attacks',
-        'deck_1', 'deck_1_tipo', 'deck_2', 'deck_2_tipo', 'deck_3', 'deck_3_tipo', 'deck_4', 'deck_4_tipo'
+        'deck_1', 'deck_1_tipo', 'deck_2', 'deck_2_tipo', 'deck_3', 'deck_3_tipo', 'deck_4', 'deck_4_tipo',
+        'war_vitorias', 'war_derrotas', 'war_medals', 'war_torre', 'war_tipo_principal', 'war_battles_count'
     ]
     
     # Arquivo único com todos os dados (separados por player_tag_conta)
@@ -177,6 +257,7 @@ def collect_river_race_intelligence():
     # com dados reais, NÃO sobrescrever - manter histórico da guerra anterior
     total_fame = sum(r.get('player_fame', 0) for r in all_results)
     if total_fame == 0:
+        import glob
         previous_files = sorted(glob.glob(f"{DATA_DIR}/inteligencia_guerra_*.csv"))
         previous_files = [f for f in previous_files if '_sec_' not in f and '_pri_' not in f]
         if previous_files:
@@ -210,6 +291,22 @@ def collect_river_race_intelligence():
     
     for cn, info in sorted(clans_in_results.items(), key=lambda x: x[1]['posicao']):
         print(f"#{info['posicao']} {cn} - {info['fame']} fame - {info['players']} players")
+    
+    # Resumo de batalhas de guerra
+    print("\n" + "=" * 60)
+    print("RESUMO - BATALHAS DE GUERRA POR CONTA")
+    print("=" * 60)
+    
+    for tag in ['#2QR292P', '#2220UQQ0UU']:
+        account_results = [r for r in all_results if r.get('player_tag_conta') == tag]
+        if account_results:
+            total_vit = sum(r.get('war_vitorias', 0) for r in account_results)
+            total_der = sum(r.get('war_derrotas', 0) for r in account_results)
+            total_medals = sum(r.get('war_medals', 0) for r in account_results)
+            total_battles = sum(r.get('war_battles_count', 0) for r in account_results)
+            print(f"\n{tag}:")
+            print(f"  Vitórias: {total_vit} | Derrotas: {total_der}")
+            print(f"  Medals: {total_medals} | Batalhas: {total_battles}")
 
 if __name__ == "__main__":
     collect_river_race_intelligence()

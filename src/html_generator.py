@@ -4184,7 +4184,14 @@ class GitHubPagesHTMLGenerator:
                         'deck_3': row.get('deck_3', ''),
                         'deck_3_tipo': row.get('deck_3_tipo', ''),
                         'deck_4': row.get('deck_4', ''),
-                        'deck_4_tipo': row.get('deck_4_tipo', '')
+                        'deck_4_tipo': row.get('deck_4_tipo', ''),
+                        # Novas estatísticas de guerra
+                        'war_vitorias': int(row.get('war_vitorias', 0) or 0),
+                        'war_derrotas': int(row.get('war_derrotas', 0) or 0),
+                        'war_medals': int(row.get('war_medals', 0) or 0),
+                        'war_torre': row.get('war_torre', 'Tower Princess'),
+                        'war_tipo_principal': row.get('war_tipo_principal', ''),
+                        'war_battles_count': int(row.get('war_battles_count', 0) or 0)
                     })
                     players_added += 1
             
@@ -4371,6 +4378,13 @@ class GitHubPagesHTMLGenerator:
                             <span class="rd-lutou" title="Lutou hoje">{lutou_icon}</span>
                             <span class="rd-attacks">{attacks}</span>
                         </div>
+                        <div class="rd-player-stats">
+                            <span class="rd-stat rd-vitorias" title="Vitórias de guerra">🏆 {p.get('war_vitorias', 0)}</span>
+                            <span class="rd-stat rd-derrotas" title="Derrotas de guerra">💔 {p.get('war_derrotas', 0)}</span>
+                            <span class="rd-stat rd-medals" title="Medals ganhos">🏅 {p.get('war_medals', 0)}</span>
+                            <span class="rd-stat rd-battles" title="Total de batalhas">⚔️ {p.get('war_battles_count', 0)}</span>
+                            <span class="rd-stat rd-torre" title="Torre do jogador">🏰 {p.get('war_torre', 'Tower Princess')}</span>
+                        </div>
                         <div class="rd-decks">
                             {deck_rows_html}
                         </div>
@@ -4408,12 +4422,12 @@ class GitHubPagesHTMLGenerator:
                 {calendar_html}
                 <div class="rd-header">
                     <div class="rd-badge">RADAR DE GUERRA</div>
-                    <h2>📡 Radar de Guerra{day_suffix}</h2>
+                    <h2>📡 Radar TOP Global WAR{day_suffix}</h2>
                     <div class="rd-legend">
                         <span class="rd-legend-item"><span class="rd-legend-dot rd-red"></span> Lutou hoje</span>
                         <span class="rd-legend-item"><span class="rd-legend-dot rd-gray"></span> Nao lutou</span>
                         <span class="rd-legend-item">|</span>
-                        <span class="rd-legend-item">5 clãs · Top 3 players · 4 decks</span>
+                        <span class="rd-legend-item">5 clãs · Top 5 players · 4 decks · Stats</span>
                     </div>
                 </div>
                 <div class="rd-grid">
@@ -7162,6 +7176,28 @@ class GitHubPagesHTMLGenerator:
         .rd-tab { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 10px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.85em; transition: all 0.3s; }
         .rd-tab:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
         .rd-tab.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.4); }
+        
+        /* Estatísticas de Guerra do Jogador */
+        .rd-player-stats {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+            padding: 6px 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+        .rd-stat {
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .rd-vitorias { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+        .rd-derrotas { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+        .rd-medals { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
+        .rd-battles { color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+        .rd-torre { color: #a78bfa; background: rgba(167, 139, 250, 0.1); }
         
         /* Calendário de Dias de Guerra - NOVO LAYOUT TIMELINE HORIZONTAL */
         .rd-calendar-container { 
