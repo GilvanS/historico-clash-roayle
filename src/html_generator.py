@@ -4119,23 +4119,99 @@ class GitHubPagesHTMLGenerator:
             logger.error(f"Erro em get_war_intelligence_data: {e}")
             return {'boats': [], 'rivals': {}, 'my_clan': 'Desconhecido'}
     
-    def get_war_radar_data(self, player_tag: str = None):
-        """Coleta dados do radar de guerra: 5 clãs, top 3 players, 4 decks cada."""
+    def get_war_radar_data(self, player_tag: str = None, mode: str = 'my-war'):
+        """Coleta dados do radar de guerra: 5 clãs, top 3 players, 4 decks cada.
+        
+        Args:
+            player_tag: Tag do jogador para identificar conta
+            mode: 'my-war' para dados da conta ou 'top-global' para TOP global
+        """
         if not player_tag:
             player_tag = self.player_tag
         
         data = {'clans': [], 'my_clan': '', 'total_clans': 0}
         
-        # Selecionar arquivo unificado (contém dados de ambas contas com coluna player_tag_conta)
         intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
-        # Filtrar para não incluir arquivos antigos com _sec ou _pri no nome
-        intel_files = [f for f in intel_files if '_full_sec_' not in f and '_full_pri_' not in f and '_sec_' not in f and '_pri_' not in f]
+        # Filtrar arquivos: excluir _full_, _pri_, _sec_, e formatos antigos (_2026_05_xx)
+        intel_files = [f for f in intel_files if '_full_' not in f and '_pri_' not in f and '_sec_' not in f and '_2026_05_' not in f]
         
         if not intel_files:
             logger.warning(f"get_war_radar_data: Nenhum arquivo para player_tag={player_tag}")
             return data
         
-        # Para conta secundária, buscar o arquivo com mais dados (score)
+        if mode == 'top-global':
+            latest_intel = max(intel_files) if intel_files else None
+            if not latest_intel:
+                return data
+            
+            try:
+                with open(latest_intel, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    all_rows = list(reader)
+                
+                clan_data = {}
+                for row in all_rows:
+                    row_account = row.get('player_tag_conta', '')
+                    if row_account != 'TOP_GLOBAL':
+                        continue
+                    
+                    cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
+                    ranking = int(row.get('clan_posicao') or 99)
+                    player_name = row.get('player_nome') or row.get('Jogador', '')
+                    player_fame = int(row.get('player_fame') or 0)
+                    decks_used = row.get('decks_usados') or '0/4'
+                    boat_attacks = row.get('boat_attacks', '0')
+                    lutou = "Sim" if int(boat_attacks or 0) > 0 else "Nao"
+                    
+                    if cla not in clan_data:
+                        clan_data[cla] = []
+                    
+                    if len(clan_data[cla]) < 5:
+                        clan_data[cla].append({
+                            'ranking': ranking,
+                            'player': player_name,
+                            'fame': player_fame,
+                            'lutou': lutou,
+                            'ataques': f"{decks_used}/4" if decks_used else '0/4',
+                            'deck_1': row.get('deck_1', ''),
+                            'deck_1_tipo': row.get('deck_1_tipo', 'Guerra'),
+                            'deck_2': row.get('deck_2', ''),
+                            'deck_2_tipo': row.get('deck_2_tipo', ''),
+                            'deck_3': row.get('deck_3', ''),
+                            'deck_3_tipo': row.get('deck_3_tipo', ''),
+                            'deck_4': row.get('deck_4', ''),
+                            'deck_4_tipo': row.get('deck_4_tipo', ''),
+                            'war_vitorias': int(row.get('war_vitorias', 0) or 0),
+                            'war_derrotas': int(row.get('war_derrotas', 0) or 0),
+                            'war_medals': int(row.get('war_medals', 0) or 0),
+                            'war_torre': row.get('war_torre', 'Tower Princess'),
+                            'war_tipo_principal': row.get('war_tipo_principal', ''),
+                            'war_battles_count': int(row.get('war_battles_count', 0) or 0)
+                        })
+                
+                clan_list = []
+                for cla, players in clan_data.items():
+                    total_fame = sum(p['fame'] for p in players)
+                    clan_list.append({
+                        'name': cla,
+                        'players': sorted(players, key=lambda x: x['ranking']),
+                        'total_fame': total_fame,
+                        'is_me': False
+                    })
+                
+                clan_list.sort(key=lambda x: x['total_fame'], reverse=True)
+                for i, c in enumerate(clan_list):
+                    c['position'] = i + 1
+                
+                data['clans'] = clan_list
+                data['total_clans'] = len(clan_list)
+                logger.info(f"get_war_radar_data: TOP_GLOBAL mode, clans={len(clan_list)}")
+                
+            except Exception as e:
+                logger.error(f"Erro ao parsear TOP Global: {e}")
+            
+            return data
+        
         if '2220UQQ0UU' in player_tag:
             best_file = None
             best_score = -1
@@ -4510,13 +4586,22 @@ class GitHubPagesHTMLGenerator:
                         <span class="rd-legend-item">5 clãs · Top 5 players · 4 decks · Stats</span>
                     </div>
                 </div>
-                <div class="rd-grid">
-                    {clan_cards_html}
+                <div class="rd-mode-selector">
+                    <button class="rd-mode-btn" onclick="switchRadarMode('my-war', this)" data-active="true">Minha Guerra</button>
+                    <button class="rd-mode-btn" onclick="switchRadarMode('top-global', this)">TOP Global</button>
+                </div>
+                <div id="rd-my-war-{tab_id}" class="rd-mode-content" style="display: block;">
+                    <div class="rd-grid">
+                        {clan_cards_html}
+                    </div>
+                </div>
+                <div id="rd-top-global-{tab_id}" class="rd-mode-content" style="display: none;">
+                    <div id="rd-top-global-grid-{tab_id}" class="rd-grid"></div>
                 </div>
             </div>
         """
         
-        return {'tab': tab_html, 'content': content_html}
+        return {'tab': tab_html, 'content': content_html, 'clans': data.get('clans', [])}
 
     def generate_war_intelligence_html(self, data):
         """Gera o HTML para a seção de Inteligência de Guerra."""
@@ -5114,9 +5199,8 @@ class GitHubPagesHTMLGenerator:
 
             war_radar_html = ""
             war_radar_tabs = ""
+            top_global_script = ""
             try:
-                # Gerar radar para CADA conta
-                # Buscar histórico de dias para ambas as contas
                 day_history = self.get_war_day_history(7)
                 
                 for tag in self.tracked_tags:
@@ -5125,10 +5209,83 @@ class GitHubPagesHTMLGenerator:
                         result = self.generate_war_radar_html(radar_data, tag)
                         war_radar_tabs += result['tab']
                         war_radar_html += result['content']
+                
+                # Gerar dados do TOP Global
+                top_global_data = self.get_war_radar_data(None, mode='top-global')
+                if top_global_data.get('clans'):
+                    tab_id_for_js = "pri" if len(self.tracked_tags) == 1 else "sec"
+                    top_global_json = json.dumps(top_global_data.get('clans', []), ensure_ascii=False)
+                    top_global_script = f"""
+                        <script>
+                            window.TOP_GLOBAL_DATA = {top_global_json};
+                            function switchRadarMode(mode, btn) {{
+                                var tabs = document.querySelectorAll('.rd-mode-btn');
+                                tabs.forEach(function(b) {{ b.classList.remove('active'); }});
+                                btn.classList.add('active');
+                                var contents = document.querySelectorAll('.rd-mode-content');
+                                contents.forEach(function(el) {{ el.style.display = 'none'; }});
+                                var tabId = btn.closest('.rd-content') ? btn.closest('.rd-content').id.replace('rd-content-', '') : '{tab_id_for_js}';
+                                if (mode === 'top-global') {{
+                                    var target = document.getElementById('rd-top-global-' + tabId);
+                                    if (target) target.style.display = 'block';
+                                    renderTopGlobal(tabId);
+                                }} else {{
+                                    var target2 = document.getElementById('rd-my-war-' + tabId);
+                                    if (target2) target2.style.display = 'block';
+                                }}
+                            }}
+                            function renderTopGlobal(tabId) {{
+                                var grid = document.getElementById('rd-top-global-grid-' + tabId);
+                                if (!grid || !window.TOP_GLOBAL_DATA) return;
+                                grid.innerHTML = '';
+                                window.TOP_GLOBAL_DATA.forEach(function(clan) {{
+                                    var playersHtml = '';
+                                    clan.players.forEach(function(p) {{
+                                        var decksHtml = '';
+                                        for (var d = 1; d <= 4; d++) {{
+                                            var deck = p['deck_' + d];
+                                            if (deck && deck.trim() && deck !== 'Deck nao encontrado no log recente') {{
+                                                var cards = deck.split(',').map(function(c) {{ return c.trim(); }}).filter(function(c) {{ return c; }}).slice(0, 8);
+                                                var tipo = p['deck_' + d + '_tipo'] || 'Batalha';
+                                                var tipoIcon = {{'Guerra': '⚔️', 'Barco': '🚣', 'Range Battle': '🎯', 'Duelo': '⚡'}}[tipo] || '🛡️';
+                                                decksHtml += '<div class="rd-deck-row"><div class="rd-deck-label">' + tipoIcon + ' ' + tipo + '</div><div class="rd-deck">';
+                                                cards.forEach(function(card) {{
+                                                    decksHtml += '<div class="cr-card-wrap-premium rd-card"><span>' + card + '</span></div>';
+                                                }});
+                                                decksHtml += '</div></div>';
+                                            }}
+                                        }}
+                                        var lutouIcon = p.lutou === 'Sim' ? '🔴' : '⚪';
+                                        var warStats = '<div class="rd-player-stats">' +
+                                            '<span class="rd-stat rd-vitorias">🏆 ' + p.war_vitorias + '</span>' +
+                                            '<span class="rd-stat rd-derrotas">💔 ' + p.war_derrotas + '</span>' +
+                                            '<span class="rd-stat rd-medals">🏅 ' + p.war_medals + '</span>' +
+                                            '<span class="rd-stat rd-battles">⚔️ ' + p.war_battles_count + '</span>' +
+                                            '</div>';
+                                        playersHtml += '<div class="rd-player">' +
+                                            '<div class="rd-player-header">' +
+                                            '<span class="rd-rank">#' + p.ranking + '</span>' +
+                                            '<span class="rd-name">' + p.player + '</span>' +
+                                            '<span class="rd-fame">+' + p.fame + '</span>' +
+                                            '<span class="rd-lutou" title="Lutou hoje">' + lutouIcon + '</span>' +
+                                            '<span class="rd-attacks">' + p.ataques + '</span>' +
+                                            '</div>' + warStats + '<div class="rd-decks">' + decksHtml + '</div></div>';
+                                    }});
+                                    var meClass = clan.is_me ? ' rd-clan-me' : '';
+                                    var meBadge = clan.is_me ? "<span class='rd-me-badge'>MEU CLÃ</span>" : "";
+                                    grid.innerHTML += '<div class="rd-clan' + meClass + '">' +
+                                        '<div class="rd-clan-header">' +
+                                        '<span class="rd-pos">#' + clan.position + '</span>' +
+                                        '<span class="rd-clan-name">' + clan.name + '</span>' + meBadge +
+                                        '<span class="rd-clan-fame">' + clan.total_fame.toLocaleString() + ' ⭐</span>' +
+                                        '</div><div class="rd-players">' + playersHtml + '</div></div>';
+                                }});
+                            }}
+                        </script>
+                    """;
             except Exception as e:
-                logger.error(f"Error generating war radar: {e}")
+                logger.error(f"Error generating TOP Global script: {e}")
             
-            # Se há múltiplas tabs, criar container com tabs
             if war_radar_tabs and len(self.tracked_tags) > 1:
                 war_radar_html = f"""
                     <div class="rd-tabs-container">
@@ -5138,6 +5295,8 @@ class GitHubPagesHTMLGenerator:
                         {war_radar_html}
                     </div>
                 """
+            
+            war_radar_html += top_global_script
             
             return self.generate_full_html(account_tabs_html, account_contents_html, 
                                          clan_member_activity_html, war_intel_html, war_radar_html)
@@ -7256,6 +7415,10 @@ class GitHubPagesHTMLGenerator:
         .rd-tab { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 10px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.85em; transition: all 0.3s; }
         .rd-tab:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
         .rd-tab.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.4); }
+        .rd-mode-selector { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        .rd-mode-btn { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8em; transition: all 0.3s; }
+        .rd-mode-btn:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
+        .rd-mode-btn[data-active="true"] { background: var(--primary); border-color: var(--primary); color: white; }
         
         /* Estatísticas de Guerra do Jogador */
         .rd-player-stats {

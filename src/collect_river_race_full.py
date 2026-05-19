@@ -104,6 +104,127 @@ def collect_war_battles_stats(battles):
     
     return stats
 
+def collect_top_global_clans(token, limit=5):
+    """Coleta os TOP N clãs do ranking global e seus top 5 jogadores com decks"""
+    headers = {'Authorization': f'Bearer {token}'}
+    base_url = "https://proxy.royaleapi.dev/v1"
+    
+    results = []
+    data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
+    
+    try:
+        r = requests.get(f"{base_url}/locations/global/rankings/clans", headers=headers, timeout=15)
+        if r.status_code != 200:
+            print(f"ERRO ao buscar ranking global: {r.status_code}")
+            return []
+        
+        data = r.json()
+        clans = data.get('items', [])
+        
+        print(f"\n{'='*60}")
+        print(f"COLLECTING TOP GLOBAL WAR - TOP {limit} CLANS")
+        print(f"{'='*60}")
+        
+        for clan_idx, clan in enumerate(clans[:limit], 1):
+            clan_name = clan.get('name', 'Unknown')
+            clan_tag = clan.get('tag', '')
+            clan_fame = clan.get('fame', 0)
+            clan_members = clan.get('members', 0)
+            
+            print(f"\n#{clan_idx} {clan_name} ({clan_tag}) - Fame: {clan_fame}")
+            
+            try:
+                clan_url = clan_tag.replace('#', '%23')
+                cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=15)
+                
+                if cr.status_code == 200:
+                    race_data = cr.json()
+                    my_clan = race_data.get('clans', [])
+                    clan_race = next((c for c in my_clan if c.get('tag') == clan_tag), None)
+                    
+                    if clan_race:
+                        clan_fame = clan_race.get('fame', 0)
+                    
+                    participants = next((c.get('participants', []) for c in my_clan if c.get('tag') == clan_tag), [])
+                    sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
+                    top_players = sorted_players[:5]
+                else:
+                    top_players = []
+            except:
+                top_players = []
+            
+            for player_idx, player in enumerate(top_players, 1):
+                player_tag_player = player.get('tag', '')
+                player_name = player.get('name', 'Unknown')
+                player_fame = player.get('fame', 0)
+                decks_used = player.get('decksUsed', 0)
+                boat_attacks = player.get('boatAttacks', 0)
+                
+                player_decks = {'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
+                               'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''}
+                
+                war_stats = {
+                    'war_vitorias': 0, 'war_derrotas': 0, 'war_medals': 0,
+                    'war_torre': 'Tower Princess', 'war_tipo_principal': '', 'war_battles_count': 0
+                }
+                
+                if player_tag_player:
+                    try:
+                        p_tag_url = player_tag_player.replace('#', '%23')
+                        br = requests.get(f"{base_url}/players/{p_tag_url}/battlelog", headers=headers, timeout=10)
+                        
+                        if br.status_code == 200:
+                            battles = br.json()
+                            war_stats = collect_war_battles_stats(battles)
+                            
+                            decks_collected = []
+                            deck_types = []
+                            
+                            for b in battles:
+                                battle_type = b.get('type', '')
+                                if battle_type in WAR_BATTLE_TYPES:
+                                    team = b.get('team', [{}])[0]
+                                    cards = team.get('cards', [])
+                                    deck_str = format_deck(cards)
+                                    
+                                    if deck_str and deck_str not in decks_collected:
+                                        decks_collected.append(deck_str)
+                                        deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
+                                    
+                                    if len(decks_collected) >= 4:
+                                        break
+                            
+                            for i, deck in enumerate(decks_collected, 1):
+                                player_decks[f'deck_{i}'] = deck
+                                player_decks[f'deck_{i}_tipo'] = deck_types[i-1] if i <= len(deck_types) else ''
+                    except:
+                        pass
+                
+                results.append({
+                    'data_coleta': data_hoje,
+                    'player_tag_conta': 'TOP_GLOBAL',
+                    'clan_posicao': clan_idx,
+                    'clan_nome': clan_name,
+                    'clan_tag': clan_tag,
+                    'clan_fame': clan_fame,
+                    'player_posicao': player_idx,
+                    'player_nome': player_name,
+                    'player_tag': player_tag_player,
+                    'player_fame': player_fame,
+                    'decks_usados': decks_used,
+                    'boat_attacks': boat_attacks,
+                    **player_decks,
+                    **war_stats
+                })
+                
+                print(f"  - Player #{player_idx}: {player_name} ({player_fame} fame)")
+        
+        return results
+        
+    except Exception as e:
+        print(f"ERRO ao coletar TOP Global: {e}")
+        return []
+
 def collect_river_race_for_account(token, player_tag, suffix=""):
     headers = {'Authorization': f'Bearer {token}'}
     base_url = "https://proxy.royaleapi.dev/v1"
@@ -217,7 +338,6 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
     return results
 
 def collect_river_race_intelligence():
-    # Carregar dotenv do projeto raiz
     dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env')
     load_dotenv(dotenv_path)
     
@@ -230,16 +350,22 @@ def collect_river_race_intelligence():
     print("COLETANDO INTELIGENCIA DE GUERRA - RIVER RACE")
     print("=" * 60)
     
-    # Coletar para conta principal (#2QR292P)
+    results_pri = []
+    results_sec = []
+    
+    try:
+        print("\n--- TOP GLOBAL ---")
+        results_global = collect_top_global_clans(token, limit=5)
+    except:
+        results_global = []
+    
     print("\n--- CONTA PRINCIPAL ---")
     results_pri = collect_river_race_for_account(token, 'CR_PLAYER_TAG', '_pri')
     
-    # Coletar para conta secundaria (#2220UQQ0UU)
     print("\n--- CONTA SECUNDARIA ---")
     results_sec = collect_river_race_for_account(token, 'CR_PLAYER_TAG_SEC', '_sec')
     
-    # Combinar resultados
-    all_results = results_pri + results_sec
+    all_results = results_global + results_pri + results_sec
     data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
     
     # Campos do CSV (agora inclui estatísticas de guerra)
@@ -300,18 +426,22 @@ def collect_river_race_intelligence():
         except Exception as e:
             print(f"Aviso: Erro ao buscar dados anteriores da conta secundaria: {e}")
     
-    # Combinar resultados
-    all_results = results_pri + results_sec
+    # Combinar resultados (inclui TOP_GLOBAL)
+    all_results = results_global + results_pri + results_sec
     
-    # Salvar arquivo unificado
+    # Salvar arquivo unificado (inclui TOP_GLOBAL)
     with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
         writer.writeheader()
+        writer.writerows(results_global)
         writer.writerows(results_pri)
         writer.writerows(results_sec)
     
     print(f"\n\nSUCESSO!")
-    print(f"Arquivo unificado: {filename} ({len(results_pri) + len(results_sec)} jogadores)")
+    print(f"Arquivo: {filename}")
+    print(f"  - TOP Global: {len(results_global)} jogadores")
+    print(f"  - Conta Principal: {len(results_pri)} jogadores")
+    print(f"  - Conta Secundaria: {len(results_sec)} jogadores")
     
     # Resumo
     print("\n" + "=" * 60)
