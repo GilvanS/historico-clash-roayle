@@ -3794,37 +3794,110 @@ class GitHubPagesHTMLGenerator:
         
         return history
     
-    def get_war_calendar_data(self, my_clan: str, days_back: int = 5, suffix: str = '') -> List[Dict]:
+    def get_war_calendar_data(self, my_clan: str, days_back: int = 5, suffix: str = '', player_tag: str = None) -> List[Dict]:
         """Retorna dados processados do calendário de guerra para um clã específico.
         
         Args:
             my_clan: Nome do clã
             days_back: Quantos dias atrás buscar
             suffix: Sufixo do arquivo ('_pri', '_sec' ou '' para padrão)
+            player_tag: Tag do jogador para identificar qual conta (afeta busca em inteligencia_guerra)
         """
+        import glob
         days = []
         war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
         
-        # Buscar arquivos de status_barcos com sufixo correto
+        # Buscar arquivos de inteligencia_guerra (contém dados de todas as contas)
+        intel_data = {}  # date -> {position, fame}
+        # Buscar todos os arquivos e ordenar por data de modificação (mais recente primeiro)
+        all_intel = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+        all_intel = [f for f in all_intel if '_full_' not in os.path.basename(f)]
+        # Ordenar por data de modificação (mais recente primeiro)
+        all_intel.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+        intel_files = all_intel
+        
+        for fpath in intel_files[:days_back]:
+            try:
+                fname = os.path.basename(fpath)
+                # Extrair data do nome: inteligencia_guerra_2026-05-18.csv -> 2026_05_18
+                date_str = fname.replace('inteligencia_guerra_', '').replace('.csv', '').replace('-', '_')
+                
+                with open(fpath, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    cols = reader.fieldnames or []
+                    
+                    # Detectar formato do arquivo
+                    has_new_format = 'clan_nome' in cols and 'player_tag_conta' in cols
+                    
+                    # Agregar dados POR CLÃ (cada clã pode ter várias linhas de jogadores)
+                    clans_aggregated = {}
+                    
+                    for row in reader:
+                        if has_new_format:
+                            # Formato novo: dados agregados por clã
+                            clan_nome = row.get('clan_nome', '') or ''
+                            if not clan_nome or clan_nome.strip() == '':
+                                continue
+                                
+                            # Agregar: pegar posição e fame do clã (só precisa de uma linha por clã)
+                            if clan_nome not in clans_aggregated:
+                                clans_aggregated[clan_nome] = {
+                                    'position': int(row.get('clan_posicao', 0) or 0),
+                                    'fame': int(row.get('clan_fame', 0) or 0)
+                                }
+                        else:
+                            # Formato antigo: Cla, Ranking, Fama_Hoje
+                            clan_nome = row.get('Cla', '') or ''
+                            if not clan_nome or clan_nome.strip() == '':
+                                continue
+                                
+                            if clan_nome not in clans_aggregated:
+                                clans_aggregated[clan_nome] = {
+                                    'position': int(row.get('Ranking', 0) or 0),
+                                    'fame': int(row.get('Fama_Hoje', 0) or 0)
+                                }
+                    
+                    # Verificar se o clã específico está nos dados agregados
+                    # Usar comparação flexível: procurar partes do nome
+                    my_clan_upper = my_clan.strip().upper()
+                    found_match = False
+                    for cn, data in clans_aggregated.items():
+                        cn_upper = cn.upper()
+                        # Remover caracteres não-ASCII para comparação
+                        my_clean = ''.join(c for c in my_clan_upper if c.isascii())
+                        cn_clean = ''.join(c for c in cn_upper if c.isascii())
+                        
+                        # Match flexível
+                        if (my_clean in cn_clean or cn_clean in my_clean or 
+                            my_clean.replace(' ', '') in cn_clean.replace(' ', '')):
+                            intel_data[date_str] = data
+                            found_match = True
+                            break
+                    
+                    if not found_match:
+                        # Debug: listar clans do arquivo (com caracteres especiais removidos)
+                        clans_keys = [c for c in clans_aggregated.keys() if c.strip()]
+                        logger.debug(f"Clan '{my_clan}' nao encontrado em {fname}. Clans ({len(clans_keys)}): {clans_keys[:5]}")
+            except Exception as e:
+                logger.error(f"Erro ao processar {fpath}: {e}")
+                continue
+        
+        # Buscar arquivos de status_barcos para fallback (só tem dados da conta principal)
         import glob
         if suffix:
             boat_files = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", f"status_barcos{suffix}_*.csv")), reverse=True)
         else:
-            # Arquivo padrão (sem sufixo) ou específico
-            # Tentar primeiro arquivo com sufixo, depois sem
-            boat_files_pri = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_pri_*.csv")), reverse=True)
-            boat_files_sec = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_sec_*.csv")), reverse=True)
             boat_files_default = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv")), reverse=True)
-            # Filtrar para não incluir os _pri e _sec
             boat_files_default = [f for f in boat_files_default if '_pri_' not in os.path.basename(f) and '_sec_' not in os.path.basename(f)]
-            boat_files = boat_files_default or boat_files_pri or boat_files_sec
+            boat_files = boat_files_default
         
         today = datetime.now().date()
         
         for filepath in boat_files[:days_back]:
             try:
                 filename = os.path.basename(filepath)
-                date_str = filename.replace('status_barcos_', '').replace('.csv', '')
+                clean_filename = filename.replace('status_barcos_pri_', 'status_barcos_').replace('status_barcos_sec_', 'status_barcos_')
+                date_str = clean_filename.replace('status_barcos_', '').replace('.csv', '')
                 
                 date_parts = date_str.split('_')
                 day_date = datetime(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
@@ -3833,45 +3906,43 @@ class GitHubPagesHTMLGenerator:
                 
                 is_today = day_date.date() == today or weekday in [0, 3, 4, 5, 6]
                 
-                with open(filepath, 'r', encoding='utf-8-sig') as f:
-                    reader = csv.DictReader(f, delimiter=';')
-                    clan_data = None
-                    for b in reader:
-                        if b.get('Nome_Cla') == my_clan:
-                            clan_data = {
-                                'position': int(b.get('Posicao', 0) or 0),
-                                'fame': int(b.get('Fama_Atual', 0) or 0),
-                                'points': int(b.get('Pontos_Periodo', 0) or 0)
-                            }
-                            break
-                
-                # Se o clã não foi encontrado mas tem um clã válido, ainda mostrar entrada com dados vazios
-                if not clan_data and my_clan:
-                    # Verificar se é o clã correto (mesmo que não tenha dados ainda)
+                # Primeiro tenta buscar dados do inteligencia_guerra (tem dados de ambas contas)
+                if date_str in intel_data:
+                    clan_data = intel_data[date_str]
+                else:
+                    # Fallback para status_barcos (só conta principal)
                     with open(filepath, 'r', encoding='utf-8-sig') as f:
                         reader = csv.DictReader(f, delimiter=';')
+                        clan_data = None
                         for b in reader:
-                            # Verifica por nome parcial (para clãs com caracteres especiais)
-                            if my_clan.lower() in b.get('Nome_Cla', '').lower() or b.get('Nome_Cla', '').lower() in my_clan.lower():
+                            if b.get('Nome_Cla') == my_clan:
                                 clan_data = {
                                     'position': int(b.get('Posicao', 0) or 0),
-                                    'fame': int(b.get('Fama_Atual', 0) or 0),
-                                    'points': int(b.get('Pontos_Periodo', 0) or 0)
+                                    'fame': int(b.get('Fama_Atual', 0) or 0)
                                 }
                                 break
+                    
+                    if not clan_data and my_clan:
+                        with open(filepath, 'r', encoding='utf-8-sig') as f:
+                            reader = csv.DictReader(f, delimiter=';')
+                            for b in reader:
+                                if my_clan.lower() in b.get('Nome_Cla', '').lower() or b.get('Nome_Cla', '').lower() in my_clan.lower():
+                                    clan_data = {
+                                        'position': int(b.get('Posicao', 0) or 0),
+                                        'fame': int(b.get('Fama_Atual', 0) or 0)
+                                    }
+                                    break
                 
-                # Se encontrou dados do clã, adicionar ao calendário
                 if clan_data:
                     days.append({
                         'date': date_str,
                         'label': day_label,
                         'position': clan_data['position'],
                         'fame': clan_data['fame'],
-                        'points': clan_data['points'],
+                        'points': clan_data.get('points', 0),
                         'is_active': is_today
                     })
                 elif my_clan:
-                    # Clã existe mas não está no status_barcos deste dia
                     days.append({
                         'date': date_str,
                         'label': day_label,
@@ -4238,11 +4309,11 @@ class GitHubPagesHTMLGenerator:
                 break
         
         # Gerar calendário de dias de guerra usando dados processados
+        # IMPORTANTE: Usar arquivos SEM sufixo (_pri/_sec) pois contêm dados de TODAS as contas
         calendar_html = ""
         if my_clan:
-            # Usar suffix baseado no tab_id (_pri ou _sec)
-            suffix = f"_{tab_id}" if tab_id else ''
-            calendar_data = self.get_war_calendar_data(my_clan, 5, suffix)
+            # Não usar suffix - os arquivos padrão contêm dados de ambas as contas
+            calendar_data = self.get_war_calendar_data(my_clan, 6, '')
             if calendar_data:
                 calendar_html = self._generate_war_calendar_html(calendar_data, my_clan, tab_id)
         
