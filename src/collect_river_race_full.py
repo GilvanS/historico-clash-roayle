@@ -253,26 +253,62 @@ def collect_river_race_intelligence():
     # Arquivo único com todos os dados (separados por player_tag_conta)
     filename = f"{DATA_DIR}/inteligencia_guerra_{data_hoje}.csv"
     
-    # Verificar ANTES de escrever: se dados atuais estão vazios E existe arquivo anterior
-    # com dados reais, NÃO sobrescrever - manter histórico da guerra anterior
-    total_fame = sum(r.get('player_fame', 0) for r in all_results)
-    if total_fame == 0:
-        import glob
-        previous_files = sorted(glob.glob(f"{DATA_DIR}/inteligencia_guerra_*.csv"))
-        previous_files = [f for f in previous_files if '_sec_' not in f and '_pri_' not in f]
-        if previous_files:
-            latest_existing = max(previous_files)
-            print(f"Aviso: Dados atuais vazios. Mantendo arquivo anterior: {os.path.basename(latest_existing)}")
-            import shutil
-            shutil.copy(latest_existing, filename)
-            results_pri = []
-            results_sec = []
-    else:
-        with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
-            writer.writeheader()
-            writer.writerows(results_pri)
-            writer.writerows(results_sec)
+    # Buscar arquivos anteriores
+    import glob
+    previous_files = sorted(glob.glob(f"{DATA_DIR}/inteligencia_guerra_*.csv"))
+    previous_files = [f for f in previous_files if '_sec_' not in os.path.basename(f) and '_pri_' not in os.path.basename(f)]
+    
+    # Tag real das contas
+    tag_pri_real = os.getenv('CR_PLAYER_TAG', '#2QR292P')
+    tag_sec_real = os.getenv('CR_PLAYER_TAG_SEC', '#2220UQQ0UU')
+    
+    # Verificar se dados atuais têm DADOS REAIS (deck_1 não vazio E player_fame > 0)
+    has_real_data_pri = any(
+        r.get('player_fame', 0) > 0 or (r.get('deck_1') and r.get('deck_1', '').strip())
+        for r in results_pri
+    )
+    has_real_data_sec = any(
+        r.get('player_fame', 0) > 0 or (r.get('deck_1') and r.get('deck_1', '').strip())
+        for r in results_sec
+    )
+    
+    if previous_files and not has_real_data_pri:
+        latest = max(previous_files)
+        print(f"Buscando dados da conta principal do arquivo: {os.path.basename(latest)}")
+        try:
+            with open(latest, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                for row in reader:
+                    ptc = row.get('player_tag_conta', '')
+                    if ptc == tag_pri_real or ptc.replace('#', '') == tag_pri_real.replace('#', ''):
+                        row['data_coleta'] = data_hoje
+                        results_pri.append(row)
+        except Exception as e:
+            print(f"Aviso: Erro ao buscar dados anteriores da conta principal: {e}")
+    
+    if previous_files and not has_real_data_sec:
+        latest = max(previous_files)
+        print(f"Buscando dados da conta secundaria do arquivo: {os.path.basename(latest)}")
+        try:
+            with open(latest, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                for row in reader:
+                    ptc = row.get('player_tag_conta', '')
+                    if ptc == tag_sec_real or ptc.replace('#', '') == tag_sec_real.replace('#', ''):
+                        row['data_coleta'] = data_hoje
+                        results_sec.append(row)
+        except Exception as e:
+            print(f"Aviso: Erro ao buscar dados anteriores da conta secundaria: {e}")
+    
+    # Combinar resultados
+    all_results = results_pri + results_sec
+    
+    # Salvar arquivo unificado
+    with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+        writer.writeheader()
+        writer.writerows(results_pri)
+        writer.writerows(results_sec)
     
     print(f"\n\nSUCESSO!")
     print(f"Arquivo unificado: {filename} ({len(results_pri) + len(results_sec)} jogadores)")
