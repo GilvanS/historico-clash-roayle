@@ -4271,9 +4271,11 @@ class GitHubPagesHTMLGenerator:
             clan_data = {}
             players_added = 0
             for row in all_rows:
-                # Filtrar por conta: só mostrar dados da conta especificada
+                # Filtrar por conta: CR_PLAYER_TAG para conta principal, CR_PLAYER_TAG_SEC para secundária
                 row_account = row.get('player_tag_conta', '')
-                if row_account and row_account != player_tag:
+                # Mapear player_tag para o identificador correto no CSV
+                expected_account = 'CR_PLAYER_TAG' if player_tag == self.player_tag else 'CR_PLAYER_TAG_SEC'
+                if row_account != expected_account:
                     continue  # Pular linhas de outras contas
                 
                 cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
@@ -5215,9 +5217,18 @@ class GitHubPagesHTMLGenerator:
                 if top_global_data.get('clans'):
                     tab_id_for_js = "pri" if len(self.tracked_tags) == 1 else "sec"
                     top_global_json = json.dumps(top_global_data.get('clans', []), ensure_ascii=False)
+                    
+                    # Criar mapeamento de imagens de cartas para o JavaScript
+                    card_img_paths = {}
+                    for card_name in self.cards_master.keys():
+                        img_path = self.get_card_image_path(card_name)
+                        card_img_paths[card_name] = img_path
+                    card_img_json = json.dumps(card_img_paths, ensure_ascii=False)
+                    
                     top_global_script = f"""
                         <script>
                             window.TOP_GLOBAL_DATA = {top_global_json};
+                            window.CARD_IMAGE_PATHS = {card_img_json};
                             function switchRadarMode(mode, btn) {{
                                 var tabs = document.querySelectorAll('.rd-mode-btn');
                                 tabs.forEach(function(b) {{ b.classList.remove('active'); }});
@@ -5250,7 +5261,11 @@ class GitHubPagesHTMLGenerator:
                                                 var tipoIcon = {{'Guerra': '⚔️', 'Barco': '🚣', 'Range Battle': '🎯', 'Duelo': '⚡'}}[tipo] || '🛡️';
                                                 decksHtml += '<div class="rd-deck-row"><div class="rd-deck-label">' + tipoIcon + ' ' + tipo + '</div><div class="rd-deck">';
                                                 cards.forEach(function(card) {{
-                                                    decksHtml += '<div class="cr-card-wrap-premium rd-card"><span>' + card + '</span></div>';
+                                                    var imgPath = window.CARD_IMAGE_PATHS && window.CARD_IMAGE_PATHS[card];
+                                                    var imgTag = imgPath 
+                                                        ? '<img src="' + imgPath + '" alt="' + card + '" title="' + card + '">' 
+                                                        : '<span class="rd-card-text">' + card + '</span>';
+                                                    decksHtml += '<div class="cr-card-wrap-premium rd-card">' + imgTag + '</div>';
                                                 }});
                                                 decksHtml += '</div></div>';
                                             }}
