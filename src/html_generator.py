@@ -3934,13 +3934,16 @@ class GitHubPagesHTMLGenerator:
                                     break
                 
                 if clan_data:
+                    # Adicionar top 3 jogadores do clan para este dia
+                    top_players = self._get_top_players_for_day(fpath, my_clan)
                     days.append({
                         'date': date_str,
                         'label': day_label,
                         'position': clan_data['position'],
                         'fame': clan_data['fame'],
                         'points': clan_data.get('points', 0),
-                        'is_active': is_today
+                        'is_active': is_today,
+                        'top_players': top_players
                     })
                 elif my_clan:
                     days.append({
@@ -3949,13 +3952,62 @@ class GitHubPagesHTMLGenerator:
                         'position': 0,
                         'fame': 0,
                         'points': 0,
-                        'is_active': is_today
+                        'is_active': is_today,
+                        'top_players': []
                     })
             except Exception as e:
                 logger.error(f"Erro ao processar {filepath}: {e}")
                 continue
         
         return days
+    
+    def _get_top_players_for_day(self, filepath: str, my_clan: str) -> List[Dict]:
+        """Retorna top 3 jogadores do clan para um dia específico."""
+        top_players = []
+        try:
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f, delimiter=';')
+                cols = reader.fieldnames or []
+                has_new_format = 'clan_nome' in cols
+                
+                players_by_clan = {}
+                for row in reader:
+                    if has_new_format:
+                        clan_nome = row.get('clan_nome') or ''
+                    else:
+                        clan_nome = row.get('Cla') or ''
+                    
+                    if not clan_nome:
+                        continue
+                    
+                    # Match flexível
+                    my_clean = ''.join(c for c in my_clan.upper() if c.isascii())
+                    cn_clean = ''.join(c for c in clan_nome.upper() if c.isascii())
+                    
+                    if my_clean in cn_clean or cn_clean in my_clean:
+                        if clan_nome not in players_by_clan:
+                            players_by_clan[clan_nome] = []
+                        
+                        player_name = row.get('player_nome') or row.get('Jogador') or 'N/A'
+                        player_fame = int(row.get('player_fame') or row.get('Fama_Hoje') or 0)
+                        player_pos = int(row.get('player_posicao') or row.get('Posicao') or 99)
+                        
+                        players_by_clan[clan_nome].append({
+                            'name': player_name,
+                            'fame': player_fame,
+                            'position': player_pos,
+                            'medals': player_fame // 100  # Estima medals baseado na fame
+                        })
+                
+                # Pegar top 3 jogadores ordenados por posição
+                for cn, players in players_by_clan.items():
+                    sorted_players = sorted(players, key=lambda x: x['position'])
+                    top_players = sorted_players[:3]
+                    break
+        except Exception as e:
+            logger.error(f"Erro ao buscar top players: {e}")
+        
+        return top_players
     
     def get_war_day_status_for_clan(self, clan_name: str, history: List[Dict]) -> Dict:
         """Retorna status do clã para cada dia no histórico."""
@@ -4235,7 +4287,7 @@ class GitHubPagesHTMLGenerator:
             position = entry.get('position', 0)
             fame = entry.get('fame', 0)
             boat_status = entry.get('boat_status', 'unknown')
-            medals = entry.get('medals', 0)
+            top_players = entry.get('top_players', [])
             
             active_class = "rd-calendar-day-active" if is_active else ""
             position_class = f"rd-calendar-pos-{position}" if position > 0 else ""
@@ -4268,6 +4320,29 @@ class GitHubPagesHTMLGenerator:
                 boat_icon = "⚓"
                 boat_class = ""
             
+            # Gerar HTML dos top 3 jogadores com medalhas
+            top_players_html = ""
+            medal_icons = ['🥇', '🥈', '🥉']
+            for i, player in enumerate(top_players[:3]):
+                player_name = player.get('name', 'N/A')
+                player_fame = player.get('fame', 0)
+                medals = player.get('medals', 0)
+                medal_icon = medal_icons[i] if i < 3 else ""
+                
+                # Truncar nome se muito longo
+                display_name = player_name[:12] + "..." if len(player_name) > 12 else player_name
+                
+                top_players_html += f"""
+                    <div class="rd-calendar-player">
+                        <span class="rd-medal">{medal_icon}</span>
+                        <span class="rd-player-name" title="{player_name}">{display_name}</span>
+                        <span class="rd-player-fame">+{player_fame}</span>
+                    </div>
+                """
+            
+            if not top_players_html:
+                top_players_html = '<div class="rd-calendar-no-players">Sem dados</div>'
+            
             days_html += f"""
                 <div class="rd-calendar-day {active_class} {position_class} {status_class}" 
                      onclick="selectWarDay('{tab_id}', '{date}', this)"
@@ -4277,7 +4352,9 @@ class GitHubPagesHTMLGenerator:
                     <div class="rd-calendar-pos">#{position if position > 0 else '—'}</div>
                     <div class="rd-calendar-fame">⚔️ {fame:,}</div>
                     <div class="rd-calendar-boat {boat_class}">{boat_icon}</div>
-                    {f'<div style="font-size:0.65em;color:#a78bfa;">🏅{medals}</div>' if medals > 0 else ''}
+                    <div class="rd-calendar-players">
+                        {top_players_html}
+                    </div>
                 </div>
             """
         
@@ -7344,6 +7421,46 @@ class GitHubPagesHTMLGenerator:
         .rd-calendar-boat.complete { color: #4ade80; }
         .rd-calendar-boat.repairing { color: #fbbf24; }
         .rd-calendar-boat.destroyed { color: #f87171; }
+        
+        /* Top 3 Jogadores no Calendário */
+        .rd-calendar-players {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .rd-calendar-player {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.65em;
+            padding: 2px 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        .rd-medal {
+            font-size: 0.8em;
+            min-width: 14px;
+        }
+        .rd-player-name {
+            color: #e2e8f0;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rd-player-fame {
+            color: #4ade80;
+            font-weight: 700;
+        }
+        .rd-calendar-no-players {
+            font-size: 0.6em;
+            color: #64748b;
+            text-align: center;
+            padding: 4px;
+        }
         
         /* Responsivo Mobile */
         @media (max-width: 768px) { 
