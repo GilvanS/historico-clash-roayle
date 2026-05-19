@@ -4448,15 +4448,19 @@ class GitHubPagesHTMLGenerator:
             </div>
         """
         
-    def generate_war_radar_html(self, data, player_tag: str = None):
+    def generate_war_radar_html(self, data, player_tag: str = None, tab_id: str = None):
         """Gera o HTML para a seção de Radar de Guerra (5 clãs × Top 3 players × 4 decks).
         
         Args:
             data: Dados dos clãs e jogadores
             player_tag: Tag do jogador para identificar conta
+            tab_id: ID da tab (pri/sec)
         """
+        if tab_id is None:
+            tab_id = "pri" if player_tag and '2QR292P' in player_tag else "sec"
+        
         if not data.get('clans'):
-            return ""
+            return {'content': '', 'tab': '', 'tab_id': tab_id}
         
         weekday = datetime.now().weekday()
         war_day_map = {0: "Reset", 3: "1", 4: "2", 5: "3", 6: "4"}
@@ -4464,7 +4468,6 @@ class GitHubPagesHTMLGenerator:
         
         # Nome da conta para a tab
         account_label = "CONTA PRINCIPAL" if player_tag and '2QR292P' in player_tag else "CONTA SECUNDÁRIA"
-        tab_id = "pri" if player_tag and '2QR292P' in player_tag else "sec"
         
         # Identificar clã da conta para usar no calendário
         my_clan = data.get('my_clan', '')
@@ -4603,7 +4606,7 @@ class GitHubPagesHTMLGenerator:
             </div>
         """
         
-        return {'tab': tab_html, 'content': content_html, 'clans': data.get('clans', [])}
+        return {'content': content_html, 'tab_id': tab_id}
 
     def generate_war_intelligence_html(self, data):
         """Gera o HTML para a seção de Inteligência de Guerra."""
@@ -5205,12 +5208,24 @@ class GitHubPagesHTMLGenerator:
             try:
                 day_history = self.get_war_day_history(7)
                 
+                # Criar tabs para TODAS as contas tracked (mesmo sem dados)
+                for idx, tag in enumerate(self.tracked_tags):
+                    tab_id = "pri" if idx == 0 else "sec"
+                    account_label = "CONTA PRINCIPAL" if idx == 0 else "CONTA SECUNDÁRIA"
+                    tab_html = f"""
+                        <button class="rd-tab" onclick="switchRadarTab('{tab_id}', this)" data-tag="{tag}">
+                            {account_label}
+                        </button>
+                    """
+                    war_radar_tabs += tab_html
+                
+                # Agora buscar dados e gerar conteúdo para cada conta
                 for tag in self.tracked_tags:
                     radar_data = self.get_war_radar_data(tag)
-                    if radar_data.get('clans'):
-                        result = self.generate_war_radar_html(radar_data, tag)
-                        war_radar_tabs += result['tab']
-                        war_radar_html += result['content']
+                    idx = self.tracked_tags.index(tag)
+                    tab_id = "pri" if idx == 0 else "sec"
+                    result = self.generate_war_radar_html(radar_data, tag, tab_id)
+                    war_radar_html += result['content']
                 
                 # Gerar dados do TOP Global
                 top_global_data = self.get_war_radar_data(None, mode='top-global')
@@ -5257,10 +5272,20 @@ class GitHubPagesHTMLGenerator:
                                             var deck = p['deck_' + d];
                                             if (deck && deck.trim() && deck !== 'Deck nao encontrado no log recente') {{
                                                 var cards = deck.split(',').map(function(c) {{ return c.trim(); }}).filter(function(c) {{ return c; }}).slice(0, 8);
+                                                var row1 = cards.slice(0, 4);
+                                                var row2 = cards.slice(4, 8);
                                                 var tipo = p['deck_' + d + '_tipo'] || 'Batalha';
                                                 var tipoIcon = {{'Guerra': '⚔️', 'Barco': '🚣', 'Range Battle': '🎯', 'Duelo': '⚡'}}[tipo] || '🛡️';
                                                 decksHtml += '<div class="rd-deck-row"><div class="rd-deck-label">' + tipoIcon + ' ' + tipo + '</div><div class="rd-deck">';
-                                                cards.forEach(function(card) {{
+                                                row1.forEach(function(card) {{
+                                                    var imgPath = window.CARD_IMAGE_PATHS && window.CARD_IMAGE_PATHS[card];
+                                                    var imgTag = imgPath 
+                                                        ? '<img src="' + imgPath + '" alt="' + card + '" title="' + card + '">' 
+                                                        : '<span class="rd-card-text">' + card + '</span>';
+                                                    decksHtml += '<div class="cr-card-wrap-premium rd-card">' + imgTag + '</div>';
+                                                }});
+                                                decksHtml += '<div class="rd-deck-break"></div>';
+                                                row2.forEach(function(card) {{
                                                     var imgPath = window.CARD_IMAGE_PATHS && window.CARD_IMAGE_PATHS[card];
                                                     var imgTag = imgPath 
                                                         ? '<img src="' + imgPath + '" alt="' + card + '" title="' + card + '">' 
