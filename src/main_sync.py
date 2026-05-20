@@ -81,20 +81,15 @@ def main():
     except Exception as e:
         logger.error(f"Erro na FASE 1.3 (Meta BR): {e}")
 
-    # 1.5 Coletar Decks de Guerra (Quinta a Domingo)
+    # 1.5 Coletar Decks de Guerra e Inteligencia da Corrida
     try:
-        # Quinta=3, Sexta=4, Sabado=5, Domingo=6
-        hoje = datetime.now()
-        if hoje.weekday() in [0, 3, 4, 5, 6]:
-            logger.info("FASE 1.5: Dia de Guerra detectado! Coletando decks dos melhores jogadores...")
-            from collect_war_top_decks import collect_top_decks
-            from collect_war_weekend import collect_boat_data
-            from collect_river_race_full import collect_river_race_intelligence
-            collect_top_decks()
-            collect_boat_data()
-            collect_river_race_intelligence()  # Inteligencia completa da corrida
-        else:
-            logger.info("FASE 1.5: Fora do periodo de guerra (Segunda a Quarta). Pulando coleta de decks.")
+        logger.info("FASE 1.5: Coletando decks dos melhores jogadores e dados de guerra/treino...")
+        from collect_war_top_decks import collect_top_decks
+        from collect_war_weekend import collect_boat_data
+        from collect_river_race_full import collect_river_race_intelligence
+        collect_top_decks()
+        collect_boat_data()
+        collect_river_race_intelligence()  # Inteligencia completa da corrida
     except Exception as e:
         logger.error(f"Erro na FASE 1.5 (Guerra): {e}")
 
