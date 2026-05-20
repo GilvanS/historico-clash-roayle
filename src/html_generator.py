@@ -4219,21 +4219,26 @@ class GitHubPagesHTMLGenerator:
                 with open(f, 'r', encoding='utf-8-sig') as csvfile:
                     reader = csv.DictReader(csvfile, delimiter=';')
                     rows = list(reader)
-                    rows = [r for r in rows if r.get('player_tag_conta') == 'CR_PLAYER_TAG_SEC']
+                    # Verificar se tem coluna player_tag_conta
+                    has_tag_col = 'player_tag_conta' in (rows[0] if rows else {})
+                    if has_tag_col:
+                        rows = [r for r in rows if r.get('player_tag_conta') == '#2220UQQ0UU']
                     deck_count = sum(1 for r in rows if r.get('deck_1') and 'Deck nao encontrado' not in r.get('deck_1', '') and len(r.get('deck_1', '')) > 10)
                     total_fame = sum(int(r.get('player_fame', 0) or 0) for r in rows)
                     score = deck_count * 1000 + total_fame
                     if score > best_score:
                         best_score = score
                         best_file = f
-            # Se não encontrou arquivo com dados reais, incluir arquivos _full_ como fallback
+            # Se não encontrou arquivo com dados reais, buscar em _full_
             if not best_file or best_score == 0:
                 full_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_*.csv"))
                 for f in full_files:
                     with open(f, 'r', encoding='utf-8-sig') as csvfile:
                         reader = csv.DictReader(csvfile, delimiter=';')
                         rows = list(reader)
-                        if rows and rows[0].get('player_tag_conta') is None:
+                        has_tag_col = 'player_tag_conta' in (rows[0] if rows else {})
+                        # Se não tem coluna player_tag_conta, usar todos (fallback)
+                        if not has_tag_col or rows[0].get('player_tag_conta') is None:
                             deck_count = sum(1 for r in rows if r.get('deck_1') and len(r.get('deck_1', '')) > 10)
                             total_fame = sum(int(r.get('player_fame', 0) or 0) for r in rows)
                             score = deck_count * 1000 + total_fame
@@ -4242,11 +4247,31 @@ class GitHubPagesHTMLGenerator:
                                 best_file = f
             if best_file:
                 latest_intel = best_file
-                logger.info(f"get_war_radar_data: sec usando arquivo com dados: {os.path.basename(best_file)} (score={best_score})")
+                logger.info(f"get_war_radar_data: sec usando arquivo: {os.path.basename(best_file)} (score={best_score})")
             else:
                 latest_intel = max(intel_files) if intel_files else None
         else:
+            # Conta principal: usar arquivo mais recente com filtro por tag
             latest_intel = max(intel_files) if intel_files else None
+            # Se o arquivo mais recente tem dados da sec, buscar arquivo anterior
+            if latest_intel:
+                with open(latest_intel, 'r', encoding='utf-8-sig') as csvfile:
+                    reader = csv.DictReader(csvfile, delimiter=';')
+                    rows = list(reader)
+                    has_tag_col = 'player_tag_conta' in (rows[0] if rows else {})
+                    if has_tag_col:
+                        pri_rows = [r for r in rows if r.get('player_tag_conta') == '#2QR292P']
+                        if not pri_rows or sum(1 for r in pri_rows if r.get('deck_1') and len(r.get('deck_1', '')) > 10) == 0:
+                            # Buscar arquivo anterior com dados da principal
+                            for f in intel_files[1:]:
+                                with open(f, 'r', encoding='utf-8-sig') as cf:
+                                    reader2 = csv.DictReader(cf, delimiter=';')
+                                    rows2 = list(reader2)
+                                    if 'player_tag_conta' in (rows2[0] if rows2 else {}):
+                                        pri2 = [r for r in rows2 if r.get('player_tag_conta') == '#2QR292P']
+                                        if pri2 and sum(1 for r in pri2 if r.get('deck_1') and len(r.get('deck_1', '')) > 10) > 0:
+                                            latest_intel = f
+                                            break
         
         if not latest_intel:
             return data
@@ -4282,16 +4307,17 @@ class GitHubPagesHTMLGenerator:
             # Agrupar por clã - filtro por player_tag_conta
             clan_data = {}
             players_added = 0
+            has_tag_column = 'player_tag_conta' in (all_rows[0] if all_rows else {})
+            
             for row in all_rows:
-                # Filtrar por conta: usar tag real
+                # Filtrar por conta
                 row_account = row.get('player_tag_conta', '')
                 is_sec = '2220UQQ0UU' in player_tag
                 expected_account = '#2220UQQ0UU' if is_sec else '#2QR292P'
                 
-                # Se row_account está vazio (arquivos antigos sem essa coluna), incluir todos
-                # Se row_account existe, comparar com a tag esperada
-                if row_account and row_account != expected_account:
-                    continue  # Pular linhas de outras contas
+                # Se tem coluna player_tag_conta, filtrar; se não tem, aceitar todas (fallback)
+                if has_tag_column and row_account and row_account != expected_account:
+                    continue
                 
                 cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
                 cla_tag = row.get('clan_tag', '')
