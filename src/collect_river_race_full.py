@@ -394,7 +394,7 @@ def collect_river_race_intelligence():
     
     import glob
     previous_files = sorted(glob.glob(f"{DATA_DIR}/inteligencia_guerra_*.csv"))
-    previous_files = [f for f in previous_files if '_full_' not in f and '_pri_' not in f and '_sec_' not in f and '_2026_05_' not in f]
+    previous_files = [f for f in previous_files if '_full_' not in f and '_pri_' not in f and '_sec_' not in f]
     
     # Verificar se dados atuais têm DADOS REAIS
     has_real_data_pri = any(
