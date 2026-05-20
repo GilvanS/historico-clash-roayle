@@ -97,7 +97,7 @@ def collect_top_decks():
     print(f"Identificados {len(players_to_fetch)} jogadores de elite. Coletando decks (Guerra + Barco)...")
     
     results = []
-    data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%d/%m/%Y')
+    data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
 
     for i, p in enumerate(players_to_fetch, 1):
         p_tag = p.get('tag')
@@ -181,6 +181,14 @@ def collect_top_decks():
     # Indexar dados existentes por (data, nome)
     data_map = {}
     for row in existing_data:
+        # Normalize date format from DD/MM/YYYY to YYYY-MM-DD on the fly
+        dt_str = row['data_coleta']
+        if '/' in dt_str:
+            try:
+                dt_str = datetime.strptime(dt_str, '%d/%m/%Y').strftime('%Y-%m-%d')
+                row['data_coleta'] = dt_str
+            except ValueError:
+                pass
         key = (row['data_coleta'], row.get('nome_jogador', ''))
         data_map[key] = row
 
@@ -200,7 +208,7 @@ def collect_top_decks():
 
     # Converter de volta para lista e ordenar por data (desc) e posicao
     final_results = list(data_map.values())
-    final_results.sort(key=lambda x: (datetime.strptime(x['data_coleta'], '%d/%m/%Y'), -int(x['posicao_no_top'])), reverse=True)
+    final_results.sort(key=lambda x: (datetime.strptime(x['data_coleta'], '%Y-%m-%d'), -int(x['posicao_no_top'])), reverse=True)
 
     with open(file_path, 'w', newline='', encoding='utf-8-sig') as f:
         writer = csv.DictWriter(f, fieldnames=WAR_FIELDNAMES, delimiter=';')
