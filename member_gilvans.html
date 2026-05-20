@@ -1898,6 +1898,10 @@
         .rd-tab { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 10px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.85em; transition: all 0.3s; }
         .rd-tab:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
         .rd-tab.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.4); }
+        .rd-mode-selector { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        .rd-mode-btn { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8em; transition: all 0.3s; }
+        .rd-mode-btn:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
+        .rd-mode-btn[data-active="true"] { background: var(--primary); border-color: var(--primary); color: white; }
         
         /* Estatísticas de Guerra do Jogador */
         .rd-player-stats {
@@ -2063,6 +2067,46 @@
         .rd-calendar-boat.complete { color: #4ade80; }
         .rd-calendar-boat.repairing { color: #fbbf24; }
         .rd-calendar-boat.destroyed { color: #f87171; }
+        
+        /* Top 3 Jogadores no Calendário */
+        .rd-calendar-players {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .rd-calendar-player {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.65em;
+            padding: 2px 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        .rd-medal {
+            font-size: 0.8em;
+            min-width: 14px;
+        }
+        .rd-player-name {
+            color: #e2e8f0;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rd-player-fame {
+            color: #4ade80;
+            font-weight: 700;
+        }
+        .rd-calendar-no-players {
+            font-size: 0.6em;
+            color: #64748b;
+            text-align: center;
+            padding: 4px;
+        }
         
         /* Responsivo Mobile */
         @media (max-width: 768px) { 
@@ -2310,8 +2354,8 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 19/05/2026 10:57:07</p>
-            <p>Visto por último: 17 days ago</p>
+            <p>Perfil gerado em 20/05/2026 16:30:49</p>
+            <p>Visto por último: 18 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
             </div>
