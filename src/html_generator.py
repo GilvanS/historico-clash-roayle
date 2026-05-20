@@ -4219,15 +4219,27 @@ class GitHubPagesHTMLGenerator:
                 with open(f, 'r', encoding='utf-8-sig') as csvfile:
                     reader = csv.DictReader(csvfile, delimiter=';')
                     rows = list(reader)
-                    # Filtrar apenas linhas desta conta
-                    rows = [r for r in rows if r.get('player_tag_conta') == player_tag]
-                    # Score: mais decks = melhor
-                    deck_count = sum(1 for r in rows if r.get('deck_1') and 'Deck nao encontrado' not in r.get('deck_1', ''))
+                    rows = [r for r in rows if r.get('player_tag_conta') == 'CR_PLAYER_TAG_SEC']
+                    deck_count = sum(1 for r in rows if r.get('deck_1') and 'Deck nao encontrado' not in r.get('deck_1', '') and len(r.get('deck_1', '')) > 10)
                     total_fame = sum(int(r.get('player_fame', 0) or 0) for r in rows)
                     score = deck_count * 1000 + total_fame
                     if score > best_score:
                         best_score = score
                         best_file = f
+            # Se não encontrou arquivo com dados reais, incluir arquivos _full_ como fallback
+            if not best_file or best_score == 0:
+                full_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_full_*.csv"))
+                for f in full_files:
+                    with open(f, 'r', encoding='utf-8-sig') as csvfile:
+                        reader = csv.DictReader(csvfile, delimiter=';')
+                        rows = list(reader)
+                        if rows and rows[0].get('player_tag_conta') is None:
+                            deck_count = sum(1 for r in rows if r.get('deck_1') and len(r.get('deck_1', '')) > 10)
+                            total_fame = sum(int(r.get('player_fame', 0) or 0) for r in rows)
+                            score = deck_count * 1000 + total_fame
+                            if score > best_score:
+                                best_score = score
+                                best_file = f
             if best_file:
                 latest_intel = best_file
                 logger.info(f"get_war_radar_data: sec usando arquivo com dados: {os.path.basename(best_file)} (score={best_score})")
@@ -4271,11 +4283,14 @@ class GitHubPagesHTMLGenerator:
             clan_data = {}
             players_added = 0
             for row in all_rows:
-                # Filtrar por conta: CR_PLAYER_TAG para conta principal, CR_PLAYER_TAG_SEC para secundária
+                # Filtrar por conta: usar tag real
                 row_account = row.get('player_tag_conta', '')
-                # Mapear player_tag para o identificador correto no CSV
-                expected_account = 'CR_PLAYER_TAG' if player_tag == self.player_tag else 'CR_PLAYER_TAG_SEC'
-                if row_account != expected_account:
+                is_sec = '2220UQQ0UU' in player_tag
+                expected_account = '#2220UQQ0UU' if is_sec else '#2QR292P'
+                
+                # Se row_account está vazio (arquivos antigos sem essa coluna), incluir todos
+                # Se row_account existe, comparar com a tag esperada
+                if row_account and row_account != expected_account:
                     continue  # Pular linhas de outras contas
                 
                 cla = row.get('clan_nome') or row.get('Cla', 'Unknown')

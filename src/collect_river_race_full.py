@@ -317,10 +317,10 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
                 except:
                     pass
             
-            # Incluir player_tag da conta (não do jogador)
+            # Incluir player_tag da conta (não do jogador) - usar tag real do .env
             results.append({
                 'data_coleta': data_hoje,
-                'player_tag_conta': player_tag,
+                'player_tag_conta': player_tag,  # player_tag agora é a tag real (#2QR292P ou #2220UQQ0UU)
                 'clan_posicao': clan_idx,
                 'clan_nome': clan_name,
                 'clan_tag': clan_tag,
@@ -345,6 +345,10 @@ def collect_river_race_intelligence():
     if not token:
         print("ERRO: CR_API_TOKEN nao encontrado")
         return
+    
+    # Tags reais das contas
+    tag_pri_real = os.getenv('CR_PLAYER_TAG', '#2QR292P')
+    tag_sec_real = os.getenv('CR_PLAYER_TAG_SEC', '#2220UQQ0UU')
 
     print("=" * 60)
     print("COLETANDO INTELIGENCIA DE GUERRA - RIVER RACE")
@@ -360,10 +364,10 @@ def collect_river_race_intelligence():
         results_global = []
     
     print("\n--- CONTA PRINCIPAL ---")
-    results_pri = collect_river_race_for_account(token, 'CR_PLAYER_TAG', '_pri')
+    results_pri = collect_river_race_for_account(token, tag_pri_real, '_pri')
     
     print("\n--- CONTA SECUNDARIA ---")
-    results_sec = collect_river_race_for_account(token, 'CR_PLAYER_TAG_SEC', '_sec')
+    results_sec = collect_river_race_for_account(token, tag_sec_real, '_sec')
     
     all_results = results_global + results_pri + results_sec
     data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
@@ -376,25 +380,28 @@ def collect_river_race_intelligence():
         'war_vitorias', 'war_derrotas', 'war_medals', 'war_torre', 'war_tipo_principal', 'war_battles_count'
     ]
     
-    # Arquivo único com todos os dados (separados por player_tag_conta)
+    # Arquivo único com todos os dados
     filename = f"{DATA_DIR}/inteligencia_guerra_{data_hoje}.csv"
     
-    # Buscar arquivos anteriores
+    # Salvar arquivo unificado INICIAL (pode ter dados vazios)
+    with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+        writer.writeheader()
+        writer.writerows(results_global)
+        writer.writerows(results_pri)
+        writer.writerows(results_sec)
+    
     import glob
     previous_files = sorted(glob.glob(f"{DATA_DIR}/inteligencia_guerra_*.csv"))
-    previous_files = [f for f in previous_files if '_sec_' not in os.path.basename(f) and '_pri_' not in os.path.basename(f)]
+    previous_files = [f for f in previous_files if '_full_' not in f and '_pri_' not in f and '_sec_' not in f and '_2026_05_' not in f]
     
-    # Tag real das contas
-    tag_pri_real = os.getenv('CR_PLAYER_TAG', '#2QR292P')
-    tag_sec_real = os.getenv('CR_PLAYER_TAG_SEC', '#2220UQQ0UU')
-    
-    # Verificar se dados atuais têm DADOS REAIS (deck_1 não vazio E player_fame > 0)
+    # Verificar se dados atuais têm DADOS REAIS
     has_real_data_pri = any(
-        r.get('player_fame', 0) > 0 or (r.get('deck_1') and r.get('deck_1', '').strip())
+        (r.get('deck_1') and len(r.get('deck_1', '')) > 10) 
         for r in results_pri
     )
     has_real_data_sec = any(
-        r.get('player_fame', 0) > 0 or (r.get('deck_1') and r.get('deck_1', '').strip())
+        (r.get('deck_1') and len(r.get('deck_1', '')) > 10) 
         for r in results_sec
     )
     
@@ -406,7 +413,7 @@ def collect_river_race_intelligence():
                 reader = csv.DictReader(f, delimiter=';')
                 for row in reader:
                     ptc = row.get('player_tag_conta', '')
-                    if ptc == tag_pri_real or ptc.replace('#', '') == tag_pri_real.replace('#', ''):
+                    if ptc == tag_pri_real:
                         row['data_coleta'] = data_hoje
                         results_pri.append(row)
         except Exception as e:
@@ -420,16 +427,13 @@ def collect_river_race_intelligence():
                 reader = csv.DictReader(f, delimiter=';')
                 for row in reader:
                     ptc = row.get('player_tag_conta', '')
-                    if ptc == tag_sec_real or ptc.replace('#', '') == tag_sec_real.replace('#', ''):
+                    if ptc == tag_sec_real:
                         row['data_coleta'] = data_hoje
                         results_sec.append(row)
         except Exception as e:
             print(f"Aviso: Erro ao buscar dados anteriores da conta secundaria: {e}")
     
-    # Combinar resultados (inclui TOP_GLOBAL)
-    all_results = results_global + results_pri + results_sec
-    
-    # Salvar arquivo unificado (inclui TOP_GLOBAL)
+    # Re-salvar com dados de fallback incluídos
     with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
         writer.writeheader()
