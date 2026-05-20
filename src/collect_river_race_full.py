@@ -35,9 +35,10 @@ def format_deck(cards):
     if not cards: return ""
     return ", ".join(c.get('name', '') for c in cards)
 
-def get_clan_tag(token, player_tag='#2QR292P'):
-    tag = os.getenv(player_tag, '#2QR292P').replace('#', '%23')
-    r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{tag}", headers={'Authorization': f'Bearer {token}'})
+def get_clan_tag(token, player_tag):
+    """Obtém a tag do clã do jogador usando a API"""
+    clean = player_tag.replace('#', '%23')
+    r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{clean}", headers={'Authorization': f'Bearer {token}'})
     if r.status_code == 200:
         return r.json().get('clan', {}).get('tag')
     return None
