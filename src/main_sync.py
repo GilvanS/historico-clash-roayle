@@ -99,11 +99,27 @@ def main():
         logger.error(f"Erro na FASE 1.3 (Meta BR): {e}")
         collection_logs.append(("Meta BR", f"ERRO: {e}"))
 
-    # FASE 1.5: Coletar Decks de Guerra (Quinta a Domingo)
+    # FASE 1.5: Coletar Decks de Guerra (Quinta 7h00 a Segunda 6h59)
     try:
         hoje = datetime.now()
-        if hoje.weekday() in [0, 3, 4, 5, 6]:
-            logger.info("FASE 1.5: Dia de Guerra detectado! Coletando decks dos melhores jogadores...")
+        hora = hoje.hour
+        dia_semana = hoje.weekday()  # 0=Seg, 1=Ter, 2=Qua, 3=Qui, 4=Sex, 5=Sab, 6=Dom
+        
+        # Regra: Guerra vai de Quinta 7h00 ate Segunda 6h59
+        # Quinta (3): so coleta se hora >= 7
+        # Sexta (4), Sabado (5), Domingo (6): coleta sempre
+        # Segunda (0): so coleta se hora < 7
+        # Terca (1), Quarta (2): nunca coleta
+        is_war_period = False
+        if dia_semana == 3 and hora >= 7:  # Quinta apos 7h
+            is_war_period = True
+        elif dia_semana in [4, 5, 6]:  # Sexta, Sabado, Domingo
+            is_war_period = True
+        elif dia_semana == 0 and hora < 7:  # Segunda antes de 7h
+            is_war_period = True
+        
+        if is_war_period:
+            logger.info("FASE 1.5: Periodo de Guerra ativo! Coletando decks dos melhores jogadores...")
             war_logs = []
             # Nota: Alguns scripts de guerra usam sys.stdout.buffer, incompativel com redirect_stdout
             # Executamos normalmente e capturamos apenas o que for possivel
@@ -137,7 +153,7 @@ def main():
             
             collection_logs.append(("Guerra", "\n".join(war_logs)))
         else:
-            logger.info("FASE 1.5: Fora do periodo de guerra (Segunda a Quarta). Pulando coleta de decks.")
+            logger.info("FASE 1.5: Fora do periodo de guerra. Pulando coleta de decks.")
             collection_logs.append(("Guerra", "Pulada (fora do periodo de guerra)"))
     except Exception as e:
         logger.error(f"Erro na FASE 1.5 (Guerra): {e}")
