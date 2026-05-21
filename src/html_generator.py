@@ -933,13 +933,29 @@ class GitHubPagesHTMLGenerator:
     
     
     def get_player_stats(self, player_tag: str = None) -> Optional[Dict]:
-        """Get player statistics from CSV files"""
+        """Get player statistics from CSV files com fallback para conta secundaria"""
         if not player_tag:
             player_tag = self.player_tag
             
         player_row = self._load_players_csv(player_tag)
+        
+        # Fallback: se nao encontrar em players.csv mas tiver batalhas, cria stats minimo
+        battles = self.battles_by_tag.get(player_tag, [])
+        if not player_row and battles:
+            logger.warning(f"Jogador {player_tag} nao em players.csv, usando fallback com {len(battles)} batalhas")
+            player_row = {
+                'player_tag': player_tag,
+                'name': f'Conta {player_tag}',
+                'trophies': '0',
+                'best_trophies': '0',
+                'level': '0',
+                'clan_tag': '',
+                'clan_name': '',
+                'last_updated': datetime.now(UTC).isoformat()
+            }
+        
         if not player_row:
-            logger.warning(f"Jogador {player_tag} nao encontrado em players.csv")
+            logger.warning(f"Jogador {player_tag} nao encontrado em players.csv e sem batalhas")
             return None
         
         player_tag = player_row.get('player_tag')
@@ -5177,8 +5193,30 @@ class GitHubPagesHTMLGenerator:
                 try:
                     stats = self.get_player_stats(tag)
                     if not stats:
-                        logger.warning(f"Conta {tag} removida do HTML: get_player_stats retornou None")
-                        continue
+                        # Fallback critico: cria stats minimo para nao perder a conta no HTML
+                        battles = self.battles_by_tag.get(tag, [])
+                        if battles:
+                            stats = {
+                                'player_tag': tag,
+                                'name': f'Conta {tag[-4:]}',
+                                'trophies': 0,
+                                'best_trophies': 0,
+                                'level': 0,
+                                'clan_tag': '',
+                                'clan_name': '',
+                                'last_updated': datetime.now(UTC).isoformat(),
+                                'total_battles': len(battles),
+                                'wins': sum(1 for b in battles if b.get('result') == 'victory'),
+                                'losses': sum(1 for b in battles if b.get('result') == 'defeat'),
+                                'draws': sum(1 for b in battles if b.get('result') == 'draw'),
+                                'total_trophy_change': 0,
+                                'last_battle': battles[0].get('battle_time', ''),
+                                'first_battle': battles[-1].get('battle_time', '')
+                            }
+                            logger.warning(f"Conta {tag} usando stats fallback: {len(battles)} batalhas")
+                        else:
+                            logger.error(f"Conta {tag} SEM batalhas e SEM stats, pulando")
+                            continue
                     
                     logger.info(f"Conta {tag} ({stats['name']}) processada: {stats['total_battles']} batalhas")
                     
@@ -5196,6 +5234,8 @@ class GitHubPagesHTMLGenerator:
                     account_contents_html += f'<div id="account-tab-{clean_tag}" class="cr-tab-content {active_class}">{content_html}</div>'
                 except Exception as e:
                     logger.error(f"Error processing account {tag}: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
                     continue
             
             account_tabs_html += '</div>'
