@@ -27,4 +27,11 @@ print("\n\nTesting get_war_calendar_data('Tropa Do Bruxo'):")
 calendar_data = gen.get_war_calendar_data('Tropa Do Bruxo', 5)
 print(f"Days returned: {len(calendar_data)}")
 for day in calendar_data:
-    print(f"  {day}")
+    # Sanitiza a saida para o console Windows
+    sanitized_day = {}
+    for k, v in day.items():
+        if isinstance(v, str):
+            sanitized_day[k] = ''.join(c for c in v if ord(c) < 128)
+        else:
+            sanitized_day[k] = v
+    print(f"  Date: {sanitized_day.get('date')}, Label: {sanitized_day.get('label')}, Position: {sanitized_day.get('position')}, Fame: {sanitized_day.get('fame')}")

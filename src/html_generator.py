@@ -3966,14 +3966,64 @@ class GitHubPagesHTMLGenerator:
                 logger.error(f"Erro ao processar {fpath}: {e}")
                 continue
         
-        # Buscar arquivos de status_barcos para fallback (só tem dados da conta principal)
+        # Alteracao: 2026-05-21 - Agrupamento inteligente de status_barcos por data para incluir arquivos com sufixo pri/sec no calendario
         import glob
-        if suffix:
-            boat_files = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", f"status_barcos{suffix}_*.csv")), reverse=True)
-        else:
-            boat_files_default = sorted(glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv")), reverse=True)
-            boat_files_default = [f for f in boat_files_default if '_pri_' not in os.path.basename(f) and '_sec_' not in os.path.basename(f)]
-            boat_files = boat_files_default
+        import re
+        
+        pref_suffix = '_pri'
+        my_clan_lower = my_clan.lower() if my_clan else ''
+        if 'lendario' in my_clan_lower or 'secund' in my_clan_lower or 'bruxo 2' in my_clan_lower or 'sec' in suffix:
+            pref_suffix = '_sec'
+            
+        all_boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
+        
+        # Agrupar arquivos por data
+        by_date = {}
+        for filepath in all_boat_files:
+            fname = os.path.basename(filepath)
+            # Extrair data no formato YYYY_MM_DD
+            match = re.search(r'status_barcos_(?:pri_|sec_)?(\d{4}_\d{2}_\d{2})\.csv', fname)
+            if match:
+                date_str = match.group(1)
+                if date_str not in by_date:
+                    by_date[date_str] = []
+                by_date[date_str].append(filepath)
+        
+        # Para cada data, escolher o melhor arquivo de barco
+        selected_files = []
+        for date_str, paths in by_date.items():
+            if len(paths) == 1:
+                selected_files.append((date_str, paths[0]))
+                continue
+                
+            chosen = None
+            if suffix:
+                for p in paths:
+                    if f"status_barcos{suffix}_" in os.path.basename(p):
+                        chosen = p
+                        break
+            
+            if not chosen:
+                for p in paths:
+                    if f"status_barcos{pref_suffix}_" in os.path.basename(p):
+                        chosen = p
+                        break
+            
+            if not chosen:
+                for p in paths:
+                    fname = os.path.basename(p)
+                    if '_pri_' not in fname and '_sec_' not in fname:
+                        chosen = p
+                        break
+            
+            if not chosen:
+                chosen = paths[0]
+                
+            selected_files.append((date_str, chosen))
+            
+        # Ordenar as datas decrescente (mais recente primeiro)
+        selected_files.sort(key=lambda x: x[0], reverse=True)
+        boat_files = [path for date, path in selected_files]
         
         today = datetime.now().date()
         
