@@ -46,13 +46,13 @@ def _get_battle_date(battle_time_str: str, rollover_hour: int = 0) -> str:
     """
     Calcula a data correta de uma batalha baseada no horario de virada do dia.
     
-    Para conta secundaria (rollover=21h):
-      - O "dia" comeca as 21h e vai ate as 21h do dia seguinte
-      - Batalha 20/05 20:00 (hour 20 < 21) -> pertence ao dia 19/05
-      - Batalha 20/05 22:00 (hour 22 >= 21) -> pertence ao dia 20/05
+    Conta Secundaria (rollover=21h):
+      - Batalha 20/05 20:41 (hour 20 < 21) -> dia 20/05
+      - Batalha 20/05 21:35 (hour 21 >= 21) -> dia 21/05
     
-    Para conta primaria (rollover=0):
-      - Meia-noite e a virada, comportamento padrao
+    Conta Principal (rollover=0h):
+      - Batalha 20/05 23:59 -> dia 20/05
+      - Batalha 21/05 00:00 -> dia 21/05
     
     Args:
         battle_time_str: Data/hora da batalha no formato ISO ou similar
@@ -76,13 +76,15 @@ def _get_battle_date(battle_time_str: str, rollover_hour: int = 0) -> str:
         else:
             return battle_time_str.split('T')[0] if 'T' in battle_time_str else battle_time_str.split(' ')[0]
         
-        # Se o horario da batalha for < rollover, pertence ao dia anterior
-        # Ex: rollover=21, batalha as 20h do dia 20 -> conta como dia 19
-        # Ex: rollover=21, batalha as 22h do dia 20 -> conta como dia 20
-        if dt.hour < rollover_hour:
+        # Se rollover for 0 (meia-noite), usa a data do calendario normalmente
+        if rollover_hour == 0:
+            return dt.strftime('%Y-%m-%d')
+        
+        # Se a hora da batalha for >= rollover, pertence ao "dia seguinte" do jogo
+        # Ex: rollover=21, batalha 20/05 21:35 -> dia do jogo e 21/05
+        if dt.hour >= rollover_hour:
             from datetime import timedelta
-            adjusted_date = dt - timedelta(days=1)
-            return adjusted_date.strftime('%Y-%m-%d')
+            return (dt + timedelta(days=1)).strftime('%Y-%m-%d')
         else:
             return dt.strftime('%Y-%m-%d')
     except:
