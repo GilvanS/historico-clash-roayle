@@ -79,6 +79,9 @@ class GitHubPagesHTMLGenerator:
         self.battles_cache = []
         for tag in self.tracked_tags:
             self.battles_cache.extend(self.battles_by_tag.get(tag, []))
+            
+        # FIX: Ensure global sorting across multiple tags so recent battles from any tag appear first
+        self.battles_cache.sort(key=lambda x: x.get('_dt', datetime.min), reverse=True)
         
         self.clan_members_cache = self._load_clan_members_csv()
         self.players_cache = self._load_csv_as_list('players.csv')
