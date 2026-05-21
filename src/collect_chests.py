@@ -4,6 +4,7 @@ Coleta o ciclo de baús do jogador e salva em JSON para o Dashboard.
 """
 
 import os
+import sys
 import requests
 import json
 from dotenv import load_dotenv
@@ -16,12 +17,14 @@ def collect_chests():
     
     if not token or not tag:
         print("[ERRO] Token ou Tag não configurados.")
+        sys.stdout.flush()
         return
 
     url = f"https://proxy.royaleapi.dev/v1/players/%23{tag}/upcomingchests"
     headers = {'Authorization': f'Bearer {token}'}
     
     print(f"Buscando ciclo de baús para #{tag}...")
+    sys.stdout.flush()
     
     try:
         response = requests.get(url, headers=headers, timeout=15)
@@ -39,9 +42,11 @@ def collect_chests():
             json.dump(data, f, indent=4)
             
         print(f"Ciclo de baús salvo com sucesso em: {output_path}")
+        sys.stdout.flush()
         
     except Exception as e:
         print(f"[ERRO] Falha ao coletar baús: {e}")
+        sys.stdout.flush()
 
 if __name__ == "__main__":
     collect_chests()

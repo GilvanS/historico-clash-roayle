@@ -340,6 +340,7 @@ def main():
     print(f"Contas detectadas: {len(accounts)}")
     for label, tag in accounts:
         print(f"  [{label}] {tag}")
+    sys.stdout.flush()
 
     # Coleta para cada conta
     grand_total = 0
@@ -350,9 +351,11 @@ def main():
     print("\n" + "=" * 60)
     print(f"Coleta concluida! Total de novas batalhas: {grand_total}")
     print("=" * 60)
+    sys.stdout.flush()
 
     if grand_total == 0:
         print("[INFO] Nenhuma batalha nova nesta coleta (todas ja existem nos CSVs).")
+        sys.stdout.flush()
 
 
 if __name__ == "__main__":

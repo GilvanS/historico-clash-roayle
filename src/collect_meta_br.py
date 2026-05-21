@@ -5,6 +5,7 @@ Parte do Plano de Expansão 2026 - Dia 2.
 """
 
 import os
+import sys
 import requests
 import json
 from datetime import datetime
@@ -24,6 +25,7 @@ def collect_meta_br():
     
     if not token:
         print("[ERRO] Token da API não configurado.")
+        sys.stdout.flush()
         return
 
     # Calcula hora BRT (UTC-3) para trava de reset
@@ -34,12 +36,14 @@ def collect_meta_br():
     # Regra: No dia do reset, coletar apenas após as 12h BRT
     if is_reset_day() and brt_now.hour < 12:
         print(f"[AVISO] Dia de Reset detectado ({brt_now.strftime('%d/%m')}). Hora BRT atual: {brt_now.hour}h. Coleta suspensa até as 12h BRT.")
+        sys.stdout.flush()
         return
 
     url = f"https://proxy.royaleapi.dev/v1/locations/{location_id}/rankings/players?limit=100"
     headers = {'Authorization': f'Bearer {token}'}
     
     print(f"Buscando Top 100 Brasil (Ladder)...")
+    sys.stdout.flush()
     
     try:
         response = requests.get(url, headers=headers, timeout=20)
@@ -50,6 +54,7 @@ def collect_meta_br():
         items = data.get('items', [])
         if not items:
             print("[AVISO] API retornou ranking vazio. Mantendo dados anteriores para evitar dashboard em branco.")
+            sys.stdout.flush()
             return
 
         # Adiciona timestamp da coleta
@@ -67,9 +72,11 @@ def collect_meta_br():
             json.dump(data, f, indent=4, ensure_ascii=False)
             
         print(f"Ranking Meta BR atualizado com sucesso: {len(items)} jogadores.")
+        sys.stdout.flush()
         
     except Exception as e:
         print(f"[ERRO] Falha ao coletar Meta BR: {e}")
+        sys.stdout.flush()
 
 if __name__ == "__main__":
     collect_meta_br()
