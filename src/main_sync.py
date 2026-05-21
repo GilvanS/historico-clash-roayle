@@ -128,7 +128,7 @@ def main():
                 [sys.executable, '-c',
                  'from collect_war_top_decks import collect_top_decks; collect_top_decks()'],
                 cwd=os.path.dirname(os.path.abspath(__file__)),
-                capture_output=True, text=True, timeout=120
+                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=120
             )
             if result.stdout: war_logs.append(result.stdout)
             if result.stderr: war_logs.append(result.stderr)
@@ -137,7 +137,7 @@ def main():
                 [sys.executable, '-c',
                  'from collect_war_weekend import collect_boat_data; collect_boat_data()'],
                 cwd=os.path.dirname(os.path.abspath(__file__)),
-                capture_output=True, text=True, timeout=120
+                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=120
             )
             if result.stdout: war_logs.append(result.stdout)
             if result.stderr: war_logs.append(result.stderr)
@@ -146,7 +146,7 @@ def main():
                 [sys.executable, '-c',
                  'from collect_river_race_full import collect_river_race_intelligence; collect_river_race_intelligence()'],
                 cwd=os.path.dirname(os.path.abspath(__file__)),
-                capture_output=True, text=True, timeout=120
+                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=120
             )
             if result.stdout: war_logs.append(result.stdout)
             if result.stderr: war_logs.append(result.stderr)
@@ -205,7 +205,11 @@ def main():
             # Imprime o log da coleta sem prefixo de timestamp para clareza
             for line in log.strip().split('\n'):
                 if line.strip():
-                    print(f"  [{name}] {line}")
+                    try:
+                        print(f"  [{name}] {line}")
+                    except UnicodeEncodeError:
+                        safe_line = line.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(sys.stdout.encoding or 'utf-8')
+                        print(f"  [{name}] {safe_line}")
             print()
 
     logger.info("=" * 60)

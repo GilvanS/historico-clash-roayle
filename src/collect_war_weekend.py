@@ -23,7 +23,8 @@ def get_config():
     clan_tag_sec = "%23R0JVY98R"
     return headers, base_url, clan_tag_pri, clan_tag_sec
 
-DATA_DIR = 'src/data_clan'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(script_dir, 'data_clan')
 
 def collect_boat_data_for_clan(headers, base_url, clan_tag, suffix=""):
     """Coleta status dos barcos para um clã específico."""
@@ -35,15 +36,16 @@ def collect_boat_data_for_clan(headers, base_url, clan_tag, suffix=""):
         
         os.makedirs(DATA_DIR, exist_ok=True)
         today = datetime.now().strftime('%Y_%m_%d')
-        filename = f'{DATA_DIR}/status_barcos{suffix}_{today}.csv'
+        filename = os.path.join(DATA_DIR, f'status_barcos{suffix}_{today}.csv')
         
         # Verificar se dados atuais estão vazios
         total_fame = sum(c.get('fame', 0) for c in clans)
         
         if total_fame == 0:
-            # Buscar arquivo anterior com dados
-            pattern = f'{DATA_DIR}/status_barcos{suffix}_*.csv'
-            previous_files = sorted(glob.glob(pattern))
+            # Buscar arquivo anterior com dados (excluindo o proprio de hoje)
+            pattern = os.path.join(DATA_DIR, f'status_barcos{suffix}_*.csv')
+            previous_files = [f for f in glob.glob(pattern) if os.path.abspath(f) != os.path.abspath(filename)]
+            previous_files = sorted(previous_files)
             if previous_files:
                 latest_existing = max(previous_files)
                 print(f"Aviso: Dados vazios. Mantendo arquivo anterior: {os.path.basename(latest_existing)}")
@@ -88,19 +90,19 @@ def collect_boat_data():
     
     # Se algum arquivo não foi criado por falta de dados, copiar do anterior
     if not filename_pri or not os.path.exists(filename_pri):
-        pattern = f'{DATA_DIR}/status_barcos_pri_*.csv'
-        previous = sorted(glob.glob(pattern))
+        filename = os.path.join(DATA_DIR, f'status_barcos_pri_{datetime.now().strftime("%Y_%m_%d")}.csv')
+        pattern = os.path.join(DATA_DIR, 'status_barcos_pri_*.csv')
+        previous = [f for f in glob.glob(pattern) if os.path.abspath(f) != os.path.abspath(filename)]
         if previous:
-            filename = f'{DATA_DIR}/status_barcos_pri_{datetime.now().strftime("%Y_%m_%d")}.csv'
             import shutil
             shutil.copy(max(previous), filename)
             print(f"Copiado status_barcos_pri do dia anterior")
     
     if not filename_sec or not os.path.exists(filename_sec):
-        pattern = f'{DATA_DIR}/status_barcos_sec_*.csv'
-        previous = sorted(glob.glob(pattern))
+        filename = os.path.join(DATA_DIR, f'status_barcos_sec_{datetime.now().strftime("%Y_%m_%d")}.csv')
+        pattern = os.path.join(DATA_DIR, 'status_barcos_sec_*.csv')
+        previous = [f for f in glob.glob(pattern) if os.path.abspath(f) != os.path.abspath(filename)]
         if previous:
-            filename = f'{DATA_DIR}/status_barcos_sec_{datetime.now().strftime("%Y_%m_%d")}.csv'
             import shutil
             shutil.copy(max(previous), filename)
             print(f"Copiado status_barcos_sec do dia anterior")

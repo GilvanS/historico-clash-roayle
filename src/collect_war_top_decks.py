@@ -22,7 +22,8 @@ WAR_FIELDNAMES = [
     'resultado_dia', 'lutou_hoje'
 ]
 
-DATA_DIR = 'src/data_csv_oficial'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(script_dir, 'data_csv_oficial')
 
 def get_clan_tag():
     token = os.getenv('CR_API_TOKEN')
