@@ -32,6 +32,53 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+# Horarios de virada de dia por conta (hora em que o "dia" comeca/termina)
+# Conta Principal: 00:00 (meia-noite)
+# Conta Secundaria: 21:00 (9h da noite do dia anterior)
+# Guerra de Clã: 07:00 (7h da manha)
+DAY_ROLLOVER_HOURS = {
+    'primary': 0,    # Conta Principal vira a 00:00
+    'secondary': 21, # Conta Secundaria vira a 21:00
+    'war': 7,        # Guerra vira a 07:00
+}
+
+def _get_battle_date(battle_time_str: str, rollover_hour: int = 0) -> str:
+    """
+    Calcula a data correta de uma batalha baseada no horario de virada do dia.
+    
+    Args:
+        battle_time_str: Data/hora da batalha no formato ISO ou similar
+        rollover_hour: Hora em que o dia vira (0=meia-noite, 21=21h, 7=7h)
+    
+    Returns:
+        String da data no formato YYYY-MM-DD considerando o rollover
+    """
+    if not battle_time_str:
+        return ''
+    
+    try:
+        # Parse da data/hora
+        b_time_str = battle_time_str.replace('Z', '')
+        for fmt in ['%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S', '%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M']:
+            try:
+                dt = datetime.strptime(b_time_str, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            return battle_time_str.split('T')[0] if 'T' in battle_time_str else battle_time_str.split(' ')[0]
+        
+        # Se o horario da batalha for antes do rollover, pertence ao dia anterior
+        if dt.hour < rollover_hour:
+            # Batalha ocorreu antes do horario de virada, entao pertence ao dia anterior
+            from datetime import timedelta
+            adjusted_date = dt - timedelta(hours=rollover_hour)
+            return adjusted_date.strftime('%Y-%m-%d')
+        else:
+            return dt.strftime('%Y-%m-%d')
+    except:
+        return battle_time_str.split('T')[0] if 'T' in battle_time_str else battle_time_str.split(' ')[0]
+
 class GitHubPagesHTMLGenerator:
     def __init__(self, db_path: str = None):
         self.src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -1402,9 +1449,14 @@ class GitHubPagesHTMLGenerator:
         return members
     
     def get_daily_battle_stats(self, days_limit: int = 30, player_tag: str = None) -> List[Dict]:
-        """Get daily wins/losses aggregation from CSV files"""
+        """Get daily wins/losses aggregation from CSV files com virada de dia correta por conta"""
         if not player_tag:
             player_tag = self.player_tag
+        
+        # Determina o horario de virada baseado na conta
+        rollover_hour = DAY_ROLLOVER_HOURS['primary']  # Padrao: 00:00
+        if player_tag == self.player_tag_sec:
+            rollover_hour = DAY_ROLLOVER_HOURS['secondary']  # Secundaria: 21:00
             
         # Use cached battles organized by tag
         battles = self.battles_by_tag.get(player_tag, [])
@@ -1425,8 +1477,8 @@ class GitHubPagesHTMLGenerator:
             b_time = b['battle_time']
             if not b_time: continue
             
-            # Extract date part
-            b_date = b_time.split('T')[0] if 'T' in b_time else b_time.split(' ')[0]
+            # Usa a funcao auxiliar para calcular a data correta com base no rollover
+            b_date = _get_battle_date(b_time, rollover_hour)
             
             if b_date in daily_map:
                 res = b['result']
@@ -5509,7 +5561,7 @@ class GitHubPagesHTMLGenerator:
         <h1>⚔️ Clash Royale Analytics</h1>
         <h2>No Data Available</h2>
         <p>The analytics data is being generated. Please check back in a few minutes.</p>
-        <p>Data is automatically updated every hour via GitHub Actions.</p>
+        <p>Data is automatically updated every 30min (day) / 1h (night) via GitHub Actions.</p>
     </div>
 </body>
 </html>
@@ -7695,10 +7747,11 @@ class GitHubPagesHTMLGenerator:
         """Generate the complete HTML document with multi-account support"""
         
         css_styles = self.get_base_css_styles()
+        build_timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         
         return f"""
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-build="{build_timestamp}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7746,6 +7799,32 @@ class GitHubPagesHTMLGenerator:
     </div>
     
     <script>
+    // Auto-refresh: detecta atualizacoes do GitHub Actions e recarrega suavemente
+    (function() {{
+        const currentBuild = document.documentElement.getAttribute('data-build');
+        if (!currentBuild) return;
+        
+        // Verifica a cada 60 segundos se ha versao nova
+        setInterval(async function() {{
+            try {{
+                const res = await fetch(window.location.href, {{ method: 'HEAD', cache: 'no-store' }});
+                if (!res.ok) return;
+                
+                // Compara o Last-Modified ou ETag
+                const lastMod = res.headers.get('Last-Modified');
+                if (lastMod) {{
+                    const stored = sessionStorage.getItem('cr_last_modified');
+                    if (stored && stored !== lastMod) {{
+                        console.log('[AutoRefresh] Dashboard atualizado, recarregando...');
+                        window.location.reload();
+                        return;
+                    }}
+                    sessionStorage.setItem('cr_last_modified', lastMod);
+                }}
+            }} catch(e) {{ /* Ignora erros de rede */ }}
+        }}, 60000);
+    }})();
+    
     // Tab switching for multiple accounts (Main vs Secondary)
 /**
      * @description Gerencia a troca de abas principais (Contas)
