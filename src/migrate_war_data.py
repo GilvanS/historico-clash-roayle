@@ -45,13 +45,13 @@ CLAN_TAG_MAP = {
     'красная месть!': '#SEC_CLAN_5',
 }
 
-# Traducao de dias da semana para Dia de Batalha (Quinta=Dia 1, Sexta=Dia 2, etc.)
+# Traducao de dias da semana para Dia de Batalha (Quinta=Reset, Sexta=Dia 1, etc.)
 WEEKDAY_TO_BATTLE_DAY = {
-    3: 'Dia 1',  # Quinta-feira
-    4: 'Dia 2',  # Sexta-feira
-    5: 'Dia 3',  # Sabado
-    6: 'Dia 4',  # Domingo
-    0: 'Reset',  # Segunda-feira (fim da guerra)
+    3: 'Reset',  # Quinta-feira (treinamento)
+    4: 'Dia 1',  # Sexta-feira (batalha)
+    5: 'Dia 2',  # Sabado (batalha)
+    6: 'Dia 3',  # Domingo (batalha)
+    0: 'Dia 4',  # Segunda-feira (batalha final)
 }
 
 def get_battle_day_label(date_str: str) -> str:

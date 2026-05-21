@@ -90,6 +90,17 @@ def _get_battle_date(battle_time_str: str, rollover_hour: int = 0) -> str:
     except:
         return battle_time_str.split('T')[0] if 'T' in battle_time_str else battle_time_str.split(' ')[0]
 
+def safe_int(val, default=0):
+    try:
+        if val is None:
+            return default
+        val_str = str(val).strip()
+        if not val_str:
+            return default
+        return int(float(val_str))
+    except (ValueError, TypeError):
+        return default
+
 class GitHubPagesHTMLGenerator:
     def __init__(self, db_path: str = None):
         self.src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -3983,32 +3994,43 @@ class GitHubPagesHTMLGenerator:
                     if clan_nome:
                         if clan_nome not in intel_data[dt_key]:
                             intel_data[dt_key][clan_nome] = {
-                                'position': int(row.get('clan_posicao') or row.get('Ranking', 0) or 0),
-                                'fame': int(row.get('clan_fame') or row.get('Fama_Hoje', 0) or 0)
+                                'position': safe_int(row.get('clan_posicao') or row.get('Ranking', 0)),
+                                'fame': safe_int(row.get('clan_fame') or row.get('Fama_Hoje', 0))
                             }
                 
-                # 3. Monta o calendario com as datas do status de barcos
-                sorted_dates = sorted(status_by_date.keys(), reverse=True)
+                # 3. Monta o calendario com as datas da guerra ativa atual
+                now = datetime.now()
+                if now.hour < 7:
+                    logical_today = now.date() - timedelta(days=1)
+                else:
+                    logical_today = now.date()
+                
+                # Acha a Quinta-feira operacional de inicio da guerra
+                weekday = logical_today.weekday()
+                if weekday >= 3:
+                    start_date = logical_today - timedelta(days=(weekday - 3))
+                else:
+                    start_date = logical_today - timedelta(days=(weekday + 4))
+                
+                # Gera exatamente as 5 datas do ciclo de guerra cronologicamente crescente
+                war_dates = []
+                for i in range(5):
+                    war_dates.append(start_date + timedelta(days=i))
                 
                 days = []
-                war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
-                today = datetime.now().date()
+                # Novo mapeamento: Quinta=Reset, Sexta=Dia 1, Sabado=Dia 2, Domingo=Dia 3, Segunda=Dia 4
+                war_day_labels = {3: "Reset", 4: "Dia 1", 5: "Dia 2", 6: "Dia 3", 0: "Dia 4"}
                 
-                for date_str in sorted_dates[:days_back]:
-                    try:
-                        date_parts = date_str.split('_')
-                        day_date = datetime(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
-                        weekday = day_date.weekday()
-                        day_label = war_day_labels.get(weekday, f"D{weekday}")
-                    except:
-                        day_label = date_str
-                        day_date = datetime.now()
-                        weekday = day_date.weekday()
-                    
-                    is_today = day_date.date() == today or weekday in [0, 3, 4, 5, 6]
+                for day_date in war_dates:
+                    date_str = day_date.strftime('%Y_%m_%d')
+                    weekday = day_date.weekday()
+                    day_label = war_day_labels.get(weekday, f"D{weekday}")
+                    is_today = day_date == logical_today
                     
                     # Acha dados do clan para esta data na inteligencia
                     clan_data = None
+                    boat_status = 'unknown'
+                    
                     if date_str in intel_data:
                         my_clan_upper = my_clan.strip().upper()
                         for cn, data in intel_data[date_str].items():
@@ -4020,15 +4042,25 @@ class GitHubPagesHTMLGenerator:
                                 clan_data = data
                                 break
                     
-                    # Se nao achou na inteligencia, pega do status de barcos
-                    if not clan_data and date_str in status_by_date:
+                    # Acha boat_status a partir do historico de barcos
+                    if date_str in status_by_date:
                         for row in status_by_date[date_str]:
                             cn = row.get('clan_nome', '')
                             if my_clan.lower() in cn.lower() or cn.lower() in my_clan.lower():
-                                clan_data = {
-                                    'position': int(row.get('posicao', 0) or 0),
-                                    'fame': int(row.get('fama_atual', 0) or 0)
-                                }
+                                finalizado = row.get('finalizado', 'Não')
+                                reparo = safe_int(row.get('pontos_reparo', 0))
+                                if finalizado == 'Sim':
+                                    boat_status = 'complete'
+                                elif reparo > 0:
+                                    boat_status = 'repairing'
+                                else:
+                                    boat_status = 'active'
+                                
+                                if not clan_data:
+                                    clan_data = {
+                                        'position': safe_int(row.get('posicao', 0)),
+                                        'fame': safe_int(row.get('fama_atual', 0))
+                                    }
                                 break
                     
                     if clan_data:
@@ -4042,8 +4074,8 @@ class GitHubPagesHTMLGenerator:
                                 cn_clean = ''.join(c for c in clan_nome.upper() if c.isascii())
                                 if my_clean in cn_clean or cn_clean in my_clean:
                                     player_name = row.get('player_nome') or row.get('Jogador') or 'N/A'
-                                    player_fame = int(row.get('player_fame') or row.get('Fama_Hoje') or 0)
-                                    player_pos = int(row.get('player_posicao') or row.get('Posicao') or 99)
+                                    player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje'))
+                                    player_pos = safe_int(row.get('player_posicao') or row.get('Posicao'), 99)
                                     clan_players.append({
                                         'name': player_name,
                                         'fame': player_fame,
@@ -4060,6 +4092,7 @@ class GitHubPagesHTMLGenerator:
                             'fame': clan_data['fame'],
                             'points': clan_data.get('points', 0),
                             'is_active': is_today,
+                            'boat_status': boat_status,
                             'top_players': top_players
                         })
                     elif my_clan:
@@ -4070,6 +4103,7 @@ class GitHubPagesHTMLGenerator:
                             'fame': 0,
                             'points': 0,
                             'is_active': is_today,
+                            'boat_status': 'unknown',
                             'top_players': []
                         })
                 return days
@@ -4079,7 +4113,8 @@ class GitHubPagesHTMLGenerator:
         # Fallback legado se os consolidados nao existirem
         import glob
         days = []
-        war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
+        # Quinta=Reset, Sexta=Dia 1, Sabado=Dia 2, Domingo=Dia 3, Segunda=Dia 4
+        war_day_labels = {3: "Reset", 4: "Dia 1", 5: "Dia 2", 6: "Dia 3", 0: "Dia 4"}
         
         intel_data = {}
         intel_path_by_date = {}
@@ -4186,12 +4221,13 @@ class GitHubPagesHTMLGenerator:
                 
             selected_files.append((date_str, chosen))
             
-        selected_files.sort(key=lambda x: x[0], reverse=True)
-        boat_files = [path for date, path in selected_files]
+        # Ordenacao cronologica crescente (mais antigo primeiro)
+        selected_files.sort(key=lambda x: x[0], reverse=False)
+        boat_files = [path for date, path in selected_files][-days_back:]
         
         today = datetime.now().date()
         
-        for filepath in boat_files[:days_back]:
+        for filepath in boat_files:
             try:
                 filename = os.path.basename(filepath)
                 clean_filename = filename.replace('status_barcos_pri_', 'status_barcos_').replace('status_barcos_sec_', 'status_barcos_')
@@ -4213,8 +4249,8 @@ class GitHubPagesHTMLGenerator:
                         for b in reader:
                             if b.get('Nome_Cla') == my_clan:
                                 clan_data = {
-                                    'position': int(b.get('Posicao', 0) or 0),
-                                    'fame': int(b.get('Fama_Atual', 0) or 0)
+                                    'position': safe_int(b.get('Posicao', 0)),
+                                    'fame': safe_int(b.get('Fama_Atual', 0))
                                 }
                                 break
                     
@@ -4224,8 +4260,8 @@ class GitHubPagesHTMLGenerator:
                             for b in reader:
                                 if my_clan.lower() in b.get('Nome_Cla', '').lower() or b.get('Nome_Cla', '').lower() in my_clan.lower():
                                     clan_data = {
-                                        'position': int(b.get('Posicao', 0) or 0),
-                                        'fame': int(b.get('Fama_Atual', 0) or 0)
+                                        'position': safe_int(b.get('Posicao', 0)),
+                                        'fame': safe_int(b.get('Fama_Atual', 0))
                                     }
                                     break
                 
@@ -4425,11 +4461,26 @@ class GitHubPagesHTMLGenerator:
                 if target_date:
                     norm_target = target_date.replace('_', '-')
                     rows = [row for row in rows if row.get('data_coleta') == norm_target]
-                
-                unique_dates = sorted(list(set(row['data_coleta'] for row in rows)), reverse=True)
-                target_dates = unique_dates[:6]
-                
-                rows = [row for row in rows if row['data_coleta'] in target_dates]
+                else:
+                    # Obter as 5 datas da guerra ativa atual no consolidado
+                    now = datetime.now()
+                    if now.hour < 7:
+                        logical_today = now.date() - timedelta(days=1)
+                    else:
+                        logical_today = now.date()
+                    
+                    weekday = logical_today.weekday()
+                    if weekday >= 3:
+                        start_date = logical_today - timedelta(days=(weekday - 3))
+                    else:
+                        start_date = logical_today - timedelta(days=(weekday + 4))
+                    
+                    target_dates = []
+                    for i in range(5):
+                        d = start_date + timedelta(days=i)
+                        target_dates.append(d.strftime('%Y-%m-%d'))
+                    
+                    rows = [row for row in rows if row.get('data_coleta') in target_dates]
                 
                 clan_data = {}
                 for row in rows:
@@ -4446,12 +4497,12 @@ class GitHubPagesHTMLGenerator:
                     
                     file_date = row.get('data_coleta', '').replace('-', '_')
                     cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
-                    ranking = int(row.get('clan_posicao') or row.get('Ranking', 99) or 99)
+                    ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
                     player_name = row.get('player_nome') or row.get('Jogador', '')
-                    player_fame = int(row.get('player_fame') or row.get('Fama_Hoje', 0) or 0)
+                    player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
                     decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
                     boat_attacks = row.get('boat_attacks', '0')
-                    lutou = "Sim" if int(boat_attacks or 0) > 0 else "Nao"
+                    lutou = "Sim" if safe_int(boat_attacks) > 0 else "Nao"
                     deck_1 = row.get('deck_1', '')
                     
                     if cla not in clan_data:
@@ -4463,29 +4514,43 @@ class GitHubPagesHTMLGenerator:
                     is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
                     max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
                     
-                    if len(clan_data[cla][file_date]) < max_players:
-                        clan_data[cla][file_date].append({
-                            'ranking': ranking,
-                            'player': player_name,
-                            'fame': player_fame,
-                            'date': file_date,
-                            'lutou': lutou,
-                            'ataques': f"{decks_used}/4" if decks_used and '/' not in decks_used else decks_used or '0/4',
-                            'deck_1': deck_1,
-                            'deck_1_tipo': row.get('deck_1_tipo', 'Guerra'),
-                            'deck_2': row.get('deck_2', ''),
-                            'deck_2_tipo': row.get('deck_2_tipo', ''),
-                            'deck_3': row.get('deck_3', ''),
-                            'deck_3_tipo': row.get('deck_3_tipo', ''),
-                            'deck_4': row.get('deck_4', ''),
-                            'deck_4_tipo': row.get('deck_4_tipo', ''),
-                            'war_vitorias': int(row.get('war_vitorias', 0) or 0),
-                            'war_derrotas': int(row.get('war_derrotas', 0) or 0),
-                            'war_medals': int(row.get('war_medals', 0) or 0),
-                            'war_torre': row.get('war_torre', 'Tower Princess'),
-                            'war_tipo_principal': row.get('war_tipo_principal', ''),
-                            'war_battles_count': int(row.get('war_battles_count', 0) or 0)
-                        })
+                    # Evitar duplicados do mesmo jogador no mesmo dia (mantendo o de maior fama/ranking melhor)
+                    existing_idx = -1
+                    for idx, p in enumerate(clan_data[cla][file_date]):
+                        if p['player'] == player_name:
+                            existing_idx = idx
+                            break
+                    
+                    player_data_item = {
+                        'ranking': ranking,
+                        'player': player_name,
+                        'fame': player_fame,
+                        'date': file_date,
+                        'lutou': lutou,
+                        'ataques': f"{decks_used}/4" if decks_used and '/' not in decks_used else decks_used or '0/4',
+                        'deck_1': deck_1,
+                        'deck_1_tipo': row.get('deck_1_tipo', 'Guerra'),
+                        'deck_2': row.get('deck_2', ''),
+                        'deck_2_tipo': row.get('deck_2_tipo', ''),
+                        'deck_3': row.get('deck_3', ''),
+                        'deck_3_tipo': row.get('deck_3_tipo', ''),
+                        'deck_4': row.get('deck_4', ''),
+                        'deck_4_tipo': row.get('deck_4_tipo', ''),
+                        'war_vitorias': safe_int(row.get('war_vitorias', 0)),
+                        'war_derrotas': safe_int(row.get('war_derrotas', 0)),
+                        'war_medals': safe_int(row.get('war_medals', 0)),
+                        'war_torre': row.get('war_torre', 'Tower Princess'),
+                        'war_tipo_principal': row.get('war_tipo_principal', ''),
+                        'war_battles_count': safe_int(row.get('war_battles_count', 0))
+                    }
+                    
+                    if existing_idx >= 0:
+                        # Se ja existe, mantem o de maior fama para evitar duplicidade de coletas parciais
+                        if player_fame > clan_data[cla][file_date][existing_idx]['fame']:
+                            clan_data[cla][file_date][existing_idx] = player_data_item
+                    else:
+                        if len(clan_data[cla][file_date]) < max_players:
+                            clan_data[cla][file_date].append(player_data_item)
                 
                 clan_list = []
                 for cla, dates_dict in clan_data.items():
@@ -4547,7 +4612,8 @@ class GitHubPagesHTMLGenerator:
                 logger.warning(f"get_war_radar_data: Nenhum arquivo de inteligencia de guerra encontrado")
                 return data
                 
-            intel_files.sort(key=lambda x: os.path.basename(x), reverse=True)
+            # Ordenacao cronologica crescente (mais antigo primeiro)
+            intel_files.sort(key=lambda x: os.path.basename(x), reverse=False)
             
             if target_date:
                 date_norm_under = target_date.replace('-', '_')
@@ -4555,8 +4621,30 @@ class GitHubPagesHTMLGenerator:
                 filtered = [f for f in intel_files if date_norm_under in os.path.basename(f) or date_norm_dash in os.path.basename(f)]
                 if filtered:
                     intel_files = filtered
+            else:
+                # Obter as 5 datas da guerra ativa atual no bloco legado
+                now = datetime.now()
+                if now.hour < 7:
+                    logical_today = now.date() - timedelta(days=1)
+                else:
+                    logical_today = now.date()
+                
+                weekday = logical_today.weekday()
+                if weekday >= 3:
+                    start_date = logical_today - timedelta(days=(weekday - 3))
+                else:
+                    start_date = logical_today - timedelta(days=(weekday + 4))
+                
+                target_dates_dash = []
+                target_dates_under = []
+                for i in range(5):
+                    d = start_date + timedelta(days=i)
+                    target_dates_dash.append(d.strftime('%Y-%m-%d'))
+                    target_dates_under.append(d.strftime('%Y_%m_%d'))
+                
+                intel_files = [f for f in intel_files if any(d in os.path.basename(f) for d in target_dates_dash + target_dates_under)]
             
-            files_to_process = intel_files[:6]
+            files_to_process = intel_files
             
             clan_data = {}
             for fpath in files_to_process:
@@ -4586,12 +4674,12 @@ class GitHubPagesHTMLGenerator:
                                 continue
                                 
                         cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
-                        ranking = int(row.get('clan_posicao') or row.get('Ranking', 99) or 99)
+                        ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
                         player_name = row.get('player_nome') or row.get('Jogador', '')
-                        player_fame = int(row.get('player_fame') or row.get('Fama_Hoje', 0) or 0)
+                        player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
                         decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
                         boat_attacks = row.get('boat_attacks', '0')
-                        lutou = "Sim" if int(boat_attacks or 0) > 0 else "Nao"
+                        lutou = "Sim" if safe_int(boat_attacks) > 0 else "Nao"
                         deck_1 = row.get('deck_1', '')
                         
                         if cla not in clan_data:
@@ -4619,12 +4707,12 @@ class GitHubPagesHTMLGenerator:
                                 'deck_3_tipo': row.get('deck_3_tipo', ''),
                                 'deck_4': row.get('deck_4', ''),
                                 'deck_4_tipo': row.get('deck_4_tipo', ''),
-                                'war_vitorias': int(row.get('war_vitorias', 0) or 0),
-                                'war_derrotas': int(row.get('war_derrotas', 0) or 0),
-                                'war_medals': int(row.get('war_medals', 0) or 0),
+                                'war_vitorias': safe_int(row.get('war_vitorias', 0)),
+                                'war_derrotas': safe_int(row.get('war_derrotas', 0)),
+                                'war_medals': safe_int(row.get('war_medals', 0)),
                                 'war_torre': row.get('war_torre', 'Tower Princess'),
                                 'war_tipo_principal': row.get('war_tipo_principal', ''),
-                                'war_battles_count': int(row.get('war_battles_count', 0) or 0)
+                                'war_battles_count': safe_int(row.get('war_battles_count', 0))
                             })
                 except Exception as e:
                     logger.error(f"Erro ao processar {fpath}: {e}")
@@ -4667,7 +4755,7 @@ class GitHubPagesHTMLGenerator:
             return ""
         
         days_html = ""
-        for entry in day_history[:6]:  # Limita a 6 dias (Terça a Domingo)
+        for entry in day_history[:5]:  # Limita a 5 dias operacionais (Reset a Dia 4)
             date = entry['date']
             label = entry.get('label', date)
             is_active = entry.get('is_active', False)
@@ -4771,9 +4859,15 @@ class GitHubPagesHTMLGenerator:
         if not data.get('clans'):
             return {'content': '', 'tab': '', 'tab_id': tab_id}
         
-        weekday = datetime.now().weekday()
-        war_day_map = {0: "Reset", 3: "1", 4: "2", 5: "3", 6: "4"}
-        day_suffix = f": Dia {war_day_map[weekday]}" if weekday in war_day_map else ""
+        # Alinhamento do dia da semana de acordo com o corte operacional das 7:00 da manha
+        now = datetime.now()
+        if now.hour < 7:
+            logical_today = now.date() - timedelta(days=1)
+        else:
+            logical_today = now.date()
+        weekday = logical_today.weekday()
+        war_day_map = {3: "Reset", 4: "Dia 1", 5: "Dia 2", 6: "Dia 3", 0: "Dia 4"}
+        day_suffix = f": {war_day_map[weekday]}" if weekday in war_day_map else ""
         
         # Nome da conta para a tab
         account_label = "CONTA PRINCIPAL" if player_tag and '2QR292P' in player_tag else "CONTA SECUNDÁRIA"
@@ -4789,8 +4883,8 @@ class GitHubPagesHTMLGenerator:
         # IMPORTANTE: Usar arquivos SEM sufixo (_pri/_sec) pois contêm dados de TODAS as contas
         calendar_html = ""
         if my_clan:
-            # Não usar suffix - os arquivos padrão contêm dados de ambas as contas
-            calendar_data = self.get_war_calendar_data(my_clan, 6, '', player_tag=player_tag)
+            # Nao usar suffix - os arquivos padrao contem dados de ambas as contas
+            calendar_data = self.get_war_calendar_data(my_clan, 5, '', player_tag=player_tag)
             if calendar_data:
                 calendar_html = self._generate_war_calendar_html(calendar_data, my_clan, tab_id)
         
@@ -7860,7 +7954,7 @@ class GitHubPagesHTMLGenerator:
         /* Timeline Horizontal com CSS Grid */
         .rd-calendar-timeline {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 12px;
             overflow-x: auto;
             padding-bottom: 10px;
@@ -8061,7 +8155,7 @@ class GitHubPagesHTMLGenerator:
         /* Responsivo Mobile */
         @media (max-width: 768px) { 
             .rd-calendar-timeline {
-                grid-template-columns: repeat(6, minmax(90px, 1fr));
+                grid-template-columns: repeat(5, minmax(90px, 1fr));
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 scroll-snap-type: x mandatory;
@@ -8376,18 +8470,31 @@ class GitHubPagesHTMLGenerator:
             }}
         }}
         
-        // Task 3: Restaurar o dia de guerra salvo por tab (pri/sec)
+        // Task 3: Restaurar o dia de guerra salvo por tab (pri/sec) ou simular clique inicial no dia ativo/primeiro
         ['pri', 'sec'].forEach(function(tabId) {{
             var savedDay = localStorage.getItem('cr_radar_day_' + tabId);
+            var calendarEl = document.getElementById('rd-calendar-' + tabId);
+            if (!calendarEl) return;
+            
+            var dayBtn = null;
             if (savedDay) {{
-                // Localizar o botao do dia no calendario correspondente
-                var calendarEl = document.getElementById('rd-calendar-' + tabId);
-                if (!calendarEl) return;
-                var dayBtn = calendarEl.querySelector('.rd-calendar-day[data-date="' + savedDay + '"]');
-                if (dayBtn) {{
-                    // Simular clique no dia salvo para restaurar o estado visual
-                    selectWarDay(tabId, savedDay, dayBtn);
-                }}
+                // Localizar o botao do dia salvo
+                dayBtn = calendarEl.querySelector('.rd-calendar-day[data-date="' + savedDay + '"]');
+            }}
+            
+            // Se nao encontrou botao salvo, tenta o dia ativo do sistema (.rd-calendar-day-active)
+            if (!dayBtn) {{
+                dayBtn = calendarEl.querySelector('.rd-calendar-day.rd-calendar-day-active');
+            }}
+            
+            // Se ainda assim nao encontrou, tenta o primeiro dia disponivel (Reset)
+            if (!dayBtn) {{
+                dayBtn = calendarEl.querySelector('.rd-calendar-day');
+            }}
+            
+            if (dayBtn) {{
+                var date = dayBtn.getAttribute('data-date');
+                selectWarDay(tabId, date, dayBtn);
             }}
         }});
     }});

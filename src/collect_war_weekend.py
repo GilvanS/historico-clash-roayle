@@ -37,14 +37,16 @@ def get_logical_date_and_battle_day():
     data_str = logical_date.strftime('%Y-%m-%d')
     wd = logical_date.weekday()
     
-    # Quinta=Dia 1 (3), Sexta=Dia 2 (4), Sabado=Dia 3 (5), Domingo=Dia 4 (6), Reset=Segunda em diante
+    # Quinta=Reset (3), Sexta=Dia 1 (4), Sabado=Dia 2 (5), Domingo=Dia 3 (6), Segunda=Dia 4 (0), outros=Reset
     if wd == 3:
-        dia_batalha = 'Dia 1'
+        dia_batalha = 'Reset'
     elif wd == 4:
-        dia_batalha = 'Dia 2'
+        dia_batalha = 'Dia 1'
     elif wd == 5:
-        dia_batalha = 'Dia 3'
+        dia_batalha = 'Dia 2'
     elif wd == 6:
+        dia_batalha = 'Dia 3'
+    elif wd == 0:
         dia_batalha = 'Dia 4'
     else:
         dia_batalha = 'Reset'
