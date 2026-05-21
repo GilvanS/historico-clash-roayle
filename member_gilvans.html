@@ -2108,6 +2108,54 @@
             padding: 4px;
         }
         
+        /* Task 3: Painel de resumo dinamico do dia selecionado */
+        .rd-war-summary {
+            background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.9) 100%);
+            border: 1px solid rgba(0,255,204,0.25);
+            border-radius: 10px;
+            padding: 10px 20px;
+            margin: 8px 0 12px 0;
+            animation: rdSummaryFadeIn 0.3s ease;
+            box-shadow: 0 0 20px rgba(0,255,204,0.08);
+        }
+        @keyframes rdSummaryFadeIn {{
+            from {{ opacity: 0; transform: translateY(-6px); }}
+            to   {{ opacity: 1; transform: translateY(0); }}
+        }}
+        .rd-war-summary-inner {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }}
+        .rd-war-summary-label {{
+            color: #94a3b8;
+            font-size: 0.78em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }}
+        .rd-war-summary-date {{
+            color: #e2e8f0;
+            font-size: 0.85em;
+            font-weight: 700;
+            font-family: monospace;
+        }}
+        .rd-war-summary-pos {{
+            color: #fbbf24;
+            font-size: 0.95em;
+            font-weight: 800;
+        }}
+        .rd-war-summary-fame {{
+            color: #00ffcc;
+            font-size: 0.95em;
+            font-weight: 800;
+        }}
+        .rd-war-summary-sep {{
+            color: #334155;
+            font-size: 0.9em;
+        }}
+        
         /* Responsivo Mobile */
         @media (max-width: 768px) { 
             .rd-calendar-timeline {
@@ -2120,6 +2168,10 @@
                 scroll-snap-align: start;
                 min-width: 90px;
             }
+            .rd-war-summary-inner {{
+                gap: 6px;
+                font-size: 0.9em;
+            }}
         }
         
         @media (max-width: 768px) { .rd-grid { grid-template-columns: 1fr; } }
@@ -2354,7 +2406,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 20/05/2026 22:43:57</p>
+            <p>Perfil gerado em 21/05/2026 00:12:00</p>
             <p>Visto por último: 18 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
