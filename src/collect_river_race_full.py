@@ -19,7 +19,8 @@ if sys.stdout.encoding != 'utf-8':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-DATA_DIR = 'src/data_clan'
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(SCRIPT_DIR, 'data_clan')
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # Tipos de batalha da Guerra de Rio
@@ -338,6 +339,31 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
     
     return results
 
+def get_logical_date_and_battle_day():
+    """Retorna data coleta logica e dia batalha com base no reset pontual das 07:00:00 da manha."""
+    now = datetime.now()
+    if now.hour < 7:
+        logical_date = now - timedelta(days=1)
+    else:
+        logical_date = now
+    
+    data_str = logical_date.strftime('%Y-%m-%d')
+    wd = logical_date.weekday()
+    
+    # Quinta=Dia 1 (3), Sexta=Dia 2 (4), Sabado=Dia 3 (5), Domingo=Dia 4 (6), Reset=Segunda em diante
+    if wd == 3:
+        dia_batalha = 'Dia 1'
+    elif wd == 4:
+        dia_batalha = 'Dia 2'
+    elif wd == 5:
+        dia_batalha = 'Dia 3'
+    elif wd == 6:
+        dia_batalha = 'Dia 4'
+    else:
+        dia_batalha = 'Reset'
+        
+    return data_str, dia_batalha
+
 def collect_river_race_intelligence():
     dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env')
     load_dotenv(dotenv_path)
@@ -361,7 +387,8 @@ def collect_river_race_intelligence():
     try:
         print("\n--- TOP GLOBAL ---")
         results_global = collect_top_global_clans(token, limit=5)
-    except:
+    except Exception as e:
+        print(f"Aviso: Erro ao coletar TOP Global: {e}")
         results_global = []
     
     print("\n--- CONTA PRINCIPAL ---")
@@ -370,31 +397,7 @@ def collect_river_race_intelligence():
     print("\n--- CONTA SECUNDARIA ---")
     results_sec = collect_river_race_for_account(token, tag_sec_real, '_sec')
     
-    all_results = results_global + results_pri + results_sec
-    data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
-    
-    # Campos do CSV (agora inclui estatísticas de guerra)
-    fieldnames = [
-        'data_coleta', 'player_tag_conta', 'clan_posicao', 'clan_nome', 'clan_tag', 'clan_fame',
-        'player_posicao', 'player_nome', 'player_tag', 'player_fame', 'decks_usados', 'boat_attacks',
-        'deck_1', 'deck_1_tipo', 'deck_2', 'deck_2_tipo', 'deck_3', 'deck_3_tipo', 'deck_4', 'deck_4_tipo',
-        'war_vitorias', 'war_derrotas', 'war_medals', 'war_torre', 'war_tipo_principal', 'war_battles_count'
-    ]
-    
-    # Arquivo único com todos os dados
-    filename = f"{DATA_DIR}/inteligencia_guerra_{data_hoje}.csv"
-    
-    # Salvar arquivo unificado INICIAL (pode ter dados vazios)
-    with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
-        writer.writeheader()
-        writer.writerows(results_global)
-        writer.writerows(results_pri)
-        writer.writerows(results_sec)
-    
-    import glob
-    previous_files = sorted(glob.glob(f"{DATA_DIR}/inteligencia_guerra_*.csv"))
-    previous_files = [f for f in previous_files if '_full_' not in f and '_pri_' not in f and '_sec_' not in f]
+    data_hoje, dia_batalha = get_logical_date_and_battle_day()
     
     # Verificar se dados atuais têm DADOS REAIS
     has_real_data_pri = any(
@@ -406,78 +409,149 @@ def collect_river_race_intelligence():
         for r in results_sec
     )
     
-    if previous_files and not has_real_data_pri:
-        latest = max(previous_files)
-        print(f"Buscando dados da conta principal do arquivo: {os.path.basename(latest)}")
+    guerra_hist_path = f"{DATA_DIR}/guerra_historico.csv"
+    
+    # Mapear fallbacks a partir do arquivo guerra_historico.csv mestre se necessario
+    if not has_real_data_pri or not has_real_data_sec:
+        if os.path.exists(guerra_hist_path):
+            try:
+                historical_rows = []
+                with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    for row in reader:
+                        historical_rows.append(row)
+                
+                # Achar a data mais recente que nao seja a data de hoje
+                dates_before_today = sorted(list(set(
+                    row['data_coleta'] for row in historical_rows 
+                    if row['data_coleta'] < data_hoje
+                )), reverse=True)
+                
+                if dates_before_today:
+                    latest_date = dates_before_today[0]
+                    print(f"Buscando fallback de dados anteriores da data: {latest_date}")
+                    
+                    if not has_real_data_pri:
+                        print("Fallback para Conta Principal...")
+                        results_pri = []
+                        for row in historical_rows:
+                            if row['data_coleta'] == latest_date and row.get('conta_tipo') == tag_pri_real:
+                                new_row = row.copy()
+                                new_row['data_coleta'] = data_hoje
+                                new_row['dia_batalha'] = dia_batalha
+                                results_pri.append(new_row)
+                                
+                    if not has_real_data_sec:
+                        print("Fallback para Conta Secundaria...")
+                        results_sec = []
+                        for row in historical_rows:
+                            if row['data_coleta'] == latest_date and row.get('conta_tipo') == tag_sec_real:
+                                new_row = row.copy()
+                                new_row['data_coleta'] = data_hoje
+                                new_row['dia_batalha'] = dia_batalha
+                                results_sec.append(new_row)
+            except Exception as e:
+                print(f"Aviso: Erro ao buscar dados do historico para fallback: {e}")
+
+    # Campos oficiais do guerra_historico.csv mestre
+    fieldnames = [
+        'data_coleta', 'dia_batalha', 'conta_tipo', 'player_tag', 'player_nome', 
+        'player_fame', 'player_posicao', 'clan_tag', 'clan_nome', 'clan_posicao', 
+        'clan_fame', 'decks_usados', 'boat_attacks', 
+        'deck_1', 'deck_1_tipo', 'deck_2', 'deck_2_tipo', 
+        'deck_3', 'deck_3_tipo', 'deck_4', 'deck_4_tipo',
+        'war_vitorias', 'war_derrotas', 'war_medals', 'war_torre', 'war_battles_count'
+    ]
+    
+    # Preparar novos registros mapeando chaves
+    new_records = []
+    for r in results_global + results_pri + results_sec:
+        # Resolve conta_tipo e player_tag_conta de forma unificada
+        conta_tipo_val = r.get('player_tag_conta', r.get('conta_tipo', 'TOP_GLOBAL'))
+        if not conta_tipo_val:
+            conta_tipo_val = 'TOP_GLOBAL'
+            
+        rec = {
+            'data_coleta': data_hoje,
+            'dia_batalha': dia_batalha,
+            'conta_tipo': conta_tipo_val,
+            'player_tag': r.get('player_tag', ''),
+            'player_nome': r.get('player_nome', ''),
+            'player_fame': r.get('player_fame', '0'),
+            'player_posicao': r.get('player_posicao', '0'),
+            'clan_tag': r.get('clan_tag', ''),
+            'clan_nome': r.get('clan_nome', ''),
+            'clan_posicao': r.get('clan_posicao', '0'),
+            'clan_fame': r.get('clan_fame', '0'),
+            'decks_usados': r.get('decks_usados', '0'),
+            'boat_attacks': r.get('boat_attacks', '0'),
+            'deck_1': r.get('deck_1') if r.get('deck_1') else 'N/A',
+            'deck_1_tipo': r.get('deck_1_tipo') if r.get('deck_1_tipo') else 'N/A',
+            'deck_2': r.get('deck_2') if r.get('deck_2') else 'N/A',
+            'deck_2_tipo': r.get('deck_2_tipo') if r.get('deck_2_tipo') else 'N/A',
+            'deck_3': r.get('deck_3') if r.get('deck_3') else 'N/A',
+            'deck_3_tipo': r.get('deck_3_tipo') if r.get('deck_3_tipo') else 'N/A',
+            'deck_4': r.get('deck_4') if r.get('deck_4') else 'N/A',
+            'deck_4_tipo': r.get('deck_4_tipo') if r.get('deck_4_tipo') else 'N/A',
+            'war_vitorias': r.get('war_vitorias', '0'),
+            'war_derrotas': r.get('war_derrotas', '0'),
+            'war_medals': r.get('war_medals', '0'),
+            'war_torre': r.get('war_torre', 'Tower Princess'),
+            'war_battles_count': r.get('war_battles_count', '0')
+        }
+        new_records.append(rec)
+        
+    # Carregar registros existentes
+    existing_records = []
+    if os.path.exists(guerra_hist_path):
         try:
-            with open(latest, 'r', encoding='utf-8-sig') as f:
+            with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f, delimiter=';')
                 for row in reader:
-                    ptc = row.get('player_tag_conta', '')
-                    if ptc == tag_pri_real:
-                        row['data_coleta'] = data_hoje
-                        results_pri.append(row)
+                    # Idempotencia: remover registros da mesma data logic calculada
+                    if row.get('data_coleta') == data_hoje:
+                        continue
+                    existing_records.append(row)
         except Exception as e:
-            print(f"Aviso: Erro ao buscar dados anteriores da conta principal: {e}")
+            print(f"Aviso: Erro ao ler guerra_historico.csv para idempotencia: {e}")
+            
+    # Concatenar todos os registros
+    final_records = existing_records + new_records
     
-    if previous_files and not has_real_data_sec:
-        latest = max(previous_files)
-        print(f"Buscando dados da conta secundaria do arquivo: {os.path.basename(latest)}")
-        try:
-            with open(latest, 'r', encoding='utf-8-sig') as f:
-                reader = csv.DictReader(f, delimiter=';')
-                for row in reader:
-                    ptc = row.get('player_tag_conta', '')
-                    if ptc == tag_sec_real:
-                        row['data_coleta'] = data_hoje
-                        results_sec.append(row)
-        except Exception as e:
-            print(f"Aviso: Erro ao buscar dados anteriores da conta secundaria: {e}")
+    # Ordenar registros finais por data decrescente e fama decrescente do jogador
+    final_records = sorted(
+        final_records,
+        key=lambda x: (x['data_coleta'], -int(x.get('player_fame', 0) or 0)),
+        reverse=True
+    )
     
-    # Re-salvar com dados de fallback incluídos
-    with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
-        writer.writeheader()
-        writer.writerows(results_global)
-        writer.writerows(results_pri)
-        writer.writerows(results_sec)
-    
+    # Gravar no guerra_historico.csv consolidado
+    try:
+        with open(guerra_hist_path, 'w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+            writer.writeheader()
+            writer.writerows(final_records)
+        print(f"SUCESSO: Gravado de forma idempotente em {guerra_hist_path} ({len(new_records)} novos, {len(final_records)} total)")
+    except Exception as e:
+        print(f"ERRO ao gravar guerra_historico.csv consolidado: {e}")
+
+    # Salvar tambem um arquivo temporario diario para debug se necessario (opcional, mantendo compatibilidade)
+    temp_filename = f"{DATA_DIR}/inteligencia_guerra_{data_hoje}.csv"
+    try:
+        with open(temp_filename, 'w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=';')
+            writer.writeheader()
+            # Filtra registros apenas do dia de hoje para o arquivo diario
+            today_records = [r for r in final_records if r['data_coleta'] == data_hoje]
+            writer.writerows(today_records)
+    except Exception as e:
+        print(f"Aviso: Erro ao criar copia diaria de debug: {e}")
+
     print(f"\n\nSUCESSO!")
-    print(f"Arquivo: {filename}")
-    print(f"  - TOP Global: {len(results_global)} jogadores")
-    print(f"  - Conta Principal: {len(results_pri)} jogadores")
-    print(f"  - Conta Secundaria: {len(results_sec)} jogadores")
-    
-    # Resumo
-    print("\n" + "=" * 60)
-    print("RESUMO - TOP 5 CLANS DA CORRIDA (AMBAS CONTAS)")
-    print("=" * 60)
-    
-    clans_in_results = {}
-    for r in all_results:
-        cn = r['clan_nome']
-        if cn not in clans_in_results:
-            clans_in_results[cn] = {'posicao': r['clan_posicao'], 'fame': r['clan_fame'], 'players': 0}
-        clans_in_results[cn]['players'] += 1
-    
-    for cn, info in sorted(clans_in_results.items(), key=lambda x: x[1]['posicao']):
-        print(f"#{info['posicao']} {cn} - {info['fame']} fame - {info['players']} players")
-    
-    # Resumo de batalhas de guerra
-    print("\n" + "=" * 60)
-    print("RESUMO - BATALHAS DE GUERRA POR CONTA")
-    print("=" * 60)
-    
-    for tag in ['#2QR292P', '#2220UQQ0UU']:
-        account_results = [r for r in all_results if r.get('player_tag_conta') == tag]
-        if account_results:
-            total_vit = sum(r.get('war_vitorias', 0) for r in account_results)
-            total_der = sum(r.get('war_derrotas', 0) for r in account_results)
-            total_medals = sum(r.get('war_medals', 0) for r in account_results)
-            total_battles = sum(r.get('war_battles_count', 0) for r in account_results)
-            print(f"\n{tag}:")
-            print(f"  Vitórias: {total_vit} | Derrotas: {total_der}")
-            print(f"  Medals: {total_medals} | Batalhas: {total_battles}")
+    print(f"Arquivo Consolidado: {guerra_hist_path}")
+    print(f"  - TOP Global: {len([r for r in new_records if r['conta_tipo'] == 'TOP_GLOBAL'])} jogadores")
+    print(f"  - Conta Principal: {len([r for r in new_records if r['conta_tipo'] == tag_pri_real])} jogadores")
+    print(f"  - Conta Secundaria: {len([r for r in new_records if r['conta_tipo'] == tag_sec_real])} jogadores")
 
 if __name__ == "__main__":
     collect_river_race_intelligence()

@@ -3847,6 +3847,53 @@ class GitHubPagesHTMLGenerator:
 
     def get_war_day_history(self, days_back: int = 7) -> List[Dict]:
         """Coleta histórico de status_barcos para os últimos dias."""
+        # 1. Tenta buscar do historico consolidado status_barcos_historico.csv
+        historico_path = os.path.join(self.src_dir, "data_clan", "status_barcos_historico.csv")
+        if os.path.exists(historico_path):
+            try:
+                with open(historico_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    rows = list(reader)
+                
+                # Agrupar por data_coleta
+                # Para get_war_day_history retrocompativel, pegamos os dados de 'principal' por padrao
+                by_date = {}
+                for row in rows:
+                    if row.get('conta_tipo') != 'principal':
+                        continue
+                    
+                    data_coleta = row.get('data_coleta')
+                    if not data_coleta:
+                        continue
+                    
+                    # Converte YYYY-MM-DD para YYYY_MM_DD
+                    date_key = data_coleta.replace('-', '_')
+                    if date_key not in by_date:
+                        by_date[date_key] = []
+                    
+                    by_date[date_key].append({
+                        'Posicao': row.get('posicao'),
+                        'Nome_Cla': row.get('clan_nome'),
+                        'Fama_Atual': row.get('fama_atual'),
+                        'Pontos_Reparo': row.get('pontos_reparo'),
+                        'Finalizado': row.get('finalizado'),
+                        'Pontos_Periodo': row.get('pontos_periodo')
+                    })
+                
+                # Ordenar datas decrescente
+                sorted_dates = sorted(by_date.keys(), reverse=True)
+                
+                history = []
+                for d in sorted_dates[:days_back]:
+                    history.append({
+                        'date': d,
+                        'boats': by_date[d]
+                    })
+                return history
+            except Exception as e:
+                logger.error(f"Erro ao ler consolidado status_barcos_historico.csv em get_war_day_history: {e}")
+        
+        # Fallback para o comportamento legado de glob fisico
         history = []
         import glob
         boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
@@ -3885,88 +3932,209 @@ class GitHubPagesHTMLGenerator:
             suffix: Sufixo do arquivo ('_pri', '_sec' ou '' para padrão)
             player_tag: Tag do jogador para identificar qual conta (afeta busca em inteligencia_guerra)
         """
+        guerra_hist_path = os.path.join(self.src_dir, "data_clan", "guerra_historico.csv")
+        status_hist_path = os.path.join(self.src_dir, "data_clan", "status_barcos_historico.csv")
+        
+        # Se os arquivos consolidados existirem, lê diretamente deles de forma rapida e unificada
+        if os.path.exists(guerra_hist_path) and os.path.exists(status_hist_path):
+            try:
+                pref_suffix = '_pri'
+                my_clan_lower = my_clan.lower() if my_clan else ''
+                if 'lendario' in my_clan_lower or 'secund' in my_clan_lower or 'bruxo 2' in my_clan_lower or 'sec' in suffix or (player_tag and '2220UQQ0UU' in player_tag.upper()):
+                    pref_suffix = '_sec'
+                
+                target_suffix = suffix or pref_suffix
+                conta_tipo = 'principal' if target_suffix == '_pri' else 'secundaria'
+                
+                # 1. Carrega dados de barcos do historico
+                with open(status_hist_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    status_rows = list(reader)
+                
+                status_by_date = {}
+                for row in status_rows:
+                    if row.get('conta_tipo') == conta_tipo:
+                        dt = row.get('data_coleta', '')
+                        dt_key = dt.replace('-', '_')
+                        if dt_key not in status_by_date:
+                            status_by_date[dt_key] = []
+                        status_by_date[dt_key].append(row)
+                
+                # 2. Carrega dados de inteligencia do historico
+                with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    guerra_rows = list(reader)
+                
+                intel_data = {}  # date_key -> clan_name -> {position, fame}
+                players_by_date = {}  # date_key -> list of rows
+                
+                for row in guerra_rows:
+                    dt = row.get('data_coleta', '')
+                    dt_key = dt.replace('-', '_')
+                    
+                    if dt_key not in intel_data:
+                        intel_data[dt_key] = {}
+                    if dt_key not in players_by_date:
+                        players_by_date[dt_key] = []
+                    
+                    players_by_date[dt_key].append(row)
+                    
+                    clan_nome = row.get('clan_nome') or row.get('Cla', '')
+                    if clan_nome:
+                        if clan_nome not in intel_data[dt_key]:
+                            intel_data[dt_key][clan_nome] = {
+                                'position': int(row.get('clan_posicao') or row.get('Ranking', 0) or 0),
+                                'fame': int(row.get('clan_fame') or row.get('Fama_Hoje', 0) or 0)
+                            }
+                
+                # 3. Monta o calendario com as datas do status de barcos
+                sorted_dates = sorted(status_by_date.keys(), reverse=True)
+                
+                days = []
+                war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
+                today = datetime.now().date()
+                
+                for date_str in sorted_dates[:days_back]:
+                    try:
+                        date_parts = date_str.split('_')
+                        day_date = datetime(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
+                        weekday = day_date.weekday()
+                        day_label = war_day_labels.get(weekday, f"D{weekday}")
+                    except:
+                        day_label = date_str
+                        day_date = datetime.now()
+                        weekday = day_date.weekday()
+                    
+                    is_today = day_date.date() == today or weekday in [0, 3, 4, 5, 6]
+                    
+                    # Acha dados do clan para esta data na inteligencia
+                    clan_data = None
+                    if date_str in intel_data:
+                        my_clan_upper = my_clan.strip().upper()
+                        for cn, data in intel_data[date_str].items():
+                            cn_upper = cn.upper()
+                            my_clean = ''.join(c for c in my_clan_upper if c.isascii())
+                            cn_clean = ''.join(c for c in cn_upper if c.isascii())
+                            if (my_clean in cn_clean or cn_clean in my_clean or 
+                                my_clean.replace(' ', '') in cn_clean.replace(' ', '')):
+                                clan_data = data
+                                break
+                    
+                    # Se nao achou na inteligencia, pega do status de barcos
+                    if not clan_data and date_str in status_by_date:
+                        for row in status_by_date[date_str]:
+                            cn = row.get('clan_nome', '')
+                            if my_clan.lower() in cn.lower() or cn.lower() in my_clan.lower():
+                                clan_data = {
+                                    'position': int(row.get('posicao', 0) or 0),
+                                    'fame': int(row.get('fama_atual', 0) or 0)
+                                }
+                                break
+                    
+                    if clan_data:
+                        # Obter top 3 jogadores
+                        top_players = []
+                        if date_str in players_by_date:
+                            clan_players = []
+                            for row in players_by_date[date_str]:
+                                clan_nome = row.get('clan_nome') or row.get('Cla', '')
+                                my_clean = ''.join(c for c in my_clan.upper() if c.isascii())
+                                cn_clean = ''.join(c for c in clan_nome.upper() if c.isascii())
+                                if my_clean in cn_clean or cn_clean in my_clean:
+                                    player_name = row.get('player_nome') or row.get('Jogador') or 'N/A'
+                                    player_fame = int(row.get('player_fame') or row.get('Fama_Hoje') or 0)
+                                    player_pos = int(row.get('player_posicao') or row.get('Posicao') or 99)
+                                    clan_players.append({
+                                        'name': player_name,
+                                        'fame': player_fame,
+                                        'position': player_pos,
+                                        'medals': player_fame // 100
+                                    })
+                            clan_players_sorted = sorted(clan_players, key=lambda x: x['position'])
+                            top_players = clan_players_sorted[:3]
+                        
+                        days.append({
+                            'date': date_str,
+                            'label': day_label,
+                            'position': clan_data['position'],
+                            'fame': clan_data['fame'],
+                            'points': clan_data.get('points', 0),
+                            'is_active': is_today,
+                            'top_players': top_players
+                        })
+                    elif my_clan:
+                        days.append({
+                            'date': date_str,
+                            'label': day_label,
+                            'position': 0,
+                            'fame': 0,
+                            'points': 0,
+                            'is_active': is_today,
+                            'top_players': []
+                        })
+                return days
+            except Exception as e:
+                logger.error(f"Erro ao processar consolidado em get_war_calendar_data: {e}")
+        
+        # Fallback legado se os consolidados nao existirem
         import glob
         days = []
         war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
         
-        # Buscar arquivos de inteligencia_guerra (contém dados de todas as contas)
-        intel_data = {}  # date -> {position, fame}
-        intel_path_by_date = {}  # date_str -> fpath (Evita vazamento de escopo fpath, Task 2)
-        # Buscar todos os arquivos e ordenar por data de modificação (mais recente primeiro)
+        intel_data = {}
+        intel_path_by_date = {}
         all_intel = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
         all_intel = [f for f in all_intel if '_full_' not in os.path.basename(f)]
-        # Ordenar por data de modificação (mais recente primeiro)
         all_intel.sort(key=lambda x: os.path.getmtime(x), reverse=True)
         intel_files = all_intel
         
         for fpath in intel_files[:days_back]:
             try:
                 fname = os.path.basename(fpath)
-                # Extrair data do nome: inteligencia_guerra_2026-05-18.csv -> 2026_05_18
                 date_str = fname.replace('inteligencia_guerra_', '').replace('.csv', '').replace('-', '_')
                 intel_path_by_date[date_str] = fpath
                 
                 with open(fpath, 'r', encoding='utf-8-sig') as f:
                     reader = csv.DictReader(f, delimiter=';')
                     cols = reader.fieldnames or []
-                    
-                    # Detectar formato do arquivo
                     has_new_format = 'clan_nome' in cols and 'player_tag_conta' in cols
                     
-                    # Agregar dados POR CLÃ (cada clã pode ter várias linhas de jogadores)
                     clans_aggregated = {}
-                    
                     for row in reader:
                         if has_new_format:
-                            # Formato novo: dados agregados por clã
                             clan_nome = row.get('clan_nome', '') or ''
                             if not clan_nome or clan_nome.strip() == '':
                                 continue
-                                
-                            # Agregar: pegar posição e fame do clã (só precisa de uma linha por clã)
                             if clan_nome not in clans_aggregated:
                                 clans_aggregated[clan_nome] = {
                                     'position': int(row.get('clan_posicao', 0) or 0),
                                     'fame': int(row.get('clan_fame', 0) or 0)
                                 }
                         else:
-                            # Formato antigo: Cla, Ranking, Fama_Hoje
                             clan_nome = row.get('Cla', '') or ''
                             if not clan_nome or clan_nome.strip() == '':
                                 continue
-                                
                             if clan_nome not in clans_aggregated:
                                 clans_aggregated[clan_nome] = {
                                     'position': int(row.get('Ranking', 0) or 0),
                                     'fame': int(row.get('Fama_Hoje', 0) or 0)
                                 }
                     
-                    # Verificar se o clã específico está nos dados agregados
-                    # Usar comparação flexível: procurar partes do nome
                     my_clan_upper = my_clan.strip().upper()
                     found_match = False
                     for cn, data in clans_aggregated.items():
                         cn_upper = cn.upper()
-                        # Remover caracteres não-ASCII para comparação
                         my_clean = ''.join(c for c in my_clan_upper if c.isascii())
                         cn_clean = ''.join(c for c in cn_upper if c.isascii())
-                        
-                        # Match flexível
                         if (my_clean in cn_clean or cn_clean in my_clean or 
                             my_clean.replace(' ', '') in cn_clean.replace(' ', '')):
                             intel_data[date_str] = data
                             found_match = True
                             break
-                    
-                    if not found_match:
-                        # Debug: listar clans do arquivo (com caracteres especiais removidos)
-                        clans_keys = [c for c in clans_aggregated.keys() if c.strip()]
-                        logger.debug(f"Clan '{my_clan}' nao encontrado em {fname}. Clans ({len(clans_keys)}): {clans_keys[:5]}")
             except Exception as e:
                 logger.error(f"Erro ao processar {fpath}: {e}")
                 continue
         
-        # Alteracao: 2026-05-21 - Agrupamento inteligente de status_barcos por data para incluir arquivos com sufixo pri/sec no calendario
         import glob
         import re
         
@@ -3977,11 +4145,9 @@ class GitHubPagesHTMLGenerator:
             
         all_boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
         
-        # Agrupar arquivos por data
         by_date = {}
         for filepath in all_boat_files:
             fname = os.path.basename(filepath)
-            # Extrair data no formato YYYY_MM_DD
             match = re.search(r'status_barcos_(?:pri_|sec_)?(\d{4}_\d{2}_\d{2})\.csv', fname)
             if match:
                 date_str = match.group(1)
@@ -3989,7 +4155,6 @@ class GitHubPagesHTMLGenerator:
                     by_date[date_str] = []
                 by_date[date_str].append(filepath)
         
-        # Para cada data, escolher o melhor arquivo de barco
         selected_files = []
         for date_str, paths in by_date.items():
             if len(paths) == 1:
@@ -4021,7 +4186,6 @@ class GitHubPagesHTMLGenerator:
                 
             selected_files.append((date_str, chosen))
             
-        # Ordenar as datas decrescente (mais recente primeiro)
         selected_files.sort(key=lambda x: x[0], reverse=True)
         boat_files = [path for date, path in selected_files]
         
@@ -4040,11 +4204,9 @@ class GitHubPagesHTMLGenerator:
                 
                 is_today = day_date.date() == today or weekday in [0, 3, 4, 5, 6]
                 
-                # Primeiro tenta buscar dados do inteligencia_guerra (tem dados de ambas contas)
                 if date_str in intel_data:
                     clan_data = intel_data[date_str]
                 else:
-                    # Fallback para status_barcos (só conta principal)
                     with open(filepath, 'r', encoding='utf-8-sig') as f:
                         reader = csv.DictReader(f, delimiter=';')
                         clan_data = None
@@ -4068,7 +4230,6 @@ class GitHubPagesHTMLGenerator:
                                     break
                 
                 if clan_data:
-                    # Adicionar top 3 jogadores do clan para este dia (resolvendo vazamento de escopo fpath)
                     intel_filepath = intel_path_by_date.get(date_str, filepath)
                     top_players = self._get_top_players_for_day(intel_filepath, my_clan)
                     days.append({
@@ -4096,107 +4257,79 @@ class GitHubPagesHTMLGenerator:
         
         return days
     
-    def _get_top_players_for_day(self, filepath: str, my_clan: str) -> List[Dict]:
-        """Retorna top 3 jogadores do clan para um dia específico."""
-        top_players = []
-        try:
-            with open(filepath, 'r', encoding='utf-8-sig') as f:
-                reader = csv.DictReader(f, delimiter=';')
-                cols = reader.fieldnames or []
-                has_new_format = 'clan_nome' in cols
-                
-                players_by_clan = {}
-                for row in reader:
-                    if has_new_format:
-                        clan_nome = row.get('clan_nome') or ''
-                    else:
-                        clan_nome = row.get('Cla') or ''
-                    
-                    if not clan_nome:
-                        continue
-                    
-                    # Match flexível
-                    my_clean = ''.join(c for c in my_clan.upper() if c.isascii())
-                    cn_clean = ''.join(c for c in clan_nome.upper() if c.isascii())
-                    
-                    if my_clean in cn_clean or cn_clean in my_clean:
-                        if clan_nome not in players_by_clan:
-                            players_by_clan[clan_nome] = []
-                        
-                        player_name = row.get('player_nome') or row.get('Jogador') or 'N/A'
-                        player_fame = int(row.get('player_fame') or row.get('Fama_Hoje') or 0)
-                        player_pos = int(row.get('player_posicao') or row.get('Posicao') or 99)
-                        
-                        players_by_clan[clan_nome].append({
-                            'name': player_name,
-                            'fame': player_fame,
-                            'position': player_pos,
-                            'medals': player_fame // 100  # Estima medals baseado na fame
-                        })
-                
-                # Pegar top 3 jogadores ordenados por posição
-                for cn, players in players_by_clan.items():
-                    sorted_players = sorted(players, key=lambda x: x['position'])
-                    top_players = sorted_players[:3]
-                    break
-        except Exception as e:
-            logger.error(f"Erro ao buscar top players: {e}")
-        
-        return top_players
-    
-    def get_war_day_status_for_clan(self, clan_name: str, history: List[Dict]) -> Dict:
-        """Retorna status do clã para cada dia no histórico."""
-        days = []
-        war_day_labels = {0: "Reset", 3: "Dia 1", 4: "Dia 2", 5: "Dia 3", 6: "Dia 4"}
-        
-        for entry in history:
-            date_str = entry['date']
-            boats = entry['boats']
-            
-            # Extrai dia da semana da data
-            try:
-                date_parts = date_str.split('_')
-                day_date = datetime(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
-                weekday = day_date.weekday()
-                day_label = war_day_labels.get(weekday, f"D{weekday}")
-            except:
-                day_label = date_str
-            
-            # Encontra posição do clã
-            clan_data = None
-            for b in boats:
-                if b.get('Nome_Cla') == clan_name:
-                    clan_data = {
-                        'position': int(b.get('Posicao', 0) or 0),
-                        'fame': int(b.get('Fama_Atual', 0) or 0),
-                        'points': int(b.get('Pontos_Periodo', 0) or 0)
-                    }
-                    break
-            
-            if clan_data:
-                days.append({
-                    'date': date_str,
-                    'label': day_label,
-                    'position': clan_data['position'],
-                    'fame': clan_data['fame'],
-                    'points': clan_data['points'],
-                    'is_active': self._is_today(date_str)
-                })
-        
-        return days
-    
-    def _is_today(self, date_str: str) -> bool:
-        """Verifica se a data é hoje."""
-        try:
-            date_parts = date_str.split('_')
-            day_date = datetime(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
-            today = datetime.now()
-            return day_date.date() == today.date()
-        except:
-            return False
-    
     def get_war_intelligence_data(self):
         """Coleta dados de inteligencia de guerra (Dia 4)."""
+        guerra_hist_path = os.path.join(self.src_dir, "data_clan", "guerra_historico.csv")
+        status_hist_path = os.path.join(self.src_dir, "data_clan", "status_barcos_historico.csv")
+        
+        # Tenta buscar dos consolidados
+        if os.path.exists(guerra_hist_path) and os.path.exists(status_hist_path):
+            try:
+                data = {
+                    'boats': [],
+                    'rivals': {},
+                    'difficulty': 'Indeterminada',
+                    'summary': '',
+                    'my_clan': 'Desconhecido'
+                }
+                
+                # 1. Busca status dos barcos mais recentes
+                with open(status_hist_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    status_rows = list(reader)
+                
+                if status_rows:
+                    latest_date = max(row['data_coleta'] for row in status_rows)
+                    # clãs da data mais recente da conta principal
+                    latest_boats = [row for row in status_rows if row['data_coleta'] == latest_date and row.get('conta_tipo') == 'principal']
+                    
+                    if not latest_boats:
+                        latest_boats = [row for row in status_rows if row['data_coleta'] == latest_date]
+                        
+                    data['boats'] = [{
+                        'Posicao': r.get('posicao'),
+                        'Nome_Cla': r.get('clan_nome'),
+                        'Fama_Atual': r.get('fama_atual'),
+                        'Pontos_Reparo': r.get('pontos_reparo'),
+                        'Finalizado': r.get('finalizado'),
+                        'Pontos_Periodo': r.get('pontos_periodo')
+                    } for r in latest_boats]
+                
+                # 2. Busca inteligencia de oponentes mais recente
+                with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f, delimiter=';')
+                    guerra_rows = list(reader)
+                
+                if guerra_rows:
+                    latest_intel_date = max(row['data_coleta'] for row in guerra_rows)
+                    latest_guerra = [row for row in guerra_rows if row['data_coleta'] == latest_intel_date]
+                    
+                    for row in latest_guerra:
+                        cla = row.get('clan_nome') or row.get('Cla') or 'Unknown'
+                        if cla not in data['rivals']:
+                            data['rivals'][cla] = []
+                        if len(data['rivals'][cla]) < 3:
+                            data['rivals'][cla].append(row)
+                
+                my_clan = "Tropa Do Bruxo"
+                try:
+                    players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+                    if os.path.exists(players_file):
+                        with open(players_file, 'r', encoding='utf-8-sig') as f:
+                            reader = csv.DictReader(f, delimiter=';')
+                            for row in reader:
+                                if row.get('player_tag'):
+                                    my_clan = row.get('clan_name', my_clan)
+                                    break
+                except Exception as e:
+                    logger.warning(f"Erro ao ler players: {e}")
+                
+                data['my_clan'] = my_clan
+                return data
+            except Exception as e:
+                logger.error(f"Erro em get_war_intelligence_data consolidado: {e}")
+        
+        # Fallback legado
         try:
             data = {
                 'boats': [],
@@ -4206,7 +4339,6 @@ class GitHubPagesHTMLGenerator:
                 'my_clan': 'Desconhecido'
             }
             
-            # 1. Busca status dos barcos (mais recente)
             import glob
             boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
             if boat_files:
@@ -4218,7 +4350,6 @@ class GitHubPagesHTMLGenerator:
                 except Exception as e:
                     logger.warning(f"Erro ao ler boats: {e}")
             
-            # 2. Busca inteligencia de oponentes
             intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
             if intel_files:
                 latest_intel = max(intel_files)
@@ -4234,7 +4365,6 @@ class GitHubPagesHTMLGenerator:
                 except Exception as e:
                     logger.warning(f"Erro ao ler intel: {e}")
                 
-            # 3. Identifica clan do jogador via players.csv
             my_clan = "Tropa Do Bruxo"
             try:
                 players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
@@ -4266,70 +4396,44 @@ class GitHubPagesHTMLGenerator:
             player_tag = self.player_tag
         
         data = {'clans': [], 'my_clan': '', 'total_clans': 0}
+        guerra_hist_path = os.path.join(self.src_dir, "data_clan", "guerra_historico.csv")
         
-        intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
-        # Filtrar arquivos: excluir _full_, _pri_, _sec_
-        intel_files = [f for f in intel_files if '_full_' not in f and '_pri_' not in f and '_sec_' not in f]
-        
-        if not intel_files:
-            logger.warning(f"get_war_radar_data: Nenhum arquivo de inteligencia de guerra encontrado")
-            return data
-            
-        # Ordenar arquivos do mais recente para o mais antigo pelo nome para consistência temporal
-        intel_files.sort(key=lambda x: os.path.basename(x), reverse=True)
-        
-        # Se target_date for fornecida, limitar intel_files apenas aos arquivos correspondentes (Task 2)
-        if target_date:
-            date_norm_under = target_date.replace('-', '_')
-            date_norm_dash = target_date.replace('_', '-')
-            filtered = [f for f in intel_files if date_norm_under in os.path.basename(f) or date_norm_dash in os.path.basename(f)]
-            if filtered:
-                intel_files = filtered
-                logger.info(f"get_war_radar_data: Filtrado para target_date={target_date} (arquivos: {len(intel_files)})")
-        
-        # Para evitar arquivos HTML absurdamente gigantescos e lentidão na renderização,
-        # limitamos a leitura aos últimos 6 arquivos de inteligência históricos (correspondentes ao calendário de 6 dias)
-        files_to_process = intel_files[:6]
-        
-        # Identificar meu clã pelo players.csv
-        my_clan = ''
-        my_clan_tag = ''
-        try:
-            players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
-            if os.path.exists(players_file):
-                with open(players_file, 'r', encoding='utf-8-sig') as f:
-                    reader = csv.DictReader(f, delimiter=';')
-                    for row in reader:
-                        if row.get('player_tag') == player_tag:
-                            my_clan = row.get('clan_name', '')
-                            my_clan_tag = row.get('clan_tag', '')
-                            break
-        except Exception as e:
-            logger.warning(f"Erro ao ler players.csv: {e}")
-            
-        data['my_clan'] = my_clan
-        
-        # Agrupamento: clan_data[clan_name] = { date_str: [player_dicts] }
-        clan_data = {}
-        
-        for fpath in files_to_process:
-            fname = os.path.basename(fpath)
-            # Extrair data normalizada (formato YYYY_MM_DD)
-            file_date = fname.replace('inteligencia_guerra_', '').replace('.csv', '').replace('-', '_')
-            
+        # Tenta buscar direto do guerra_historico.csv consolidado de forma ultra otimizada
+        if os.path.exists(guerra_hist_path):
             try:
-                with open(fpath, 'r', encoding='utf-8-sig') as f:
+                my_clan = ''
+                my_clan_tag = ''
+                try:
+                    players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+                    if os.path.exists(players_file):
+                        with open(players_file, 'r', encoding='utf-8-sig') as f:
+                            reader = csv.DictReader(f, delimiter=';')
+                            for row in reader:
+                                if row.get('player_tag') == player_tag:
+                                    my_clan = row.get('clan_name', '')
+                                    my_clan_tag = row.get('clan_tag', '')
+                                    break
+                except Exception as e:
+                    logger.warning(f"Erro ao ler players.csv: {e}")
+                    
+                data['my_clan'] = my_clan
+                
+                with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
                     reader = csv.DictReader(f, delimiter=';')
                     rows = list(reader)
-                    
-                if not rows:
-                    continue
-                    
-                has_tag_col = 'player_tag_conta' in rows[0]
                 
-                # Para cada linha do arquivo de inteligência
+                if target_date:
+                    norm_target = target_date.replace('_', '-')
+                    rows = [row for row in rows if row.get('data_coleta') == norm_target]
+                
+                unique_dates = sorted(list(set(row['data_coleta'] for row in rows)), reverse=True)
+                target_dates = unique_dates[:6]
+                
+                rows = [row for row in rows if row['data_coleta'] in target_dates]
+                
+                clan_data = {}
                 for row in rows:
-                    row_account = row.get('player_tag_conta', '')
+                    row_account = row.get('conta_tipo', '')
                     
                     if mode == 'top-global':
                         if row_account != 'TOP_GLOBAL':
@@ -4337,9 +4441,10 @@ class GitHubPagesHTMLGenerator:
                     else:
                         is_sec = '2220UQQ0UU' in player_tag
                         expected_account = '#2220UQQ0UU' if is_sec else '#2QR292P'
-                        if has_tag_col and row_account and row_account != expected_account:
+                        if row_account != expected_account:
                             continue
-                            
+                    
+                    file_date = row.get('data_coleta', '').replace('-', '_')
                     cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
                     ranking = int(row.get('clan_posicao') or row.get('Ranking', 99) or 99)
                     player_name = row.get('player_nome') or row.get('Jogador', '')
@@ -4355,10 +4460,6 @@ class GitHubPagesHTMLGenerator:
                     if file_date not in clan_data[cla]:
                         clan_data[cla][file_date] = []
                         
-                    # Limite de players por clã e por data
-                    # Para TOP Global, limitar a no máximo 3 jogadores por clã (otimização de performance)
-                    # Para my-war, se for o nosso próprio clã, mostrar todos (no máximo 5)
-                    # Caso contrário, limitar a no máximo 3 jogadores por clã
                     is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
                     max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
                     
@@ -4385,43 +4486,180 @@ class GitHubPagesHTMLGenerator:
                             'war_tipo_principal': row.get('war_tipo_principal', ''),
                             'war_battles_count': int(row.get('war_battles_count', 0) or 0)
                         })
+                
+                clan_list = []
+                for cla, dates_dict in clan_data.items():
+                    all_players = []
+                    for date_str, players in dates_dict.items():
+                        all_players.extend(players)
+                        
+                    if not all_players:
+                        continue
+                        
+                    latest_processed_date = max(dates_dict.keys()) if dates_dict else None
+                    total_fame = sum(p['fame'] for p in dates_dict.get(latest_processed_date, []))
+                    
+                    clan_list.append({
+                        'name': cla,
+                        'players': sorted(all_players, key=lambda x: (x['date'], x['ranking'])),
+                        'total_fame': total_fame,
+                        'date': latest_processed_date,
+                        'is_me': cla == my_clan or cla == my_clan_tag.replace('#', '')
+                    })
+                    
+                clan_list.sort(key=lambda x: x['total_fame'], reverse=True)
+                
+                for i, c in enumerate(clan_list):
+                    c['position'] = i + 1
+                    
+                data['clans'] = clan_list
+                data['total_clans'] = len(clan_list)
+                
+                logger.info(f"get_war_radar_data consolidado: mode={mode}, clans={len(clan_list)}, total_players={sum(len(c['players']) for c in clan_list)}")
+                return data
             except Exception as e:
-                logger.error(f"Erro ao processar {fpath}: {e}")
-                
-        # Achatamento e formatação final esperada pela página
-        clan_list = []
-        for cla, dates_dict in clan_data.items():
-            # Achatamos os jogadores de todas as datas em uma única lista para este clã
-            all_players = []
-            for date_str, players in dates_dict.items():
-                all_players.extend(players)
-                
-            if not all_players:
-                continue
-                
-            # O total_fame do clã é a soma da fama do dia mais recente processado
-            latest_processed_date = max(dates_dict.keys()) if dates_dict else None
-            total_fame = sum(p['fame'] for p in dates_dict.get(latest_processed_date, []))
-            
-            clan_list.append({
-                'name': cla,
-                'players': sorted(all_players, key=lambda x: (x['date'], x['ranking'])),
-                'total_fame': total_fame,
-                'date': latest_processed_date,
-                'is_me': cla == my_clan or cla == my_clan_tag.replace('#', '')
-            })
-            
-        # Ordenar clãs por fama total decrescente
-        clan_list.sort(key=lambda x: x['total_fame'], reverse=True)
+                logger.error(f"Erro em get_war_radar_data consolidado: {e}")
         
-        for i, c in enumerate(clan_list):
-            c['position'] = i + 1
+        # Fallback legado para o glob fisico
+        try:
+            import glob
+            my_clan = ''
+            my_clan_tag = ''
+            try:
+                players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+                if os.path.exists(players_file):
+                    with open(players_file, 'r', encoding='utf-8-sig') as f:
+                        reader = csv.DictReader(f, delimiter=';')
+                        for row in reader:
+                            if row.get('player_tag') == player_tag:
+                                my_clan = row.get('clan_name', '')
+                                my_clan_tag = row.get('clan_tag', '')
+                                break
+            except Exception as e:
+                logger.warning(f"Erro ao ler players.csv: {e}")
+                
+            data['my_clan'] = my_clan
             
-        data['clans'] = clan_list
-        data['total_clans'] = len(clan_list)
-        
-        logger.info(f"get_war_radar_data: mode={mode}, clans={len(clan_list)}, total_players={sum(len(c['players']) for c in clan_list)}")
-        return data
+            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+            intel_files = [f for f in intel_files if '_full_' not in f and '_pri_' not in f and '_sec_' not in f]
+            
+            if not intel_files:
+                logger.warning(f"get_war_radar_data: Nenhum arquivo de inteligencia de guerra encontrado")
+                return data
+                
+            intel_files.sort(key=lambda x: os.path.basename(x), reverse=True)
+            
+            if target_date:
+                date_norm_under = target_date.replace('-', '_')
+                date_norm_dash = target_date.replace('_', '-')
+                filtered = [f for f in intel_files if date_norm_under in os.path.basename(f) or date_norm_dash in os.path.basename(f)]
+                if filtered:
+                    intel_files = filtered
+            
+            files_to_process = intel_files[:6]
+            
+            clan_data = {}
+            for fpath in files_to_process:
+                fname = os.path.basename(fpath)
+                file_date = fname.replace('inteligencia_guerra_', '').replace('.csv', '').replace('-', '_')
+                
+                try:
+                    with open(fpath, 'r', encoding='utf-8-sig') as f:
+                        reader = csv.DictReader(f, delimiter=';')
+                        rows = list(reader)
+                        
+                    if not rows:
+                        continue
+                        
+                    has_tag_col = 'player_tag_conta' in rows[0]
+                    
+                    for row in rows:
+                        row_account = row.get('player_tag_conta', '')
+                        
+                        if mode == 'top-global':
+                            if row_account != 'TOP_GLOBAL':
+                                continue
+                        else:
+                            is_sec = '2220UQQ0UU' in player_tag
+                            expected_account = '#2220UQQ0UU' if is_sec else '#2QR292P'
+                            if has_tag_col and row_account and row_account != expected_account:
+                                continue
+                                
+                        cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
+                        ranking = int(row.get('clan_posicao') or row.get('Ranking', 99) or 99)
+                        player_name = row.get('player_nome') or row.get('Jogador', '')
+                        player_fame = int(row.get('player_fame') or row.get('Fama_Hoje', 0) or 0)
+                        decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
+                        boat_attacks = row.get('boat_attacks', '0')
+                        lutou = "Sim" if int(boat_attacks or 0) > 0 else "Nao"
+                        deck_1 = row.get('deck_1', '')
+                        
+                        if cla not in clan_data:
+                            clan_data[cla] = {}
+                            
+                        if file_date not in clan_data[cla]:
+                            clan_data[cla][file_date] = []
+                            
+                        is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
+                        max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
+                        
+                        if len(clan_data[cla][file_date]) < max_players:
+                            clan_data[cla][file_date].append({
+                                'ranking': ranking,
+                                'player': player_name,
+                                'fame': player_fame,
+                                'date': file_date,
+                                'lutou': lutou,
+                                'ataques': f"{decks_used}/4" if decks_used and '/' not in decks_used else decks_used or '0/4',
+                                'deck_1': deck_1,
+                                'deck_1_tipo': row.get('deck_1_tipo', 'Guerra'),
+                                'deck_2': row.get('deck_2', ''),
+                                'deck_2_tipo': row.get('deck_2_tipo', ''),
+                                'deck_3': row.get('deck_3', ''),
+                                'deck_3_tipo': row.get('deck_3_tipo', ''),
+                                'deck_4': row.get('deck_4', ''),
+                                'deck_4_tipo': row.get('deck_4_tipo', ''),
+                                'war_vitorias': int(row.get('war_vitorias', 0) or 0),
+                                'war_derrotas': int(row.get('war_derrotas', 0) or 0),
+                                'war_medals': int(row.get('war_medals', 0) or 0),
+                                'war_torre': row.get('war_torre', 'Tower Princess'),
+                                'war_tipo_principal': row.get('war_tipo_principal', ''),
+                                'war_battles_count': int(row.get('war_battles_count', 0) or 0)
+                            })
+                except Exception as e:
+                    logger.error(f"Erro ao processar {fpath}: {e}")
+                    
+            clan_list = []
+            for cla, dates_dict in clan_data.items():
+                all_players = []
+                for date_str, players in dates_dict.items():
+                    all_players.extend(players)
+                    
+                if not all_players:
+                    continue
+                    
+                latest_processed_date = max(dates_dict.keys()) if dates_dict else None
+                total_fame = sum(p['fame'] for p in dates_dict.get(latest_processed_date, []))
+                
+                clan_list.append({
+                    'name': cla,
+                    'players': sorted(all_players, key=lambda x: (x['date'], x['ranking'])),
+                    'total_fame': total_fame,
+                    'date': latest_processed_date,
+                    'is_me': cla == my_clan or cla == my_clan_tag.replace('#', '')
+                })
+                
+            clan_list.sort(key=lambda x: x['total_fame'], reverse=True)
+            
+            for i, c in enumerate(clan_list):
+                c['position'] = i + 1
+                
+            data['clans'] = clan_list
+            data['total_clans'] = len(clan_list)
+            return data
+        except Exception as e:
+            logger.error(f"Erro geral em get_war_radar_data: {e}")
+            return data
     
     def _generate_war_calendar_html(self, day_history: List[Dict], my_clan: str, tab_id: str) -> str:
         """Gera o HTML do calendário de dias de guerra com timeline horizontal."""
@@ -4552,7 +4790,7 @@ class GitHubPagesHTMLGenerator:
         calendar_html = ""
         if my_clan:
             # Não usar suffix - os arquivos padrão contêm dados de ambas as contas
-            calendar_data = self.get_war_calendar_data(my_clan, 6, '')
+            calendar_data = self.get_war_calendar_data(my_clan, 6, '', player_tag=player_tag)
             if calendar_data:
                 calendar_html = self._generate_war_calendar_html(calendar_data, my_clan, tab_id)
         
