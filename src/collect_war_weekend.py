@@ -72,9 +72,12 @@ def collect_boat_data_for_clan(headers, base_url, clan_tag, suffix=""):
         total_fame = sum(c.get('fame', 0) for c in clans)
         
         if total_fame == 0:
-            print(f"Aviso: Fama total zerada. Tentando buscar fallback do historico...")
+            print("Aviso: Fama total zerada. Tentando buscar fallback do historico...")
             new_records = get_fallback_from_history(historico_path, conta_tipo, data_hoje, dia_batalha)
-        else:
+            if not new_records and clans:
+                print("Aviso: Fallback vazio. Usando dados reais com fama zerada da API.")
+        
+        if not new_records and clans:
             sorted_clans = sorted(clans, key=lambda x: x.get('fame', 0), reverse=True)
             for i, clan in enumerate(sorted_clans):
                 new_records.append({

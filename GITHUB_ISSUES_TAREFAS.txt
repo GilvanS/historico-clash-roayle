@@ -1,0 +1,81 @@
+======================================================================
+REGISTRO DE TAREFAS EXECUTADAS - ISSUES DO GITHUB
+======================================================================
+
+Este arquivo contem o detalhamento tecnico de todas as tarefas de reengenharia e correcoes efetuadas no projeto Clash Royale. Estes templates estao formatados no padrao de Issues do GitHub, prontos para serem copiados ou usados como referencia tecnica.
+
+----------------------------------------------------------------------
+
+## ISSUE 1: Reengenharia de Dados & Migracao Historica dos CSVs de Guerra
+* Titulo: [Dados] Reengenharia de Dados: Unificacao do Historico de Guerra e Status de Barcos
+* Tipo: Refactoring / Data Engineering
+* Status: Concluida
+* Tags: data-engineering, refactoring, idempotency
+
+### Descricao da Issue:
+Atualmente, o pipeline gerava dezenas de pequenos arquivos diarios individuais no formato inteligencia_guerra_*.csv e status_barcos_*.csv. Isso causava fragmentacao, desperdicio de espaco no repositorio e alto custo computacional de glob.glob para listagem no backend. Esta issue resolve o problema consolidando todo o historico acumulado em dois arquivos CSV unificados mestres.
+
+### Checklist de Tarefas Efetuadas:
+[X] Analise de Leiautes Antigos: Mapeamento dos formatos de dados antigos (incluindo dados anteriores a 17 de maio que nao continham tags de jogadores/clas).
+[X] Criacao do Script de Migracao (src/migrate_war_data.py):
+    - Normalizacao de colunas antigas e preenchimento inteligente de Tags de cla/jogador ausentes baseando-se em mapeamentos conhecidos.
+    - Calculo da coluna logica rodada_guerra (Dia 1 a Dia 4) aplicando estritamente a regra de reset logico das 07:00:00 da manha.
+    - Agrupamento e processamento de 358 registros historicos de guerra e 90 registros de barcos.
+[X] Geracao dos CSVs Mestres na pasta src/data_clan/:
+    - guerra_historico.csv (101 KB, 358 registros consolidados)
+    - status_barcos_historico.csv (6 KB, 90 registros consolidados)
+[X] Limpeza Fisica: Remocao das dezenas de CSVs diarios legados para manter o repositorio organizado e enxuto.
+
+----------------------------------------------------------------------
+
+## ISSUE 2: Ajuste e Robustez nos Scripts de Coleta (Idempotencia e Caminhos Fisicos)
+* Titulo: [Coletores] Correcao de Diretorios Fantasmas e Implementacao de Deduplicacao Ativa nos Coletores
+* Tipo: Bug / Optimization
+* Status: Concluida
+* Tags: collectors, idempotency, file-system
+
+### Descricao da Issue:
+Identificamos a geracao de um diretorio fantasma e redundante em src/src/data_clan/ por conta de caminhos relativos frageis ('src/data_clan') durante a execucao orquestrada a partir de subpastas. Alem disso, execucoes sucessivas do pipeline no mesmo dia podiam duplicar dados no historico. Esta issue corrige os caminhos fisicos absolutos e garante idempotencia total das coletas diarias.
+
+### Checklist de Tarefas Efetuadas:
+[X] Correcao de Paths em collect_river_race_full.py: Alteracao do DATA_DIR relativo para um path fisico absoluto baseado em os.path.dirname(os.path.abspath(__file__)).
+[X] Implementacao de Deduplicacao Idempotente:
+    - O script agora calcula a data logica logico-operacional das 07:00:00.
+    - Antes de salvar, ele carrega o historico existente e remove registros da mesma data logica para aquele jogador/conta, mantendo apenas a coleta mais recente.
+[X] Adequacao do Coletor de Barcos (collect_war_weekend.py): Atualizacao para gravar de forma idempotente e direta no arquivo acumulado consolidado status_barcos_historico.csv.
+[X] Limpeza do Diretorio Fantasma: Remocao fisica da pasta duplicada src/src/ e todos os seus arquivos residuais.
+
+----------------------------------------------------------------------
+
+## ISSUE 3: Restauracao do Calendario de Guerra e Otimizacao do Dashboard
+* Titulo: [Dashboard] Restauracao do Calendario da Conta Secundaria e Leitura em Memoria Otimizada
+* Tipo: Frontend / Performance
+* Status: Concluida
+* Tags: dashboard, frontend, calendar, performance
+
+### Descricao da Issue:
+A aba da Conta Secundaria no dashboard apresentava falhas de renderizacao no calendario horizontal de 4 dias. A causa era a ausencia da tag do jogador durante a resolucao de dados historicos de barcos. Adicionalmente, ler dezenas de arquivos fisicos com glob.glob em tempo de execucao de renderizacao gerava gargalo no gerador de HTML.
+
+### Checklist de Tarefas Efetuadas:
+[X] Otimizacao do Gerador (src/html_generator.py): Modificacao do metodo get_war_calendar_data para ler as datas e barcos diretamente em memoria a partir de status_barcos_historico.csv.
+[X] Correcao da Tag de Rastreamento: Passagem do argumento explictio player_tag para o calendario de guerra em generate_war_radar_html.
+[X] Resolucao do Cla Secundario: Implementacao de logica para detectar a tag secundaria #2220UQQ0UU e aponta-la corretamente para as estatisticas do cla BLACK「DR4GON (_sec), restabelecendo o calendario horizontal e a listagem de barcos.
+
+----------------------------------------------------------------------
+
+## ISSUE 4: Resolucao da Corrupcao do Dashboard (Bug da Fama Zerada no Barco)
+* Titulo: [Bug] Correcao de Travamento de Abas HTML e Tratamento de Fama Zero no Inicio da Guerra
+* Tipo: Bug / UI-UX
+* Status: Concluida
+* Tags: bug-fix, dashboard, clash-api, robustness
+
+### Descricao da Issue:
+O dashboard index.html travava a interatividade das abas no navegador (excecao JS silenciosa) e sumia com o calendario devido a uma falha catastrofica de fallback. No inicio da guerra (quinta-feira util), quando a fama na API oficial e zero, o script de barcos descartava as informacoes da API e tentava buscar um fallback historico. Como a secundaria e nova, o fallback retornava vazio ([]), quebrando os dados estruturais do HTML.
+
+### Checklist de Tarefas Efetuadas:
+[X] Correcao de Condicao de Fama em collect_war_weekend.py: Ajuste do fluxo de fallback. Se a fama for zero e o historico estiver vazio, o script agora preserva e grava os clas reais validos da API Clash Royale com fama zero.
+[X] Execucao e Consolidaçao das Contas: Execucao do pipeline mestre python src/main_sync.py de ponta a ponta com sucesso. Os dados de barcos de fama zero para a conta secundaria foram gravados no CSV de forma limpa.
+[X] Criacao do Script de Validacao de Integridade (scratch/check_html_corruption.py):
+    - Analise sintatica do index.html de 18.353 linhas.
+    - Validacao de fechamento correto de tags estruturais e presenca de abas ativas para ambas as contas: conta principal (account-tab-2QR292P) na Linha 2204 e secundaria (account-tab-2220UQQ0UU) na Linha 9693.
+    - Atestado no relatorio de diagnostico (scratch/corruption_report.txt) que o HTML esta 100% integro e reativo no navegador.
