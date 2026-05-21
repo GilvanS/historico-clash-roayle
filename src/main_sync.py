@@ -105,15 +105,36 @@ def main():
         if hoje.weekday() in [0, 3, 4, 5, 6]:
             logger.info("FASE 1.5: Dia de Guerra detectado! Coletando decks dos melhores jogadores...")
             war_logs = []
-            buf = io.StringIO()
-            with redirect_stdout(buf), redirect_stderr(buf):
-                from collect_war_top_decks import collect_top_decks
-                from collect_war_weekend import collect_boat_data
-                from collect_river_race_full import collect_river_race_intelligence
-                collect_top_decks()
-                collect_boat_data()
-                collect_river_race_intelligence()
-            war_logs.append(buf.getvalue())
+            # Nota: Alguns scripts de guerra usam sys.stdout.buffer, incompativel com redirect_stdout
+            # Executamos normalmente e capturamos apenas o que for possivel
+            import subprocess
+            result = subprocess.run(
+                [sys.executable, '-c',
+                 'from collect_war_top_decks import collect_top_decks; collect_top_decks()'],
+                cwd=os.path.dirname(os.path.abspath(__file__)),
+                capture_output=True, text=True, timeout=120
+            )
+            if result.stdout: war_logs.append(result.stdout)
+            if result.stderr: war_logs.append(result.stderr)
+            
+            result = subprocess.run(
+                [sys.executable, '-c',
+                 'from collect_war_weekend import collect_boat_data; collect_boat_data()'],
+                cwd=os.path.dirname(os.path.abspath(__file__)),
+                capture_output=True, text=True, timeout=120
+            )
+            if result.stdout: war_logs.append(result.stdout)
+            if result.stderr: war_logs.append(result.stderr)
+            
+            result = subprocess.run(
+                [sys.executable, '-c',
+                 'from collect_river_race_full import collect_river_race_intelligence; collect_river_race_intelligence()'],
+                cwd=os.path.dirname(os.path.abspath(__file__)),
+                capture_output=True, text=True, timeout=120
+            )
+            if result.stdout: war_logs.append(result.stdout)
+            if result.stderr: war_logs.append(result.stderr)
+            
             collection_logs.append(("Guerra", "\n".join(war_logs)))
         else:
             logger.info("FASE 1.5: Fora do periodo de guerra (Segunda a Quarta). Pulando coleta de decks.")
