@@ -2,17 +2,19 @@
 """
 Mestre da Sincronização Clash Royale (30 MIN)
 Orquestra: Coleta -> Consolidação -> README -> Dashboard HTML
+Logs de coleta sao capturados e exibidos APENAS no final para clareza.
 """
 
 import os
 import sys
 import logging
+import io
+from contextlib import redirect_stdout, redirect_stderr
 from datetime import datetime
 
 # Adiciona o diretório src ao path se necessário
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from collect_battles_csv import main as collect_main
 from update_readme_from_csv import ReadmeCSVUpdater
 from html_generator import GitHubPagesHTMLGenerator
 from clan_generator import ClanAnalyticsGenerator
@@ -46,96 +48,131 @@ def main():
 
     
     # Validação de Integridade (Segurança para o Dashboard Multi-Conta)
-    # Se estiver no GitHub Actions, a tag secundária é OBRIGATÓRIA para evitar regressão do UI.
+    # Se estiver no GitHub Actions, a tag secundaria e OBRIGATORIA para evitar regressao do UI.
     is_github = os.environ.get("GITHUB_ACTIONS") == "true"
     player_tag_sec = os.environ.get("CR_PLAYER_TAG_SEC")
     
     if is_github and not player_tag_sec:
-        logger.error("❌ ERRO CRÍTICO: A variável CR_PLAYER_TAG_SEC não foi encontrada!")
-        logger.error("Para evitar que o dashboard seja sobrescrito no formato de conta única, o pipeline será interrompido.")
-        logger.error("Ação necessária: Configure o 'Secret' CR_PLAYER_TAG_SEC no seu repositório GitHub.")
+        logger.error("ERRO CRITICO: A variavel CR_PLAYER_TAG_SEC nao foi encontrada!")
+        logger.error("Para evitar que o dashboard seja sobrescrito no formato de conta unica, o pipeline sera interrompido.")
+        logger.error("Acao necessaria: Configure o 'Secret' CR_PLAYER_TAG_SEC no seu repositorio GitHub.")
         sys.exit(1) # Interrompe o pipeline com erro
     elif not player_tag_sec:
-        logger.warning("⚠️ Aviso: Rodando sem a Tag Secundária. O dashboard local será gerado apenas com a conta principal.")
+        logger.warning("Aviso: Rodando sem a Tag Secundaria. O dashboard local sera gerado apenas com a conta principal.")
 
+    # Buffer para capturar logs das coletas
+    collection_logs = []
+
+    # FASE 1: Coletar batalhas
     try:
         logger.info("FASE 1: Coletando batalhas da API e atualizando CSVs...")
-        collect_main()
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            from collect_battles_csv import main as collect_main
+            collect_main()
+        collection_logs.append(("Batalhas", buf.getvalue()))
     except Exception as e:
         logger.error(f"Erro na FASE 1 (Coleta): {e}")
-        # Prossegue para atualizar com os dados que já existem
+        collection_logs.append(("Batalhas", f"ERRO: {e}"))
 
-    # 1.2 Coletar Ciclo de Baús (Fase 1 do Plano)
+    # FASE 1.2: Coletar Ciclo de Baús
     try:
         logger.info("FASE 1.2: Coletando ciclo de baús...")
-        from collect_chests import collect_chests
-        collect_chests()
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            from collect_chests import collect_chests
+            collect_chests()
+        collection_logs.append(("Baus", buf.getvalue()))
     except Exception as e:
-        logger.error(f"Erro na FASE 1.2 (Baús): {e}")
+        logger.error(f"Erro na FASE 1.2 (Baus): {e}")
+        collection_logs.append(("Baus", f"ERRO: {e}"))
 
-    # 1.3 Coletar Meta Brasil (Fase 2 do Plano)
+    # FASE 1.3: Coletar Meta Brasil
     try:
         logger.info("FASE 1.3: Coletando ranking Top 100 Brasil (Meta)...")
-        from collect_meta_br import collect_meta_br
-        collect_meta_br()
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            from collect_meta_br import collect_meta_br
+            collect_meta_br()
+        collection_logs.append(("Meta BR", buf.getvalue()))
     except Exception as e:
         logger.error(f"Erro na FASE 1.3 (Meta BR): {e}")
+        collection_logs.append(("Meta BR", f"ERRO: {e}"))
 
-    # 1.5 Coletar Decks de Guerra (Quinta a Domingo)
+    # FASE 1.5: Coletar Decks de Guerra (Quinta a Domingo)
     try:
-        # Quinta=3, Sexta=4, Sabado=5, Domingo=6
         hoje = datetime.now()
         if hoje.weekday() in [0, 3, 4, 5, 6]:
             logger.info("FASE 1.5: Dia de Guerra detectado! Coletando decks dos melhores jogadores...")
-            from collect_war_top_decks import collect_top_decks
-            from collect_war_weekend import collect_boat_data
-            from collect_river_race_full import collect_river_race_intelligence
-            collect_top_decks()
-            collect_boat_data()
-            collect_river_race_intelligence()  # Inteligencia completa da corrida
+            war_logs = []
+            buf = io.StringIO()
+            with redirect_stdout(buf), redirect_stderr(buf):
+                from collect_war_top_decks import collect_top_decks
+                from collect_war_weekend import collect_boat_data
+                from collect_river_race_full import collect_river_race_intelligence
+                collect_top_decks()
+                collect_boat_data()
+                collect_river_race_intelligence()
+            war_logs.append(buf.getvalue())
+            collection_logs.append(("Guerra", "\n".join(war_logs)))
         else:
             logger.info("FASE 1.5: Fora do periodo de guerra (Segunda a Quarta). Pulando coleta de decks.")
+            collection_logs.append(("Guerra", "Pulada (fora do periodo de guerra)"))
     except Exception as e:
         logger.error(f"Erro na FASE 1.5 (Guerra): {e}")
+        collection_logs.append(("Guerra", f"ERRO: {e}"))
 
-    # 2. Atualizar README (Histograma e Estatísticas)
+    # FASE 2: Atualizar README
     try:
-        logger.info("FASE 2: Atualizando README.md com novas estatísticas...")
+        logger.info("FASE 2: Atualizando README.md com novas estatisticas...")
         updater = ReadmeCSVUpdater(csv_dir="src", readme_path="README.md")
         updater.update_readme()
     except Exception as e:
         logger.error(f"Erro na FASE 2 (README): {e}")
 
-    # 3. Gerar Dashboard HTML Premium
+    # FASE 3: Gerar Dashboard HTML Premium
     try:
         logger.info("FASE 3: Gerando Dashboard HTML Premium (index.html na raiz)...")
         generator = GitHubPagesHTMLGenerator()
         html_content = generator.generate_html_report()
         
-        # Define diretório de saída
+        # Define diretorio de saida
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         index_path = os.path.join(root_dir, 'index.html')
         with open(index_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        # 3.2 Gerar Página do Clã (clan.html)
-        logger.info("FASE 3.2: Gerando página do Clã (clan.html na raiz)...")
+            
+        # FASE 3.2: Gerar Pagina do Cla (clan.html)
+        logger.info("FASE 3.2: Gerando pagina do Cla (clan.html na raiz)...")
         clan_gen = ClanAnalyticsGenerator()
         clan_html = clan_gen.generate_clan_html_report()
         clan_path = os.path.join(root_dir, 'clan.html')
         with open(clan_path, 'w', encoding='utf-8') as f:
             f.write(clan_html)
         
-        # 3.3 Gerar Páginas de Membros (member_*.html)
-        logger.info("FASE 3.3: Gerando páginas individuais de membros (member_*.html na raiz)...")
+        # FASE 3.3: Gerar Paginas de Membros (member_*.html)
+        logger.info("FASE 3.3: Gerando paginas individuais de membros (member_*.html na raiz)...")
         from member_generator import main as members_main
         members_main()
         
-        logger.info("Dashboard e relatórios gerados com sucesso na raiz.")
+        logger.info("Dashboard e relatorios gerados com sucesso na raiz.")
     except Exception as e:
         logger.error(f"Erro na FASE 3 (HTML): {e}")
 
+    # RESUMO FINAL: Exibe logs das coletas agora que tudo foi processado
     logger.info("=" * 60)
-    logger.info("SINCRONIZAÇÃO CONCLUÍDA COM SUCESSO!")
+    logger.info("RESUMO DAS COLETAS")
+    logger.info("=" * 60)
+    for name, log in collection_logs:
+        if log and log.strip():
+            # Imprime o log da coleta sem prefixo de timestamp para clareza
+            for line in log.strip().split('\n'):
+                if line.strip():
+                    print(f"  [{name}] {line}")
+            print()
+
+    logger.info("=" * 60)
+    logger.info("SINCRONIZACAO CONCLUÍDA COM SUCESSO!")
     logger.info("=" * 60)
 
 if __name__ == "__main__":
