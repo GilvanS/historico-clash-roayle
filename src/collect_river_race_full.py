@@ -547,6 +547,9 @@ def collect_river_race_intelligence():
         }
         new_records.append(rec)
         
+    # Determinar quais tipos de conta TEM dados novos (para nao remover dados sem substituto)
+    account_types_com_new_data = set(r.get('conta_tipo', '') for r in new_records)
+    
     # Carregar registros existentes
     existing_records = []
     if os.path.exists(guerra_hist_path):
@@ -554,8 +557,9 @@ def collect_river_race_intelligence():
             with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f, delimiter=';')
                 for row in reader:
-                    # Idempotencia: remover registros da mesma data logic calculada
-                    if row.get('data_coleta') == data_hoje:
+                    row_conta = row.get('conta_tipo', '')
+                    # Idempotencia segura: so remove registros de hoje se tiver dados NOVOS para ESSE tipo de conta
+                    if row.get('data_coleta') == data_hoje and row_conta in account_types_com_new_data:
                         continue
                     existing_records.append(row)
         except Exception as e:
