@@ -5778,12 +5778,19 @@ class GitHubPagesHTMLGenerator:
                             window.TOP_GLOBAL_DATA = {top_global_json};
                             window.CARD_IMAGE_PATHS = {card_img_json};
                             function switchRadarMode(mode, btn) {{
-                                var tabs = document.querySelectorAll('.rd-mode-btn');
+                                var parent = btn.closest('.rd-content');
+                                if (!parent) return;
+                                
+                                var tabId = parent.id.replace('rd-content-', '');
+                                
+                                // Alterna a classe active apenas nos botoes pertencentes a esta aba de conta
+                                var tabs = parent.querySelectorAll('.rd-mode-btn');
                                 tabs.forEach(function(b) {{ b.classList.remove('active'); }});
                                 btn.classList.add('active');
-                                var contents = document.querySelectorAll('.rd-mode-content');
+                                
+                                // Alterna a exibicao do conteudo apenas dentro desta aba de conta
+                                var contents = parent.querySelectorAll('.rd-mode-content');
                                 contents.forEach(function(el) {{ el.style.display = 'none'; }});
-                                var tabId = btn.closest('.rd-content') ? btn.closest('.rd-content').id.replace('rd-content-', '') : '{tab_id_for_js}';
                                 
                                 // Acha a data ativa no calendario daquela tab
                                 var activeDayBtn = document.querySelector('#rd-calendar-' + tabId + ' .rd-calendar-day-active');

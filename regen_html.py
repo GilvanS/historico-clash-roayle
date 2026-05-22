@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import sys
 import os
+import logging
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.html_generator import GitHubPagesHTMLGenerator
 
