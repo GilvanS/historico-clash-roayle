@@ -4429,8 +4429,8 @@ class GitHubPagesHTMLGenerator:
                             continue
                     else:
                         is_sec = player_tag and '2220UQQ0UU' in player_tag
-                        expected_account = '#2220UQQ0UU' if is_sec else '#2QR292P'
-                        if row_account != expected_account:
+                        expected_accounts = ['#2220UQQ0UU'] if is_sec else ['#2QR292P', 'principal']
+                        if row_account not in expected_accounts:
                             continue
                             
                     d_dash = row.get('data_coleta', '')
@@ -4501,7 +4501,7 @@ class GitHubPagesHTMLGenerator:
                                         existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                 seen_players[player_name] = existing
                         
-                        sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
+                        sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_battles_count', 0) > 0, x['fame']), reverse=True)
                         is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
                         max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
                         
@@ -4582,8 +4582,8 @@ class GitHubPagesHTMLGenerator:
                                     continue
                             else:
                                 is_sec = player_tag and '2220UQQ0UU' in player_tag
-                                expected_account = '#2220UQQ0UU' if is_sec else '#2QR292P'
-                                if has_tag_col and row_account and row_account != expected_account:
+                                expected_accounts = ['#2220UQQ0UU'] if is_sec else ['#2QR292P', 'principal']
+                                if has_tag_col and row_account and row_account not in expected_accounts:
                                     continue
                                     
                             cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
@@ -4650,7 +4650,7 @@ class GitHubPagesHTMLGenerator:
                                             existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                     seen_players[player_name] = existing
                             
-                            sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
+                            sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_battles_count', 0) > 0, x['fame']), reverse=True)
                             is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
                             max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
                             
