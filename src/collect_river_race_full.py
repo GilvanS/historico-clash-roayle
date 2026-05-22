@@ -418,6 +418,10 @@ def collect_river_race_intelligence():
     data_hoje, dia_batalha = get_logical_date_and_battle_day()
     
     # Verificar se dados atuais têm DADOS REAIS
+    has_real_data_global = any(
+        (r.get('deck_1') and len(r.get('deck_1', '')) > 10)
+        for r in results_global
+    )
     has_real_data_pri = any(
         (r.get('deck_1') and len(r.get('deck_1', '')) > 10) 
         for r in results_pri
@@ -430,7 +434,7 @@ def collect_river_race_intelligence():
     guerra_hist_path = f"{DATA_DIR}/guerra_historico.csv"
     
     # Mapear fallbacks a partir do arquivo guerra_historico.csv mestre se necessario
-    if not has_real_data_pri or not has_real_data_sec:
+    if not has_real_data_global or not has_real_data_pri or not has_real_data_sec:
         if os.path.exists(guerra_hist_path):
             try:
                 historical_rows = []
@@ -448,6 +452,16 @@ def collect_river_race_intelligence():
                 if dates_before_today:
                     latest_date = dates_before_today[0]
                     print(f"Buscando fallback de dados anteriores da data: {latest_date}")
+                    
+                    if not has_real_data_global:
+                        print("Fallback para TOP Global...")
+                        results_global = []
+                        for row in historical_rows:
+                            if row['data_coleta'] == latest_date and row.get('conta_tipo') == 'TOP_GLOBAL':
+                                new_row = row.copy()
+                                new_row['data_coleta'] = data_hoje
+                                new_row['dia_batalha'] = dia_batalha
+                                results_global.append(new_row)
                     
                     if not has_real_data_pri:
                         print("Fallback para Conta Principal...")
