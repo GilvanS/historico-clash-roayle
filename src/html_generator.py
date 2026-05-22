@@ -4481,8 +4481,25 @@ class GitHubPagesHTMLGenerator:
                             if player_name not in seen_players:
                                 seen_players[player_name] = player_item
                             else:
-                                if player_fame > seen_players[player_name]['fame']:
-                                    seen_players[player_name] = player_item
+                                # Acumula stats de guerra de todos os registros do jogador
+                                existing = seen_players[player_name]
+                                existing['war_vitorias'] = existing.get('war_vitorias', 0) + player_item.get('war_vitorias', 0)
+                                existing['war_derrotas'] = existing.get('war_derrotas', 0) + player_item.get('war_derrotas', 0)
+                                existing['war_medals'] = existing.get('war_medals', 0) + player_item.get('war_medals', 0)
+                                existing['war_battles_count'] = existing.get('war_battles_count', 0) + player_item.get('war_battles_count', 0)
+                                # Atualiza fame e decks se o novo registro for melhor
+                                if player_fame > existing['fame'] or (player_item.get('war_battles_count', 0) > 0 and not existing.get('deck_1', '')):
+                                    existing['fame'] = max(existing['fame'], player_fame)
+                                    if player_item.get('deck_1', ''):
+                                        existing['deck_1'] = player_item['deck_1']
+                                        existing['deck_1_tipo'] = player_item['deck_1_tipo']
+                                        existing['deck_2'] = player_item['deck_2']
+                                        existing['deck_2_tipo'] = player_item['deck_2_tipo']
+                                        existing['deck_3'] = player_item['deck_3']
+                                        existing['deck_3_tipo'] = player_item['deck_3_tipo']
+                                        existing['deck_4'] = player_item['deck_4']
+                                        existing['deck_4_tipo'] = player_item['deck_4_tipo']
+                                seen_players[player_name] = existing
                         
                         sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
                         is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
@@ -4613,8 +4630,25 @@ class GitHubPagesHTMLGenerator:
                                 if player_name not in seen_players:
                                     seen_players[player_name] = player_item
                                 else:
-                                    if player_fame > seen_players[player_name]['fame']:
-                                        seen_players[player_name] = player_item
+                                    # Acumula stats de guerra de todos os registros do jogador
+                                    existing = seen_players[player_name]
+                                    existing['war_vitorias'] = existing.get('war_vitorias', 0) + player_item.get('war_vitorias', 0)
+                                    existing['war_derrotas'] = existing.get('war_derrotas', 0) + player_item.get('war_derrotas', 0)
+                                    existing['war_medals'] = existing.get('war_medals', 0) + player_item.get('war_medals', 0)
+                                    existing['war_battles_count'] = existing.get('war_battles_count', 0) + player_item.get('war_battles_count', 0)
+                                    # Atualiza fame e decks se o novo registro for melhor
+                                    if player_fame > existing['fame'] or (player_item.get('war_battles_count', 0) > 0 and not existing.get('deck_1', '')):
+                                        existing['fame'] = max(existing['fame'], player_fame)
+                                        if player_item.get('deck_1', ''):
+                                            existing['deck_1'] = player_item['deck_1']
+                                            existing['deck_1_tipo'] = player_item['deck_1_tipo']
+                                            existing['deck_2'] = player_item['deck_2']
+                                            existing['deck_2_tipo'] = player_item['deck_2_tipo']
+                                            existing['deck_3'] = player_item['deck_3']
+                                            existing['deck_3_tipo'] = player_item['deck_3_tipo']
+                                            existing['deck_4'] = player_item['deck_4']
+                                            existing['deck_4_tipo'] = player_item['deck_4_tipo']
+                                    seen_players[player_name] = existing
                             
                             sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
                             is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
