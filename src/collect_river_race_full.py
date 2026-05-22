@@ -36,12 +36,22 @@ def format_deck(cards):
     if not cards: return ""
     return ", ".join(c.get('name', '') for c in cards)
 
-def get_clan_tag(token, player_tag):
-    """Obtém a tag do clã do jogador usando a API"""
+def get_clan_tag(token, player_tag, fallback_tag=None):
+    """Obtém a tag do clã do jogador usando a API, com fallback para env var ou tag fornecida"""
     clean = player_tag.replace('#', '%23')
-    r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{clean}", headers={'Authorization': f'Bearer {token}'})
-    if r.status_code == 200:
-        return r.json().get('clan', {}).get('tag')
+    try:
+        r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{clean}", headers={'Authorization': f'Bearer {token}'}, timeout=10)
+        if r.status_code == 200:
+            clan_tag = r.json().get('clan', {}).get('tag')
+            if clan_tag:
+                return clan_tag
+    except Exception as e:
+        print(f"Aviso: API do jogador {player_tag} falhou: {e}")
+    
+    # Fallback: usar tag fornecida ou env var
+    if fallback_tag:
+        print(f"Usando fallback de clã fornecido: {fallback_tag}")
+        return fallback_tag
     return None
 
 def collect_war_battles_stats(battles):
@@ -235,11 +245,11 @@ def collect_top_global_clans(token, limit=5):
         print(f"ERRO ao coletar TOP Global: {e}")
         return []
 
-def collect_river_race_for_account(token, player_tag, suffix=""):
+def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallback=None):
     headers = {'Authorization': f'Bearer {token}'}
     base_url = "https://proxy.royaleapi.dev/v1"
     
-    my_clan_tag = get_clan_tag(token, player_tag)
+    my_clan_tag = get_clan_tag(token, player_tag, fallback_tag=clan_tag_fallback)
     if not my_clan_tag:
         print(f"ERRO: Nao foi possivel obter a tag do clan para {player_tag}")
         return []
@@ -394,6 +404,10 @@ def collect_river_race_intelligence():
     # Tags reais das contas
     tag_pri_real = os.getenv('CR_PLAYER_TAG', '#2QR292P')
     tag_sec_real = os.getenv('CR_PLAYER_TAG_SEC', '#2220UQQ0UU')
+    
+    # Tags de cla fixas (fallback caso API nao retorne)
+    clan_tag_pri = os.getenv('CR_CLAN_TAG') or ''
+    clan_tag_sec = os.getenv('CR_CLAN_TAG_SEC') or ''
 
     print("=" * 60)
     print("COLETANDO INTELIGENCIA DE GUERRA - RIVER RACE")
@@ -410,10 +424,10 @@ def collect_river_race_intelligence():
         results_global = []
     
     print("\n--- CONTA PRINCIPAL ---")
-    results_pri = collect_river_race_for_account(token, tag_pri_real, '_pri')
+    results_pri = collect_river_race_for_account(token, tag_pri_real, '_pri', clan_tag_fallback=clan_tag_pri)
     
     print("\n--- CONTA SECUNDARIA ---")
-    results_sec = collect_river_race_for_account(token, tag_sec_real, '_sec')
+    results_sec = collect_river_race_for_account(token, tag_sec_real, '_sec', clan_tag_fallback=clan_tag_sec)
     
     data_hoje, dia_batalha = get_logical_date_and_battle_day()
     
