@@ -8646,6 +8646,16 @@ class GitHubPagesHTMLGenerator:
         if (target) {{
             target.classList.add('active');
             target.style.display = 'block';
+            
+            // Garantir o recalculamento das métricas ao tornar a aba visível física no DOM
+            // Busca o dia ativo no calendário desta aba e simula o clique nele com delay de 50ms
+            setTimeout(function() {{
+                const activeDayBtn = target.querySelector('.rd-calendar-day.rd-calendar-day-active') || target.querySelector('.rd-calendar-day');
+                if (activeDayBtn) {{
+                    const date = activeDayBtn.getAttribute('data-date');
+                    selectWarDay(tabId, date, activeDayBtn);
+                }}
+            }}, 50);
         }}
         
         // Salvar seleção no localStorage

@@ -307,12 +307,15 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
     print(f"Coletando para {player_tag} - Clan: {my_clan_tag}")
     
     clan_url = my_clan_tag.replace('#', '%23')
-    r = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers)
-    if r.status_code != 200:
-        print(f"ERRO ao buscar corrida: {r.status_code}")
+    try:
+        r = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=15)
+        if r.status_code != 200:
+            print(f"ERRO ao buscar corrida: {r.status_code}")
+            return []
+        data = r.json()
+    except Exception as e:
+        print(f"ERRO de conexao ao buscar corrida: {e}")
         return []
-    
-    data = r.json()
     clans = data.get('clans', [])
     
     if not clans:
