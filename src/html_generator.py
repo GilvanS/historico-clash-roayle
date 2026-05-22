@@ -8308,6 +8308,13 @@ class GitHubPagesHTMLGenerator:
             
             // Trigger para redimensionar gráficos se houver
             window.dispatchEvent(new Event('resize'));
+            
+            // Sincronizar o Radar de Guerra da parte inferior (evitando loops de recursão)
+            const radarTab = document.querySelector(`.rd-tab[data-tag*="${{cleanTag}}"]`);
+            if (radarTab && !radarTab.classList.contains('active')) {{
+                console.log('Sincronizando aba do Radar de Guerra para tag:', cleanTag);
+                radarTab.click();
+            }}
         }} else {{
             console.error('ERRO CRÍTICO: Container de conta não encontrado no DOM: ' + targetId);
             const availableIds = Array.from(allContents).map(c => c.id);
@@ -8381,6 +8388,17 @@ class GitHubPagesHTMLGenerator:
         
         // Salvar seleção no localStorage
         localStorage.setItem('cr_radar_tab_' + tabId, tabId);
+        
+        // Sincronizar com a aba de conta principal do topo (evitando loops de recursão)
+        const tag = element.getAttribute('data-tag');
+        if (tag) {{
+            const cleanTag = tag.replace('#', '');
+            const accountTab = document.querySelector(`.cr-dashboard-main-header .cr-tab[onclick*="${{cleanTag}}"]`);
+            if (accountTab && !accountTab.classList.contains('active')) {{
+                console.log('Sincronizando aba de conta no topo com o Radar para tag:', cleanTag);
+                accountTab.click();
+            }}
+        }}
     }}
     
     // War Day selection - filtrar jogadores e clans por data e atualizar painel de resumo
@@ -8437,7 +8455,18 @@ class GitHubPagesHTMLGenerator:
     // Task 3: Restaurar conta e dia selecionado do localStorage ao carregar a pagina
     document.addEventListener('DOMContentLoaded', function() {{
         // Restaurar conta ativa
-        const savedAccount = localStorage.getItem('cr_active_account');
+        let savedAccount = localStorage.getItem('cr_active_account');
+        if (!savedAccount) {{
+            // Se não houver conta ativa no localStorage (ex: primeira visita), ativa a primeira aba do topo
+            const firstTab = document.querySelector('.cr-dashboard-main-header .cr-tab');
+            if (firstTab) {{
+                const match = firstTab.getAttribute('onclick').match(/'([^']+)'/);
+                if (match) {{
+                    savedAccount = match[1];
+                }}
+            }}
+        }}
+        
         if (savedAccount) {{
             const savedTab = document.querySelector(`.cr-tab[onclick*="${{savedAccount}}"]`);
             if (savedTab) {{
