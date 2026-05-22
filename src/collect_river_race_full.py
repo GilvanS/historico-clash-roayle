@@ -187,11 +187,19 @@ def collect_top_global_clans(token, limit=5):
                                 if battle_type in WAR_BATTLE_TYPES:
                                     team = b.get('team', [{}])[0]
                                     cards = team.get('cards', [])
-                                    deck_str = format_deck(cards)
                                     
-                                    if deck_str and deck_str not in decks_collected:
-                                        decks_collected.append(deck_str)
-                                        deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
+                                    if len(cards) > 8:
+                                        for idx in range(0, len(cards), 8):
+                                            sub_cards = cards[idx:idx+8]
+                                            deck_str = format_deck(sub_cards)
+                                            if deck_str and deck_str not in decks_collected:
+                                                decks_collected.append(deck_str)
+                                                deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
+                                    else:
+                                        deck_str = format_deck(cards)
+                                        if deck_str and deck_str not in decks_collected:
+                                            decks_collected.append(deck_str)
+                                            deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
                                     
                                     if len(decks_collected) >= 4:
                                         break
@@ -295,7 +303,7 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
                         # Coletar estatísticas de batalha de guerra
                         war_stats = collect_war_battles_stats(battles)
                         
-                        # Coletar decks (lógica existente)
+                        # Coletar decks
                         decks_collected = []
                         deck_types = []
                         
@@ -304,11 +312,19 @@ def collect_river_race_for_account(token, player_tag, suffix=""):
                             if battle_type in WAR_BATTLE_TYPES:
                                 team = b.get('team', [{}])[0]
                                 cards = team.get('cards', [])
-                                deck_str = format_deck(cards)
                                 
-                                if deck_str and deck_str not in decks_collected:
-                                    decks_collected.append(deck_str)
-                                    deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
+                                if len(cards) > 8:
+                                    for idx in range(0, len(cards), 8):
+                                        sub_cards = cards[idx:idx+8]
+                                        deck_str = format_deck(sub_cards)
+                                        if deck_str and deck_str not in decks_collected:
+                                            decks_collected.append(deck_str)
+                                            deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
+                                else:
+                                    deck_str = format_deck(cards)
+                                    if deck_str and deck_str not in decks_collected:
+                                        decks_collected.append(deck_str)
+                                        deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
                                 
                                 if len(decks_collected) >= 4:
                                     break
