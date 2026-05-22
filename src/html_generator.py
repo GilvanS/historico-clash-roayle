@@ -25,6 +25,7 @@ except ImportError:
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from csv_database_manager import CSVManager
+from war_prediction_engine import WarPredictionEngine
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -109,6 +110,7 @@ class GitHubPagesHTMLGenerator:
 
         # Inicializa o gerenciador de CSV (Sem SQL)
         self.csv_manager = CSVManager()
+        self.prediction_engine = WarPredictionEngine()
         
         logger.info(f"Dashboard configurado em modo 100% CSV")
         self.base_url = "https://proxy.royaleapi.dev/v1"
@@ -4076,6 +4078,19 @@ class GitHubPagesHTMLGenerator:
                             clan_players_sorted = sorted(clan_players, key=lambda x: x['position'])
                             top_players = clan_players_sorted[:3]
                         
+                        # Calcular metricas preditivas usando o prediction_engine
+                        decks_played = 0
+                        decks_remaining = 200
+                        efficiency = 0.0
+                        projected_fame = clan_data['fame']
+                        
+                        if date_str in players_by_date:
+                            metrics = self.prediction_engine.calculate_clan_metrics(players_by_date[date_str], my_clan)
+                            decks_played = metrics['decks_played']
+                            decks_remaining = metrics['decks_remaining']
+                            efficiency = metrics['efficiency']
+                            projected_fame = metrics['projected_fame']
+
                         days.append({
                             'date': date_str,
                             'label': day_label,
@@ -4084,7 +4099,11 @@ class GitHubPagesHTMLGenerator:
                             'points': clan_data.get('points', 0),
                             'is_active': is_today,
                             'boat_status': boat_status,
-                            'top_players': top_players
+                            'top_players': top_players,
+                            'decks_played': decks_played,
+                            'decks_remaining': decks_remaining,
+                            'efficiency': efficiency,
+                            'projected_fame': projected_fame
                         })
                     else:
                         days.append({
@@ -4095,7 +4114,11 @@ class GitHubPagesHTMLGenerator:
                             'points': 0,
                             'is_active': is_today,
                             'boat_status': 'unknown',
-                            'top_players': []
+                            'top_players': [],
+                            'decks_played': 0,
+                            'decks_remaining': 200,
+                            'efficiency': 0.0,
+                            'projected_fame': 0
                         })
                 return days
             except Exception as e:
@@ -4511,14 +4534,39 @@ class GitHubPagesHTMLGenerator:
                         
                         total_fame = sum(p['fame'] for p in top_players)
                         
+                        # Calcular metricas preditivas usando o prediction_engine
+                        metrics = self.prediction_engine.calculate_clan_metrics(player_rows, cla)
+
                         clan_list.append({
                             'name': cla,
                             'players': top_players,
                             'total_fame': total_fame,
                             'date': u_date,
-                            'is_me': is_my_own_clan
+                            'is_me': is_my_own_clan,
+                            'decks_played': metrics['decks_played'],
+                            'decks_remaining': metrics['decks_remaining'],
+                            'efficiency': metrics['efficiency'],
+                            'projected_fame': metrics['projected_fame']
                         })
                     
+                    # 1. Encontrar a projecao do meu clan
+                    my_projection = 0
+                    for c in clan_list:
+                        if c['is_me']:
+                            my_projection = c['projected_fame']
+                            break
+                    
+                    # 2. Calcular o nivel de ameaca para cada clan rival
+                    for c in clan_list:
+                        if c['is_me']:
+                            c['threat_level'] = 'CONTROLADA'
+                        else:
+                            c['threat_level'] = self.prediction_engine.determine_threat_level(
+                                rival_projection=c['projected_fame'],
+                                my_projection=my_projection,
+                                rival_decks_remaining=c['decks_remaining']
+                            )
+
                     clan_list.sort(key=lambda x: x['total_fame'], reverse=True)
                     for idx, c in enumerate(clan_list):
                         c['position'] = idx + 1
@@ -4762,7 +4810,11 @@ class GitHubPagesHTMLGenerator:
             days_html += f"""
                 <div class="rd-calendar-day {active_class} {position_class} {status_class}" 
                      onclick="selectWarDay('{tab_id}', '{date}', this)"
-                     data-date="{date}" data-position="{position}" data-fame="{fame}">
+                     data-date="{date}" data-position="{position}" data-fame="{fame}"
+                     data-decks-played="{entry.get('decks_played', 0)}"
+                     data-decks-remaining="{entry.get('decks_remaining', 200)}"
+                     data-efficiency="{entry.get('efficiency', 0.0)}"
+                     data-projected-fame="{entry.get('projected_fame', 0)}">
                     <div class="rd-calendar-label">{label}</div>
                     <div class="rd-calendar-icon">{status_icon}</div>
                     <div class="rd-calendar-pos">#{position if position > 0 else '—'}</div>
@@ -4918,6 +4970,42 @@ class GitHubPagesHTMLGenerator:
                     position = clan.get('position', '?')
                     clan_name = clan.get('name', '')
                     
+                    decks_played = clan.get('decks_played', 0)
+                    efficiency = clan.get('efficiency', 0.0)
+                    projected_fame = clan.get('projected_fame', 0)
+                    threat_level = clan.get('threat_level', 'CONTROLADA')
+                    
+                    # Definir badge de ameaca e cores neon para rivais
+                    threat_badge = ""
+                    if not is_me:
+                        threat_colors = {
+                            'CRITICA': 'rd-threat-critical',
+                            'MODERADA': 'rd-threat-moderate',
+                            'CONTROLADA': 'rd-threat-controlled'
+                        }
+                        t_class = threat_colors.get(threat_level, 'rd-threat-controlled')
+                        threat_badge = f'<span class="rd-threat-badge {t_class}">{threat_level}</span>'
+                    
+                    metrics_bar_html = f"""
+                    <div class="rd-clan-metrics-bar">
+                        <div class="rd-clan-metric-item" title="Eficiencia de vitoria">
+                            <span class="rd-metric-icon">⚡</span>
+                            <span class="rd-metric-val">{efficiency:.1f}%</span>
+                        </div>
+                        <div class="rd-clan-metric-item" title="Decks jogados de 200">
+                            <span class="rd-metric-icon">🎴</span>
+                            <span class="rd-metric-val">{decks_played}/200</span>
+                        </div>
+                        {"" if is_me else f'''
+                        <div class="rd-clan-metric-item" title="Fama projetada no final do dia">
+                            <span class="rd-metric-icon">🔮</span>
+                            <span class="rd-metric-val">{projected_fame:,} ⭐</span>
+                        </div>
+                        '''}
+                        {threat_badge}
+                    </div>
+                    """
+                    
                     clan_cards_html += f"""
                         <div class="rd-clan {me_class}">
                             <div class="rd-clan-header">
@@ -4926,6 +5014,7 @@ class GitHubPagesHTMLGenerator:
                                 {me_badge}
                                 <span class="rd-clan-fame">{total_fame:,} ⭐</span>
                             </div>
+                            {metrics_bar_html}
                             <div class="rd-players">
                                 {player_rows_html}
                             </div>
@@ -4952,6 +5041,40 @@ class GitHubPagesHTMLGenerator:
         content_html = f"""
             <div id="rd-content-{tab_id}" class="rd-content" style="display: none;">
                 {calendar_html}
+                
+                <!-- Widgets Analiticos Premium de Projecao -->
+                <div class="rd-analytics-cards" id="rd-analytics-cards-{tab_id}">
+                    <div class="rd-card-premium rd-decks-card">
+                        <div class="rd-card-glow"></div>
+                        <div class="rd-card-icon">🎴</div>
+                        <div class="rd-card-details">
+                            <span class="rd-card-title">Decks Utilizados</span>
+                            <span class="rd-card-value" id="rd-decks-value-{tab_id}">0 / 200</span>
+                            <span class="rd-card-sub" id="rd-decks-sub-{tab_id}">200 restantes</span>
+                        </div>
+                    </div>
+                    
+                    <div class="rd-card-premium rd-efficiency-card">
+                        <div class="rd-card-glow"></div>
+                        <div class="rd-card-icon">⚡</div>
+                        <div class="rd-card-details">
+                            <span class="rd-card-title">Eficiencia Media</span>
+                            <span class="rd-card-value" id="rd-efficiency-value-{tab_id}">0.0%</span>
+                            <span class="rd-card-sub">Baseada em vitorias</span>
+                        </div>
+                    </div>
+                    
+                    <div class="rd-card-premium rd-projection-card">
+                        <div class="rd-card-glow"></div>
+                        <div class="rd-card-icon">🔮</div>
+                        <div class="rd-card-details">
+                            <span class="rd-card-title">Projecao de Fama</span>
+                            <span class="rd-card-value" id="rd-projection-value-{tab_id}">0 ⭐</span>
+                            <span class="rd-card-sub">Estimativa matematica</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="rd-war-summary-{tab_id}" class="rd-war-summary" style="display: none;">
                     <div class="rd-war-summary-inner">
                         <span class="rd-war-summary-label">📅 Dia selecionado:</span>
@@ -7828,8 +7951,177 @@ class GitHubPagesHTMLGenerator:
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* WAR RADAR CSS - Estilos para seção de radar de guerra */
+        /* WAR RADAR CSS - Estilos para secao de radar de guerra */
         .rd-section { border-left: 5px solid #dc2626 !important; background: rgba(20, 10, 10, 0.85) !important; border-radius: 16px; padding: 20px; }
+        
+        /* Widgets Analiticos Premium - Glassmorphism */
+        .rd-analytics-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .rd-card-premium {
+            position: relative;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .rd-card-premium:hover {
+            transform: translateY(-4px);
+            border-color: rgba(96, 165, 250, 0.4);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(96, 165, 250, 0.15);
+        }
+        
+        .rd-card-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(96, 165, 250, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            transition: all 0.5s ease;
+            opacity: 0.5;
+        }
+        
+        .rd-card-premium:hover .rd-card-glow {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+        
+        .rd-card-icon {
+            font-size: 2.2em;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .rd-card-premium:hover .rd-card-icon {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .rd-card-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+        
+        .rd-card-title {
+            font-size: 0.7em;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        .rd-card-value {
+            font-size: 1.5em;
+            font-weight: 900;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .rd-card-sub {
+            font-size: 0.72em;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        
+        /* Cores Específicas dos Cartões */
+        .rd-decks-card .rd-card-icon { color: #60a5fa; }
+        .rd-efficiency-card .rd-card-icon { color: #f59e0b; }
+        .rd-projection-card .rd-card-icon { color: #10b981; }
+        
+        /* Barra de Métricas dos Clãs */
+        .rd-clan-metrics-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+        }
+        
+        .rd-clan-metric-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72em;
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+        }
+        
+        /* Badges de Ameaça Neon Semafórica */
+        .rd-threat-badge {
+            font-size: 0.65em;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-left: auto;
+            display: inline-block;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        .rd-threat-critical {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+        }
+        
+        .rd-threat-moderate {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+        }
+        
+        .rd-threat-controlled {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+        }
+        
+        /* Ajuste responsivo para os cartões */
+        @media (max-width: 768px) {
+            .rd-analytics-cards {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .rd-threat-badge {
+                margin-left: 0;
+            }
+        }
         .rd-header { text-align: center; margin-bottom: 24px; }
         .rd-badge { display: inline-block; background: linear-gradient(135deg, #dc2626, #991b1b); color: white; font-weight: 900; font-size: 0.8em; letter-spacing: 2px; padding: 4px 16px; border-radius: 20px; margin-bottom: 8px; }
         .rd-header h2 { font-size: 1.5em; margin: 8px 0; }
@@ -8402,6 +8694,22 @@ class GitHubPagesHTMLGenerator:
         if (topGlobalBtn && topGlobalBtn.classList.contains('active')) {{
             renderTopGlobal(tabId, date);
         }}
+        
+        // Atualizar os cards analíticos do topo dinamicamente
+        var decksPlayed = parseFloat(element.getAttribute('data-decks-played')) || 0;
+        var decksRemaining = parseFloat(element.getAttribute('data-decks-remaining')) || 200;
+        var efficiency = parseFloat(element.getAttribute('data-efficiency')) || 0.0;
+        var projectedFame = parseFloat(element.getAttribute('data-projected-fame')) || 0;
+        
+        var decksValEl = document.getElementById('rd-decks-value-' + tabId);
+        var decksSubEl = document.getElementById('rd-decks-sub-' + tabId);
+        var effValEl = document.getElementById('rd-efficiency-value-' + tabId);
+        var projValEl = document.getElementById('rd-projection-value-' + tabId);
+        
+        if (decksValEl) {{ decksValEl.textContent = decksPlayed + ' / 200'; }}
+        if (decksSubEl) {{ decksSubEl.textContent = decksRemaining + ' restantes'; }}
+        if (effValEl) {{ effValEl.textContent = efficiency.toFixed(1) + '%'; }}
+        if (projValEl) {{ projValEl.textContent = Math.round(projectedFame).toLocaleString() + ' \u2b50'; }}
         
         // Atualizar o painel de resumo com fama e posicao do dia clicado
         var fame = element.getAttribute('data-fame') || '0';
