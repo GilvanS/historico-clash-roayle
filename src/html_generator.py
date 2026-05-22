@@ -4831,7 +4831,7 @@ class GitHubPagesHTMLGenerator:
                         for d in range(1, 5):
                             deck = p.get(f'deck_{d}', '')
                             deck_tipo = p.get(f'deck_{d}_tipo', 'Batalha')
-                            if deck and deck != 'Deck nao encontrado no log recente' and deck.strip():
+                            if deck and deck != 'Deck nao encontrado no log recente' and deck != 'N/A' and deck.strip() != 'N/A' and deck.strip():
                                 cards = [c.strip() for c in deck.split(',') if c.strip()][:8]
                                 cards_row1 = cards[:4]
                                 cards_row2 = cards[4:8]
