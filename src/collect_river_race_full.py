@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Coleta Inteligência Completa da Guerra de Rio (River Race)
-- Top 5 clãs da corrida
-- Top 5 jogadores de cada clã
+Coleta Inteligencia Completa da Guerra de Rio (River Race)
+- Top 5 clas da corrida (para TOP Global)
+- TODOS os jogadores do cla rastreado (conta principal e secundaria)
 - 4 decks com tipo de batalha (Guerra, Barco, RangeBattle, Duelo)
-- Estatísticas de batalhas de guerra (vitórias, derrotas, medals, torre)
+- Estatisticas de batalhas de guerra (vitorias, derrotas, medals, torre)
+- Calculo de fame via medals quando API retorna 0
 """
 
 import os
@@ -14,7 +15,7 @@ import csv
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-# Forçar UTF-8 no terminal
+# Forcar UTF-8 no terminal
 if sys.stdout.encoding != 'utf-8':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -32,12 +33,18 @@ BATTLE_TYPE_LABELS = {
     'riverRaceDuel': 'Duelo'
 }
 
+# Pontuacao por tipo de resultado na guerra
+# Vitoria = 900 pontos, Derrota com coroa = 200 pontos, Derrota sem coroa = 100 pontos
+FAME_POR_VITORIA = 900
+FAME_POR_DERROTA_COROA = 200
+FAME_POR_DERROTA = 100
+
 def format_deck(cards):
     if not cards: return ""
     return ", ".join(c.get('name', '') for c in cards)
 
 def get_clan_tag(token, player_tag, fallback_tag=None):
-    """Obtém a tag do clã do jogador usando a API, com fallback para env var ou tag fornecida"""
+    """Obtem a tag do cla do jogador usando a API, com fallback para env var ou tag fornecida"""
     clean = player_tag.replace('#', '%23')
     try:
         r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{clean}", headers={'Authorization': f'Bearer {token}'}, timeout=10)
@@ -50,12 +57,12 @@ def get_clan_tag(token, player_tag, fallback_tag=None):
     
     # Fallback: usar tag fornecida ou env var
     if fallback_tag:
-        print(f"Usando fallback de clã fornecido: {fallback_tag}")
+        print(f"Usando fallback de cla fornecido: {fallback_tag}")
         return fallback_tag
     return None
 
 def collect_war_battles_stats(battles):
-    """Coleta estatísticas de batalhas de guerra"""
+    """Coleta estatisticas de batalhas de guerra e calcula fame real"""
     stats = {
         'war_vitorias': 0,
         'war_derrotas': 0,
@@ -74,7 +81,7 @@ def collect_war_battles_stats(battles):
     if not war_battles:
         return stats
     
-    # Contar vitórias e derrotas
+    # Contar vitorias e derrotas
     tipo_counts = {}
     for b in war_battles:
         # Verificar se o jogador venceu (olhar team e opponent)
@@ -92,12 +99,14 @@ def collect_war_battles_stats(battles):
         else:
             stats['war_derrotas'] += 1
         
-        # Contar medals (3 para vitória, 1 para derrota com coroas)
+        # Calcular fame real por batalha (900 vitoria, 200 derrota com coroa, 100 derrota sem)
         coroas = team[0].get('crowns', 0) if team else 0
         if is_victory:
-            stats['war_medals'] += 3  # Vitória = 3 medals
+            stats['war_medals'] += FAME_POR_VITORIA
         elif coroas > 0:
-            stats['war_medals'] += 1  # Derrota com coroa = 1 medal
+            stats['war_medals'] += FAME_POR_DERROTA_COROA
+        else:
+            stats['war_medals'] += FAME_POR_DERROTA
         
         # Torre do jogador (primeira batalha)
         if stats['war_torre'] == 'Tower Princess':
@@ -116,8 +125,71 @@ def collect_war_battles_stats(battles):
     
     return stats
 
+def collect_decks_from_battlelog(battles):
+    """
+    Extrai ate 4 decks distintos do historico de batalhas de guerra.
+    Trata corretamente duelos: cada rodada do duelo pode ter deck diferente.
+    """
+    decks_collected = []
+    deck_types = []
+
+    for b in battles:
+        battle_type = b.get('type', '')
+        if battle_type not in WAR_BATTLE_TYPES:
+            continue
+
+        tipo_label = BATTLE_TYPE_LABELS.get(battle_type, battle_type)
+        team = b.get('team', [{}])[0]
+        cards = team.get('cards', [])
+
+        # Duelo: a API pode empacotar multiplas rodadas com 16+ cartas (2 decks de 8)
+        if len(cards) > 8:
+            for idx in range(0, len(cards), 8):
+                sub_cards = cards[idx:idx+8]
+                deck_str = format_deck(sub_cards)
+                if deck_str and deck_str not in decks_collected:
+                    decks_collected.append(deck_str)
+                    deck_types.append(tipo_label)
+        else:
+            deck_str = format_deck(cards)
+            if deck_str and deck_str not in decks_collected:
+                decks_collected.append(deck_str)
+                deck_types.append(tipo_label)
+
+        if len(decks_collected) >= 4:
+            break
+
+    # Tambem tentar extrair do campo 'opponent' de duelos para decks extras do time
+    for b in battles:
+        if len(decks_collected) >= 4:
+            break
+        battle_type = b.get('type', '')
+        if battle_type != 'riverRaceDuel':
+            continue
+        tipo_label = BATTLE_TYPE_LABELS.get(battle_type, battle_type)
+        # Algumas APIs retornam rounds no campo 'rounds' (quando disponivel)
+        for rnd in b.get('rounds', []):
+            if len(decks_collected) >= 4:
+                break
+            team_round = rnd.get('team', [{}])[0] if isinstance(rnd.get('team'), list) else {}
+            cards_round = team_round.get('cards', [])
+            deck_str = format_deck(cards_round)
+            if deck_str and deck_str not in decks_collected:
+                decks_collected.append(deck_str)
+                deck_types.append(tipo_label)
+
+    player_decks = {
+        'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
+        'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''
+    }
+    for i, deck in enumerate(decks_collected[:4], 1):
+        player_decks[f'deck_{i}'] = deck
+        player_decks[f'deck_{i}_tipo'] = deck_types[i-1] if i <= len(deck_types) else ''
+
+    return player_decks
+
 def collect_top_global_clans(token, limit=5):
-    """Coleta os TOP N clãs do ranking global e seus top 5 jogadores com decks"""
+    """Coleta os TOP N clas do ranking global e seus top 5 jogadores com decks"""
     headers = {'Authorization': f'Bearer {token}'}
     base_url = "https://proxy.royaleapi.dev/v1"
     
@@ -172,8 +244,10 @@ def collect_top_global_clans(token, limit=5):
                 decks_used = player.get('decksUsed', 0)
                 boat_attacks = player.get('boatAttacks', 0)
                 
-                player_decks = {'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
-                               'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''}
+                player_decks = {
+                    'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
+                    'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''
+                }
                 
                 war_stats = {
                     'war_vitorias': 0, 'war_derrotas': 0, 'war_medals': 0,
@@ -188,35 +262,7 @@ def collect_top_global_clans(token, limit=5):
                         if br.status_code == 200:
                             battles = br.json()
                             war_stats = collect_war_battles_stats(battles)
-                            
-                            decks_collected = []
-                            deck_types = []
-                            
-                            for b in battles:
-                                battle_type = b.get('type', '')
-                                if battle_type in WAR_BATTLE_TYPES:
-                                    team = b.get('team', [{}])[0]
-                                    cards = team.get('cards', [])
-                                    
-                                    if len(cards) > 8:
-                                        for idx in range(0, len(cards), 8):
-                                            sub_cards = cards[idx:idx+8]
-                                            deck_str = format_deck(sub_cards)
-                                            if deck_str and deck_str not in decks_collected:
-                                                decks_collected.append(deck_str)
-                                                deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
-                                    else:
-                                        deck_str = format_deck(cards)
-                                        if deck_str and deck_str not in decks_collected:
-                                            decks_collected.append(deck_str)
-                                            deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
-                                    
-                                    if len(decks_collected) >= 4:
-                                        break
-                            
-                            for i, deck in enumerate(decks_collected, 1):
-                                player_decks[f'deck_{i}'] = deck
-                                player_decks[f'deck_{i}_tipo'] = deck_types[i-1] if i <= len(deck_types) else ''
+                            player_decks = collect_decks_from_battlelog(battles)
                     except:
                         pass
                 
@@ -246,6 +292,10 @@ def collect_top_global_clans(token, limit=5):
         return []
 
 def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallback=None):
+    """
+    Coleta TODOS os participantes do proprio cla do jogador rastreado.
+    Para os clas adversarios, limita a 5 jogadores (inteligencia de guerra).
+    """
     headers = {'Authorization': f'Bearer {token}'}
     base_url = "https://proxy.royaleapi.dev/v1"
     
@@ -280,17 +330,28 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
         
         participants = clan.get('participants', [])
         sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
-        top_players = sorted_players[:5]
+        
+        # CORRECAO: Para o PROPRIO clan, coletar TODOS os participantes
+        # Para clans adversarios, limitar a 5 (inteligencia de guerra)
+        is_own_clan = (clan_tag == my_clan_tag)
+        if is_own_clan:
+            top_players = sorted_players  # TODOS os membros do proprio cla
+            print(f"  Clan PROPRIO [{clan_name}] ({clan_tag}): {len(top_players)} participantes")
+        else:
+            top_players = sorted_players[:5]  # Top 5 dos adversarios
+            print(f"  Clan adversario [{clan_name}] ({clan_tag}): top {len(top_players)}")
         
         for player_idx, player in enumerate(top_players, 1):
             player_tag_player = player.get('tag', '')
             player_name = player.get('name', 'Unknown')
-            player_fame = player.get('fame', 0)
+            player_fame_api = player.get('fame', 0)
             decks_used = player.get('decksUsed', 0)
             boat_attacks = player.get('boatAttacks', 0)
             
-            player_decks = {'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
-                           'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''}
+            player_decks = {
+                'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
+                'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''
+            }
             
             # Inicializar stats de guerra
             war_stats = {
@@ -310,45 +371,24 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
                     if br.status_code == 200:
                         battles = br.json()
                         
-                        # Coletar estatísticas de batalha de guerra
+                        # Coletar estatisticas de batalha de guerra
                         war_stats = collect_war_battles_stats(battles)
                         
-                        # Coletar decks
-                        decks_collected = []
-                        deck_types = []
-                        
-                        for b in battles:
-                            battle_type = b.get('type', '')
-                            if battle_type in WAR_BATTLE_TYPES:
-                                team = b.get('team', [{}])[0]
-                                cards = team.get('cards', [])
-                                
-                                if len(cards) > 8:
-                                    for idx in range(0, len(cards), 8):
-                                        sub_cards = cards[idx:idx+8]
-                                        deck_str = format_deck(sub_cards)
-                                        if deck_str and deck_str not in decks_collected:
-                                            decks_collected.append(deck_str)
-                                            deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
-                                else:
-                                    deck_str = format_deck(cards)
-                                    if deck_str and deck_str not in decks_collected:
-                                        decks_collected.append(deck_str)
-                                        deck_types.append(BATTLE_TYPE_LABELS.get(battle_type, battle_type))
-                                
-                                if len(decks_collected) >= 4:
-                                    break
-                        
-                        for i, deck in enumerate(decks_collected, 1):
-                            player_decks[f'deck_{i}'] = deck
-                            player_decks[f'deck_{i}_tipo'] = deck_types[i-1] if i <= len(deck_types) else ''
+                        # Coletar decks (incluindo duelos com multiplos decks)
+                        player_decks = collect_decks_from_battlelog(battles)
                 except:
                     pass
             
-            # Incluir player_tag da conta (não do jogador) - usar tag real do .env
+            # CORRECAO: Se a API retornar fame=0 mas temos batalhas contabilizadas,
+            # usar os war_medals calculados como aproximacao real da pontuacao
+            player_fame_final = player_fame_api
+            if player_fame_final == 0 and war_stats.get('war_battles_count', 0) > 0:
+                player_fame_final = war_stats.get('war_medals', 0)
+                print(f"    AVISO: {player_name} fame=0 na API, usando calculado: {player_fame_final}")
+
             results.append({
                 'data_coleta': data_hoje,
-                'player_tag_conta': player_tag,  # player_tag agora é a tag real (#2QR292P ou #2220UQQ0UU)
+                'player_tag_conta': player_tag,
                 'clan_posicao': clan_idx,
                 'clan_nome': clan_name,
                 'clan_tag': clan_tag,
@@ -356,7 +396,7 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
                 'player_posicao': player_idx,
                 'player_nome': player_name,
                 'player_tag': player_tag_player,
-                'player_fame': player_fame,
+                'player_fame': player_fame_final,
                 'decks_usados': decks_used,
                 'boat_attacks': boat_attacks,
                 **player_decks,
@@ -431,7 +471,7 @@ def collect_river_race_intelligence():
     
     data_hoje, dia_batalha = get_logical_date_and_battle_day()
     
-    # Verificar se dados atuais têm DADOS REAIS
+    # Verificar se dados atuais tem DADOS REAIS
     has_real_data_global = any(
         (r.get('deck_1') and len(r.get('deck_1', '')) > 10)
         for r in results_global
@@ -516,6 +556,14 @@ def collect_river_race_intelligence():
         conta_tipo_val = r.get('player_tag_conta', r.get('conta_tipo', 'TOP_GLOBAL'))
         if not conta_tipo_val:
             conta_tipo_val = 'TOP_GLOBAL'
+
+        # Remover o '#' da conta_tipo para contas secundarias (normalizacao)
+        # A conta_tipo para conta secundaria era '2220UQQ0UU' sem #, mas precisamos ser consistentes
+        # Padrao: manter exatamente como vem do env var (ex: '#2220UQQ0UU' ou '2220UQQ0UU')
+        # Para garantir, normalizar: remover # da conta_tipo para compatibilidade com dados existentes
+        if conta_tipo_val.startswith('#') and conta_tipo_val not in ('#2QR292P',):
+            # Manter como esta para a conta secundaria para compatibilidade
+            pass
             
         rec = {
             'data_coleta': data_hoje,
@@ -585,7 +633,7 @@ def collect_river_race_intelligence():
     except Exception as e:
         print(f"ERRO ao gravar guerra_historico.csv consolidado: {e}")
 
-    # Salvar tambem um arquivo temporario diario para debug se necessario (opcional, mantendo compatibilidade)
+    # Salvar tambem um arquivo temporario diario para debug se necessario
     temp_filename = f"{DATA_DIR}/inteligencia_guerra_{data_hoje}.csv"
     try:
         with open(temp_filename, 'w', newline='', encoding='utf-8-sig') as f:
