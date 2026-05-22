@@ -1856,8 +1856,177 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* WAR RADAR CSS - Estilos para seção de radar de guerra */
+        /* WAR RADAR CSS - Estilos para secao de radar de guerra */
         .rd-section { border-left: 5px solid #dc2626 !important; background: rgba(20, 10, 10, 0.85) !important; border-radius: 16px; padding: 20px; }
+        
+        /* Widgets Analiticos Premium - Glassmorphism */
+        .rd-analytics-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .rd-card-premium {
+            position: relative;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .rd-card-premium:hover {
+            transform: translateY(-4px);
+            border-color: rgba(96, 165, 250, 0.4);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(96, 165, 250, 0.15);
+        }
+        
+        .rd-card-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(96, 165, 250, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            transition: all 0.5s ease;
+            opacity: 0.5;
+        }
+        
+        .rd-card-premium:hover .rd-card-glow {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+        
+        .rd-card-icon {
+            font-size: 2.2em;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .rd-card-premium:hover .rd-card-icon {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .rd-card-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+        
+        .rd-card-title {
+            font-size: 0.7em;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        .rd-card-value {
+            font-size: 1.5em;
+            font-weight: 900;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .rd-card-sub {
+            font-size: 0.72em;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        
+        /* Cores Específicas dos Cartões */
+        .rd-decks-card .rd-card-icon { color: #60a5fa; }
+        .rd-efficiency-card .rd-card-icon { color: #f59e0b; }
+        .rd-projection-card .rd-card-icon { color: #10b981; }
+        
+        /* Barra de Métricas dos Clãs */
+        .rd-clan-metrics-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+        }
+        
+        .rd-clan-metric-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72em;
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+        }
+        
+        /* Badges de Ameaça Neon Semafórica */
+        .rd-threat-badge {
+            font-size: 0.65em;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-left: auto;
+            display: inline-block;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        .rd-threat-critical {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+        }
+        
+        .rd-threat-moderate {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+        }
+        
+        .rd-threat-controlled {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+        }
+        
+        /* Ajuste responsivo para os cartões */
+        @media (max-width: 768px) {
+            .rd-analytics-cards {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .rd-threat-badge {
+                margin-left: 0;
+            }
+        }
         .rd-header { text-align: center; margin-bottom: 24px; }
         .rd-badge { display: inline-block; background: linear-gradient(135deg, #dc2626, #991b1b); color: white; font-weight: 900; font-size: 0.8em; letter-spacing: 2px; padding: 4px 16px; border-radius: 20px; margin-bottom: 8px; }
         .rd-header h2 { font-size: 1.5em; margin: 8px 0; }
@@ -2461,7 +2630,7 @@
         </div>
 
         <div class="footer">
-            <p>Relatório gerado em 2026-05-22 16:45:37</p>
+            <p>Relatório gerado em 2026-05-22 18:34:45</p>
             <p>Última atualização dos dados: 18 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="index.html" class="back-link">← Dashboard</a>
