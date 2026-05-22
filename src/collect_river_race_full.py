@@ -557,13 +557,10 @@ def collect_river_race_intelligence():
         if not conta_tipo_val:
             conta_tipo_val = 'TOP_GLOBAL'
 
-        # Remover o '#' da conta_tipo para contas secundarias (normalizacao)
-        # A conta_tipo para conta secundaria era '2220UQQ0UU' sem #, mas precisamos ser consistentes
-        # Padrao: manter exatamente como vem do env var (ex: '#2220UQQ0UU' ou '2220UQQ0UU')
-        # Para garantir, normalizar: remover # da conta_tipo para compatibilidade com dados existentes
-        if conta_tipo_val.startswith('#') and conta_tipo_val not in ('#2QR292P',):
-            # Manter como esta para a conta secundaria para compatibilidade
-            pass
+        # Normalizacao: garantir que conta_tipo sempre comeca com '#' para tags de jogadores
+        # Isso garante consistencia entre registros antigos e novos
+        if conta_tipo_val not in ('TOP_GLOBAL', 'principal') and not conta_tipo_val.startswith('#'):
+            conta_tipo_val = '#' + conta_tipo_val
             
         rec = {
             'data_coleta': data_hoje,

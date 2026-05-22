@@ -4429,7 +4429,8 @@ class GitHubPagesHTMLGenerator:
                             continue
                     else:
                         is_sec = player_tag and '2220UQQ0UU' in player_tag
-                        expected_accounts = ['#2220UQQ0UU'] if is_sec else ['#2QR292P', 'principal']
+                        # Aceita tanto '#2220UQQ0UU' (novo padrao) quanto '2220UQQ0UU' (registros antigos sem #)
+                        expected_accounts = ['#2220UQQ0UU', '2220UQQ0UU'] if is_sec else ['#2QR292P', 'principal']
                         if row_account not in expected_accounts:
                             continue
                             
@@ -4582,7 +4583,8 @@ class GitHubPagesHTMLGenerator:
                                     continue
                             else:
                                 is_sec = player_tag and '2220UQQ0UU' in player_tag
-                                expected_accounts = ['#2220UQQ0UU'] if is_sec else ['#2QR292P', 'principal']
+                                # Aceita tanto '#2220UQQ0UU' (novo padrao) quanto '2220UQQ0UU' (registros antigos sem #)
+                                expected_accounts = ['#2220UQQ0UU', '2220UQQ0UU'] if is_sec else ['#2QR292P', 'principal']
                                 if has_tag_col and row_account and row_account not in expected_accounts:
                                     continue
                                     
