@@ -5885,13 +5885,8 @@ class GitHubPagesHTMLGenerator:
                 logger.error(f"Error generating histograms for {player_tag}: {e}")
                 daily_histogram_html = "<div class='error'>Error loading activity chart</div>"
 
-            # 5. Chests
-            try:
-                account_chests = self._load_upcoming_chests_json(player_tag=player_tag)
-                chests_html = self.generate_chests_html(account_chests)
-            except Exception as e:
-                logger.error(f"Error generating chests for {player_tag}: {e}")
-                chests_html = "<div class='error'>Error loading chests</div>"
+            # 5. Chests (Desativado conforme solicitacao do usuario)
+            chests_html = ""
 
             # 6. Final Assembly
             return f"""
@@ -8215,31 +8210,6 @@ class GitHubPagesHTMLGenerator:
     </div>
     
     <script>
-    // Auto-refresh: detecta atualizacoes do GitHub Actions e recarrega suavemente
-    (function() {{
-        const currentBuild = document.documentElement.getAttribute('data-build');
-        if (!currentBuild) return;
-        
-        // Verifica a cada 60 segundos se ha versao nova
-        setInterval(async function() {{
-            try {{
-                const res = await fetch(window.location.href, {{ method: 'HEAD', cache: 'no-store' }});
-                if (!res.ok) return;
-                
-                // Compara o Last-Modified ou ETag
-                const lastMod = res.headers.get('Last-Modified');
-                if (lastMod) {{
-                    const stored = sessionStorage.getItem('cr_last_modified');
-                    if (stored && stored !== lastMod) {{
-                        console.log('[AutoRefresh] Dashboard atualizado, recarregando...');
-                        window.location.reload();
-                        return;
-                    }}
-                    sessionStorage.setItem('cr_last_modified', lastMod);
-                }}
-            }} catch(e) {{ /* Ignora erros de rede */ }}
-        }}, 60000);
-    }})();
     
     // Tab switching for multiple accounts (Main vs Secondary)
 /**
