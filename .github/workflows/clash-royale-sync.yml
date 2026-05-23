@@ -2,11 +2,14 @@ name: Clash Royale Sync (Inteligente)
 
 on:
   schedule:
-    # Madrugada (00:00-07:00 UTC): a cada 1 hora
-    - cron: '0 0,1,2,3,4,5,6,7 * * *'
-    # Dia/Noite (07:30-23:30 UTC): a cada 30 minutos
-    - cron: '30 7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *'
-    - cron: '0 8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *'
+    # Madrugada (00:00-06:00 Horário de São Paulo, UTC-3): a cada 1 hora
+    # 00:00 local = 03:00 UTC | 06:00 local = 09:00 UTC
+    - cron: '0 3,4,5,6,7,8,9 * * *'
+    
+    # Dia/Noite (07:00-23:30 Horário de São Paulo, UTC-3): a cada 30 minutos
+    # 07:00 local = 10:00 UTC | 23:30 local = 02:30 UTC (dia seguinte)
+    - cron: '0 0,1,2,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *'
+    - cron: '30 0,1,2,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * *'
   workflow_dispatch:
 
 permissions:
