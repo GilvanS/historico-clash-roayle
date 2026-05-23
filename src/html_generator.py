@@ -1782,7 +1782,7 @@ class GitHubPagesHTMLGenerator:
         css_class = "deck-cards-compact" if not show_names else "deck-cards"
         return f'<div class="{css_class}">{cards_html}</div>'
     
-    def generate_daily_histogram_html(self, daily_stats: List[Dict], css_class: str = "", include_legend: bool = True) -> str:
+    def generate_daily_histogram_html(self, daily_stats: List[Dict], css_class: str = "", include_legend: bool = True, player_tag: str = "") -> str:
         """Generate HTML for daily wins/losses stacked histogram"""
         if not daily_stats:
             return "<p>No daily battle data available for histogram.</p>"
@@ -1811,15 +1811,15 @@ class GitHubPagesHTMLGenerator:
             else:
                 # Scale based on max battles, with minimum heights for visibility
                 scale_factor = (total / max_battles) * 180  # 180px max height
-                win_height = max((wins / total) * scale_factor, 3 if wins > 0 else 0)
-                loss_height = max((losses / total) * scale_factor, 3 if losses > 0 else 0)
-                draw_height = max((draws / total) * scale_factor, 3 if draws > 0 else 0)
+                win_height = max((wins / total) * scale_factor, 16 if wins > 0 else 0)
+                loss_height = max((losses / total) * scale_factor, 16 if losses > 0 else 0)
+                draw_height = max((draws / total) * scale_factor, 16 if draws > 0 else 0)
             
             # Create tooltip
             tooltip = f"{date}: {wins}W/{losses}L/{draws}D" if total > 0 else f"{date}: No battles"
             
             histogram_html += f'''
-                <div class="histogram-bar" title="{tooltip}">
+                <div class="histogram-bar" title="{tooltip}" onclick="showDayDetailModal('{player_tag}', '{date}')" style="cursor: pointer;">
                     <div class="bar-date">{date[-2:]}</div>
                     <div class="bar-stack">
             '''
@@ -2836,11 +2836,51 @@ class GitHubPagesHTMLGenerator:
             if 'mini-p-e-k-k-a' in slug: card_urls['minipekka'] = url
             if 'the-log' in slug: card_urls['log'] = url
 
+        # Coletar as batalhas de todas as contas em formato JSON limpo
+        battles_json_data = {}
+        for tag in self.tracked_tags:
+            tag_battles = self.battles_by_tag.get(tag, [])
+            mapped_battles = []
+            for b in tag_battles:
+                # Calcular a data correta de batalha considerando o rollover da respectiva conta
+                rollover_hour = DAY_ROLLOVER_HOURS['primary']
+                if tag == self.player_tag_sec:
+                    rollover_hour = DAY_ROLLOVER_HOURS['secondary']
+                b_date = _get_battle_date(b.get('battle_time', ''), rollover_hour)
+                
+                # Extrair metricas reais dos decks e torres
+                my_m = self._get_battle_deck_metrics(b.get('deck_cards', ''), b, is_opponent=False)
+                opp_m = self._get_battle_deck_metrics(b.get('opponent_deck_cards', ''), b, is_opponent=True)
+                
+                mapped_battles.append({
+                    'b_date': b_date,
+                    'result': b.get('result', ''),
+                    'opponent_name': b.get('opponent_name', ''),
+                    'crowns': int(b.get('crowns', 0) or 0),
+                    'opponent_crowns': int(b.get('opponent_crowns', 0) or 0),
+                    'elixir_p': float(b.get('elixir_vazado_jogador') or 0.0),
+                    'elixir_o': float(b.get('elixir_vazado_oponente') or 0.0),
+                    'game_mode': b.get('game_mode', 'Batalha'),
+                    'arena_name': b.get('arena_name', 'Arena'),
+                    'trophy_change': int(b.get('trophy_change', 0) or 0),
+                    'my_deck': b.get('deck_cards', ''),
+                    'opp_deck': b.get('opponent_deck_cards', ''),
+                    'opponent_tag': b.get('opponent_tag', ''),
+                    'opp_level': int(b.get('opponent_level') or 14),
+                    'p_tower_url': my_m.get('tower_url', ''),
+                    'o_tower_url': opp_m.get('tower_url', ''),
+                    'p_hp': my_m.get('hp', '4820'),
+                    'o_hp': opp_m.get('hp', '4820'),
+                })
+            battles_json_data[tag] = mapped_battles
+        
+        battles_json = json.dumps(battles_json_data, ensure_ascii=False)
         card_map_json = json.dumps(card_urls)
 
         return """
         <script>
         const CARD_MAP = """ + card_map_json + """;
+        window.PLAYER_BATTLES_DATA = """ + battles_json + """;
 
         function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics, deckLink, icons) {
             if (!deckStr) return { playerName, cardsHtml: `<div class="${sideClass} cr-empty-grid">N/D</div>`, metricsHtml: '' };
@@ -2912,10 +2952,320 @@ class GitHubPagesHTMLGenerator:
             };
         }
 
-        function updateBattlePreview(deckId, battleIdx, battleDataJson) {
-            // Modal removido conforme solicitação para economizar espaço
-            // A atualização agora é feita inline via updateOpponentView onde aplicável
-            console.log("updateBattlePreview called, but modal is disabled");
+        let currentDayBattles = [];
+        let currentDayPlayerTag = '';
+
+        function showDayDetailModal(playerTag, dateStr) {
+            console.log("[RoyaleAnalytics] showDayDetailModal called for tag:", playerTag, "date:", dateStr);
+            
+            // Obter todas as batalhas deste jogador
+            const battles = window.PLAYER_BATTLES_DATA[playerTag] || [];
+            // Filtrar batalhas que batem com a data
+            const dayBattles = battles.filter(b => b.b_date === dateStr);
+            
+            if (dayBattles.length === 0) {
+                console.warn("[RoyaleAnalytics] No battles found for date:", dateStr);
+                return;
+            }
+            
+            currentDayBattles = dayBattles;
+            currentDayPlayerTag = playerTag;
+            
+            // 1. Calcular estatisticas diarias
+            const totalBattles = dayBattles.length;
+            let wins = 0;
+            let losses = 0;
+            let draws = 0;
+            let totalCrowns = 0;
+            let totalElixirLeaked = 0.0;
+            
+            let maxConseqWins = 0;
+            let currentConseqWins = 0;
+            
+            // Pior Inimigo
+            let worstLossDiff = -999;
+            let worstEnemyName = "Nenhum";
+            
+            // Reverter para ordem cronologica para calcular sequencia consecutiva correta
+            const cronoBattles = [...dayBattles].reverse();
+            
+            cronoBattles.forEach(b => {
+                const res = b.result.toLowerCase();
+                if (res === 'victory' || res === 'win') {
+                    wins++;
+                    currentConseqWins++;
+                    if (currentConseqWins > maxConseqWins) {
+                        maxConseqWins = currentConseqWins;
+                    }
+                } else {
+                    currentConseqWins = 0;
+                    if (res === 'defeat' || res === 'loss') {
+                        losses++;
+                    } else {
+                        draws++;
+                    }
+                }
+                
+                totalCrowns += b.crowns;
+                totalElixirLeaked += b.elixir_p;
+                
+                // Pior Inimigo: Batalha com a maior diferenca negativa de coroas
+                if (res === 'defeat' || res === 'loss') {
+                    const diff = b.opponent_crowns - b.crowns;
+                    if (diff > worstLossDiff) {
+                        worstLossDiff = diff;
+                        worstEnemyName = b.opponent_name || "Oponente";
+                    }
+                }
+            });
+            
+            const winRate = totalBattles > 0 ? ((wins / totalBattles) * 100).toFixed(2) : "0.00";
+            const avgCrowns = totalBattles > 0 ? (totalCrowns / totalBattles).toFixed(1) : "0.0";
+            const avgElixir = totalBattles > 0 ? (totalElixirLeaked / totalBattles).toFixed(1) : "0.0";
+            
+            // 2. Construir o HTML do Grid de Batalhas Recentes
+            let gridHtml = '';
+            dayBattles.forEach((b, idx) => {
+                const resClass = b.result.toLowerCase() === 'victory' || b.result.toLowerCase() === 'win' ? 'win' : 
+                                 (b.result.toLowerCase() === 'defeat' || b.result.toLowerCase() === 'loss' ? 'loss' : 'draw');
+                
+                // Determinar o icone de modo de jogo
+                const mode = b.game_mode || 'Batalha';
+                let icon = '🛡️';
+                if (mode.includes('Duelo') || mode.includes('Duel')) icon = '⚡';
+                else if (mode.includes('Barco') || mode.includes('Boat')) icon = '🚣';
+                else if (mode.includes('Guerra') || mode.includes('War')) icon = '⚔️';
+                else if (mode.includes('Range')) icon = '🎯';
+                
+                gridHtml += `
+                    <div class="cr-day-battle-card ${resClass}" id="modal-battle-dot-${idx}" onclick="showModalBattleDetails(${idx})" title="${b.opponent_name || 'Guerra'} (${b.crowns}x${b.opponent_crowns})">
+                        ${icon}
+                    </div>
+                `;
+            });
+            
+            // 3. Montar a estrutura interna do Modal
+            const modalContent = document.getElementById('battle-modal-content');
+            if (!modalContent) return;
+            
+            modalContent.innerHTML = `
+                <div class="cr-day-modal-title">
+                    <span>⚔️ Detalhes da Atividade - ${dateStr}</span>
+                </div>
+                
+                <div class="cr-day-modal-layout">
+                    <!-- BATTLE SUMMARY -->
+                    <div class="cr-day-modal-box">
+                        <h3 class="clash-font" style="font-size: 1.1em; color: #4299e1; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                            ⚔️ BATTLE SUMMARY
+                        </h3>
+                        
+                        <div class="cr-day-metric-row">
+                            <span class="cr-day-metric-label">Taxa de vitória</span>
+                            <span class="cr-day-metric-dots"></span>
+                            <span class="cr-day-metric-value" style="color: #48bb78;">${winRate}%</span>
+                        </div>
+                        <div class="cr-day-metric-row">
+                            <span class="cr-day-metric-label">Sequência mais longa</span>
+                            <span class="cr-day-metric-dots"></span>
+                            <span class="cr-day-metric-value">${maxConseqWins}</span>
+                        </div>
+                        <div class="cr-day-metric-row">
+                            <span class="cr-day-metric-label">Média de coroas</span>
+                            <span class="cr-day-metric-dots"></span>
+                            <span class="cr-day-metric-value">${avgCrowns}</span>
+                        </div>
+                        <div class="cr-day-metric-row">
+                            <span class="cr-day-metric-label">Avg. Elixir Leaked</span>
+                            <span class="cr-day-metric-dots"></span>
+                            <span class="cr-day-metric-value">${avgElixir}</span>
+                        </div>
+                        <div class="cr-day-metric-row">
+                            <span class="cr-day-metric-label">Worst Enemy</span>
+                            <span class="cr-day-metric-dots"></span>
+                            <span class="cr-day-metric-value" style="color: #f56565;">${worstEnemyName}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- BATALHAS RECENTES -->
+                    <div class="cr-day-modal-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 class="clash-font" style="font-size: 1.1em; color: #4299e1; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                🛡️ BATALHAS RECENTES
+                            </h3>
+                            <span class="clash-font" style="font-size: 0.95em; color: #94a3b8;">
+                                <span style="color: #48bb78;">W${wins}</span> &middot; <span style="color: #f56565;">L${losses}</span>${draws > 0 ? ` &middot; <span style="color: #a0aec0;">D${draws}</span>` : ''}
+                            </span>
+                        </div>
+                        
+                        <div class="cr-day-battles-grid">
+                            ${gridHtml}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PALCO VS DETALHADO (VS STAGE) -->
+                <div id="cr-day-battle-vs-container">
+                    <!-- Sera populado dinamicamente -->
+                </div>
+            `;
+            
+            // Abrir o modal
+            const modal = document.getElementById('cr-battle-modal');
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // Selecionar por padrao a primeira batalha da lista
+            if (dayBattles.length > 0) {
+                showModalBattleDetails(0);
+            }
+        }
+
+        function showModalBattleDetails(idx) {
+            const battle = currentDayBattles[idx];
+            if (!battle) return;
+            
+            // Atualizar classe ativa no grid
+            currentDayBattles.forEach((_, i) => {
+                const dot = document.getElementById(`modal-battle-dot-${i}`);
+                if (dot) {
+                    if (i === idx) dot.classList.add('active');
+                    else dot.classList.remove('active');
+                }
+            });
+            
+            const container = document.getElementById('cr-day-battle-vs-container');
+            if (!container) return;
+            
+            // Obter dados da batalha
+            const crowns = battle.crowns;
+            const opponent_crowns = battle.opponent_crowns;
+            const dateContent = battle.b_date;
+            const gameMode = battle.game_mode || 'Batalha';
+            const arenaName = battle.arena_name || 'Arena';
+            const trophyChange = battle.trophy_change || 0;
+            
+            const resClass = crowns > opponent_crowns ? 'victory' : (crowns < opponent_crowns ? 'defeat' : 'draw');
+            const resultText = crowns > opponent_crowns ? 'VITÓRIA' : (crowns < opponent_crowns ? 'DERROTA' : 'EMPATE');
+            
+            // Metricas do jogador e oponente
+            const playerMetrics = {
+                avg: '--',
+                cycle: '--',
+                leaked: battle.elixir_p || 0,
+                level: 14,
+                hp: battle.p_hp || '4.820',
+                tower_url: battle.p_tower_url
+            };
+            
+            const oppMetrics = {
+                avg: '--',
+                cycle: '--',
+                leaked: battle.elixir_o || 0,
+                level: battle.opp_level || 14,
+                hp: battle.o_hp || '4.820',
+                tower_url: battle.o_tower_url
+            };
+            
+            // Obter mini grid do jogador
+            const pGrid = getMiniGridJS(battle.my_deck, 'cr-deck-left', 'Você', '', playerMetrics, '', null);
+            
+            // Obter mini grid do oponente
+            const oGrid = getMiniGridJS(battle.opp_deck, 'cr-deck-right', battle.opponent_name || 'Oponente', '', oppMetrics, '', null);
+            
+            // Diferenca de Trofeus
+            let trophyHtml = '';
+            if (trophyChange !== 0) {
+                const sign = trophyChange > 0 ? '+' : '';
+                const color = trophyChange > 0 ? '#48bb78' : '#f56565';
+                trophyHtml = `<span style="color: ${color}; font-weight: bold; font-family: 'Inter', monospace; margin-left: 10px;">${sign}${trophyChange} Troféus</span>`;
+            }
+            
+            container.innerHTML = `
+                <div class="cr-main-vs-stage cr-day-modal-box" style="margin-top: 20px; padding: 25px !important; border: 1px solid rgba(255,255,255,0.06); background: rgba(15, 23, 42, 0.6) !important;">
+                    <!-- Header do Stage -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 15px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="clash-font" style="font-size: 1.1em; color: #4299e1;">${gameMode}</span>
+                            <span style="color: #64748b; font-size: 0.9em;">&bull;</span>
+                            <span style="color: #94a3b8; font-size: 0.9em; font-weight: 600;">${arenaName}</span>
+                            ${trophyHtml}
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.9em; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                            <i class="far fa-calendar-alt" style="opacity: 0.7;"></i>
+                            <span>${dateContent}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Linha Principal do Palco VS -->
+                    <div class="cr-vs-decks-row-premium" style="display: grid; grid-template-columns: 1fr 150px 1fr; gap: 20px; align-items: center;">
+                        
+                        <!-- Lado do Jogador -->
+                        <div class="cr-deck-side cr-deck-left" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
+                            <!-- Informacoes do Jogador -->
+                            <div class="cr-vs-player-info" style="margin-bottom: 15px; display: flex; align-items: center; gap: 12px; width: 100%;">
+                                <div class="cr-tower-card-premium" style="margin: 0; width: 64px; height: 80px; border-radius: 12px; padding: 5px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                    <img src="${pGrid.towerUrl}" class="cr-tower-img-premium cr-tower-zoom" style="width: 50px; height: 50px; object-fit: contain;">
+                                    <span style="font-size: 0.65em; font-weight: 800; color: #94a3b8; margin-top: 4px;">NV ${pGrid.tLevel}</span>
+                                </div>
+                                <div>
+                                    <div class="cr-player-name-vs clash-font" style="font-size: 1.15em; color: #fff; margin-bottom: 2px;">Você</div>
+                                    <div style="display: flex; gap: 10px; font-size: 0.8em; color: #94a3b8; font-weight: 600;">
+                                        <span>🏰 HP: ${pGrid.tHP}</span>
+                                        ${battle.elixir_p > 0 ? `<span class="cr-leak-active" style="color: #f6ad55;">💧 Vazou: ${battle.elixir_p.toFixed(1)}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Grid de Cartas -->
+                            <div style="width: 100%;">
+                                ${pGrid.cardsHtml}
+                            </div>
+                        </div>
+                        
+                        <!-- Placar Central / VS -->
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+                            <div class="clash-font" style="font-size: 2.2em; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.2); letter-spacing: 2px;">
+                                ${crowns} - ${opponent_crowns}
+                            </div>
+                            <div class="cr-vs-center-divider" style="font-size: 0.8em; font-weight: 900; letter-spacing: 2px; padding: 4px 12px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8;">
+                                VS
+                            </div>
+                            <div style="font-size: 0.75em; font-weight: 800; letter-spacing: 1px; color: ${resClass === 'victory' ? '#48bb78' : (resClass === 'defeat' ? '#f56565' : '#a0aec0')};">
+                                ${resultText}
+                            </div>
+                        </div>
+                        
+                        <!-- Lado do Oponente -->
+                        <div class="cr-deck-side cr-deck-right" style="display: flex; flex-direction: column; align-items: flex-end; width: 100%;">
+                            <!-- Informacoes do Oponente -->
+                            <div class="cr-vs-player-info" style="margin-bottom: 15px; display: flex; flex-direction: row-reverse; align-items: center; gap: 12px; width: 100%; text-align: right;">
+                                <div class="cr-tower-card-premium" style="margin: 0; width: 64px; height: 80px; border-radius: 12px; padding: 5px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                    <img src="${oGrid.towerUrl}" class="cr-tower-img-premium cr-tower-zoom" style="width: 50px; height: 50px; object-fit: contain; transform: scaleX(-1);">
+                                    <span style="font-size: 0.65em; font-weight: 800; color: #94a3b8; margin-top: 4px;">NV ${oGrid.tLevel}</span>
+                                </div>
+                                <div>
+                                    <div class="cr-player-name-vs clash-font" style="font-size: 1.15em; color: #fff; margin-bottom: 2px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                                        <span>${battle.opponent_name || 'Oponente'}</span>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; font-size: 0.8em; color: #94a3b8; font-weight: 600; justify-content: flex-end;">
+                                        ${battle.elixir_o > 0 ? `<span class="cr-leak-active" style="color: #f6ad55;">💧 Vazou: ${battle.elixir_o.toFixed(1)}</span>` : ''}
+                                        <span>#${battle.opponent_tag || ''}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Grid de Cartas -->
+                            <div style="width: 100%;">
+                                ${oGrid.cardsHtml}
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            `;
         }
 
         function closeBattleModal() {
@@ -6008,8 +6358,8 @@ class GitHubPagesHTMLGenerator:
 
             # 4. Histograms
             try:
-                daily_histogram_desktop = self.generate_daily_histogram_html(daily_stats, f"histogram-desktop-{player_tag.replace('#','')}", include_legend=True)
-                daily_histogram_mobile = self.generate_daily_histogram_html(daily_stats_7_days, f"histogram-mobile-{player_tag.replace('#','')}", include_legend=False)
+                daily_histogram_desktop = self.generate_daily_histogram_html(daily_stats, f"histogram-desktop-{player_tag.replace('#','')}", include_legend=True, player_tag=player_tag)
+                daily_histogram_mobile = self.generate_daily_histogram_html(daily_stats_7_days, f"histogram-mobile-{player_tag.replace('#','')}", include_legend=False, player_tag=player_tag)
                 daily_histogram_html = daily_histogram_desktop + daily_histogram_mobile
             except Exception as e:
                 logger.error(f"Error generating histograms for {player_tag}: {e}")
@@ -7397,9 +7747,158 @@ class GitHubPagesHTMLGenerator:
             border-radius: 6px;
             transition: all 0.3s;
             position: relative;
+            overflow: hidden; /* Oculta textos se a altura for menor que o texto */
+        }
+
+        .segment-value {
+            font-size: 8px !important;
+            font-weight: 900;
+            color: #fff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            line-height: 1;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            display: inline-block;
+            white-space: nowrap;
         }
 
         .bar-segment:hover { filter: brightness(1.2); transform: scaleX(1.1); }
+
+        /* Estilos do Modal de Atividade Diaria Premium */
+        .cr-day-modal-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            .cr-day-modal-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .cr-day-modal-box {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .cr-day-modal-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.4em;
+            font-weight: 800;
+            color: #f1f5f9;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 15px;
+        }
+
+        .cr-day-metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            color: #e2e8f0;
+            position: relative;
+        }
+
+        .cr-day-metric-label {
+            font-weight: 600;
+            color: #94a3b8;
+            z-index: 1;
+            background: rgba(15, 23, 42, 0.95);
+            padding-right: 8px;
+        }
+
+        .cr-day-metric-dots {
+            flex-grow: 1;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+            margin: 0 8px;
+            transform: translateY(-4px);
+        }
+
+        .cr-day-metric-value {
+            font-family: 'Inter', monospace;
+            font-weight: 800;
+            color: #f8fafc;
+            z-index: 1;
+            background: rgba(15, 23, 42, 0.95);
+            padding-left: 8px;
+        }
+
+        .cr-day-battles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+            gap: 12px;
+        }
+
+        .cr-day-battle-card {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4em;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .cr-day-battle-card:hover {
+            transform: translateY(-4px) scale(1.06);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+        }
+
+        .cr-day-battle-card.win {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.25), rgba(72, 187, 120, 0.1));
+            border: 1px solid rgba(72, 187, 120, 0.4);
+            color: #48bb78;
+        }
+
+        .cr-day-battle-card.win.active {
+            border: 2px solid #48bb78 !important;
+            box-shadow: 0 0 15px rgba(72, 187, 120, 0.75) !important;
+            transform: translateY(-2px);
+        }
+
+        .cr-day-battle-card.loss {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.25), rgba(245, 101, 101, 0.15));
+            border: 1px solid rgba(245, 101, 101, 0.4);
+            color: #f56565;
+        }
+
+        .cr-day-battle-card.loss.active {
+            border: 2px solid #f56565 !important;
+            box-shadow: 0 0 15px rgba(245, 101, 101, 0.75) !important;
+            transform: translateY(-2px);
+        }
+
+        .cr-day-battle-card.draw {
+            background: linear-gradient(135deg, rgba(113, 128, 150, 0.25), rgba(113, 128, 150, 0.1));
+            border: 1px solid rgba(113, 128, 150, 0.4);
+            color: #a0aec0;
+        }
+
+        .cr-day-battle-card.draw.active {
+            border: 2px solid #a0aec0 !important;
+            box-shadow: 0 0 15px rgba(113, 128, 150, 0.75) !important;
+            transform: translateY(-2px);
+        }
 
         .bar-wins { background: var(--success); }
         .bar-losses { background: var(--danger); }
@@ -7823,13 +8322,14 @@ class GitHubPagesHTMLGenerator:
             left: 0;
             width: 100%;
             height: 100%;
-            background: #050914;
+            background: rgba(2, 6, 23, 0.5) !important;
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             opacity: 0;
             transition: opacity 0.3s ease;
+            backdrop-filter: blur(8px) !important;
         }
 
         .cr-modal-overlay.active {
@@ -7840,16 +8340,17 @@ class GitHubPagesHTMLGenerator:
         .cr-modal-container {
             width: 1450px !important;
             max-width: 98% !important;
-            background: #0f172a; /* Fundo sólido para legibilidade máxima */
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.85) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
             border-radius: 24px;
-            box-shadow: 0 0 100px rgba(0, 0, 0, 0.9), 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
             padding: 20px;
             position: relative;
             transform: scale(0.9);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             overflow-y: auto;
             max-height: 92vh;
+            backdrop-filter: blur(20px) !important;
         }
 
         .cr-modal-overlay.active .cr-modal-container {

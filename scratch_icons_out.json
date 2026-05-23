@@ -1,0 +1,132 @@
+[
+  {
+    "line": 1938,
+    "emoji": "🏆",
+    "content": "<span class=\"trophy-count\">🏆 {member['trophies']:,}</span>"
+  },
+  {
+    "line": 1966,
+    "emoji": "🎯",
+    "content": "#     html += '<div class=\"analytics-section\"><h3>🎯 Most Popular Clan Decks</h3>'"
+  },
+  {
+    "line": 2195,
+    "emoji": "🏆",
+    "content": "<span class=\"stat\">🏆 {opponent_game_stats.get('total_battles', 0)} batalhas</span>"
+  },
+  {
+    "line": 2205,
+    "emoji": "🏆",
+    "content": "<span class=\"stat\">🏆 {deck['total_battles']} vezes que me derrotou</span>"
+  },
+  {
+    "line": 2225,
+    "emoji": "🏆",
+    "content": "<span class=\"stat\">🏆 {member_total} batalhas</span>"
+  },
+  {
+    "line": 2235,
+    "emoji": "🏆",
+    "content": "<span class=\"stat\">🏆 {deck['total_battles']} batalhas</span>"
+  },
+  {
+    "line": 3715,
+    "emoji": "🏆",
+    "content": "<span class=\"trophy-count\">🏆 {member['trophies']:,}</span>"
+  },
+  {
+    "line": 4821,
+    "emoji": "⚔️",
+    "content": "<div class=\"rd-calendar-fame\">⚔️ {fame:,}</div>"
+  },
+  {
+    "line": 4934,
+    "emoji": "⚔️",
+    "content": "'Guerra': '⚔️',"
+  },
+  {
+    "line": 4935,
+    "emoji": "🚣",
+    "content": "'Barco': '🚣',"
+  },
+  {
+    "line": 4936,
+    "emoji": "🎯",
+    "content": "'Range Battle': '🎯',"
+  },
+  {
+    "line": 4937,
+    "emoji": "⚡",
+    "content": "'Duelo': '⚡'"
+  },
+  {
+    "line": 4938,
+    "emoji": "🛡️",
+    "content": "}.get(deck_tipo, '🛡️')"
+  },
+  {
+    "line": 4956,
+    "emoji": "🏆",
+    "content": "<span class=\"rd-stat rd-vitorias\" title=\"Vitórias de guerra\">🏆 {p.get('war_vitorias', 0)}</span>"
+  },
+  {
+    "line": 4959,
+    "emoji": "⚔️",
+    "content": "<span class=\"rd-stat rd-battles\" title=\"Total de batalhas\">⚔️ {p.get('war_battles_count', 0)}</span>"
+  },
+  {
+    "line": 4992,
+    "emoji": "⚡",
+    "content": "<span class=\"rd-metric-icon\">⚡</span>"
+  },
+  {
+    "line": 5059,
+    "emoji": "⚡",
+    "content": "<div class=\"rd-card-icon\">⚡</div>"
+  },
+  {
+    "line": 5083,
+    "emoji": "🏆",
+    "content": "<span class=\"rd-war-summary-label\">🏆 Posicao:</span>"
+  },
+  {
+    "line": 5218,
+    "emoji": "🏆",
+    "content": "<h3>🏆 Corrida Fluvial</h3>"
+  },
+  {
+    "line": 5448,
+    "emoji": "🏆",
+    "content": "<div class=\"meta-score\">{score} 🏆</div>"
+  },
+  {
+    "line": 5830,
+    "emoji": "⚡",
+    "content": "var tipoIcon = {{'Guerra': '⚔️', 'Barco': '🚣', 'Range Battle': '🎯', 'Duelo': '⚡'}}[tipo] || '🛡️';"
+  },
+  {
+    "line": 5852,
+    "emoji": "🏆",
+    "content": "'<span class=\"rd-stat rd-vitorias\">🏆 ' + p.war_vitorias + '</span>' +"
+  },
+  {
+    "line": 5855,
+    "emoji": "⚔️",
+    "content": "'<span class=\"rd-stat rd-battles\">⚔️ ' + p.war_battles_count + '</span>' +"
+  },
+  {
+    "line": 6053,
+    "emoji": "🏆",
+    "content": "<h2 class=\"clash-font\">🏆 Deck Performance</h2>"
+  },
+  {
+    "line": 6058,
+    "emoji": "⚔️",
+    "content": "<h2 class=\"clash-font\">⚔️ Last Battles</h2>"
+  },
+  {
+    "line": 6102,
+    "emoji": "⚔️",
+    "content": "<h1>⚔️ Clash Royale Analytics</h1>"
+  }
+]
