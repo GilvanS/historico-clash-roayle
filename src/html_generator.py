@@ -1504,6 +1504,11 @@ class GitHubPagesHTMLGenerator:
         # Aggregate by date
         from datetime import datetime, timedelta
         end_date = datetime.now()
+        
+        # Correcao de virada de dia para o Histograma (Secundaria vira as 21h00)
+        if rollover_hour > 0 and end_date.hour >= rollover_hour:
+            end_date = end_date + timedelta(days=1)
+            
         start_date = end_date - timedelta(days=days_limit - 1)
         
         daily_map = {}

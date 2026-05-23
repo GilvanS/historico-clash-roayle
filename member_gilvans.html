@@ -1293,9 +1293,158 @@
             border-radius: 6px;
             transition: all 0.3s;
             position: relative;
+            overflow: hidden; /* Oculta textos se a altura for menor que o texto */
+        }
+
+        .segment-value {
+            font-size: 8px !important;
+            font-weight: 900;
+            color: #fff;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            line-height: 1;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            display: inline-block;
+            white-space: nowrap;
         }
 
         .bar-segment:hover { filter: brightness(1.2); transform: scaleX(1.1); }
+
+        /* Estilos do Modal de Atividade Diaria Premium */
+        .cr-day-modal-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            .cr-day-modal-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .cr-day-modal-box {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .cr-day-modal-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.4em;
+            font-weight: 800;
+            color: #f1f5f9;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 15px;
+        }
+
+        .cr-day-metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            color: #e2e8f0;
+            position: relative;
+        }
+
+        .cr-day-metric-label {
+            font-weight: 600;
+            color: #94a3b8;
+            z-index: 1;
+            background: rgba(15, 23, 42, 0.95);
+            padding-right: 8px;
+        }
+
+        .cr-day-metric-dots {
+            flex-grow: 1;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+            margin: 0 8px;
+            transform: translateY(-4px);
+        }
+
+        .cr-day-metric-value {
+            font-family: 'Inter', monospace;
+            font-weight: 800;
+            color: #f8fafc;
+            z-index: 1;
+            background: rgba(15, 23, 42, 0.95);
+            padding-left: 8px;
+        }
+
+        .cr-day-battles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+            gap: 12px;
+        }
+
+        .cr-day-battle-card {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4em;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .cr-day-battle-card:hover {
+            transform: translateY(-4px) scale(1.06);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+        }
+
+        .cr-day-battle-card.win {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.25), rgba(72, 187, 120, 0.1));
+            border: 1px solid rgba(72, 187, 120, 0.4);
+            color: #48bb78;
+        }
+
+        .cr-day-battle-card.win.active {
+            border: 2px solid #48bb78 !important;
+            box-shadow: 0 0 15px rgba(72, 187, 120, 0.75) !important;
+            transform: translateY(-2px);
+        }
+
+        .cr-day-battle-card.loss {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.25), rgba(245, 101, 101, 0.15));
+            border: 1px solid rgba(245, 101, 101, 0.4);
+            color: #f56565;
+        }
+
+        .cr-day-battle-card.loss.active {
+            border: 2px solid #f56565 !important;
+            box-shadow: 0 0 15px rgba(245, 101, 101, 0.75) !important;
+            transform: translateY(-2px);
+        }
+
+        .cr-day-battle-card.draw {
+            background: linear-gradient(135deg, rgba(113, 128, 150, 0.25), rgba(113, 128, 150, 0.1));
+            border: 1px solid rgba(113, 128, 150, 0.4);
+            color: #a0aec0;
+        }
+
+        .cr-day-battle-card.draw.active {
+            border: 2px solid #a0aec0 !important;
+            box-shadow: 0 0 15px rgba(113, 128, 150, 0.75) !important;
+            transform: translateY(-2px);
+        }
 
         .bar-wins { background: var(--success); }
         .bar-losses { background: var(--danger); }
@@ -1719,13 +1868,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #050914;
+            background: rgba(2, 6, 23, 0.5) !important;
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             opacity: 0;
             transition: opacity 0.3s ease;
+            backdrop-filter: blur(8px) !important;
         }
 
         .cr-modal-overlay.active {
@@ -1736,16 +1886,17 @@
         .cr-modal-container {
             width: 1450px !important;
             max-width: 98% !important;
-            background: #0f172a; /* Fundo sólido para legibilidade máxima */
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.85) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
             border-radius: 24px;
-            box-shadow: 0 0 100px rgba(0, 0, 0, 0.9), 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
             padding: 20px;
             position: relative;
             transform: scale(0.9);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             overflow-y: auto;
             max-height: 92vh;
+            backdrop-filter: blur(20px) !important;
         }
 
         .cr-modal-overlay.active .cr-modal-container {
@@ -2575,7 +2726,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 22/05/2026 23:11:30</p>
+            <p>Perfil gerado em 22/05/2026 22:58:46</p>
             <p>Visto por último: 20 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
