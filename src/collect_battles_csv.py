@@ -25,7 +25,11 @@ FIELDNAMES = [
     'vida_torres_princesa_jogador', 'vida_torres_princesa_oponente',
     'trofes_iniciais_jogador', 'trofes_finais_jogador',
     'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente',
-    'torre_jogador', 'torre_oponente'
+    'torre_jogador', 'torre_oponente',
+    'elixir_medio_jogador', 'elixir_medio_oponente',
+    'evolucoes_jogador', 'evolucoes_oponente',
+    'nivel_medio_deck_jogador', 'nivel_medio_deck_oponente',
+    'tag_clan_oponente'
 ]
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data_csv_oficial')
@@ -136,6 +140,31 @@ def extract_battle_row(battle: dict, player_tag: str):
         
         return 'Tower Princess'
 
+    # Helper to calculate average elixir
+    def get_avg_elixir(team_data):
+        cards = team_data.get('cards', [])
+        if not cards: return 0.0
+        total_elixir = sum(c.get('elixirCost', 0) for c in cards if 'elixirCost' in c)
+        has_elixir = sum(1 for c in cards if 'elixirCost' in c)
+        if has_elixir == 0: return 0.0
+        return round(total_elixir / has_elixir, 2)
+
+    # Helper to get evolved cards as a list string
+    def get_evolutions(team_data):
+        cards = team_data.get('cards', [])
+        if not cards: return ""
+        evo_names = [c.get('name') for c in cards if c.get('evolutionLevel', 0) > 0 and c.get('name')]
+        return " | ".join(evo_names)
+
+    # Helper to calculate average card level
+    def get_avg_level(team_data):
+        cards = team_data.get('cards', [])
+        if not cards: return 0.0
+        total_level = sum(c.get('level', 0) for c in cards if 'level' in c)
+        has_level = sum(1 for c in cards if 'level' in c)
+        if has_level == 0: return 0.0
+        return round(total_level / has_level, 2)
+
     return {
         '_dt_utc': dt_utc,  # campo interno, removido antes de salvar
         'player_tag': search_tag,
@@ -168,7 +197,14 @@ def extract_battle_row(battle: dict, player_tag: str):
         'posicao_global_oponente': opponent_team.get('globalRank', 'N/A') or 'N/A',
         'nivel_torre_oponente': opponent_team.get('expLevel', 0),
         'torre_jogador': get_tower_name(player_team, dt_utc),
-        'torre_oponente': get_tower_name(opponent_team, dt_utc)
+        'torre_oponente': get_tower_name(opponent_team, dt_utc),
+        'elixir_medio_jogador': get_avg_elixir(player_team),
+        'elixir_medio_oponente': get_avg_elixir(opponent_team),
+        'evolucoes_jogador': get_evolutions(player_team),
+        'evolucoes_oponente': get_evolutions(opponent_team),
+        'nivel_medio_deck_jogador': get_avg_level(player_team),
+        'nivel_medio_deck_oponente': get_avg_level(opponent_team),
+        'tag_clan_oponente': opponent_team.get('clan', {}).get('tag', '')
     }
 
 

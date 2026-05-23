@@ -3,9 +3,20 @@ from datetime import datetime, timedelta
 import glob
 
 FIELDNAMES = [
-    'data','nome_oponente','tag_oponente','nivel_oponente','trofes_oponente',
-    'clan_oponente','resultado','coroas_jogador','coroas_oponente','mudanca_trofes',
-    'modo_jogo','tipo_batalha','arena','deck_jogador','deck_oponente','vezes_enfrentado'
+    'player_tag',
+    'data', 'nome_oponente', 'tag_oponente', 'nivel_oponente', 'trofes_oponente',
+    'clan_oponente', 'resultado', 'coroas_jogador', 'coroas_oponente', 'mudanca_trofes',
+    'modo_jogo', 'tipo_batalha', 'arena', 'deck_jogador', 'deck_oponente', 'vezes_enfrentado',
+    'elixir_vazado_jogador', 'elixir_vazado_oponente', 'nivel_torre_jogador',
+    'vida_torre_rei_jogador', 'vida_torre_rei_oponente',
+    'vida_torres_princesa_jogador', 'vida_torres_princesa_oponente',
+    'trofes_iniciais_jogador', 'trofes_finais_jogador',
+    'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente',
+    'torre_jogador', 'torre_oponente',
+    'elixir_medio_jogador', 'elixir_medio_oponente',
+    'evolucoes_jogador', 'evolucoes_oponente',
+    'nivel_medio_deck_jogador', 'nivel_medio_deck_oponente',
+    'tag_clan_oponente'
 ]
 
 def parse_date(date_str):
