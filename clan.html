@@ -125,6 +125,62 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
+        /* Account Header Styles */
+        .cr-account-header {
+            padding: 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cr-account-header .player-title {
+            margin: 0;
+            font-size: 2em;
+        }
+        .cr-account-header .player-tag-span {
+            font-size: 0.5em;
+            color: rgba(255,255,255,0.3);
+            vertical-align: middle;
+        }
+        .cr-account-header .player-clan-lv {
+            margin: 5px 0 0 0;
+            color: #94a3b8;
+        }
+        .cr-account-header .player-since {
+            font-size: 0.8em;
+            color: #64748b;
+            margin-top: 10px;
+        }
+        .cr-account-stats-grid {
+            display: flex;
+            gap: 20px;
+        }
+        .cr-account-stats-grid .stat-card {
+            text-align: center;
+            min-width: 120px;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .cr-account-stats-grid .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+        }
+        .cr-account-stats-grid .stat-card .value {
+            font-size: 1.5em;
+            font-weight: 900;
+        }
+        .cr-account-stats-grid .stat-card small {
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 0.5px;
+        }
+
         /* VS Stage Premium v2 - New Hierarchy */
         .cr-vs-stage-v2 {
             display: flex;
@@ -1265,25 +1321,187 @@
                 padding: 12px !important;
             }
 
-            /* Histogram Mobile Adjustments */
-            .chart-container.histogram-desktop { display: none; }
-            .chart-container.histogram-mobile { display: block; }
-            
-            .chart-container {
-                padding: 20px 10px 50px 10px !important;
-                margin: 15px 0 !important;
+            /* Responsive Account Tabs */
+            .cr-account-tabs {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 15px 0 25px 0 !important;
+                gap: 8px !important;
+                border-radius: 12px !important;
+                padding: 6px !important;
+                display: flex !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: none !important;
+            }
+            .cr-account-tabs::-webkit-scrollbar {
+                display: none !important;
+            }
+            .cr-tab {
+                flex: 0 0 auto !important;
+                padding: 10px 16px !important;
+                font-size: 0.72em !important;
+                border-radius: 8px !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                white-space: nowrap !important;
+            }
+            .cr-tab span {
+                display: none !important;
+            }
+            .cr-tab small {
+                margin-left: 0 !important;
+                font-size: 1.05em !important;
+            }
+            /* Main account selector stretches to fill screen width */
+            .cr-dashboard-main-header .cr-account-tabs .cr-tab {
+                flex: 1 !important;
             }
 
-            .stacked-histogram {
-                height: 160px !important;
+            /* Responsive Radar War Tabs */
+            .rd-tabs-header {
+                width: 100% !important;
+                max-width: 100% !important;
+                gap: 6px !important;
+                margin: 10px 0 !important;
+            }
+            .rd-tab {
+                flex: 1 !important;
+                padding: 10px 4px !important;
+                font-size: 0.72em !important;
+                border-radius: 8px !important;
+                text-align: center !important;
+            }
+            .rd-tab span, .rd-tab small {
+                display: none !important;
+            }
+
+            /* Responsive Account Info Header & Grids */
+            .cr-account-header {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                padding: 20px 15px !important;
+                gap: 20px !important;
+                margin-bottom: 20px !important;
+            }
+            .cr-account-stats-grid {
+                width: 100% !important;
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 8px !important;
+            }
+            .cr-account-stats-grid .stat-card {
+                min-width: 0 !important;
+                padding: 10px 5px !important;
+            }
+            .cr-account-stats-grid .stat-card .value {
+                font-size: 1.25em !important;
+            }
+
+            /* Responsive VS Stage v2 */
+            .cr-vs-stage-v2 {
+                padding: 15px !important;
+                border-radius: 20px !important;
+                gap: 15px !important;
+            }
+            .cr-vs-top-row-v2 {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 15px !important;
+                text-align: center !important;
+                align-items: center !important;
+            }
+            .cr-vs-side-info {
+                gap: 4px !important;
+                text-align: center !important;
+                align-items: center !important;
+                width: 100% !important;
+            }
+            .cr-vs-side-info.player {
+                order: 1 !important;
+            }
+            .cr-vs-center-v2 {
+                order: 2 !important;
+                margin: 5px 0 !important;
+            }
+            .cr-vs-side-info.opponent {
+                order: 3 !important;
+                text-align: center !important;
+            }
+            .cr-vs-score-v2 {
+                font-size: 2.8em !important;
+                letter-spacing: -1px !important;
+            }
+            .cr-vs-decks-row-v2 {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 25px !important;
+                width: 100% !important;
+            }
+            .cr-vs-deck-column {
+                width: 100% !important;
+                flex: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+            .cr-vs-deck-wrap {
+                padding: 12px !important;
+                border-radius: 16px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .cr-grid-4x2 {
+                grid-template-columns: repeat(4, 1fr) !important;
                 gap: 6px !important;
             }
+            .cr-vs-metrics-footer-v2 {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 12px !important;
+                padding: 12px !important;
+                border-radius: 16px !important;
+                width: 100% !important;
+                align-items: center !important;
+                text-align: center !important;
+            }
+            .cr-vs-battle-meta-v2 {
+                border: none !important;
+                border-top: 1px solid rgba(255,255,255,0.05) !important;
+                border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+                padding: 10px 0 !important;
+                width: 100% !important;
+            }
+            .cr-tower-img-premium {
+                width: 80px !important;
+                height: 80px !important;
+            }
 
+            /* Responsive 30-Day Activity Chart with smooth horizontal scrolling */
+            .chart-container {
+                padding: 25px 15px 55px 15px !important;
+                margin: 20px 0 !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .chart-container::-webkit-scrollbar {
+                height: 4px;
+            }
+            .chart-container::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 4px;
+            }
+            .stacked-histogram {
+                height: 170px !important;
+                min-width: 800px !important;
+                gap: 12px !important;
+            }
             .bar-date {
                 bottom: -35px !important;
                 font-size: 0.65em !important;
             }
-
             .histogram-legend {
                 gap: 15px !important;
                 margin-top: 40px !important;
@@ -1703,17 +1921,9 @@
         @media (max-width: 768px) {
             .battle-cards {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
                 padding: 5px 0;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .battle-cards {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
             }
         }
         
@@ -2718,6 +2928,58 @@
         /* Override links */
         a { transition: all 0.3s ease; }
         a:hover { filter: brightness(1.2); text-shadow: 0 0 10px var(--primary-glow); }
+
+        /* Oculta os cartoes mobile em telas grandes por padrao */
+        .clan-member-cards {
+            display: none;
+        }
+
+        /* Responsividade Mobile Premium */
+        @media (max-width: 768px) {
+            .container {
+                width: 95% !important;
+                max-width: 100% !important;
+                padding: 15px 10px !important;
+                margin: 10px auto !important;
+            }
+            .clan-header {
+                padding: 25px 15px !important;
+                margin-bottom: 20px !important;
+            }
+            .clan-header h1 {
+                font-size: 1.8em !important;
+            }
+            .clan-info {
+                font-size: 0.9em !important;
+            }
+            
+            /* Oculta a tabela e exibe os cartoes */
+            .desktop-table {
+                display: none !important;
+            }
+            .clan-member-cards {
+                display: block !important;
+            }
+            .clan-member-card {
+                padding: 15px !important;
+                margin-bottom: 15px !important;
+            }
+            .member-card-header {
+                margin-bottom: 12px !important;
+                padding-bottom: 10px !important;
+            }
+            .member-name a {
+                font-size: 1.05em !important;
+            }
+            .member-stats {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            .trophy-count, .donation-stats, .deck-changes, .last-seen {
+                padding: 8px 12px !important;
+                font-size: 0.8em !important;
+            }
+        }
         </style>
 </head>
 <body>
@@ -2781,7 +3043,7 @@
         </div>
 
         <div class="footer">
-            <p>Relatório gerado em 2026-05-24 22:10:01</p>
+            <p>Relatório gerado em 2026-05-24 19:52:36</p>
             <p>Última atualização dos dados: 21 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="index.html" class="back-link">← Dashboard</a>
