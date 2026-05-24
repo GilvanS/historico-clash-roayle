@@ -123,62 +123,6 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Account Header Styles */
-        .cr-account-header {
-            padding: 30px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .cr-account-header .player-title {
-            margin: 0;
-            font-size: 2em;
-        }
-        .cr-account-header .player-tag-span {
-            font-size: 0.5em;
-            color: rgba(255,255,255,0.3);
-            vertical-align: middle;
-        }
-        .cr-account-header .player-clan-lv {
-            margin: 5px 0 0 0;
-            color: #94a3b8;
-        }
-        .cr-account-header .player-since {
-            font-size: 0.8em;
-            color: #64748b;
-            margin-top: 10px;
-        }
-        .cr-account-stats-grid {
-            display: flex;
-            gap: 20px;
-        }
-        .cr-account-stats-grid .stat-card {
-            text-align: center;
-            min-width: 120px;
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 15px;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
-            transition: transform 0.3s;
-        }
-        .cr-account-stats-grid .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--primary);
-        }
-        .cr-account-stats-grid .stat-card .value {
-            font-size: 1.5em;
-            font-weight: 900;
-        }
-        .cr-account-stats-grid .stat-card small {
-            color: #94a3b8;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75em;
-            letter-spacing: 0.5px;
-        }
-
         /* VS Stage Premium v2 - New Hierarchy */
         .cr-vs-stage-v2 {
             display: flex;
@@ -1319,187 +1263,25 @@
                 padding: 12px !important;
             }
 
-            /* Responsive Account Tabs */
-            .cr-account-tabs {
-                width: 100% !important;
-                max-width: 100% !important;
-                margin: 15px 0 25px 0 !important;
-                gap: 8px !important;
-                border-radius: 12px !important;
-                padding: 6px !important;
-                display: flex !important;
-                overflow-x: auto !important;
-                white-space: nowrap !important;
-                -webkit-overflow-scrolling: touch !important;
-                scrollbar-width: none !important;
-            }
-            .cr-account-tabs::-webkit-scrollbar {
-                display: none !important;
-            }
-            .cr-tab {
-                flex: 0 0 auto !important;
-                padding: 10px 16px !important;
-                font-size: 0.72em !important;
-                border-radius: 8px !important;
-                justify-content: center !important;
-                gap: 6px !important;
-                white-space: nowrap !important;
-            }
-            .cr-tab span {
-                display: none !important;
-            }
-            .cr-tab small {
-                margin-left: 0 !important;
-                font-size: 1.05em !important;
-            }
-            /* Main account selector stretches to fill screen width */
-            .cr-dashboard-main-header .cr-account-tabs .cr-tab {
-                flex: 1 !important;
-            }
-
-            /* Responsive Radar War Tabs */
-            .rd-tabs-header {
-                width: 100% !important;
-                max-width: 100% !important;
-                gap: 6px !important;
-                margin: 10px 0 !important;
-            }
-            .rd-tab {
-                flex: 1 !important;
-                padding: 10px 4px !important;
-                font-size: 0.72em !important;
-                border-radius: 8px !important;
-                text-align: center !important;
-            }
-            .rd-tab span, .rd-tab small {
-                display: none !important;
-            }
-
-            /* Responsive Account Info Header & Grids */
-            .cr-account-header {
-                flex-direction: column !important;
-                align-items: center !important;
-                text-align: center !important;
-                padding: 20px 15px !important;
-                gap: 20px !important;
-                margin-bottom: 20px !important;
-            }
-            .cr-account-stats-grid {
-                width: 100% !important;
-                display: grid !important;
-                grid-template-columns: repeat(3, 1fr) !important;
-                gap: 8px !important;
-            }
-            .cr-account-stats-grid .stat-card {
-                min-width: 0 !important;
-                padding: 10px 5px !important;
-            }
-            .cr-account-stats-grid .stat-card .value {
-                font-size: 1.25em !important;
-            }
-
-            /* Responsive VS Stage v2 */
-            .cr-vs-stage-v2 {
-                padding: 15px !important;
-                border-radius: 20px !important;
-                gap: 15px !important;
-            }
-            .cr-vs-top-row-v2 {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 15px !important;
-                text-align: center !important;
-                align-items: center !important;
-            }
-            .cr-vs-side-info {
-                gap: 4px !important;
-                text-align: center !important;
-                align-items: center !important;
-                width: 100% !important;
-            }
-            .cr-vs-side-info.player {
-                order: 1 !important;
-            }
-            .cr-vs-center-v2 {
-                order: 2 !important;
-                margin: 5px 0 !important;
-            }
-            .cr-vs-side-info.opponent {
-                order: 3 !important;
-                text-align: center !important;
-            }
-            .cr-vs-score-v2 {
-                font-size: 2.8em !important;
-                letter-spacing: -1px !important;
-            }
-            .cr-vs-decks-row-v2 {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 25px !important;
-                width: 100% !important;
-            }
-            .cr-vs-deck-column {
-                width: 100% !important;
-                flex: none !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-            }
-            .cr-vs-deck-wrap {
-                padding: 12px !important;
-                border-radius: 16px !important;
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            .cr-grid-4x2 {
-                grid-template-columns: repeat(4, 1fr) !important;
-                gap: 6px !important;
-            }
-            .cr-vs-metrics-footer-v2 {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 12px !important;
-                padding: 12px !important;
-                border-radius: 16px !important;
-                width: 100% !important;
-                align-items: center !important;
-                text-align: center !important;
-            }
-            .cr-vs-battle-meta-v2 {
-                border: none !important;
-                border-top: 1px solid rgba(255,255,255,0.05) !important;
-                border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-                padding: 10px 0 !important;
-                width: 100% !important;
-            }
-            .cr-tower-img-premium {
-                width: 80px !important;
-                height: 80px !important;
-            }
-
-            /* Responsive 30-Day Activity Chart with smooth horizontal scrolling */
+            /* Histogram Mobile Adjustments */
+            .chart-container.histogram-desktop { display: none; }
+            .chart-container.histogram-mobile { display: block; }
+            
             .chart-container {
-                padding: 25px 15px 55px 15px !important;
-                margin: 20px 0 !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
+                padding: 20px 10px 50px 10px !important;
+                margin: 15px 0 !important;
             }
-            .chart-container::-webkit-scrollbar {
-                height: 4px;
-            }
-            .chart-container::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.15);
-                border-radius: 4px;
-            }
+
             .stacked-histogram {
-                height: 170px !important;
-                min-width: 800px !important;
-                gap: 12px !important;
+                height: 160px !important;
+                gap: 6px !important;
             }
+
             .bar-date {
                 bottom: -35px !important;
                 font-size: 0.65em !important;
             }
+
             .histogram-legend {
                 gap: 15px !important;
                 margin-top: 40px !important;
@@ -1919,9 +1701,17 @@
         @media (max-width: 768px) {
             .battle-cards {
                 display: grid;
-                grid-template-columns: 1fr !important;
-                gap: 20px !important;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
                 padding: 5px 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .battle-cards {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
             }
         }
         
@@ -2879,107 +2669,17 @@
         }
 
         @media (max-width: 900px) {
-            /* Mapeamento responsivo para telas menores */
-            .member-profile-header {
-                padding: 35px 20px !important;
-                gap: 15px !important;
-            }
-            .member-avatar {
-                width: 80px !important;
-                height: 80px !important;
-                font-size: 3em !important;
-            }
-            .member-name-tag {
-                font-size: 2.2em !important;
-            }
-            .member-stats-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
-                gap: 15px !important;
-            }
-            .deck-timeline {
-                padding-left: 0 !important;
-                margin-top: 25px !important;
-            }
-            .timeline-item {
-                padding: 20px !important;
-                margin-bottom: 30px !important;
-            }
-            .timeline-item:hover {
-                transform: none !important; /* Desativa a translacao horizontal no mobile para evitar overflow-x */
-            }
             .timeline-marker {
-                position: static !important;
-                width: 100% !important;
-                text-align: left !important;
-                margin-bottom: 15px !important;
-                display: flex !important;
-                flex-direction: row !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                border-bottom: 1px dashed rgba(255,255,255,0.1) !important;
-                padding-bottom: 8px !important;
-            }
-            .timeline-date {
-                font-size: 0.9em !important;
-            }
-            .timeline-duration {
-                font-size: 0.8em !important;
-                color: #94a3b8 !important;
-            }
-            .deck-header-row {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 15px !important;
-            }
-            .deck-title-group {
-                width: 100% !important;
-            }
-            .deck-meta {
-                margin-top: 12px !important;
-                gap: 8px !important;
-            }
-            .meta-item {
-                padding: 4px 10px !important;
-                font-size: 0.8em !important;
-            }
-            .copy-btn {
-                width: 100% !important;
-                text-align: center !important;
-                display: block !important;
-                padding: 12px !important;
+                position: static;
+                width: 100%;
+                text-align: left;
+                margin-bottom: 15px;
             }
             .timeline-deck-grid {
-                display: block !important; /* Anula o grid redundante do pai */
+                grid-template-columns: repeat(4, 1fr);
             }
-            .deck-cards-compact {
-                display: grid !important;
-                grid-template-columns: repeat(4, 1fr) !important; /* Forca 4 colunas no mobile */
-                gap: 6px !important;
-                width: 100% !important;
-            }
-            .deck-cards-compact .card-container {
-                padding: 3px !important;
-                min-width: unset !important;
-                background: rgba(255, 255, 255, 0.95) !important;
-            }
-            .deck-cards-compact .card-image {
-                width: 100% !important;
-                height: auto !important;
-                max-width: 60px !important;
-                object-fit: contain !important;
-            }
-        }
-
-        /* Celulares ainda menores */
-        @media (max-width: 480px) {
-            .member-stats-grid {
-                grid-template-columns: 1fr !important; /* Empilha as estatisticas do topo se a tela for muito estreita */
-            }
-            .deck-cards-compact {
-                gap: 4px !important;
-            }
-            .deck-cards-compact .card-container {
-                padding: 2px !important;
+            .deck-header-row {
+                flex-direction: column;
             }
         }
         </style>
@@ -3026,7 +2726,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 24/05/2026 19:52:36</p>
+            <p>Perfil gerado em 24/05/2026 23:36:42</p>
             <p>Visto por último: 22 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
