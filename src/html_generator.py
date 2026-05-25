@@ -3230,7 +3230,7 @@ class GitHubPagesHTMLGenerator:
             let currentConseqWins = 0;
 
             let worstLossDiff = -999;
-            let worstEnemyName = "Nenhum";
+            let worstEnemyDecks = "Nenhum";
 
             const cronoBattles = [...dayBattles].reverse();
 
@@ -3258,7 +3258,8 @@ class GitHubPagesHTMLGenerator:
                     const diff = b.opponent_crowns - b.crowns;
                     if (diff > worstLossDiff) {
                         worstLossDiff = diff;
-                        worstEnemyName = b.opponent_name || "Oponente";
+                        const cards = (b.opp_deck || '').split('|').map(c => c.trim()).filter(Boolean);
+                        worstEnemyDecks = cards.slice(0, 4).join(' | ') + (cards.length > 4 ? ' ...' : '');
                     }
                 }
             });
@@ -3321,9 +3322,9 @@ class GitHubPagesHTMLGenerator:
                             <span class="cr-day-metric-value">${avgElixir}</span>
                         </div>
                         <div class="cr-day-metric-row">
-                            <span class="cr-day-metric-label">Worst Enemy</span>
+                            <span class="cr-day-metric-label">Deck Oponente</span>
                             <span class="cr-day-metric-dots"></span>
-                            <span class="cr-day-metric-value" style="color: #f56565;">${worstEnemyName}</span>
+                            <span class="cr-day-metric-value" style="color: #f56565; font-size: 0.75em; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${worstEnemyDecks}</span>
                         </div>
                     </div>
 
