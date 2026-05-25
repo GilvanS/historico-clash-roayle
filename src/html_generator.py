@@ -4509,20 +4509,31 @@ class GitHubPagesHTMLGenerator:
                             player_name = row.get('player_nome') or row.get('Jogador', '')
                             player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
                             clan_tag_from_row = row.get('clan_tag', '')
-                            decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
+                            decks_used_raw = row.get('decks_usados') or '0'
                             boat_attacks = row.get('boat_attacks', '0')
-                            lutou = "Sim" if safe_int(boat_attacks) > 0 else "Nao"
                             deck_1 = row.get('deck_1', '')
                             
-                            ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
+                            decks_used_num = 0
+                            if '/' in str(decks_used_raw):
+                                try: decks_used_num = int(str(decks_used_raw).split('/')[0])
+                                except: pass
+                            elif str(decks_used_raw).strip():
+                                try: decks_used_num = int(decks_used_raw)
+                                except: pass
+                            boat_num = safe_int(boat_attacks)
+                            war_battles_num = safe_int(row.get('war_battles_count', 0))
+                            war_vitorias_num = safe_int(row.get('war_vitorias', 0))
+                            war_derrotas_num = safe_int(row.get('war_derrotas', 0))
+                            war_participant = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0 or war_vitorias_num > 0 or war_derrotas_num > 0)
                             
                             player_item = {
                                 'ranking': ranking,
                                 'player': player_name,
                                 'fame': player_fame,
                                 'date': u_date,
-                                'lutou': lutou,
-                                'ataques': f"{decks_used}/4" if decks_used and '/' not in decks_used else decks_used or '0/4',
+                                'war_participant': war_participant,
+                                'lutou': "Sim" if boat_num > 0 else "Nao",
+                                'ataques': f"{decks_used_raw}/4" if decks_used_raw and '/' not in str(decks_used_raw) else decks_used_raw or '0/4',
                                 'deck_1': deck_1,
                                 'deck_1_tipo': row.get('deck_1_tipo', 'Guerra'),
                                 'deck_2': row.get('deck_2', ''),
@@ -4560,11 +4571,11 @@ class GitHubPagesHTMLGenerator:
                                         existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                 seen_players[player_name] = existing
                         
-                        sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
+                        sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_participant', False), x['fame']), reverse=True)
                         clan_tag_from_data = player_rows[0].get('clan_tag', '').replace('#', '') if player_rows else ''
                         is_my_own_clan = (my_clan_tag.replace('#', '') == clan_tag_from_data)
-                        max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
-                        top_players = sorted_players[:max_players]
+                        max_players = 10 if (is_my_own_clan and mode == 'my-war') else 3
+                        top_players = [p for p in sorted_players if p['fame'] > 0][:max_players]
                         
                         total_fame = sum(p['fame'] for p in top_players)
                         
@@ -4683,20 +4694,33 @@ class GitHubPagesHTMLGenerator:
                                 player_name = row.get('player_nome') or row.get('Jogador', '')
                                 player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
                                 clan_tag_from_row = row.get('clan_tag', '')
-                                decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
+                                decks_used_raw = row.get('decks_usados') or '0'
                                 boat_attacks = row.get('boat_attacks', '0')
-                                lutou = "Sim" if safe_int(boat_attacks) > 0 else "Nao"
                                 deck_1 = row.get('deck_1', '')
                                 
                                 ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
+                                
+                                decks_used_num = 0
+                                if '/' in str(decks_used_raw):
+                                    try: decks_used_num = int(str(decks_used_raw).split('/')[0])
+                                    except: pass
+                                elif str(decks_used_raw).strip():
+                                    try: decks_used_num = int(decks_used_raw)
+                                    except: pass
+                                boat_num = safe_int(boat_attacks)
+                                war_battles_num = safe_int(row.get('war_battles_count', 0))
+                                war_vitorias_num = safe_int(row.get('war_vitorias', 0))
+                                war_derrotas_num = safe_int(row.get('war_derrotas', 0))
+                                war_participant = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0 or war_vitorias_num > 0 or war_derrotas_num > 0)
                                 
                                 player_item = {
                                     'ranking': ranking,
                                     'player': player_name,
                                     'fame': player_fame,
                                     'date': u_date,
-                                    'lutou': lutou,
-                                    'ataques': f"{decks_used}/4" if decks_used and '/' not in decks_used else decks_used or '0/4',
+                                    'war_participant': war_participant,
+                                    'lutou': "Sim" if boat_num > 0 else "Nao",
+                                    'ataques': f"{decks_used_raw}/4" if decks_used_raw and '/' not in str(decks_used_raw) else decks_used_raw or '0/4',
                                     'deck_1': deck_1,
                                     'deck_1_tipo': row.get('deck_1_tipo', 'Guerra'),
                                     'deck_2': row.get('deck_2', ''),
@@ -4734,11 +4758,11 @@ class GitHubPagesHTMLGenerator:
                                             existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                     seen_players[player_name] = existing
                             
-                            sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
+                            sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_participant', False), x['fame']), reverse=True)
                             clan_tag_from_data = player_rows[0].get('clan_tag', '').replace('#', '') if player_rows else ''
                             is_my_own_clan = (my_clan_tag.replace('#', '') == clan_tag_from_data)
-                            max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
-                            top_players = sorted_players[:max_players]
+                            max_players = 10 if (is_my_own_clan and mode == 'my-war') else 3
+                            top_players = [p for p in sorted_players if p['fame'] > 0][:max_players]
                             
                             total_fame = sum(p['fame'] for p in top_players)
                             
