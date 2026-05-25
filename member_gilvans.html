@@ -2357,6 +2357,72 @@
         }
         
         @media (max-width: 768px) { .rd-grid { grid-template-columns: 1fr; } }
+
+        /* Modal Glassmorphism v2 */
+        .cr-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .cr-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .cr-modal-container {
+            width: 95%;
+            max-width: 1450px;
+            max-height: 92vh;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 30px;
+            box-shadow: 0 25px 100px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
+            position: relative;
+            padding: 15px;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cr-modal-overlay.active .cr-modal-container {
+            transform: scale(1);
+        }
+
+        .cr-modal-close {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .cr-modal-close:hover {
+            background: var(--primary);
+            transform: rotate(90deg);
+        }
         
         /* Member Page Specific Styles - Premium v2 */
         .member-profile-header {
@@ -2588,7 +2654,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 25/05/2026 19:01:45</p>
+            <p>Perfil gerado em 25/05/2026 20:27:31</p>
             <p>Visto por último: 23 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
