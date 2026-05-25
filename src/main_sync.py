@@ -41,23 +41,34 @@ def main():
     logger.info("INICIANDO SINCRONIZACAO CLASH ROYALE (PIPELINE UNICO)")
     logger.info("=" * 60)
     
-    # Debug de Tags
-    tag_pri = os.environ.get("CR_PLAYER_TAG")
-    tag_sec = os.environ.get("CR_PLAYER_TAG_SEC")
-    logger.info(f"Tags detectadas: Principal={tag_pri}, Secundaria={tag_sec}")
+    # Normalizacao robusta de tags no ambiente (P0 Defesa)
+    tag_pri_raw = os.environ.get("CR_PLAYER_TAG", "").strip()
+    if tag_pri_raw:
+        tag_pri = tag_pri_raw if tag_pri_raw.startswith('#') else f"#{tag_pri_raw}"
+        os.environ["CR_PLAYER_TAG"] = tag_pri
+    else:
+        tag_pri = None
 
-    
-    # Validação de Integridade (Segurança para o Dashboard Multi-Conta)
+    tag_sec_raw = os.environ.get("CR_PLAYER_TAG_SEC", "").strip()
+    if tag_sec_raw and tag_sec_raw.upper() != 'NONE':
+        tag_sec = tag_sec_raw if tag_sec_raw.startswith('#') else f"#{tag_sec_raw}"
+        os.environ["CR_PLAYER_TAG_SEC"] = tag_sec
+    else:
+        tag_sec = None
+        os.environ["CR_PLAYER_TAG_SEC"] = ""
+
+    logger.info(f"Tags detectadas e normalizadas: Principal={tag_pri}, Secundaria={tag_sec}")
+
+    # Validacao de Integridade (Seguranca para o Dashboard Multi-Conta)
     # Se estiver no GitHub Actions, a tag secundaria e OBRIGATORIA para evitar regressao do UI.
     is_github = os.environ.get("GITHUB_ACTIONS") == "true"
-    player_tag_sec = os.environ.get("CR_PLAYER_TAG_SEC")
     
-    if is_github and not player_tag_sec:
+    if is_github and not tag_sec:
         logger.error("ERRO CRITICO: A variavel CR_PLAYER_TAG_SEC nao foi encontrada!")
         logger.error("Para evitar que o dashboard seja sobrescrito no formato de conta unica, o pipeline sera interrompido.")
         logger.error("Acao necessaria: Configure o 'Secret' CR_PLAYER_TAG_SEC no seu repositorio GitHub.")
         sys.exit(1) # Interrompe o pipeline com erro
-    elif not player_tag_sec:
+    elif not tag_sec:
         logger.warning("Aviso: Rodando sem a Tag Secundaria. O dashboard local sera gerado apenas com a conta principal.")
 
     # Buffer para capturar logs das coletas

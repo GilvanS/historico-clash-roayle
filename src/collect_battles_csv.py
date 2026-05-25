@@ -345,25 +345,33 @@ def collect_for_tag(api_token: str, player_tag: str, label: str = "Principal") -
 
 def main():
     api_token = os.environ.get('CR_API_TOKEN')
-    player_tag = os.environ.get('CR_PLAYER_TAG')
-    player_tag_sec = os.environ.get('CR_PLAYER_TAG_SEC')
+    player_tag_raw = os.environ.get('CR_PLAYER_TAG')
+    player_tag_sec_raw = os.environ.get('CR_PLAYER_TAG_SEC')
 
     if not api_token:
         print("[ERRO] Variavel de ambiente CR_API_TOKEN nao configurada.")
         sys.exit(1)
-    if not player_tag:
+    if not player_tag_raw:
         print("[ERRO] Variavel de ambiente CR_PLAYER_TAG nao configurada.")
         sys.exit(1)
+
+    # Normalizacao robusta de tags (P0 Defesa)
+    player_tag_raw = player_tag_raw.strip().upper()
+    player_tag = player_tag_raw if player_tag_raw.startswith('#') else f"#{player_tag_raw}"
+
+    player_tag_sec = None
+    if player_tag_sec_raw:
+        tag_sec_cleaned = player_tag_sec_raw.strip().upper()
+        if tag_sec_cleaned and tag_sec_cleaned != "NONE" and tag_sec_cleaned != "":
+            player_tag_sec = tag_sec_cleaned if tag_sec_cleaned.startswith('#') else f"#{tag_sec_cleaned}"
 
     # Monta lista de contas para coletar
     accounts = []
     if player_tag:
-        accounts.append(("Principal", player_tag.strip().upper()))
+        accounts.append(("Principal", player_tag))
     
     if player_tag_sec:
-        tag_sec = player_tag_sec.strip().upper()
-        if tag_sec and tag_sec != "NONE" and tag_sec != "":
-            accounts.append(("Secundaria", tag_sec))
+        accounts.append(("Secundaria", player_tag_sec))
 
     if not accounts:
         print("[ERRO] Nenhuma conta configurada (CR_PLAYER_TAG / CR_PLAYER_TAG_SEC).")

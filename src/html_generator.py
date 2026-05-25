@@ -122,8 +122,15 @@ class GitHubPagesHTMLGenerator:
                 "Content-Type": "application/json"
             }
         
-        self.player_tag = os.getenv('CR_PLAYER_TAG', '#2QR292P').strip()
-        self.player_tag_sec = os.getenv('CR_PLAYER_TAG_SEC', '').strip() or None
+        player_tag_raw = os.getenv('CR_PLAYER_TAG', '#2QR292P').strip()
+        self.player_tag = player_tag_raw if player_tag_raw.startswith('#') else f"#{player_tag_raw}"
+        
+        player_tag_sec_raw = os.getenv('CR_PLAYER_TAG_SEC', '').strip()
+        if player_tag_sec_raw and player_tag_sec_raw.upper() != 'NONE':
+            self.player_tag_sec = player_tag_sec_raw if player_tag_sec_raw.startswith('#') else f"#{player_tag_sec_raw}"
+        else:
+            self.player_tag_sec = None
+            
         self.tracked_tags = [self.player_tag]
         if self.player_tag_sec:
             self.tracked_tags.append(self.player_tag_sec)
