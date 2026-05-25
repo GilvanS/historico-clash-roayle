@@ -4560,12 +4560,12 @@ class GitHubPagesHTMLGenerator:
                                         existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                 seen_players[player_name] = existing
                         
-                        sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_battles_count', 0) > 0, x['fame']), reverse=True)
-                        is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
-                        max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
-                        
-                        top_players = sorted_players[:max_players]
-                        top_players = sorted(top_players, key=lambda x: x['ranking'])
+sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
+is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
+max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
+
+top_players = sorted_players[:max_players]
+top_players = sorted(top_players, key=lambda x: x['ranking'])
                         
                         total_fame = sum(p['fame'] for p in top_players)
                         
@@ -4735,7 +4735,7 @@ class GitHubPagesHTMLGenerator:
                                             existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                     seen_players[player_name] = existing
                             
-                            sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_battles_count', 0) > 0, x['fame']), reverse=True)
+                            sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
                             is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
                             max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
                             
