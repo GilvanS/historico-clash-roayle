@@ -4508,11 +4508,13 @@ class GitHubPagesHTMLGenerator:
                         for row in player_rows:
                             player_name = row.get('player_nome') or row.get('Jogador', '')
                             player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
-                            ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
+                            clan_tag_from_row = row.get('clan_tag', '')
                             decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
                             boat_attacks = row.get('boat_attacks', '0')
                             lutou = "Sim" if safe_int(boat_attacks) > 0 else "Nao"
                             deck_1 = row.get('deck_1', '')
+                            
+                            ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
                             
                             player_item = {
                                 'ranking': ranking,
@@ -4540,13 +4542,11 @@ class GitHubPagesHTMLGenerator:
                             if player_name not in seen_players:
                                 seen_players[player_name] = player_item
                             else:
-                                # Acumula stats de guerra de todos os registros do jogador
                                 existing = seen_players[player_name]
                                 existing['war_vitorias'] = existing.get('war_vitorias', 0) + player_item.get('war_vitorias', 0)
                                 existing['war_derrotas'] = existing.get('war_derrotas', 0) + player_item.get('war_derrotas', 0)
                                 existing['war_medals'] = existing.get('war_medals', 0) + player_item.get('war_medals', 0)
                                 existing['war_battles_count'] = existing.get('war_battles_count', 0) + player_item.get('war_battles_count', 0)
-                                # Atualiza fame e decks se o novo registro for melhor
                                 if player_fame > existing['fame'] or (player_item.get('war_battles_count', 0) > 0 and not existing.get('deck_1', '')):
                                     existing['fame'] = max(existing['fame'], player_fame)
                                     if player_item.get('deck_1', ''):
@@ -4560,12 +4560,11 @@ class GitHubPagesHTMLGenerator:
                                         existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                 seen_players[player_name] = existing
                         
-sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
-is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
-max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
-
-top_players = sorted_players[:max_players]
-top_players = sorted(top_players, key=lambda x: x['ranking'])
+                        sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
+                        clan_tag_from_data = player_rows[0].get('clan_tag', '').replace('#', '') if player_rows else ''
+                        is_my_own_clan = (my_clan_tag.replace('#', '') == clan_tag_from_data)
+                        max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
+                        top_players = sorted_players[:max_players]
                         
                         total_fame = sum(p['fame'] for p in top_players)
                         
@@ -4683,11 +4682,13 @@ top_players = sorted(top_players, key=lambda x: x['ranking'])
                             for row in player_rows:
                                 player_name = row.get('player_nome') or row.get('Jogador', '')
                                 player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
-                                ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
+                                clan_tag_from_row = row.get('clan_tag', '')
                                 decks_used = row.get('decks_usados') or row.get('Ataques_Feitos', '0/4')
                                 boat_attacks = row.get('boat_attacks', '0')
                                 lutou = "Sim" if safe_int(boat_attacks) > 0 else "Nao"
                                 deck_1 = row.get('deck_1', '')
+                                
+                                ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
                                 
                                 player_item = {
                                     'ranking': ranking,
@@ -4715,13 +4716,11 @@ top_players = sorted(top_players, key=lambda x: x['ranking'])
                                 if player_name not in seen_players:
                                     seen_players[player_name] = player_item
                                 else:
-                                    # Acumula stats de guerra de todos os registros do jogador
                                     existing = seen_players[player_name]
                                     existing['war_vitorias'] = existing.get('war_vitorias', 0) + player_item.get('war_vitorias', 0)
                                     existing['war_derrotas'] = existing.get('war_derrotas', 0) + player_item.get('war_derrotas', 0)
                                     existing['war_medals'] = existing.get('war_medals', 0) + player_item.get('war_medals', 0)
                                     existing['war_battles_count'] = existing.get('war_battles_count', 0) + player_item.get('war_battles_count', 0)
-                                    # Atualiza fame e decks se o novo registro for melhor
                                     if player_fame > existing['fame'] or (player_item.get('war_battles_count', 0) > 0 and not existing.get('deck_1', '')):
                                         existing['fame'] = max(existing['fame'], player_fame)
                                         if player_item.get('deck_1', ''):
@@ -4736,11 +4735,10 @@ top_players = sorted(top_players, key=lambda x: x['ranking'])
                                     seen_players[player_name] = existing
                             
                             sorted_players = sorted(seen_players.values(), key=lambda x: x['fame'], reverse=True)
-                            is_my_own_clan = (cla == my_clan or cla == my_clan_tag.replace('#', ''))
+                            clan_tag_from_data = player_rows[0].get('clan_tag', '').replace('#', '') if player_rows else ''
+                            is_my_own_clan = (my_clan_tag.replace('#', '') == clan_tag_from_data)
                             max_players = 5 if (is_my_own_clan and mode == 'my-war') else 3
-                            
                             top_players = sorted_players[:max_players]
-                            top_players = sorted(top_players, key=lambda x: x['ranking'])
                             
                             total_fame = sum(p['fame'] for p in top_players)
                             
