@@ -61,7 +61,39 @@ def get_clan_tag(token, player_tag, fallback_tag=None):
         return fallback_tag
     return None
 
-def collect_war_battles_stats(battles):
+def is_battle_on_logical_date(battle_time_str, target_date):
+    """
+    Verifica se a batalha ocorreu na data logica alvo.
+    Converte o timestamp UTC da API para o fuso local do Brasil (UTC-3).
+    A virada do dia de guerra ocorre pontualmente as 07:00 da manha.
+    """
+    if not battle_time_str:
+        return False
+    try:
+        import re
+        from datetime import datetime, timezone, timedelta
+        
+        # O formato da API e YYYYMMDDTHHMMSS.000Z
+        match = re.match(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})", battle_time_str)
+        if not match:
+            return False
+            
+        year, month, day, hour, minute, second = map(int, match.groups())
+        dt_utc = datetime(year, month, day, hour, minute, second, tzinfo=timezone.utc)
+        dt_local = dt_utc - timedelta(hours=3) # Fuso Brasil (UTC-3)
+        
+        # Regra do limite das 07:00 da manha para a data logica
+        if dt_local.hour < 7:
+            logical_date = dt_local - timedelta(days=1)
+        else:
+            logical_date = dt_local
+            
+        return logical_date.strftime('%Y-%m-%d') == target_date
+    except Exception as e:
+        print(f"Erro ao verificar data logica da batalha {battle_time_str}: {e}")
+        return False
+
+def collect_war_battles_stats(battles, target_date=None):
     """Coleta estatisticas de batalhas de guerra e calcula fame real"""
     stats = {
         'war_vitorias': 0,
@@ -75,7 +107,17 @@ def collect_war_battles_stats(battles):
     if not battles:
         return stats
     
-    war_battles = [b for b in battles if b.get('type', '') in WAR_BATTLE_TYPES]
+    # Filtrar apenas batalhas de guerra na data logica alvo se fornecida
+    war_battles = []
+    for b in battles:
+        if b.get('type', '') not in WAR_BATTLE_TYPES:
+            continue
+        if target_date:
+            battle_time = b.get('battleTime', '')
+            if not is_battle_on_logical_date(battle_time, target_date):
+                continue
+        war_battles.append(b)
+        
     stats['war_battles_count'] = len(war_battles)
     
     if not war_battles:
@@ -125,7 +167,7 @@ def collect_war_battles_stats(battles):
     
     return stats
 
-def collect_decks_from_battlelog(battles):
+def collect_decks_from_battlelog(battles, target_date=None):
     """
     Extrai ate 4 decks distintos do historico de batalhas de guerra.
     Trata corretamente duelos: cada rodada do duelo pode ter deck diferente.
@@ -133,11 +175,19 @@ def collect_decks_from_battlelog(battles):
     decks_collected = []
     deck_types = []
 
+    # Filtrar batalhas que pertencem a data logica alvo
+    filtered_battles = []
     for b in battles:
-        battle_type = b.get('type', '')
-        if battle_type not in WAR_BATTLE_TYPES:
+        if b.get('type', '') not in WAR_BATTLE_TYPES:
             continue
+        if target_date:
+            battle_time = b.get('battleTime', '')
+            if not is_battle_on_logical_date(battle_time, target_date):
+                continue
+        filtered_battles.append(b)
 
+    for b in filtered_battles:
+        battle_type = b.get('type', '')
         tipo_label = BATTLE_TYPE_LABELS.get(battle_type, battle_type)
         team = b.get('team', [{}])[0]
         cards = team.get('cards', [])
@@ -160,7 +210,7 @@ def collect_decks_from_battlelog(battles):
             break
 
     # Tambem tentar extrair do campo 'opponent' de duelos para decks extras do time
-    for b in battles:
+    for b in filtered_battles:
         if len(decks_collected) >= 4:
             break
         battle_type = b.get('type', '')
@@ -194,7 +244,7 @@ def collect_top_global_clans(token, limit=5):
     base_url = "https://proxy.royaleapi.dev/v1"
     
     results = []
-    data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
+    data_hoje, dia_batalha = get_logical_date_and_battle_day()
     
     try:
         r = requests.get(f"{base_url}/locations/global/rankings/clans", headers=headers, timeout=15)
@@ -261,8 +311,8 @@ def collect_top_global_clans(token, limit=5):
                         
                         if br.status_code == 200:
                             battles = br.json()
-                            war_stats = collect_war_battles_stats(battles)
-                            player_decks = collect_decks_from_battlelog(battles)
+                            war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
+                            player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
                     except:
                         pass
                 
@@ -323,7 +373,7 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
         return []
     
     sorted_clans = sorted(clans, key=lambda x: x.get('fame', 0), reverse=True)
-    data_hoje = (datetime.now() - timedelta(hours=3)).strftime('%Y-%m-%d')
+    data_hoje, dia_batalha = get_logical_date_and_battle_day()
     results = []
     
     for clan_idx, clan in enumerate(sorted_clans[:5], 1):
@@ -375,10 +425,10 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
                         battles = br.json()
                         
                         # Coletar estatisticas de batalha de guerra
-                        war_stats = collect_war_battles_stats(battles)
+                        war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
                         
                         # Coletar decks (incluindo duelos com multiplos decks)
-                        player_decks = collect_decks_from_battlelog(battles)
+                        player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
                 except:
                     pass
             
