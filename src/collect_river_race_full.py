@@ -35,8 +35,8 @@ BATTLE_TYPE_LABELS = {
 
 # Pontuacao por tipo de resultado na guerra
 # Vitoria = 900 pontos, Derrota com coroa = 200 pontos, Derrota sem coroa = 100 pontos
-FAME_POR_VITORIA = 900
-FAME_POR_DERROTA_COROA = 200
+FAME_POR_VITORIA = 200
+FAME_POR_DERROTA_COROA = 100
 FAME_POR_DERROTA = 100
 
 def format_deck(cards):

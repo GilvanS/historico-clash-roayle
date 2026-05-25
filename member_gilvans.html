@@ -1041,71 +1041,7 @@
             margin-bottom: 4px;
         }
 
-        /* Modal Glassmorphism v2 */
-        .cr-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(2, 6, 23, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
 
-        .cr-modal-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        .cr-modal-container {
-            width: 95%;
-            max-width: 1450px;
-            max-height: 92vh;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 30px;
-            box-shadow: 0 25px 100px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
-            position: relative;
-            padding: 15px; /* Reduzido de 20px */
-            overflow-y: auto;
-            transform: scale(0.95);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cr-modal-overlay.active .cr-modal-container {
-            transform: scale(1);
-        }
-
-        .cr-modal-close {
-            position: absolute;
-            top: 25px;
-            right: 30px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            transition: all 0.3s;
-            z-index: 10;
-        }
-
-        .cr-modal-close:hover {
-            background: var(--primary);
-            transform: rotate(90deg);
-        }
 
         .elite-spy-section .cr-player-name {
             font-weight: 800;
@@ -1861,81 +1797,7 @@
             margin-right: 2px;
         }
 
-        /* Modal Glassmorphism */
-        .cr-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(2, 6, 23, 0.5) !important;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            backdrop-filter: blur(8px) !important;
-        }
 
-        .cr-modal-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        .cr-modal-container {
-            width: 1450px !important;
-            max-width: 98% !important;
-            background: rgba(15, 23, 42, 0.85) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            border-radius: 24px;
-            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
-            padding: 20px;
-            position: relative;
-            transform: scale(0.9);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            overflow-y: auto;
-            max-height: 92vh;
-            backdrop-filter: blur(20px) !important;
-        }
-
-        .cr-modal-overlay.active .cr-modal-container {
-            transform: scale(1);
-        }
-
-        .cr-modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            z-index: 10;
-        }
-
-        .cr-modal-close:hover {
-            background: var(--danger);
-            transform: rotate(90deg);
-        }
-
-        #battle-modal-content {
-            width: 100%;
-        }
-
-        /* Ajuste para o VS no Modal */
-        .cr-modal-container .cr-vs-row-premium-v2 {
-            background: transparent;
-            padding: 0;
-        }
 
         /* ===== TABS DE SELEÇÃO DE CONTA (Multi-Account) ===== */
         .cr-account-tabs {
@@ -2726,7 +2588,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 24/05/2026 21:52:48</p>
+            <p>Perfil gerado em 24/05/2026 22:33:27</p>
             <p>Visto por último: 22 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
