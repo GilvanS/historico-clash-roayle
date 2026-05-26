@@ -27,8 +27,9 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(script_dir, 'data_clan')
 
 def get_logical_date_and_battle_day():
-    """Retorna data coleta logica e dia batalha com base no reset pontual das 07:00:00 da manha."""
-    now = datetime.now()
+    """Retorna data coleta logica e dia batalha com base no reset pontual das 07:00:00 da manha BRT."""
+    from datetime import timezone
+    now = (datetime.now(timezone.utc) - timedelta(hours=3)).replace(tzinfo=None)
     if now.hour < 7:
         logical_date = now - timedelta(days=1)
     else:

@@ -14,8 +14,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def is_reset_day():
-    """Verifica se hoje é o dia do reset (1ª segunda-feira do mês)."""
-    now = datetime.now()
+    """Verifica se hoje é o dia do reset (1ª segunda-feira do mês) no horário do Brasil."""
+    from datetime import timezone, timedelta
+    now = (datetime.now(timezone.utc) - timedelta(hours=3)).replace(tzinfo=None)
     # 0 = Segunda-feira
     return now.weekday() == 0 and now.day <= 7
 
@@ -58,7 +59,7 @@ def collect_meta_br():
             return
 
         # Adiciona timestamp da coleta
-        data['collected_at'] = now.strftime('%Y-%m-%dT%H:%M:%S')
+        data['collected_at'] = brt_now.strftime('%Y-%m-%dT%H:%M:%S')
         
         # Define diretório de saída
         root_dir = os.path.dirname(os.path.abspath(__file__))

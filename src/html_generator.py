@@ -43,6 +43,10 @@ DAY_ROLLOVER_HOURS = {
     'war': 7,        # Guerra vira a 07:00
 }
 
+def _get_brt_now() -> datetime:
+    """Retorna datetime local do Brasil (BRT = UTC-3) naive."""
+    return (datetime.now(timezone.utc) - timedelta(hours=3)).replace(tzinfo=None)
+
 def _get_battle_date(battle_time_str: str, rollover_hour: int = 0) -> str:
     """
     Calcula a data correta de uma batalha baseada no horario de virada do dia.
@@ -1510,7 +1514,7 @@ class GitHubPagesHTMLGenerator:
         
         # Aggregate by date
         from datetime import datetime, timedelta
-        end_date = datetime.now()
+        end_date = _get_brt_now()
         
         # Correcao de virada de dia para o Histograma (Secundaria vira as 21h00)
         if rollover_hour > 0 and end_date.hour >= rollover_hour:
@@ -2381,7 +2385,7 @@ class GitHubPagesHTMLGenerator:
             
         if not all_rows: return []
             
-        today = datetime.now()
+        today = _get_brt_now()
         seven_days_ago = today - timedelta(days=7)
         deck_stats = {}
 
@@ -2488,7 +2492,7 @@ class GitHubPagesHTMLGenerator:
         global_battles = self._load_all_battles_from_csv(player_tag='#YVJR0JLY')
         if not global_battles: return []
             
-        today = datetime.now()
+        today = _get_brt_now()
         seven_days_ago = today - timedelta(days=7)
         deck_stats = {}
 
@@ -2535,110 +2539,128 @@ class GitHubPagesHTMLGenerator:
         for d in deck_stats.values():
             if d['total'] >= 1:
                 d['win_rate'] = round((d['wins'] / d['total'] * 100), 1)
-                # Ordena batalhas por tempo
                 d['battles'].sort(key=lambda x: self._parse_dt(x['battle_time']) or datetime.min, reverse=True)
                 final_list.append(d)
-            
         final_list.sort(key=lambda x: (x['win_rate'], x['total']), reverse=True)
         return final_list[:10]
 
     def generate_weekly_decks_html(self, weekly_data: List[Dict]) -> str:
-        """Gera HTML da aba 'Meus Decks' com timeline interativa e layout Premium v2."""
+        """Gera HTML da aba 'Meus Decks' com timeline interativa e layout Premium v2 Compact."""
         if not weekly_data: return '<div class="cr-empty-state">Nenhum dado encontrado para os últimos 7 dias.</div>'
-        import json, urllib.parse
+        import json
         
         player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
         player_clan = next((p.get('clan_name', '') for p in self.players_cache if p.get('player_tag') == self.player_tag), '')
 
-        html = '<div class="cr-decks-list">'
+        # Limitar a largura do container principal dos decks para que fiquem alinhados e mais compactos
+        html = '<div class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">'
         for i, deck in enumerate(weekly_data, 1):
             total = deck['total']
             win_rate = deck['win_rate']
             wins_pct = round((deck['wins']/total*100), 1) if total > 0 else 0
             losses_pct = round((deck['losses']/total*100), 1) if total > 0 else 0
             draws_pct = round(max(0, 100 - wins_pct - losses_pct), 1)
-            deck_id = f"weekly-{i}"
             
-            # Primeira batalha para o preview inicial
+            # Primeira batalha para o preview inicial e métricas do deck
             first_b = deck['battles'][0] if deck['battles'] else {}
-            my_m_f = self._get_battle_deck_metrics(first_b['my_deck'], first_b, is_opponent=False)
-            opp_m_f = self._get_battle_deck_metrics(first_b['opp_deck'], first_b, is_opponent=True)
+            my_m_f = self._get_battle_deck_metrics(deck['deck_cards'], first_b, is_opponent=False)
             
-            # Timeline HTML
-            timeline_h = ""
-            for idx, b in enumerate(deck['battles'][:15]):
-                my_m = self._get_battle_deck_metrics(b['my_deck'], b, is_opponent=False)
-                opp_m = self._get_battle_deck_metrics(b['opp_deck'], b, is_opponent=True)
-                
-                # Dados para o JS
-                b_data = {
-                    "crowns": b.get('coroas_jogador', 0),
-                    "o_crowns": b.get('coroas_oponente', 0),
-                    "mode": b.get('modo_jogo', 'Batalha'),
-                    "date": b['dt_obj'].strftime('%d/%m'),
-                    "time": b['dt_obj'].strftime('%H:%M'),
-                    "p_metrics": self._generate_metrics_panel_html_simple(my_m),
-                    "o_metrics": self._generate_metrics_panel_html_simple(opp_m),
-                    "p_grid": self._generate_deck_grid_html_simple(b['my_deck']),
-                    "o_grid": self._generate_deck_grid_html_simple(b['opp_deck']),
-                    "p_tower_url": my_m['tower_url'],
-                    "o_tower_url": opp_m['tower_url'],
-                    "p_level": my_m['level'],
-                    "o_level": opp_m['level'],
-                    "p_hp": my_m.get('hp', '--'),
-                    "o_hp": opp_m.get('hp', '--'),
-                    "p_name": player_name,
-                    "o_name": b.get('nome_oponente', 'Oponente'),
-                    "p_clan": player_clan,
-                    "o_clan": b.get('opp_clan', 'Sem Clã'),
-                    "p_tag": self.player_tag,
-                    "o_tag": b.get('tag_oponente', '000000'),
-                    "p_deck_list": [c.strip() for c in b['my_deck'].replace(' | ', '|').split('|') if c.strip()],
-                    "o_deck_list": [c.strip() for c in b['opp_deck'].replace(' | ', '|').split('|') if c.strip()]
-                }
-                
-                data_attr = json.dumps(b_data).replace('"', '&quot;')
-                res = b['resultado'].lower()
+            # Timeline HTML (Bolinhas do Histórico com popover interativo)
+            timeline_h = '<div style="margin-top: 12px; padding: 10px; background: rgba(15,23,42,0.3); border-radius: 10px; border: 1px solid rgba(255,255,255,0.03);">'
+            timeline_h += '<div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin;">'
+            
+            for idx, b in enumerate(deck['battles'][:12]):
+                res = b['resultado'].lower() if b.get('resultado') else 'unknown'
                 res_char = 'V' if any(x in res for x in ['vitoria', 'victory', 'vitória']) else ('D' if any(x in res for x in ['derrota', 'defeat']) else 'E')
                 res_color = '#48bb78' if res_char == 'V' else ('#f56565' if res_char == 'D' else '#718096')
-                active_class = "active" if idx == 0 else ""
                 
+                # Formata data e hora
+                dt_obj = b.get('dt_obj')
+                dt_str = dt_obj.strftime('%d/%m') if dt_obj else '--/--'
+                time_str = dt_obj.strftime('%H:%M') if dt_obj else '--:--'
+                
+                opp_name = b.get('nome_oponente', 'Oponente')
+                p_crowns = b.get('coroas_jogador', 0)
+                o_crowns = b.get('coroas_oponente', 0)
+                modo_jogo = b.get('modo_jogo', 'Batalha')
+                
+                # Mini deck do oponente
+                opp_deck_str = b.get('opponent_deck_cards') or b.get('deck_oponente') or ''
+                mini_cards_html = ""
+                if opp_deck_str and opp_deck_str != 'N/D':
+                    opp_cards = [c.split('|')[0].strip() for c in opp_deck_str.replace(' | ', '|').split('|') if c.strip()][:8]
+                    for card_name in opp_cards:
+                        card_url = self.get_card_image_path(card_name)
+                        mini_cards_html += f'<img src="{card_url}" style="width: 20px; height: 24px; object-fit: contain; border-radius: 4px;" title="{card_name}">'
+                else:
+                    mini_cards_html = '<span style="font-size: 0.8em; color: #64748b;">Deck N/D</span>'
+
                 timeline_h += f'''
-                <div class="cr-history-dot {active_class}" 
-                     style="border-bottom: 2px solid {res_color};"
-                     data-battle="{data_attr}"
-                     onclick="updateOpponentView('{deck_id}', this)"
-                     title="{b["data"]} - {res_char}">
-                    <span class="dot-res" style="color: {res_color}">{res_char}</span>
-                    <span class="dot-time">{b['dt_obj'].strftime('%H:%M')}</span>
+                <div class="cr-history-dot-wrap" style="position: relative; display: inline-block;">
+                    <div style="flex-shrink: 0; padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid {res_color}40; text-align: center; cursor: pointer; min-width: 32px;">
+                        <div style="font-size: 0.7em; font-weight: 900; color: {res_color};">{res_char}</div>
+                        <div style="font-size: 0.5em; color: rgba(255,255,255,0.4);">{time_str}</div>
+                    </div>
+                    
+                    <!-- Popover flutuante premium -->
+                    <div class="cr-dot-popover" style="display: none; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: #0f172a; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 10px; z-index: 1000; width: 190px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); pointer-events: none; text-align: left;">
+                        <div style="font-size: 0.75em; font-weight: 900; color: #fff; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                            <span>{opp_name[:12]}</span>
+                            <span style="color: {res_color}; font-weight: 950;">{p_crowns} - {o_crowns}</span>
+                        </div>
+                        <div style="font-size: 0.55em; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase;">📅 {dt_str} 🕒 {time_str} • {modo_jogo[:12]}</div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+                            {mini_cards_html}
+                        </div>
+                    </div>
                 </div>'''
+            
+            timeline_h += '</div></div>'
 
             wr_c = '#48bb78' if win_rate >= 60 else ('#f56565' if win_rate <= 40 else '#718096')
             
             html += f'''
-            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 12px; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
-                <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
-                    <div style="display: flex; align-items: center; gap: 15px; width: 100%; flex-wrap: wrap;">
-                        <span style="background:#4299e1; color: #fff; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 900; font-size: 0.85em;">#{i}</span>
-                        <span style="color: #fff; font-size: 0.9em; font-weight: 700;">WR: {win_rate}% <span style="opacity: 0.5; font-size: 0.75em;">({deck['recent_total']} partidas)</span></span>
-                        <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}44; color: {wr_c}; font-weight: 900; font-size: 0.75em; padding: 4px 10px; border-radius: 8px;">{total} TOTAL</span>
+            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 12px; overflow: visible; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; background: rgba(15,23,42,0.4);">
+                <!-- Header Compacto -->
+                <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
+                    <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
+                        <span style="background:#4299e1; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em;">#{i}</span>
+                        <span style="color: #fff; font-size: 0.85em; font-weight: 700;">WR: <span style="color: {wr_c}; font-weight:900;">{win_rate}%</span> <span style="opacity: 0.5; font-size: 0.8em;">({deck['recent_total']} partidas)</span></span>
+                        <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}33; color: {wr_c}; font-weight: 900; font-size: 0.7em; padding: 2px 8px; border-radius: 6px;">{total} TOTAL</span>
                     </div>
                 </div>
                 
+                <!-- Barra de Progresso Horizontal -->
                 <div style="height: 3px; background: rgba(0,0,0,0.3); display: flex;">
                     <div style="width:{wins_pct}%; background: #48bb78;"></div>
                     <div style="width:{draws_pct}%; background: #718096;"></div>
                     <div style="width:{losses_pct}%; background: #f56565;"></div>
                 </div>
 
-                <div style="padding: 15px !important; background: transparent;">
-                    {self._generate_deck_view_html(first_b.get('my_deck', deck['deck_cards']), first_b, player_name, player_clan, self.player_tag, i, deck_id, is_opponent=False)}
-                    {self._generate_history_dots_simple(deck_id, deck['battles'][:15], player_name, player_clan)}
+                <!-- Conteúdo Compacto -->
+                <div style="padding: 12px !important; background: transparent;">
+                    <!-- Grid 4x2 do Deck do Jogador -->
+                    <div style="width: 100%; max-width: 320px; margin: 0 auto 10px auto;">
+                        {self._generate_deck_grid_html_simple(deck['deck_cards'], self.get_copy_deck_link([c.split('|')[0] for c in deck['deck_cards'].split('|') if c]))}
+                    </div>
+                    
+                    <!-- Badges de Elixir Médio e Ciclo 4 -->
+                    <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 8px;">
+                        <div class="cr-metric-inline" title="Elixir Médio" style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.75em;">
+                            <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 14px; height: 14px; filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.4));">
+                            <span style="font-weight: 900; color: #fff; font-family: 'Krona One', sans-serif;">{my_m_f['avg']}</span>
+                        </div>
+                        <div class="cr-metric-inline" title="Ciclo 4" style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.75em;">
+                            <img src="docs/ciclo4.png" style="width: 14px; height: 14px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4));">
+                            <span style="font-weight: 900; color: #fff; font-family: 'Krona One', sans-serif;">{my_m_f['cycle']}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Linha de Dots do Histórico -->
+                    {timeline_h}
                 </div>
             </div>
             '''
-        return html + "</div>"
-
     def generate_winning_decks_html(self, winning_data: List[Dict]) -> str:
         """Gera HTML para a aba de melhores decks da semana (Meta/Global) no padrao Premium v2."""
         if not winning_data: return '<div class="cr-empty-state">Dados globais insuficientes para o Top Vencedores.</div>'
@@ -4279,7 +4301,7 @@ class GitHubPagesHTMLGenerator:
         Garante exatamente 5 datas operacionais cronologicas crescentes de Quinta a Segunda.
         """
         # Obter logical_today baseado no corte operacional das 07:00 da manha
-        now = datetime.now()
+        now = _get_brt_now()
         if now.hour < 7:
             logical_today = now.date() - timedelta(days=1)
         else:
@@ -4724,7 +4746,7 @@ class GitHubPagesHTMLGenerator:
             player_tag = self.player_tag
         
         # Calcular as 5 datas operacionais da guerra ativa atual
-        now = datetime.now()
+        now = _get_brt_now()
         if now.hour < 7:
             logical_today = now.date() - timedelta(days=1)
         else:
@@ -4814,6 +4836,8 @@ class GitHubPagesHTMLGenerator:
                             decks_used_raw = row.get('decks_usados') or '0'
                             boat_attacks = row.get('boat_attacks', '0')
                             deck_1 = row.get('deck_1', '')
+                            
+                            ranking = safe_int(row.get('clan_posicao') or row.get('Ranking') or row.get('posicao') or row.get('ranking') or 99)
                             
                             decks_used_num = 0
                             if '/' in str(decks_used_raw):
@@ -5212,7 +5236,7 @@ class GitHubPagesHTMLGenerator:
             return {'content': '', 'tab': '', 'tab_id': tab_id}
         
         # Alinhamento do dia da semana de acordo com o corte operacional das 7:00 da manha
-        now = datetime.now()
+        now = _get_brt_now()
         if now.hour < 7:
             logical_today = now.date() - timedelta(days=1)
         else:
@@ -5491,7 +5515,7 @@ class GitHubPagesHTMLGenerator:
         
         # Detecção de Reset da Temporada (Primeira segunda-feira do mês)
         is_reset_day = False
-        today_dt = datetime.now()
+        today_dt = _get_brt_now()
         if today_dt.weekday() == 0 and today_dt.day <= 7:
             is_reset_day = True
 
@@ -5555,7 +5579,7 @@ class GitHubPagesHTMLGenerator:
             """
             
         # Titulo dinamico baseado no dia da semana (Guerra: Qui=3 a Dom=6 + Seg=0 para Reset)
-        now = datetime.now()
+        now = _get_brt_now()
         if now.hour < 7:
             logical_today = now.date() - timedelta(days=1)
         else:
@@ -8885,6 +8909,13 @@ class GitHubPagesHTMLGenerator:
         .cr-modal-close:hover {
             background: var(--primary);
             transform: rotate(90deg);
+        }
+
+        /* Popover Premium Compacto para Histórico de Decks */
+        .cr-history-dot-wrap:hover .cr-dot-popover {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
         """
     
