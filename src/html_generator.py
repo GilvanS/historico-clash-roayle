@@ -4424,6 +4424,18 @@ class GitHubPagesHTMLGenerator:
                     reader = csv.DictReader(f, delimiter=';')
                     guerra_rows = list(reader)
                 
+                # Mapear as famas acumuladas dos jogadores por data e player_tag
+                player_tag_cums = {}  # date_key -> player_tag_or_name -> cumulative_fame
+                for row in guerra_rows:
+                    dt = row.get('data_coleta', '')
+                    dt_key = dt.replace('-', '_')
+                    tag = row.get('player_tag') or row.get('player_nome') or row.get('Jogador', '')
+                    fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                    if dt_key and tag:
+                        if dt_key not in player_tag_cums:
+                            player_tag_cums[dt_key] = {}
+                        player_tag_cums[dt_key][tag] = fame
+                
                 intel_data = {}  # date_key -> clan_name -> {position, fame}
                 players_by_date = {}  # date_key -> list of rows
                 
@@ -4496,23 +4508,42 @@ class GitHubPagesHTMLGenerator:
                     
                     if clan_data:
                         top_players = []
-                        if date_str in players_by_date:
+                        if logical_weekday == 3:  # Quinta-feira (Reset) deve exibir "Sem dados"
+                            top_players = []
+                        elif date_str in players_by_date:
                             clan_players = []
+                            prev_date_str = war_dates[idx-1].strftime('%Y_%m_%d') if idx > 0 else None
+                            is_prev_reset = (idx > 0 and war_dates[idx-1].weekday() == 3)
+                            
                             for row in players_by_date[date_str]:
                                 clan_nome = row.get('clan_nome') or row.get('Cla', '')
                                 my_clean = ''.join(c for c in my_clan.upper() if c.isascii())
                                 cn_clean = ''.join(c for c in clan_nome.upper() if c.isascii())
                                 if my_clean in cn_clean or cn_clean in my_clean:
                                     player_name = row.get('player_nome') or row.get('Jogador') or 'N/A'
-                                    player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje'))
-                                    player_pos = safe_int(row.get('player_posicao') or row.get('Posicao'), 99)
-                                    clan_players.append({
-                                        'name': player_name,
-                                        'fame': player_fame,
-                                        'position': player_pos,
-                                        'medals': player_fame // 100
-                                    })
-                            clan_players_sorted = sorted(clan_players, key=lambda x: x['position'])
+                                    player_tag = row.get('player_tag') or player_name
+                                    
+                                    # Fama acumulada hoje
+                                    fame_today = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                                    
+                                    # Fama acumulada ontem
+                                    fame_prev = 0
+                                    if prev_date_str and not is_prev_reset:
+                                        fame_prev = player_tag_cums.get(prev_date_str, {}).get(player_tag, 0)
+                                        
+                                    # Fama diária real (somente guerra ativa)
+                                    fame_daily = max(0, fame_today - fame_prev)
+                                    
+                                    # Apenas jogadores que ativamente lutaram na guerra (pontuação > 0)
+                                    if fame_daily > 0:
+                                        clan_players.append({
+                                            'name': player_name,
+                                            'fame': fame_daily,
+                                            'medals': fame_daily // 100
+                                        })
+                             
+                            # Ordenar de forma estritamente decrescente pela fama diária do dia correspondente
+                            clan_players_sorted = sorted(clan_players, key=lambda x: x['fame'], reverse=True)
                             top_players = clan_players_sorted[:3]
                         
                         # Calcular metricas preditivas usando o prediction_engine
