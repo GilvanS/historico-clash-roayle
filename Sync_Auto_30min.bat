@@ -18,13 +18,18 @@ git diff --staged --quiet
 if errorlevel 1 (
     git commit -m "chore: sincronizacao automatica Clash Royale %date% %time%"
     
+    set PUSH_SUCCESS=0
     for /L %%i in (1,1,3) do (
-        git push origin main
-        if !errorlevel! equ 0 goto :push_ok
-        echo Tentativa %%i falhou, rebase...
-        git pull --rebase -X theirs origin main
+        if !PUSH_SUCCESS! equ 0 (
+            git push origin main
+            if !errorlevel! equ 0 (
+                set PUSH_SUCCESS=1
+            ) else (
+                echo Tentativa %%i falhou, rebase...
+                git pull --rebase -X theirs origin main
+            )
+        )
     )
-    :push_ok
 )
 
 echo [%time%] Sincronizacao concluida! Aguardando 30 minutos...
