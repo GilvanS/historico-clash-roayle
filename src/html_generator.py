@@ -4355,6 +4355,7 @@ class GitHubPagesHTMLGenerator:
                     status_rows = list(reader)
                 
                 status_by_date = {}
+                clans_cumulative = {}  # date_str -> clan_nome -> fame_acumulada
                 for row in status_rows:
                     if row.get('conta_tipo') == conta_tipo:
                         dt = row.get('data_coleta', '')
@@ -4362,6 +4363,61 @@ class GitHubPagesHTMLGenerator:
                         if dt_key not in status_by_date:
                             status_by_date[dt_key] = []
                         status_by_date[dt_key].append(row)
+                        
+                        clan_nome = row.get('clan_nome', '')
+                        if dt_key and clan_nome:
+                            if dt_key not in clans_cumulative:
+                                clans_cumulative[dt_key] = {}
+                            clans_cumulative[dt_key][clan_nome] = safe_int(row.get('fama_atual', 0))
+                
+                # Calcular a fama diária e a posição diária para todas as 5 datas da guerra ativa
+                clans_daily_data = {}  # date_str -> clan_nome -> {fama_diaria, posicao_diaria}
+                cron_dates = sorted(war_dates)
+                for idx, day_date in enumerate(cron_dates):
+                    date_str = day_date.strftime('%Y_%m_%d')
+                    logical_weekday = day_date.weekday()
+                    clans_daily_data[date_str] = {}
+                    
+                    if logical_weekday == 3:  # Reset (Quinta-feira)
+                        if date_str in clans_cumulative:
+                            for cn in clans_cumulative[date_str].keys():
+                                clans_daily_data[date_str][cn] = {
+                                    'fama_diaria': 0,
+                                    'posicao_diaria': 0
+                                }
+                        continue
+                    
+                    today_cums = clans_cumulative.get(date_str, {})
+                    prev_date_str = cron_dates[idx-1].strftime('%Y_%m_%d') if idx > 0 else None
+                    
+                    is_prev_reset = False
+                    if idx > 0 and cron_dates[idx-1].weekday() == 3:
+                        is_prev_reset = True
+                        
+                    prev_cums = {}
+                    if prev_date_str and not is_prev_reset:
+                        prev_cums = clans_cumulative.get(prev_date_str, {})
+                        
+                    day_fames = []
+                    for cn, fame_today in today_cums.items():
+                        fame_prev = prev_cums.get(cn, 0)
+                        fama_diaria = max(0, fame_today - fame_prev)
+                        day_fames.append((cn, fama_diaria))
+                    
+                    # Ordenar por fama diária decrescente
+                    sorted_day = sorted(day_fames, key=lambda x: x[1], reverse=True)
+                    
+                    ranked_count = 1
+                    for cn, fama in sorted_day:
+                        if fama > 0:
+                            pos = ranked_count
+                            ranked_count += 1
+                        else:
+                            pos = 0
+                        clans_daily_data[date_str][cn] = {
+                            'fama_diaria': fama,
+                            'posicao_diaria': pos
+                        }
                 
                 # 2. Carrega dados de inteligencia do historico
                 with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
@@ -4400,17 +4456,6 @@ class GitHubPagesHTMLGenerator:
                     clan_data = None
                     boat_status = 'unknown'
                     
-                    if date_str in intel_data:
-                        my_clan_upper = my_clan.strip().upper()
-                        for cn, data in intel_data[date_str].items():
-                            cn_upper = cn.upper()
-                            my_clean = ''.join(c for c in my_clan_upper if c.isascii())
-                            cn_clean = ''.join(c for c in cn_upper if c.isascii())
-                            if (my_clean in cn_clean or cn_clean in my_clean or 
-                                my_clean.replace(' ', '') in cn_clean.replace(' ', '')):
-                                clan_data = data
-                                break
-                    
                     if date_str in status_by_date:
                         for row in status_by_date[date_str]:
                             cn = row.get('clan_nome', '')
@@ -4423,12 +4468,30 @@ class GitHubPagesHTMLGenerator:
                                     boat_status = 'repairing'
                                 else:
                                     boat_status = 'active'
+                                break
+                    
+                    # Obter a fama e posição diária calculadas
+                    my_clan_daily = None
+                    if date_str in clans_daily_data:
+                        for cn, daily in clans_daily_data[date_str].items():
+                            if my_clan.lower() in cn.lower() or cn.lower() in my_clan.lower():
+                                my_clan_daily = daily
+                                break
                                 
-                                if not clan_data:
-                                    clan_data = {
-                                        'position': safe_int(row.get('posicao', 0)),
-                                        'fame': safe_int(row.get('fama_atual', 0))
-                                    }
+                    if my_clan_daily:
+                        clan_data = {
+                            'position': my_clan_daily['posicao_diaria'],
+                            'fame': my_clan_daily['fama_diaria']
+                        }
+                    elif date_str in intel_data:
+                        my_clan_upper = my_clan.strip().upper()
+                        for cn, data in intel_data[date_str].items():
+                            cn_upper = cn.upper()
+                            my_clean = ''.join(c for c in my_clan_upper if c.isascii())
+                            cn_clean = ''.join(c for c in cn_upper if c.isascii())
+                            if (my_clean in cn_clean or cn_clean in my_clean or 
+                                my_clean.replace(' ', '') in cn_clean.replace(' ', '')):
+                                clan_data = data
                                 break
                     
                     if clan_data:
@@ -4809,11 +4872,97 @@ class GitHubPagesHTMLGenerator:
                 except Exception as e:
                     logger.warning(f"Erro ao ler players.csv: {e}")
                     
+                # Carregar registros de guerra_historico.csv
                 with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
                     reader = csv.DictReader(f, delimiter=';')
                     rows = list(reader)
                 
                 rows = [row for row in rows if row.get('data_coleta') in target_dates_dash]
+                
+                # Mapear as famas acumuladas dos jogadores por data e player_tag
+                player_tag_cums = {}  # date_dash -> player_tag_or_name -> cumulative_fame
+                for row in rows:
+                    dt = row.get('data_coleta', '')
+                    tag = row.get('player_tag') or row.get('player_nome') or row.get('Jogador', '')
+                    fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                    if dt and tag:
+                        if dt not in player_tag_cums:
+                            player_tag_cums[dt] = {}
+                        player_tag_cums[dt][tag] = fame
+                
+                # Vamos carregar os dados de status_barcos_historico.csv para obter a fama diária e a posição diária reais de cada clã
+                clans_daily_data = {}  # date_str -> clan_nome -> {fama_diaria, posicao_diaria}
+                status_hist_path = os.path.join(self.src_dir, "data_clan", "status_barcos_historico.csv")
+                if os.path.exists(status_hist_path):
+                    try:
+                        pref_suffix = '_pri'
+                        my_clan_lower = my_clan.lower() if my_clan else ''
+                        if 'lendario' in my_clan_lower or 'secund' in my_clan_lower or 'bruxo 2' in my_clan_lower or (player_tag and '2220UQQ0UU' in player_tag.upper()):
+                            pref_suffix = '_sec'
+                        
+                        conta_tipo = 'principal' if pref_suffix == '_pri' else 'secundaria'
+                        
+                        with open(status_hist_path, 'r', encoding='utf-8-sig') as f:
+                            reader = csv.DictReader(f, delimiter=';')
+                            status_rows = list(reader)
+                        
+                        clans_cumulative = {}  # date_str -> clan_nome -> fame_acumulada
+                        for row in status_rows:
+                            if row.get('conta_tipo') == conta_tipo:
+                                dt = row.get('data_coleta', '')
+                                dt_key = dt.replace('-', '_')
+                                clan_nome = row.get('clan_nome', '')
+                                if dt_key and clan_nome:
+                                    if dt_key not in clans_cumulative:
+                                        clans_cumulative[dt_key] = {}
+                                    clans_cumulative[dt_key][clan_nome] = safe_int(row.get('fama_atual', 0))
+                        
+                        cron_dates = sorted(start_date + timedelta(days=i) for i in range(5))
+                        for idx, day_date in enumerate(cron_dates):
+                            date_str = day_date.strftime('%Y_%m_%d')
+                            logical_weekday = day_date.weekday()
+                            clans_daily_data[date_str] = {}
+                            
+                            if logical_weekday == 3: # Reset
+                                if date_str in clans_cumulative:
+                                    for cn in clans_cumulative[date_str].keys():
+                                        clans_daily_data[date_str][cn] = {
+                                            'fama_diaria': 0,
+                                            'posicao_diaria': 0
+                                        }
+                                continue
+                                
+                            today_cums = clans_cumulative.get(date_str, {})
+                            prev_date_str = cron_dates[idx-1].strftime('%Y_%m_%d') if idx > 0 else None
+                            
+                            is_prev_reset = False
+                            if idx > 0 and cron_dates[idx-1].weekday() == 3:
+                                is_prev_reset = True
+                                
+                            prev_cums = {}
+                            if prev_date_str and not is_prev_reset:
+                                prev_cums = clans_cumulative.get(prev_date_str, {})
+                            
+                            day_fames = []
+                            for cn, fame_today in today_cums.items():
+                                fame_prev = prev_cums.get(cn, 0)
+                                fama_diaria = max(0, fame_today - fame_prev)
+                                day_fames.append((cn, fama_diaria))
+                            
+                            sorted_day = sorted(day_fames, key=lambda x: x[1], reverse=True)
+                            ranked_count = 1
+                            for cn, fama in sorted_day:
+                                if fama > 0:
+                                    pos = ranked_count
+                                    ranked_count += 1
+                                else:
+                                    pos = 0
+                                clans_daily_data[date_str][cn] = {
+                                    'fama_diaria': fama,
+                                    'posicao_diaria': pos
+                                }
+                    except Exception as e:
+                        logger.error(f"Erro ao calcular clans_daily_data em get_war_radar_data: {e}")
                 
                 grouped_data = {}
                 for d_dash in target_dates_dash:
@@ -4826,7 +4975,6 @@ class GitHubPagesHTMLGenerator:
                             continue
                     else:
                         is_sec = player_tag and '2220UQQ0UU' in player_tag
-                        # Aceita tanto '#2220UQQ0UU' (novo padrao) quanto '2220UQQ0UU' (registros antigos sem #)
                         expected_accounts = ['#2220UQQ0UU', '2220UQQ0UU'] if is_sec else ['#2QR292P', 'principal']
                         if row_account not in expected_accounts:
                             continue
@@ -4840,13 +4988,56 @@ class GitHubPagesHTMLGenerator:
                         grouped_data[d_dash][cla] = []
                     grouped_data[d_dash][cla].append(row)
                 
+                cron_dates_dash = sorted(target_dates_dash)
                 for d_dash, u_date in zip(target_dates_dash, target_dates_under):
+                    # Obter a data anterior para o cálculo diário dos jogadores
+                    try:
+                        idx = cron_dates_dash.index(d_dash)
+                    except:
+                        idx = 0
+                    
+                    prev_d_dash = None
+                    if idx > 0:
+                        prev_d_dash = cron_dates_dash[idx-1]
+                        
+                    is_prev_reset = False
+                    if prev_d_dash:
+                        try:
+                            prev_dt = datetime.strptime(prev_d_dash, '%Y-%m-%d')
+                            if prev_dt.weekday() == 3:
+                                is_prev_reset = True
+                        except: pass
+
+                    is_today_reset = False
+                    try:
+                        today_dt = datetime.strptime(d_dash, '%Y-%m-%d')
+                        if today_dt.weekday() == 3:
+                            is_today_reset = True
+                    except: pass
+                    
                     clan_list = []
                     for cla, player_rows in grouped_data[d_dash].items():
                         seen_players = {}
                         for row in player_rows:
                             player_name = row.get('player_nome') or row.get('Jogador', '')
-                            player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                            player_tag_row = row.get('player_tag', '')
+                            
+                            # Calcular fama diária do jogador
+                            fame_today = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                            if is_today_reset:
+                                fame_daily = 0
+                            else:
+                                key_tag = player_tag_row or player_name
+                                fame_prev = 0
+                                if prev_d_dash and not is_prev_reset:
+                                    prev_fames = player_tag_cums.get(prev_d_dash, {})
+                                    fame_prev = prev_fames.get(key_tag, 0)
+                                    if fame_prev == 0 and isinstance(key_tag, str):
+                                        alt_key = key_tag.replace('#', '') if '#' in key_tag else '#' + key_tag
+                                        fame_prev = prev_fames.get(alt_key, 0)
+                                fame_daily = max(0, fame_today - fame_prev)
+                            
+                            player_fame = fame_daily
                             clan_tag_from_row = row.get('clan_tag', '')
                             decks_used_raw = row.get('decks_usados') or '0'
                             boat_attacks = row.get('boat_attacks', '0')
@@ -4918,15 +5109,24 @@ class GitHubPagesHTMLGenerator:
                         max_players = 10 if (is_my_own_clan and mode == 'my-war') else 3
                         top_players = [p for p in sorted_players if p['fame'] > 0][:max_players]
                         
-                        total_fame = sum(p['fame'] for p in top_players)
-                        
-                        # Calcular metricas preditivas usando o prediction_engine
+                        clan_daily_fame = 0
+                        if u_date in clans_daily_data:
+                            for cn, daily in clans_daily_data[u_date].items():
+                                if cla.lower() in cn.lower() or cn.lower() in cla.lower():
+                                    clan_daily_fame = daily['fama_diaria']
+                                    break
+                        if clan_daily_fame == 0:
+                            if is_today_reset:
+                                clan_daily_fame = 0
+                            else:
+                                clan_daily_fame = sum(p['fame'] for p in top_players)
+                                
                         metrics = self.prediction_engine.calculate_clan_metrics(player_rows, cla)
-
+ 
                         clan_list.append({
                             'name': cla,
                             'players': top_players,
-                            'total_fame': total_fame,
+                            'total_fame': clan_daily_fame,
                             'date': u_date,
                             'is_me': is_my_own_clan,
                             'decks_played': metrics['decks_played'],
@@ -4935,14 +5135,12 @@ class GitHubPagesHTMLGenerator:
                             'projected_fame': metrics['projected_fame']
                         })
                     
-                    # 1. Encontrar a projecao do meu clan
                     my_projection = 0
                     for c in clan_list:
                         if c['is_me']:
                             my_projection = c['projected_fame']
                             break
                     
-                    # 2. Calcular o nivel de ameaca para cada clan rival
                     for c in clan_list:
                         if c['is_me']:
                             c['threat_level'] = 'CONTROLADA'
@@ -4952,10 +5150,13 @@ class GitHubPagesHTMLGenerator:
                                 my_projection=my_projection,
                                 rival_decks_remaining=c['decks_remaining']
                             )
-
+ 
                     clan_list.sort(key=lambda x: x['total_fame'], reverse=True)
                     for idx, c in enumerate(clan_list):
-                        c['position'] = idx + 1
+                        if is_today_reset or c['total_fame'] == 0:
+                            c['position'] = 0
+                        else:
+                            c['position'] = idx + 1
                     clans_by_date[u_date] = clan_list
                     
                 total_clans = len(clans_by_date[target_dates_under[-1]]) if clans_by_date else 0
@@ -5407,7 +5608,7 @@ class GitHubPagesHTMLGenerator:
                     clan_cards_html += f"""
                         <div class="rd-clan {me_class}">
                             <div class="rd-clan-header">
-                                <span class="rd-pos">#{position}</span>
+                                <span class="rd-pos">{f"#{position}" if safe_int(position) > 0 else "—"}</span>
                                 <span class="rd-clan-name">{clan_name}</span>
                                 {me_badge}
                                 <span class="rd-clan-fame">{total_fame:,} ⭐</span>
