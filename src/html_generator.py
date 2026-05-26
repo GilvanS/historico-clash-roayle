@@ -2829,10 +2829,9 @@ class GitHubPagesHTMLGenerator:
                 opp_stats[tag]['last_deck'] = b.get('deck_oponente') or b.get('opponent_deck_cards')
 
         # 3. Categorização e Ordenação
-        # Fallback inteligente: se a conta tiver menos de 3 oponentes repetidos reais (faced > 1),
-        # permitimos listar os oponentes de batalhas únicas mais recentes para não deixar a seção vazia e espaçosa
-        real_repeated_count = sum(1 for o in opp_stats.values() if o['total_battles'] > 1)
-        min_battles_required = 1 if real_repeated_count < 3 else 2
+        # Apenas listar oponentes com pelo menos 2 batalhas (oponentes repetidos reais)
+        # Evita exibir oponentes de batalhas únicas no VS Stage, o que poluía visualmente
+        min_battles_required = 2
         
         repeated = []
         for o in opp_stats.values():
