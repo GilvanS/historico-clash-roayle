@@ -2676,65 +2676,133 @@ class GitHubPagesHTMLGenerator:
         return html
 
     def generate_winning_decks_html(self, winning_data: List[Dict]) -> str:
-        """Gera HTML para a aba de melhores decks da semana (Meta/Global) no padrao Premium v2."""
+        """Gera HTML para a aba de melhores decks da semana (Meta/Global) no padrao Premium v2 com visualização VS."""
         if not winning_data: return '<div class="cr-empty-state">Dados globais insuficientes para o Top Vencedores.</div>'
         
-        html = '<div class="cr-decks-list">'
+        # Usar grid de colunas para telas médias/grandes
+        html = '<div class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); gap: 20px;">'
+        
         for i, deck in enumerate(winning_data, 1):
             total = deck['total']
             win_rate = deck['win_rate']
-            
-            cards_list = [c.strip() for c in deck['deck_cards'].split(' | ')]
-            metrics = self._get_deck_metrics(deck['deck_cards'])
-            
-            # Formatar para copy button
-            cards_for_copy = [c for c in cards_list if c]
+            deck_cards = deck['deck_cards']
             
             source_label = deck.get('source', 'Dados do Clã')
             is_global = source_label == 'Global Meta'
             game_mode = "Ranked" if is_global else "Guerra/Desafio"
             
+            # Buscar primeira batalha para o VS se houver
+            first_b = deck['battles'][0] if deck.get('battles') else {}
+            
+            # Se for global ou não tiver batalhas, criamos um mock de oponente
+            if first_b:
+                my_metrics = self._get_battle_deck_metrics(deck_cards, first_b, is_opponent=False)
+                opp_deck = first_b.get('opponent_deck_cards') or first_b.get('opp_deck') or ""
+                opp_metrics = self._get_battle_deck_metrics(opp_deck, first_b, is_opponent=True)
+                p_crowns = first_b.get('coroas_jogador') if first_b.get('coroas_jogador') is not None else first_b.get('crowns', 0)
+                o_crowns = first_b.get('coroas_oponente') if first_b.get('coroas_oponente') is not None else first_b.get('opponent_crowns', 0)
+                opp_name = first_b.get('opponent_name') or first_b.get('opp_name', 'Oponente')
+            else:
+                my_metrics = self._get_deck_metrics(deck_cards)
+                # Oponente clássico de simulação: Log Bait clássico ou Hog 2.6
+                opp_deck = "Princess|14|false | Goblin Gang|14|false | Inferno Tower|14|false | Rocket|14|false | Goblin Barrel|14|false | Ice Spirit|14|false | The Log|14|false | Valkyrie|14|false"
+                opp_metrics = self._get_deck_metrics(opp_deck)
+                p_crowns = 3
+                o_crowns = 1
+                opp_name = "Meta Rival"
+                
             wr_c = '#48bb78' if win_rate >= 55 else ('#4299e1' if win_rate >= 50 else '#f87171')
             
+            my_cards_for_copy = [c.split('|')[0] for c in deck_cards.split('|') if c]
+            my_copy_link = self.get_copy_deck_link(my_cards_for_copy)
+            
+            opp_cards_for_copy = [c.split('|')[0] for c in opp_deck.split('|') if c]
+            opp_copy_link = self.get_copy_deck_link(opp_cards_for_copy)
+            
             html += f'''
-            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 20px; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 0 !important; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
                 <div class="cr-deck-header" style="padding: 15px 25px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 24px 24px 0 0;">
-                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 20px; width: 100%; flex-wrap: wrap;">
-                        <div style="background:{wr_c}; color: #fff; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 950; font-size: 1.1em; font-family: 'Krona One', sans-serif;">#{i}</div>
+                    <div class="cr-deck-meta" style="display: flex; align-items: center; gap: 15px; width: 100%; flex-wrap: wrap;">
+                        <div style="background:{wr_c}; color: #fff; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 950; font-size: 0.95em; font-family: 'Krona One', sans-serif;">#{i}</div>
                         <div style="flex: 1;">
-                            <div style="font-size: 0.75em; color: rgba(255,255,255,0.4); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">{source_label.upper()}</div>
-                            <div style="font-size: 1em; font-weight: 900; color: #fff; margin-top: 2px;">{game_mode}</div>
+                            <div style="font-size: 0.6em; color: rgba(255,255,255,0.4); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">{source_label.upper()}</div>
+                            <div style="font-size: 0.85em; font-weight: 900; color: #fff; margin-top: 1px;">{game_mode}</div>
                         </div>
-                        <span style="background: rgba(255,255,255,0.1); color: #fff; padding: 6px 15px; border-radius: 10px; font-weight: 900; font-size: 0.8em;">{total} Partidas</span>
-                        <div style="background:{wr_c}22; border: 1px solid {wr_c}44; color: {wr_c}; padding: 8px 20px; border-radius: 12px; font-weight: 950; font-size: 1.1em; font-family: 'Krona One', sans-serif;">{win_rate}% WR</div>
+                        <span style="background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.65em;">{total} Partidas</span>
+                        <div style="background:{wr_c}22; border: 1px solid {wr_c}44; color: {wr_c}; padding: 6px 12px; border-radius: 8px; font-weight: 950; font-size: 0.9em; font-family: 'Krona One', sans-serif;">{win_rate}% WR</div>
                     </div>
                 </div>
 
-                <div class="cr-deck-body" style="padding: 30px !important; background: transparent;">
-                    <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 25px; align-items: center;">
-                        
-                        <!-- Grid do Deck -->
-                        <div style="width: 100%; max-width: 500px; padding: 25px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                             <div class="cr-grid-wrapper-premium">
-                                  {self._generate_deck_grid_html_simple(deck['deck_cards'])}
-                             </div>
+                <div class="cr-deck-body" style="padding: 25px !important; background: transparent;">
+                    <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 20px; padding: 15px; background: transparent; border: none; margin-bottom: 0;">
+                        <!-- Torres no Topo -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
+                            <!-- Minha Torre -->
+                            <div style="display: flex; flex-direction: column; align-items: center; width: 80px;">
+                                <img src="{my_metrics['tower_url']}" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.4));">
+                                <span style="font-size: 0.55em; font-weight: 900; color: #4ade80; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 6px; margin-top: 2px;">{my_metrics.get('hp', '--')} HP</span>
+                            </div>
+                            
+                            <!-- Placar de Batalha no Centro -->
+                            <div style="text-align: center;">
+                                <span style="font-family: 'Krona One', sans-serif; font-size: 1.4em; font-weight: 950; color: #48bb78; letter-spacing: -1px;">
+                                    {p_crowns} - {o_crowns}
+                                </span>
+                                <div style="font-size: 0.55em; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 2px;">VITÓRIA</div>
+                            </div>
+                            
+                            <!-- Torre do Oponente -->
+                            <div style="display: flex; flex-direction: column; align-items: center; width: 80px;">
+                                <img src="{opp_metrics['tower_url']}" style="width: 60px; height: 60px; object-fit: contain; transform: scaleX(-1); filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.4));">
+                                <span style="font-size: 0.55em; font-weight: 900; color: #f87171; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 6px; margin-top: 2px;">{opp_metrics.get('hp', '--')} HP</span>
+                            </div>
                         </div>
 
-                        <!-- Métricas -->
-                        <div style="width: 100%; max-width: 500px; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
-                            {self._generate_metrics_panel_html_simple(metrics)}
+                        <!-- Dois Decks Lado a Lado -->
+                        <div class="cr-vs-decks-row-v2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
+                            <!-- Deck Vencedor -->
+                            <div class="cr-vs-deck-wrap" style="padding: 10px; border-radius: 14px; background: rgba(15, 23, 42, 0.3);">
+                                <div style="font-size: 0.6em; font-weight: 900; color: #93c5fd; text-transform: uppercase; margin-bottom: 5px; text-align: center;">Deck Vencedor</div>
+                                {self._generate_deck_grid_html_simple(deck_cards, my_copy_link)}
+                            </div>
+                            
+                            <!-- Deck Oponente -->
+                            <div class="cr-vs-deck-wrap" style="padding: 10px; border-radius: 14px; background: rgba(15, 23, 42, 0.3);">
+                                <div style="font-size: 0.6em; font-weight: 900; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 5px; text-align: center;">Rival ({opp_name[:10]})</div>
+                                {self._generate_deck_grid_html_simple(opp_deck, opp_copy_link)}
+                            </div>
                         </div>
-                        
-                        <!-- Botão Copiar -->
-                        <div style="display: flex; gap: 15px;">
-                            <button onclick="copyToClipboardDeckDirect({cards_for_copy})" 
-                                    style="background: rgba(72, 187, 120, 0.1); border: 1px solid rgba(72, 187, 120, 0.3); color: #9ae6b4; padding: 10px 25px; border-radius: 12px; font-size: 0.8em; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s;">
-                                <i class="far fa-copy"></i> COPIAR DECK
-                            </button>
+
+                        <!-- Métricas de Ambos Embaixo -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
+                            <!-- Minhas Métricas -->
+                            <div style="display: flex; gap: 4px; justify-content: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 10px;">
+                                <div class="cr-metric-inline" title="Elixir Médio" style="font-size: 0.6em; gap: 3px;">
+                                    <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 10px; height: 10px;">
+                                    <span>{my_metrics['avg']}</span>
+                                </div>
+                                <div class="cr-metric-inline" title="Ciclo" style="font-size: 0.6em; gap: 3px;">
+                                    <img src="docs/ciclo4.png" style="width: 10px; height: 10px;">
+                                    <span>{my_metrics['cycle']}</span>
+                                </div>
+                            </div>
+                            <!-- Métricas do Rival -->
+                            <div style="display: flex; gap: 4px; justify-content: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 10px;">
+                                <div class="cr-metric-inline" title="Elixir Médio" style="font-size: 0.6em; gap: 3px;">
+                                    <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 10px; height: 10px;">
+                                    <span>{opp_metrics['avg']}</span>
+                                </div>
+                                <div class="cr-metric-inline" title="Ciclo" style="font-size: 0.6em; gap: 3px;">
+                                    <img src="docs/ciclo4.png" style="width: 10px; height: 10px;">
+                                    <span>{opp_metrics['cycle']}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>'''
+            </div>
+            '''
+            
         return html + '</div>'
 
     def get_repeated_opponents_from_csv(self, player_tag: str = None) -> List[Dict]:
@@ -3973,23 +4041,54 @@ class GitHubPagesHTMLGenerator:
 
 
     def generate_lethal_decks_html(self, lethal_decks: List[Dict]) -> str:
-        """Gera HTML para os decks que mais causam derrotas com layout Premium v2."""
+        """Gera HTML para os decks que mais causam derrotas com layout Premium v2 com visualização VS."""
         if not lethal_decks: return '<div class="cr-empty-state">Dados insuficientes para mapear decks letais.</div>'
         
         # Container Grid para os Decks Letais
-        html = '<div class="cr-lethal-decks-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">'
+        html = '<div class="cr-lethal-decks-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); gap: 20px;">'
+        
+        # Obter os decks da semana do jogador para fallback
+        weekly_decks = self.get_weekly_decks_from_csv(player_tag=self.player_tag)
+        fallback_my_deck = weekly_decks[0]['deck_cards'] if weekly_decks else "Archers|14|false | Knight|14|false | Tesla|14|false | Rocket|14|false | Ice Spirit|14|false | Skeletons|14|false | The Log|14|false | Tornado|14|false"
+        
+        all_battles = self.load_all_data_rows(player_tag=self.player_tag)
         
         for i, ld in enumerate(lethal_decks, 1):
-            deck_str = ld['deck']
+            deck_str = ld['deck'] # O deck letal do oponente
             losses = ld['losses_caused'] 
             last = ld['last_encounter'][:16].replace('T', ' ')
             
-            # Obter métricas para o deck letal
-            metrics = self._get_deck_metrics(deck_str)
+            # 1. Encontrar a última batalha correspondente em que fomos derrotados por este deck
+            matching_battle = None
+            for b in all_battles:
+                b_opp_deck = b.get('deck_oponente') or b.get('opponent_deck_cards', '')
+                res = (b.get('resultado') or b.get('result') or '').strip().lower()
+                if res in ['derrota', 'defeat'] and self._get_canonical_deck(b_opp_deck) == self._get_canonical_deck(deck_str):
+                    matching_battle = b
+                    break
             
-            # Formatar lista de cartas para o botão de cópia
-            cards_for_copy = [c.split('|')[0] for c in deck_str.split('|') if c]
-            copy_link = self.get_copy_deck_link(cards_for_copy)
+            # Se achou a batalha, usa o deck real do jogador e métricas reais
+            if matching_battle:
+                my_deck = matching_battle.get('deck_jogador') or matching_battle.get('deck_cards', '')
+                my_metrics = self._get_battle_deck_metrics(my_deck, matching_battle, is_opponent=False)
+                opp_metrics = self._get_battle_deck_metrics(deck_str, matching_battle, is_opponent=True)
+                p_crowns = matching_battle.get('coroas_jogador') if matching_battle.get('coroas_jogador') is not None else matching_battle.get('crowns', 0)
+                o_crowns = matching_battle.get('coroas_oponente') if matching_battle.get('coroas_oponente') is not None else matching_battle.get('opponent_crowns', 0)
+                opp_name = matching_battle.get('opponent_name') or matching_battle.get('nome_oponente', 'Algoz Letal')
+            else:
+                my_deck = fallback_my_deck
+                my_metrics = self._get_deck_metrics(my_deck)
+                opp_metrics = self._get_deck_metrics(deck_str)
+                p_crowns = 0
+                o_crowns = 1
+                opp_name = "Algoz Letal"
+                
+            # Formatar para o botão de cópia
+            opp_cards_for_copy = [c.split('|')[0] for c in deck_str.split('|') if c]
+            opp_copy_link = self.get_copy_deck_link(opp_cards_for_copy)
+            
+            my_cards_for_copy = [c.split('|')[0] for c in my_deck.split('|') if c]
+            my_copy_link = self.get_copy_deck_link(my_cards_for_copy)
             
             html += f'''
             <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 0 !important; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
@@ -3997,8 +4096,8 @@ class GitHubPagesHTMLGenerator:
                     <div style="display: flex; align-items: center; gap: 20px; width: 100%;">
                         <div class="cr-opp-rank" style="background: #ef4444; color: #fff; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 950; font-size: 1.1em; box-shadow: 0 0 20px rgba(239,68,68,0.3); font-family: 'Krona One', sans-serif;">{i}</div>
                         <div style="display: flex; flex-direction: column;">
-                            <span style="font-weight: 950; font-size: 1.3em; color: #fff; letter-spacing: -0.5px; font-family: 'Krona One', sans-serif;">Algoz Letal</span>
-                            <span style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Visto em: {last}</span>
+                            <span style="font-weight: 950; font-size: 1.15em; color: #fff; letter-spacing: -0.5px; font-family: 'Krona One', sans-serif;">{opp_name[:16]}</span>
+                            <span style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Última queda: {last}</span>
                         </div>
                         <div style="margin-left: auto; display: flex; align-items: center; gap: 15px;">
                             <div class="cr-wr-badge-v2" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; font-weight: 950; font-size: 0.9em; padding: 6px 15px; border-radius: 10px; font-family: 'Krona One', sans-serif;">
@@ -4008,27 +4107,76 @@ class GitHubPagesHTMLGenerator:
                     </div>
                 </div>
 
-                <div class="cr-deck-body" style="padding: 30px !important; background: transparent;">
-                    <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 24px; align-items: center;">
-                        
-                        <!-- Top Row: Torre do Oponente (espelhada para ficar de frente) -->
-                        <div class="cr-tower-display-v2" style="position: relative; display: flex; flex-direction: column; align-items: center;">
-                            <img src="{metrics['tower_url']}" class="cr-tower-img-premium" style="width: 100px; height: 100px; transform: scaleX(-1); filter: drop-shadow(0 0 25px rgba(248, 113, 113, 0.4));">
+                <div class="cr-deck-body" style="padding: 25px !important; background: transparent;">
+                    <div class="cr-vs-stage-v2" style="display: flex; flex-direction: column; gap: 20px; padding: 15px; background: transparent; border: none; margin-bottom: 0;">
+                        <!-- Torres no Topo -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;">
+                            <!-- Minha Torre -->
+                            <div style="display: flex; flex-direction: column; align-items: center; width: 80px;">
+                                <img src="{my_metrics['tower_url']}" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.4));">
+                                <span style="font-size: 0.55em; font-weight: 900; color: #4ade80; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 6px; margin-top: 2px;">{my_metrics.get('hp', '--')} HP</span>
+                            </div>
+                            
+                            <!-- Placar de Batalha no Centro -->
+                            <div style="text-align: center;">
+                                <span style="font-family: 'Krona One', sans-serif; font-size: 1.4em; font-weight: 950; color: #f87171; letter-spacing: -1px;">
+                                    {p_crowns} - {o_crowns}
+                                </span>
+                                <div style="font-size: 0.55em; font-weight: 900; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 2px;">DERROTA</div>
+                            </div>
+                            
+                            <!-- Torre do Algoz -->
+                            <div style="display: flex; flex-direction: column; align-items: center; width: 80px;">
+                                <img src="{opp_metrics['tower_url']}" style="width: 60px; height: 60px; object-fit: contain; transform: scaleX(-1); filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.4));">
+                                <span style="font-size: 0.55em; font-weight: 900; color: #f87171; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 6px; margin-top: 2px;">{opp_metrics.get('hp', '--')} HP</span>
+                            </div>
                         </div>
 
-                        <!-- Mid Row: Grid do Deck -->
-                        <div class="cr-vs-deck-wrap" style="width: 100%; max-width: 480px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                            {self._generate_deck_grid_html_simple(deck_str, copy_link)}
+                        <!-- Dois Decks Lado a Lado -->
+                        <div class="cr-vs-decks-row-v2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
+                            <!-- Meu Deck -->
+                            <div class="cr-vs-deck-wrap" style="padding: 10px; border-radius: 14px; background: rgba(15, 23, 42, 0.3);">
+                                <div style="font-size: 0.6em; font-weight: 900; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 5px; text-align: center;">Seu Deck</div>
+                                {self._generate_deck_grid_html_simple(my_deck, my_copy_link)}
+                            </div>
+                            
+                            <!-- Deck Letal -->
+                            <div class="cr-vs-deck-wrap" style="padding: 10px; border-radius: 14px; background: rgba(15, 23, 42, 0.3);">
+                                <div style="font-size: 0.6em; font-weight: 900; color: #fca5a5; text-transform: uppercase; margin-bottom: 5px; text-align: center;">Deck Inimigo</div>
+                                {self._generate_deck_grid_html_simple(deck_str, opp_copy_link)}
+                            </div>
                         </div>
 
-                        <!-- Bottom Row: Métricas -->
-                        <div class="cr-vs-metrics-footer-v2" style="width: 100%; max-width: 480px; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
-                            {self._generate_metrics_panel_html_simple(metrics)}
+                        <!-- Métricas de Ambos Embaixo -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
+                            <!-- Minhas Métricas -->
+                            <div style="display: flex; gap: 4px; justify-content: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 10px;">
+                                <div class="cr-metric-inline" title="Elixir Médio" style="font-size: 0.6em; gap: 3px;">
+                                    <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 10px; height: 10px;">
+                                    <span>{my_metrics['avg']}</span>
+                                </div>
+                                <div class="cr-metric-inline" title="Ciclo" style="font-size: 0.6em; gap: 3px;">
+                                    <img src="docs/ciclo4.png" style="width: 10px; height: 10px;">
+                                    <span>{my_metrics['cycle']}</span>
+                                </div>
+                            </div>
+                            <!-- Métricas do Algoz -->
+                            <div style="display: flex; gap: 4px; justify-content: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 10px;">
+                                <div class="cr-metric-inline" title="Elixir Médio" style="font-size: 0.6em; gap: 3px;">
+                                    <img src="https://cdn.royaleapi.com/static/img/ui/elixir.png" style="width: 10px; height: 10px;">
+                                    <span>{opp_metrics['avg']}</span>
+                                </div>
+                                <div class="cr-metric-inline" title="Ciclo" style="font-size: 0.6em; gap: 3px;">
+                                    <img src="docs/ciclo4.png" style="width: 10px; height: 10px;">
+                                    <span>{opp_metrics['cycle']}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             '''
+            
         return html + "</div>"
 
 
