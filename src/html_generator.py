@@ -3233,6 +3233,14 @@ class GitHubPagesHTMLGenerator:
                     filter: brightness(1.2) drop-shadow(0 12px 24px rgba(0,0,0,0.5)) !important;
                     z-index: 100 !important;
                 }
+                .cr-tower-zoom.cr-tower-mirrored {
+                    transform: scaleX(-1) !important;
+                }
+                .cr-tower-zoom.cr-tower-mirrored:hover {
+                    transform: scale(1.15) scaleX(-1) translateY(-8px) !important;
+                    filter: brightness(1.2) drop-shadow(0 12px 24px rgba(0,0,0,0.5)) !important;
+                    z-index: 100 !important;
+                }
                 .cr-battle-preview-v2 div {
                     white-space: nowrap !important;
                 }
@@ -3506,7 +3514,7 @@ class GitHubPagesHTMLGenerator:
                         <div class="cr-deck-side cr-deck-right" style="display: flex; flex-direction: column; align-items: flex-end; width: 100%;">
                             <div class="cr-vs-player-info" style="margin-bottom: 15px; display: flex; flex-direction: row-reverse; align-items: center; gap: 12px; width: 100%; text-align: right;">
                                 <div class="cr-tower-card-premium" style="margin: 0; width: 64px; height: 80px; border-radius: 12px; padding: 5px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                                    <img src="${oGrid.towerUrl}" class="cr-tower-img-premium cr-tower-zoom" style="width: 50px; height: 50px; object-fit: contain; transform: scaleX(-1);">
+                                    <img src="${oGrid.towerUrl}" class="cr-tower-img-premium cr-tower-zoom cr-tower-mirrored" style="width: 50px; height: 50px; object-fit: contain;">
                                     <span style="font-size: 0.65em; font-weight: 800; color: #94a3b8; margin-top: 4px;">NV ${oGrid.tLevel}</span>
                                 </div>
                                 <div>
@@ -3871,7 +3879,7 @@ class GitHubPagesHTMLGenerator:
                 <!-- Coluna Oponente -->
                 <div class="cr-vs-deck-column opponent" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;">
                     <div id="o-tower-container-{section_id}" style="width: 90px; margin-bottom: 10px; transition: all 0.3s ease;">
-                        <img id="o-tower-img-{section_id}" src="{opp_metrics['tower_url']}" class="cr-tower-zoom" style="width: 100%; transform: scaleX(-1); filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
+                        <img id="o-tower-img-{section_id}" src="{opp_metrics['tower_url']}" class="cr-tower-zoom cr-tower-mirrored" style="width: 100%; filter: drop-shadow(0 0 15px rgba(248, 113, 113, 0.4));">
                         <div id="o-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #f87171; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{opp_metrics.get('hp', '--')} HP</div>
                     </div>
                     <div id="o-grid-{section_id}" style="width: 100%; position: relative; z-index: 5;">
