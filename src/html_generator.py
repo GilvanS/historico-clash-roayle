@@ -6278,6 +6278,9 @@ class GitHubPagesHTMLGenerator:
         # Initialize component placeholders
         battles_table_html = ""
         battles_cards_html = ""
+        other_battles_table_html = ""
+        other_battles_cards_html = ""
+        other_name = "Secundária"
         daily_histogram_html = ""
         chests_html = ""
         deck_performance_html = ""
@@ -6375,9 +6378,81 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
                     """
+                
+                # 3.1. Identificar a outra conta e buscar dados de batalhas
+                other_tag = None
+                for t in self.tracked_tags:
+                    if t != player_tag:
+                        other_tag = t
+                        break
+                
+                other_battles = []
+                other_name = "Conta Secundária" if player_tag == '#2QR292P' else "Conta Principal"
+                
+                if other_tag:
+                    try:
+                        other_battles = self.get_recent_battles(15, player_tag=other_tag)
+                        other_stats = self.get_player_stats(other_tag)
+                        if other_stats:
+                            other_name = other_stats.get('name', other_name)
+                    except Exception as ex_other:
+                        logger.error(f"Erro ao buscar batalhas da outra conta {other_tag}: {ex_other}")
+                
+                # 3.2. Gerar HTML de tabelas e cards para a outra conta
+                for battle in other_battles[:10]:
+                    result_raw = battle.get('result') or 'UNKNOWN'
+                    result_class = result_raw.lower()
+                    result_text = result_raw.upper()
+                    trophy_color = "green" if (battle.get('trophy_change') or 0) >= 0 else "red"
+                    result_display = 'Vitória' if result_text in ['VICTORY', 'VITORIA', 'VITÓRIA'] else 'Derrota' if result_text in ['DEFEAT', 'DERROTA'] else 'Empate'
+                    
+                    opp_tower_lv = safe_int(battle.get('nivel_torre_oponente', '0'))
+                    if opp_tower_lv > 0:
+                        opp_display = f"{battle['opponent_name']} <small>(Nv {opp_tower_lv})</small>"
+                    else:
+                        opp_display = battle['opponent_name']
+                    
+                    other_battles_table_html += f"""
+                        <tr class="battle-{result_class}">
+                            <td>{self.format_time_ago(battle['battle_time'])}</td>
+                            <td><span class="result-{result_class}">{result_display}</span></td>
+                            <td>{opp_display}</td>
+                            <td class="center">{battle['crowns']}</td>
+                            <td class="center" style="color: {trophy_color}">
+                                <strong>{int(battle['trophy_change']):+d}</strong>
+                            </td>
+                            <td>{battle['arena_name']}</td>
+                        </tr>
+                    """
+                    
+                    other_battles_cards_html += f"""
+                        <div class="battle-card battle-{result_class}">
+                            <div class="battle-card-header">
+                                <span class="result-{result_class} battle-result">{result_display}</span>
+                                <span class="battle-time">{self.format_time_ago(battle['battle_time'])}</span>
+                            </div>
+                            <div class="battle-card-content">
+                                <div class="battle-opponent">
+                                    <span class="opp-name">vs {battle['opponent_name']}</span>
+                                    <span class="arena-name">{battle['arena_name']}</span>
+                                </div>
+                                <div class="battle-metrics">
+                                    <div class="metric crown">
+                                        <span class="metric-value">{battle['crowns']}</span>
+                                        <span class="metric-label">Crowns</span>
+                                    </div>
+                                    <div class="metric trophy" style="color: {trophy_color}">
+                                        <span class="metric-value">{int(battle['trophy_change']):+d}</span>
+                                        <span class="metric-label">Trophies</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    """
             except Exception as e:
                 logger.error(f"Error generating battle history for {player_tag}: {e}")
-                battles_table_html = "<tr><td colspan='8'>Error loading battles</td></tr>"
+                battles_table_html = "<tr><td colspan='6'>Error loading battles</td></tr>"
+                other_battles_table_html = "<tr><td colspan='6'>Error loading battles</td></tr>"
 
             # 4. Histograms
             try:
@@ -6428,14 +6503,40 @@ class GitHubPagesHTMLGenerator:
             </div>
 
             <div class="section">
-                <h2 class="clash-font">⚔️ Last Battles</h2>
-                <div class="desktop-table">
-                    <table>
-                        <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies</th><th>Arena</th></tr></thead>
-                        <tbody>{battles_table_html}</tbody>
-                    </table>
+                <h2 class="clash-font" style="margin-bottom: 20px;">⚔️ Last Battles</h2>
+                
+                <!-- Layout de Duas Colunas Lado a Lado no Desktop, Empilhado no Mobile -->
+                <div class="cr-last-battles-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 30px;">
+                    
+                    <!-- Coluna 1: Conta Atual (Destaque) -->
+                    <div class="cr-battles-column">
+                        <h3 class="clash-font" style="font-size: 1.1em; color: #60a5fa; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-star" style="color: #fbbf24;"></i> {stats['name']} <small style="opacity: 0.7; font-size: 0.8em;">(Foco Atual)</small>
+                        </h3>
+                        <div class="desktop-table">
+                            <table>
+                                <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies</th><th>Arena</th></tr></thead>
+                                <tbody>{battles_table_html if battles_table_html else '<tr><td colspan="6">Sem batalhas registradas</td></tr>'}</tbody>
+                            </table>
+                        </div>
+                        <div class="battle-cards">{battles_cards_html}</div>
+                    </div>
+                    
+                    <!-- Coluna 2: Outra Conta -->
+                    <div class="cr-battles-column" style="background: rgba(255,255,255,0.01); padding: 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
+                        <h3 class="clash-font" style="font-size: 1.1em; color: #a855f7; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-user-ninja"></i> {other_name}
+                        </h3>
+                        <div class="desktop-table">
+                            <table>
+                                <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies</th><th>Arena</th></tr></thead>
+                                <tbody>{other_battles_table_html if other_battles_table_html else '<tr><td colspan="6">Sem batalhas registradas</td></tr>'}</tbody>
+                            </table>
+                        </div>
+                        <div class="battle-cards">{other_battles_cards_html}</div>
+                    </div>
+                    
                 </div>
-                <div class="battle-cards">{battles_cards_html}</div>
             </div>
             """
 
