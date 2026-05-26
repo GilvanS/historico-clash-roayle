@@ -2671,6 +2671,10 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
             '''
+        
+        html += '</div>'
+        return html
+
     def generate_winning_decks_html(self, winning_data: List[Dict]) -> str:
         """Gera HTML para a aba de melhores decks da semana (Meta/Global) no padrao Premium v2."""
         if not winning_data: return '<div class="cr-empty-state">Dados globais insuficientes para o Top Vencedores.</div>'
@@ -4482,20 +4486,8 @@ class GitHubPagesHTMLGenerator:
                                     boat_status = 'active'
                                 break
                     
-                    # Obter a fama e posição diária calculadas
-                    my_clan_daily = None
-                    if date_str in clans_daily_data:
-                        for cn, daily in clans_daily_data[date_str].items():
-                            if my_clan.lower() in cn.lower() or cn.lower() in my_clan.lower():
-                                my_clan_daily = daily
-                                break
-                                
-                    if my_clan_daily:
-                        clan_data = {
-                            'position': my_clan_daily['posicao_diaria'],
-                            'fame': my_clan_daily['fama_diaria']
-                        }
-                    elif date_str in intel_data:
+                    # Priorizar dados oficiais acumulados de intel_data (guerra_historico.csv)
+                    if date_str in intel_data:
                         my_clan_upper = my_clan.strip().upper()
                         for cn, data in intel_data[date_str].items():
                             cn_upper = cn.upper()
@@ -4504,6 +4496,28 @@ class GitHubPagesHTMLGenerator:
                             if (my_clean in cn_clean or cn_clean in my_clean or 
                                 my_clean.replace(' ', '') in cn_clean.replace(' ', '')):
                                 clan_data = data
+                                break
+
+                    # Se nao encontrou no intel_data, tentar no status_by_date (dados de corrida de barco acumulados)
+                    if not clan_data and date_str in status_by_date:
+                        for row in status_by_date[date_str]:
+                            cn = row.get('clan_nome', '')
+                            if my_clan.lower() in cn.lower() or cn.lower() in my_clan.lower():
+                                clan_data = {
+                                    'position': safe_int(row.get('clan_posicao') or row.get('posicao', 0)),
+                                    'fame': safe_int(row.get('clan_fame') or row.get('fama_acumulada') or row.get('Fama_Atual', 0)),
+                                    'points': safe_int(row.get('pontos_reparo', 0))
+                                }
+                                break
+
+                    # Fallback em ultimo caso para clans_daily_data
+                    if not clan_data and date_str in clans_daily_data:
+                        for cn, daily in clans_daily_data[date_str].items():
+                            if my_clan.lower() in cn.lower() or cn.lower() in my_clan.lower():
+                                clan_data = {
+                                    'position': daily['posicao_diaria'],
+                                    'fame': daily['fama_diaria']
+                                }
                                 break
                     
                     if clan_data:
@@ -4523,16 +4537,18 @@ class GitHubPagesHTMLGenerator:
                                     player_name = row.get('player_nome') or row.get('Jogador') or 'N/A'
                                     player_tag = row.get('player_tag') or player_name
                                     
-                                    # Fama acumulada hoje
-                                    fame_today = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
-                                    
-                                    # Fama acumulada ontem
-                                    fame_prev = 0
-                                    if prev_date_str and not is_prev_reset:
-                                        fame_prev = player_tag_cums.get(prev_date_str, {}).get(player_tag, 0)
-                                        
-                                    # Fama diária real (somente guerra ativa)
-                                    fame_daily = max(0, fame_today - fame_prev)
+                                    # Fama diária real (priorizar coluna war_medals limpa do dia operacional correspondente)
+                                    fame_daily = safe_int(row.get('war_medals') or 0)
+                                    if fame_daily == 0:
+                                        # Fallback seguro para o cálculo de subtração
+                                        fame_today = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                                        fame_prev = 0
+                                        if prev_date_str and not is_prev_reset:
+                                            fame_prev = player_tag_cums.get(prev_date_str, {}).get(player_tag, 0)
+                                        fame_daily = max(0, fame_today - fame_prev)
+                                        # Defesa contra poluicao do CSV: limite fisico real de 1000 de fama por dia por jogador!
+                                        if fame_daily > 1000:
+                                            fame_daily = 0
                                     
                                     # Apenas jogadores que ativamente lutaram na guerra (pontuação > 0)
                                     if fame_daily > 0:
@@ -5053,20 +5069,26 @@ class GitHubPagesHTMLGenerator:
                             player_name = row.get('player_nome') or row.get('Jogador', '')
                             player_tag_row = row.get('player_tag', '')
                             
-                            # Calcular fama diária do jogador
-                            fame_today = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                            # Calcular fama diária do jogador (priorizar war_medals)
                             if is_today_reset:
                                 fame_daily = 0
                             else:
-                                key_tag = player_tag_row or player_name
-                                fame_prev = 0
-                                if prev_d_dash and not is_prev_reset:
-                                    prev_fames = player_tag_cums.get(prev_d_dash, {})
-                                    fame_prev = prev_fames.get(key_tag, 0)
-                                    if fame_prev == 0 and isinstance(key_tag, str):
-                                        alt_key = key_tag.replace('#', '') if '#' in key_tag else '#' + key_tag
-                                        fame_prev = prev_fames.get(alt_key, 0)
-                                fame_daily = max(0, fame_today - fame_prev)
+                                fame_daily = safe_int(row.get('war_medals') or 0)
+                                if fame_daily == 0:
+                                    # Fallback seguro para o cálculo de subtração
+                                    fame_today = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                                    key_tag = player_tag_row or player_name
+                                    fame_prev = 0
+                                    if prev_d_dash and not is_prev_reset:
+                                        prev_fames = player_tag_cums.get(prev_d_dash, {})
+                                        fame_prev = prev_fames.get(key_tag, 0)
+                                        if fame_prev == 0 and isinstance(key_tag, str):
+                                            alt_key = key_tag.replace('#', '') if '#' in key_tag else '#' + key_tag
+                                            fame_prev = prev_fames.get(alt_key, 0)
+                                    fame_daily = max(0, fame_today - fame_prev)
+                                    # Defesa contra poluicao do CSV: limite fisico real de 1000 de fama por dia por jogador!
+                                    if fame_daily > 1000:
+                                        fame_daily = 0
                             
                             player_fame = fame_daily
                             clan_tag_from_row = row.get('clan_tag', '')
