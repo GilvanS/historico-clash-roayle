@@ -6340,8 +6340,11 @@ class GitHubPagesHTMLGenerator:
                     t_ini = battle.get('trofes_iniciais_jogador', '0')
                     t_fin = battle.get('trofes_finais_jogador', '0')
                     
-                    opp_tower_lv = battle.get('nivel_torre_oponente', '0')
-                    opp_display = f"{battle['opponent_name']} <small>(Nv {opp_tower_lv})</small>"
+                    opp_tower_lv = safe_int(battle.get('nivel_torre_oponente', '0'))
+                    if opp_tower_lv > 0:
+                        opp_display = f"{battle['opponent_name']} <small>(Nv {opp_tower_lv})</small>"
+                    else:
+                        opp_display = battle['opponent_name']
                     
                     battles_table_html += f"""
                         <tr class="battle-{result_class}">
@@ -6352,10 +6355,6 @@ class GitHubPagesHTMLGenerator:
                             <td style="color: {trophy_color}">
                                 <strong>{int(battle['trophy_change']):+d}</strong><br>
                                 <small style="color: #94a3b8">{t_ini} → {t_fin}</small>
-                            </td>
-                            <td class="center">{elixir_p} / {elixir_o}</td>
-                            <td class="center">
-                                <small style="color: #94a3b8">{hp_p} / {hp_o}</small>
                             </td>
                             <td>{battle['arena_name']}</td>
                         </tr>
@@ -6441,7 +6440,7 @@ class GitHubPagesHTMLGenerator:
                 <h2 class="clash-font">⚔️ Last Battles</h2>
                 <div class="desktop-table">
                     <table>
-                        <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies</th><th>Elixir</th><th>Tower HP</th><th>Arena</th></tr></thead>
+                        <thead><tr><th>Time</th><th>Result</th><th>Opponent</th><th>Crowns</th><th>Trophies</th><th>Arena</th></tr></thead>
                         <tbody>{battles_table_html}</tbody>
                     </table>
                 </div>
