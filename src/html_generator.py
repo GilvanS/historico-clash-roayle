@@ -6344,9 +6344,8 @@ class GitHubPagesHTMLGenerator:
                             <td><span class="result-{result_class}">{result_display}</span></td>
                             <td>{opp_display}</td>
                             <td class="center">{battle['crowns']}</td>
-                            <td style="color: {trophy_color}">
-                                <strong>{int(battle['trophy_change']):+d}</strong><br>
-                                <small style="color: #94a3b8">{t_ini} → {t_fin}</small>
+                            <td class="center" style="color: {trophy_color}">
+                                <strong>{int(battle['trophy_change']):+d}</strong>
                             </td>
                             <td>{battle['arena_name']}</td>
                         </tr>
