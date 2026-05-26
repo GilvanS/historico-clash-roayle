@@ -6109,14 +6109,6 @@ class GitHubPagesHTMLGenerator:
                 logger.error(f"Error generating clan activity: {e}")
 
             war_intel_html = ""
-            try:
-                war_intel_data = self.get_war_intelligence_data()
-                if war_intel_data:
-                    war_intel_html = self.generate_war_intelligence_html(war_intel_data)
-            except Exception as e:
-                import traceback
-                logger.error(f"Error generating war intel: {e}")
-                logger.error(traceback.format_exc())
 
             war_radar_html = ""
             war_radar_tabs = ""
