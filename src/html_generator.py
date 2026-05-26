@@ -2291,20 +2291,28 @@ class GitHubPagesHTMLGenerator:
         # Prefixo único por conta para evitar conflitos de IDs no DOM entre Conta Principal e Secundária
         p_prefix = f"acc-{player_tag.replace('#', '')}" if player_tag else "acc-main"
 
+        # Inteligência de tab ativa: se não houver oponentes repetidos reais (> 1 batalha) no VS Stage,
+        # ativamos "Meus Decks" por padrão para deixar a experiência mais compacta e rica na conta secundária
+        has_real_repeated = any(o.get('total_battles', 0) > 1 for o in csv_repeated)
+        default_tab = "weekly-decks" if not has_real_repeated and weekly_data else "repeated-opponents"
+        
+        active_rep = "active" if default_tab == "repeated-opponents" else ""
+        active_dec = "active" if default_tab == "weekly-decks" else ""
+
         return f"""
         <div class="cr-inner-tabs-container">
             <div class="cr-account-tabs" style="margin-bottom: 20px; background: rgba(255,255,255,0.02);">
-                <button class="cr-tab active" onclick="switchInnerTab(event, '{p_prefix}-repeated-opponents')">VS Stage</button>
-                <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-weekly-decks')">Meus Decks</button>
+                <button class="cr-tab {active_rep}" onclick="switchInnerTab(event, '{p_prefix}-repeated-opponents')">VS Stage</button>
+                <button class="cr-tab {active_dec}" onclick="switchInnerTab(event, '{p_prefix}-weekly-decks')">Meus Decks</button>
                 <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-lethal-decks')">Decks Letais</button>
                 <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-winning-decks')">Top Global</button>
             </div>
 
-            <div id="{p_prefix}-repeated-opponents" class="cr-tab-content active">
+            <div id="{p_prefix}-repeated-opponents" class="cr-tab-content {active_rep}">
                 {repeated_opponents_html if repeated_opponents_html else '<p style="padding: 40px; text-align: center; color: #64748b;">Nenhum oponente repetido encontrado para esta conta.</p>'}
             </div>
 
-            <div id="{p_prefix}-weekly-decks" class="cr-tab-content">
+            <div id="{p_prefix}-weekly-decks" class="cr-tab-content {active_dec}">
                 {weekly_decks_html}
             </div>
             
@@ -2447,8 +2455,10 @@ class GitHubPagesHTMLGenerator:
                     'game_mode': row.get('game_mode') or row.get('type', 'Batalha'),
                 })
 
-        # Fallback se não houver NADA na última semana
-        use_fallback = not any(d['recent_total'] > 0 for d in deck_stats.values())
+        # Fallback inteligente: se houver poucos decks recentes (menos de 4), permitimos exibir
+        # decks históricos adicionais do CSV para preencher o grid de forma compacta e premium
+        recent_decks_count = sum(1 for d in deck_stats.values() if d['recent_total'] > 0)
+        use_fallback = (recent_decks_count < 4)
         
         final_list = []
         for d in deck_stats.values():
@@ -2460,8 +2470,8 @@ class GitHubPagesHTMLGenerator:
             d['win_rate'] = round((d['wins'] / d['total'] * 100), 1) if d['total'] > 0 else 0
             final_list.append(d)
             
-        # ORDENAÇÃO: Decks usados RECENTEMENTE e com maior volume na semana no topo
-        final_list.sort(key=lambda x: (x['recent_total'], x['win_rate'], x['total']), reverse=True)
+        # ORDENAÇÃO: Decks usados RECENTEMENTE e com maior volume de batalhas no topo
+        final_list.sort(key=lambda x: (x['recent_total'], x['total'], x['win_rate']), reverse=True)
         return final_list[:10]
 
     def get_top_winning_decks_weekly(self) -> List[Dict]:
@@ -2815,9 +2825,14 @@ class GitHubPagesHTMLGenerator:
                 opp_stats[tag]['last_deck'] = b.get('deck_oponente') or b.get('opponent_deck_cards')
 
         # 3. Categorização e Ordenação
+        # Fallback inteligente: se a conta tiver menos de 3 oponentes repetidos reais (faced > 1),
+        # permitimos listar os oponentes de batalhas únicas mais recentes para não deixar a seção vazia e espaçosa
+        real_repeated_count = sum(1 for o in opp_stats.values() if o['total_battles'] > 1)
+        min_battles_required = 1 if real_repeated_count < 3 else 2
+        
         repeated = []
         for o in opp_stats.values():
-            if o['total_battles'] > 1:
+            if o['total_battles'] >= min_battles_required:
                 # Calcula Win Rate
                 o['user_win_rate'] = round((o['user_wins'] / o['total_battles']) * 100, 1)
                 
@@ -2834,7 +2849,7 @@ class GitHubPagesHTMLGenerator:
                 o['last_battle_dt'] = o['stats'][0]['dt_obj']
                 repeated.append(o)
 
-        repeated.sort(key=lambda x: x['last_battle_dt'], reverse=True)
+        repeated.sort(key=lambda x: (x['total_battles'] > 1, x['last_battle_dt']), reverse=True)
         return repeated[:20]
 
 
