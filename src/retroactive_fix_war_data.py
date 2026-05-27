@@ -88,37 +88,91 @@ def collect_war_battles_stats(battles, target_date):
     
     tipo_counts = {}
     for b in war_battles:
-        is_victory = False
-        team = b.get('team', [])
-        opponent = b.get('opponent', [])
+        battle_type = b.get('type', '')
+        tipo_label = BATTLE_TYPE_LABELS.get(battle_type, battle_type)
+        tipo_counts[tipo_label] = tipo_counts.get(tipo_label, 0) + 1
         
-        if team and opponent:
-            team_crowns = team[0].get('crowns', 0)
-            opp_crowns = opponent[0].get('crowns', 0) if opponent else 0
-            is_victory = team_crowns > opp_crowns
-        
-        if is_victory:
-            stats['war_vitorias'] += 1
-        else:
-            stats['war_derrotas'] += 1
-        
-        coroas = team[0].get('crowns', 0) if team else 0
-        if is_victory:
-            stats['war_medals'] += FAME_POR_VITORIA
-        elif coroas > 0:
-            stats['war_medals'] += FAME_POR_DERROTA_COROA
-        else:
-            stats['war_medals'] += FAME_POR_DERROTA
-        
+        # Torre do jogador (primeira batalha)
         if stats['war_torre'] == 'Tower Princess':
             tower = b.get('team', [{}])[0].get('kingTower', {}).get('name', 'Tower Princess')
             if tower and tower != 'King Tower':
                 stats['war_torre'] = tower
-        
-        battle_type = b.get('type', '')
-        tipo_label = BATTLE_TYPE_LABELS.get(battle_type, battle_type)
-        tipo_counts[tipo_label] = tipo_counts.get(tipo_label, 0) + 1
-    
+                
+        # 1. Tratar Duelo de forma especializada
+        if battle_type == 'riverRaceDuel':
+            rounds = b.get('rounds', [])
+            vits_rodadas = 0
+            ders_rodadas = 0
+            
+            for rnd in rounds:
+                rnd_team = rnd.get('team', [])
+                rnd_opp = rnd.get('opponent', [])
+                if rnd_team and rnd_opp:
+                    team_crowns = rnd_team[0].get('crowns', 0)
+                    opp_crowns = rnd_opp[0].get('crowns', 0)
+                    if team_crowns > opp_crowns:
+                        vits_rodadas += 1
+                    else:
+                        ders_rodadas += 1
+                        
+            # Se a API nao trouxe os rounds individuais, olha o resultado global do duelo
+            if not rounds:
+                team = b.get('team', [])
+                opponent = b.get('opponent', [])
+                is_duel_victory = False
+                if team and opponent:
+                    is_duel_victory = team[0].get('crowns', 0) > opponent[0].get('crowns', 0)
+                
+                if is_duel_victory:
+                    vits_rodadas = 2
+                    ders_rodadas = 0
+                else:
+                    vits_rodadas = 0
+                    ders_rodadas = 2
+            
+            # Somar vitórias e derrotas das rodadas para o ranking
+            stats['war_vitorias'] += vits_rodadas
+            stats['war_derrotas'] += ders_rodadas
+            
+            # Pontuação oficial de Duelo na Liga Lendária
+            if vits_rodadas >= 2:
+                stats['war_medals'] += 500  # Venceu o Duelo (2-0 ou 2-1)
+            elif vits_rodadas == 1:
+                stats['war_medals'] += 350  # Perdeu o Duelo por 1-2
+            else:
+                stats['war_medals'] += 200  # Perdeu o Duelo por 0-2 (2 derrotas)
+                
+        # 2. Tratar Ataques de Barco
+        elif battle_type == 'boatBattle':
+            team = b.get('team', [])
+            opponent = b.get('opponent', [])
+            is_victory = False
+            if team and opponent:
+                is_victory = team[0].get('crowns', 0) > opponent[0].get('crowns', 0)
+                
+            if is_victory:
+                stats['war_vitorias'] += 1
+                stats['war_medals'] += 125
+            else:
+                stats['war_derrotas'] += 1
+                stats['war_medals'] += 75
+                
+        # 3. Tratar Batalhas 1v1 Convencionais (PvP e WarDay)
+        else:
+            team = b.get('team', [])
+            opponent = b.get('opponent', [])
+            is_victory = False
+            if team and opponent:
+                is_victory = team[0].get('crowns', 0) > opponent[0].get('crowns', 0)
+                
+            if is_victory:
+                stats['war_vitorias'] += 1
+                stats['war_medals'] += 200
+            else:
+                stats['war_derrotas'] += 1
+                stats['war_medals'] += 100
+
+    # Tipo mais usado
     if tipo_counts:
         stats['war_tipo_principal'] = max(tipo_counts, key=tipo_counts.get)
     

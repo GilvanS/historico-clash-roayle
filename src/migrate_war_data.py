@@ -334,40 +334,76 @@ def migrate_inteligencia_guerra(player_to_tag, player_to_clan, clan_to_tag):
                             'war_battles_count': '0'
                         }
                     
-                    # Filtrar inativos absolutos: salvar apenas quem realmente participou da guerra
-                    decks_raw = rec.get('decks_usados', '0')
-                    decks_val = 0
-                    if '/' in str(decks_raw):
-                        try: decks_val = int(str(decks_raw).split('/')[0])
-                        except: pass
-                    else:
-                        try: decks_val = int(str(decks_raw or 0))
-                        except: pass
+                    # === Higienizacao e Sanitizacao Geral de Dados Inflados ===
+                    try:
+                        vitorias = int(rec.get('war_vitorias', '0') or 0)
+                    except:
+                        vitorias = 0
+                    try:
+                        derrotas = int(rec.get('war_derrotas', '0') or 0)
+                    except:
+                        derrotas = 0
+                    try:
+                        medals = int(rec.get('war_medals', '0') or 0)
+                    except:
+                        medals = 0
+                    try:
+                        battles = int(rec.get('war_battles_count', '0') or 0)
+                    except:
+                        battles = 0
+                    try:
+                        decks = int(rec.get('decks_usados', '0') or 0)
+                    except:
+                        decks = 0
+                    try:
+                        boat = int(rec.get('boat_attacks', '0') or 0)
+                    except:
+                        boat = 0
                         
-                    boat_val = 0
-                    try: boat_val = int(rec.get('boat_attacks') or 0)
-                    except: pass
+                    # 1. Total de batalhas não pode exceder 4 por dia
+                    total_battles = vitorias + derrotas
+                    if total_battles > 4:
+                        vitorias = min(4, vitorias)
+                        derrotas = min(4 - vitorias, derrotas)
+                        battles = vitorias + derrotas
                     
-                    medals_val = 0
-                    try: medals_val = int(rec.get('war_medals') or 0)
-                    except: pass
+                    if battles > 4:
+                        battles = 4
+                        
+                    # 2. Recalculo estrito e limite maximo de medals (fama diaria real - teto supremo de 900)
+                    if medals > 900 or (vitorias > 0 or derrotas > 0):
+                        # Se contiver vitorias e derrotas estimadas
+                        medals = (vitorias * 200) + (derrotas * 100)
+                        # Fallback se as rodadas de duelo indicarem mais vitorias/derrotas que ultrapassem a fama convencional
+                        if medals == 0 and decks > 0:
+                            medals = min(900, decks * 100) # fallback seguro (derrotas)
+                        elif medals > 900:
+                            medals = 900
+                    else:
+                        # Se as medalhas vierem sem vitórias/derrotas gravadas mas vierem exageradas (> 900)
+                        if medals > 900:
+                            medals = 900
+                            
+                    # Garantir que decks_usados seja coerente (no maximo 4)
+                    if decks > 4:
+                        decks = 4
+                        
+                    # Atualizar o registro rec com os dados higienizados
+                    rec['war_vitorias'] = str(vitorias)
+                    rec['war_derrotas'] = str(derrotas)
+                    rec['war_medals'] = str(medals)
+                    rec['war_battles_count'] = str(battles)
+                    rec['decks_usados'] = str(decks)
+                    rec['boat_attacks'] = str(boat)
                     
-                    battles_val = 0
-                    try: battles_val = int(rec.get('war_battles_count') or 0)
-                    except: pass
-                    
-                    fame_val = 0
-                    try: fame_val = int(rec.get('player_fame') or 0)
-                    except: pass
-                    
-                    # Regra rigorosa de participacao:
+                    # Filtrar inativos absolutos: salvar apenas quem realmente participou da guerra
                     # Em dias de batalha (Dia 1, Dia 2, Dia 3, Dia 4), a participacao exige uso de deck ou ataque de barco.
                     # No dia de Reset (Quinta-feira / Reset), permitimos participacao se houver fama/medalhas (fallback do Reset).
                     dia_batalha_lbl = rec.get('dia_batalha', 'Reset')
                     if dia_batalha_lbl == 'Reset':
-                        participou = (decks_val > 0 or boat_val > 0 or medals_val > 0 or battles_val > 0 or fame_val > 0)
+                        participou = (decks > 0 or boat > 0 or medals > 0 or battles > 0)
                     else:
-                        participou = (decks_val > 0 or boat_val > 0)
+                        participou = (decks > 0 or boat > 0)
                         
                     if not participou:
                         continue

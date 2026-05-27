@@ -4546,6 +4546,9 @@ class GitHubPagesHTMLGenerator:
                                     
                                     # Fama diária real (priorizar coluna war_medals limpa do dia operacional correspondente)
                                     fame_daily = safe_int(row.get('war_medals') or 0)
+                                    if fame_daily > 900:
+                                        fame_daily = 900
+                                        
                                     if fame_daily == 0:
                                         # Fallback seguro para o cálculo de subtração
                                         fame_today = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
@@ -4553,9 +4556,24 @@ class GitHubPagesHTMLGenerator:
                                         if prev_date_str and not is_prev_reset:
                                             fame_prev = player_tag_cums.get(prev_date_str, {}).get(player_tag, 0)
                                         fame_daily = max(0, fame_today - fame_prev)
-                                        # Defesa contra poluicao do CSV: limite fisico real de 1000 de fama por dia por jogador!
-                                        if fame_daily > 1000:
-                                            fame_daily = 0
+                                        
+                                        # Se o delta diário der um valor impossível (> 900) por ausência de registro prévio, recalcula de forma estrita
+                                        if fame_daily > 900:
+                                            vits = safe_int(row.get('war_vitorias') or 0)
+                                            ders = safe_int(row.get('war_derrotas') or 0)
+                                            calculated_fame = (vits * 200) + (ders * 100)
+                                            if calculated_fame > 0:
+                                                fame_daily = min(900, calculated_fame)
+                                            else:
+                                                decks_used_num = safe_int(row.get('decks_usados') or 0)
+                                                fame_daily = min(900, max(1, decks_used_num) * 100)
+                                        elif fame_daily > 0 and fame_daily not in [100, 200, 300, 350, 400, 500, 600, 700, 800, 900]:
+                                            # Caso tenhamos valores fracionados bizarros
+                                            vits = safe_int(row.get('war_vitorias') or 0)
+                                            ders = safe_int(row.get('war_derrotas') or 0)
+                                            calculated_fame = (vits * 200) + (ders * 100)
+                                            if calculated_fame > 0:
+                                                fame_daily = min(900, calculated_fame)
                                     
                                     # Apenas jogadores que ativamente lutaram na guerra (pontuação > 0)
                                     if fame_daily > 0:
@@ -5110,8 +5128,10 @@ class GitHubPagesHTMLGenerator:
                                         safe_int(row.get('player_fame') or 0),
                                         safe_int(row.get('Fama_Hoje') or 0)
                                     )
-                                    if fame_daily > 800 or fame_daily == 0:
+                                    if fame_daily > 900 or fame_daily == 0:
                                         fame_daily = 500  # Fallback seguro para o reset
+                                    elif fame_daily > 900:
+                                        fame_daily = 900
                                 else:
                                     # Nos demais dias (Sexta a Segunda), fazemos a subtração do acumulado da data anterior
                                     fame_today = max(
@@ -5134,7 +5154,7 @@ class GitHubPagesHTMLGenerator:
                                     if fame_daily == 0 and participou_hoje:
                                         fame_daily = (war_vitorias_num * 200) + (war_derrotas_num * 100)
                                         if fame_daily == 0:
-                                            fame_daily = max(1, decks_used_num) * 150
+                                            fame_daily = max(1, decks_used_num) * 100
                                     
                                     # Se o cálculo do delta falhou (ex: dia anterior sem registro) e a fama diária deu um valor
                                     # impossível (> 900), corrigimos usando as batalhas reais do dia
@@ -5143,12 +5163,12 @@ class GitHubPagesHTMLGenerator:
                                         if calculated_fame > 0:
                                             fame_daily = calculated_fame
                                         else:
-                                            fame_daily = min(800, fame_daily)
-                                            if fame_daily not in [400, 500, 600, 700, 800]:
-                                                fame_daily = max(1, decks_used_num) * 150
+                                            fame_daily = min(900, fame_daily)
+                                            if fame_daily not in [400, 500, 600, 700, 800, 900]:
+                                                fame_daily = max(1, decks_used_num) * 100
                                                 
-                                    if fame_daily > 800:
-                                        fame_daily = 800
+                                    if fame_daily > 900:
+                                        fame_daily = 900
                             
                             player_fame = fame_daily
                             clan_tag_from_row = row.get('clan_tag', '')
