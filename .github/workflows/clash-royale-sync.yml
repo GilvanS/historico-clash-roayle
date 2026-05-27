@@ -1,6 +1,17 @@
 name: Clash Royale Sync (Inteligente)
 
 on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'clan.html'
+      - 'index.html'
+      - 'member_*.html'
+      - 'src/data_clan/**'
+      - 'src/data_csv_oficial/**'
+      - 'src/data_chests/**'
   schedule:
     # ---------------------------------------------------------------------------------
     # Lógica de Agendamento baseada no Ciclo de Guerra do Brasil (Horário de Brasília - BRT / UTC-3)
