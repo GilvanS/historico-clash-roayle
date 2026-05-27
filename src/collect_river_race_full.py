@@ -526,18 +526,10 @@ def collect_river_race_intelligence():
     data_hoje, dia_batalha = get_logical_date_and_battle_day()
     
     # Verificar se dados atuais tem DADOS REAIS
-    has_real_data_global = any(
-        (r.get('deck_1') and len(r.get('deck_1', '')) > 10)
-        for r in results_global
-    )
-    has_real_data_pri = any(
-        (r.get('deck_1') and len(r.get('deck_1', '')) > 10) 
-        for r in results_pri
-    )
-    has_real_data_sec = any(
-        (r.get('deck_1') and len(r.get('deck_1', '')) > 10) 
-        for r in results_sec
-    )
+    # Simplificado: se a API retornou membros (lista nao vazia), os dados sao reais e validos
+    has_real_data_global = len(results_global) > 0
+    has_real_data_pri = len(results_pri) > 0
+    has_real_data_sec = len(results_sec) > 0
     
     guerra_hist_path = f"{DATA_DIR}/guerra_historico.csv"
     
@@ -615,6 +607,36 @@ def collect_river_race_intelligence():
         # Isso garante consistencia entre registros antigos e novos
         if conta_tipo_val not in ('TOP_GLOBAL', 'principal') and not conta_tipo_val.startswith('#'):
             conta_tipo_val = '#' + conta_tipo_val
+
+        # Filtrar inativos absolutos: salvar apenas quem realmente participou da guerra hoje
+        decks_raw = r.get('decks_usados', '0')
+        decks_val = 0
+        if '/' in str(decks_raw):
+            try: decks_val = int(str(decks_raw).split('/')[0])
+            except: pass
+        else:
+            try: decks_val = int(str(decks_raw or 0))
+            except: pass
+            
+        boat_val = 0
+        try: boat_val = int(r.get('boat_attacks') or 0)
+        except: pass
+        
+        medals_val = 0
+        try: medals_val = int(r.get('war_medals') or 0)
+        except: pass
+        
+        battles_val = 0
+        try: battles_val = int(r.get('war_battles_count') or 0)
+        except: pass
+        
+        fame_val = 0
+        try: fame_val = int(r.get('player_fame') or 0)
+        except: pass
+        
+        participou = (decks_val > 0 or boat_val > 0 or medals_val > 0 or battles_val > 0 or fame_val > 0)
+        if not participou:
+            continue
             
         rec = {
             'data_coleta': data_hoje,

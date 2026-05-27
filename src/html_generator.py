@@ -4933,12 +4933,16 @@ class GitHubPagesHTMLGenerator:
                 
                 rows = [row for row in rows if row.get('data_coleta') in target_dates_dash]
                 
-                # Mapear as famas acumuladas dos jogadores por data e player_tag
+                # Mapear as famas acumuladas reais dos jogadores por data e player_tag
                 player_tag_cums = {}  # date_dash -> player_tag_or_name -> cumulative_fame
                 for row in rows:
                     dt = row.get('data_coleta', '')
                     tag = row.get('player_tag') or row.get('player_nome') or row.get('Jogador', '')
-                    fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                    fame = max(
+                        safe_int(row.get('player_fame') or 0),
+                        safe_int(row.get('war_medals') or 0),
+                        safe_int(row.get('Fama_Hoje') or 0)
+                    )
                     if dt and tag:
                         if dt not in player_tag_cums:
                             player_tag_cums[dt] = {}
@@ -5076,14 +5080,42 @@ class GitHubPagesHTMLGenerator:
                             player_name = row.get('player_nome') or row.get('Jogador', '')
                             player_tag_row = row.get('player_tag', '')
                             
-                            # Calcular fama diária do jogador (priorizar war_medals)
-                            if is_today_reset:
+                            # Calcular fama diária do jogador de forma robusta e livre de alucinações
+                            decks_used_raw = row.get('decks_usados') or '0'
+                            decks_used_num = 0
+                            if '/' in str(decks_used_raw):
+                                try: decks_used_num = int(str(decks_used_raw).split('/')[0])
+                                except: pass
+                            elif str(decks_used_raw).strip():
+                                try: decks_used_num = int(decks_used_raw)
+                                except: pass
+                            
+                            boat_num = safe_int(row.get('boat_attacks') or 0)
+                            war_battles_num = safe_int(row.get('war_battles_count', 0))
+                            war_vitorias_num = safe_int(row.get('war_vitorias', 0))
+                            war_derrotas_num = safe_int(row.get('war_derrotas', 0))
+                            
+                            participou_hoje = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0)
+                            
+                            if not participou_hoje:
                                 fame_daily = 0
                             else:
-                                fame_daily = safe_int(row.get('war_medals') or 0)
-                                if fame_daily == 0:
-                                    # Fallback seguro para o cálculo de subtração
-                                    fame_today = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
+                                if is_today_reset:
+                                    # No primeiro dia (Reset / Quinta-feira), a fama diária é a própria fama acumulada do dia
+                                    fame_daily = max(
+                                        safe_int(row.get('war_medals') or 0),
+                                        safe_int(row.get('player_fame') or 0),
+                                        safe_int(row.get('Fama_Hoje') or 0)
+                                    )
+                                    if fame_daily > 3600 or fame_daily == 0:
+                                        fame_daily = 500  # Fallback seguro para o reset
+                                else:
+                                    # Nos demais dias (Sexta a Segunda), fazemos a subtração do acumulado da data anterior
+                                    fame_today = max(
+                                        safe_int(row.get('player_fame') or 0),
+                                        safe_int(row.get('war_medals') or 0),
+                                        safe_int(row.get('Fama_Hoje') or 0)
+                                    )
                                     key_tag = player_tag_row or player_name
                                     fame_prev = 0
                                     if prev_d_dash and not is_prev_reset:
@@ -5093,30 +5125,24 @@ class GitHubPagesHTMLGenerator:
                                             alt_key = key_tag.replace('#', '') if '#' in key_tag else '#' + key_tag
                                             fame_prev = prev_fames.get(alt_key, 0)
                                     fame_daily = max(0, fame_today - fame_prev)
-                                    # Defesa contra poluicao do CSV: limite fisico real de 1000 de fama por dia por jogador!
-                                    if fame_daily > 1000:
-                                        fame_daily = 0
+                                    
+                                    # Fallback se o delta deu zero mas ele participou hoje
+                                    if fame_daily == 0 and participou_hoje:
+                                        fame_daily = (war_vitorias_num * 800) + (war_derrotas_num * 400)
+                                        if fame_daily == 0:
+                                            fame_daily = max(1, decks_used_num) * 400
+                                            
+                                    if fame_daily > 3600:
+                                        fame_daily = 3600
                             
                             player_fame = fame_daily
                             clan_tag_from_row = row.get('clan_tag', '')
-                            decks_used_raw = row.get('decks_usados') or '0'
-                            boat_attacks = row.get('boat_attacks', '0')
                             deck_1 = row.get('deck_1', '')
                             
                             ranking = safe_int(row.get('clan_posicao') or row.get('Ranking') or row.get('posicao') or row.get('ranking') or 99)
                             
-                            decks_used_num = 0
-                            if '/' in str(decks_used_raw):
-                                try: decks_used_num = int(str(decks_used_raw).split('/')[0])
-                                except: pass
-                            elif str(decks_used_raw).strip():
-                                try: decks_used_num = int(decks_used_raw)
-                                except: pass
-                            boat_num = safe_int(boat_attacks)
-                            war_battles_num = safe_int(row.get('war_battles_count', 0))
-                            war_vitorias_num = safe_int(row.get('war_vitorias', 0))
-                            war_derrotas_num = safe_int(row.get('war_derrotas', 0))
-                            war_participant = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0 or war_vitorias_num > 0 or war_derrotas_num > 0)
+                            # O jogador é participante ativo se utilizou decks ou atacou barcos
+                            war_participant = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0)
                             
                             player_item = {
                                 'ranking': ranking,
@@ -5134,22 +5160,23 @@ class GitHubPagesHTMLGenerator:
                                 'deck_3_tipo': row.get('deck_3_tipo', ''),
                                 'deck_4': row.get('deck_4', ''),
                                 'deck_4_tipo': row.get('deck_4_tipo', ''),
-                                'war_vitorias': safe_int(row.get('war_vitorias', 0)),
-                                'war_derrotas': safe_int(row.get('war_derrotas', 0)),
+                                'war_vitorias': war_vitorias_num,
+                                'war_derrotas': war_derrotas_num,
                                 'war_medals': safe_int(row.get('war_medals', 0)),
                                 'war_torre': row.get('war_torre', 'Tower Princess'),
                                 'war_tipo_principal': row.get('war_tipo_principal', ''),
-                                'war_battles_count': safe_int(row.get('war_battles_count', 0))
+                                'war_battles_count': war_battles_num
                             }
                             
                             if player_name not in seen_players:
                                 seen_players[player_name] = player_item
                             else:
                                 existing = seen_players[player_name]
-                                existing['war_vitorias'] = existing.get('war_vitorias', 0) + player_item.get('war_vitorias', 0)
-                                existing['war_derrotas'] = existing.get('war_derrotas', 0) + player_item.get('war_derrotas', 0)
-                                existing['war_medals'] = existing.get('war_medals', 0) + player_item.get('war_medals', 0)
-                                existing['war_battles_count'] = existing.get('war_battles_count', 0) + player_item.get('war_battles_count', 0)
+                                # Usar max em vez de sum cumulativo para blindagem contra duplicatas
+                                existing['war_vitorias'] = max(existing.get('war_vitorias', 0), player_item.get('war_vitorias', 0))
+                                existing['war_derrotas'] = max(existing.get('war_derrotas', 0), player_item.get('war_derrotas', 0))
+                                existing['war_medals'] = max(existing.get('war_medals', 0), player_item.get('war_medals', 0))
+                                existing['war_battles_count'] = max(existing.get('war_battles_count', 0), player_item.get('war_battles_count', 0))
                                 if player_fame > existing['fame'] or (player_item.get('war_battles_count', 0) > 0 and not existing.get('deck_1', '')):
                                     existing['fame'] = max(existing['fame'], player_fame)
                                     if player_item.get('deck_1', ''):
@@ -5343,10 +5370,11 @@ class GitHubPagesHTMLGenerator:
                                     seen_players[player_name] = player_item
                                 else:
                                     existing = seen_players[player_name]
-                                    existing['war_vitorias'] = existing.get('war_vitorias', 0) + player_item.get('war_vitorias', 0)
-                                    existing['war_derrotas'] = existing.get('war_derrotas', 0) + player_item.get('war_derrotas', 0)
-                                    existing['war_medals'] = existing.get('war_medals', 0) + player_item.get('war_medals', 0)
-                                    existing['war_battles_count'] = existing.get('war_battles_count', 0) + player_item.get('war_battles_count', 0)
+                                    # Usar max em vez de sum cumulativo para blindagem contra duplicatas
+                                    existing['war_vitorias'] = max(existing.get('war_vitorias', 0), player_item.get('war_vitorias', 0))
+                                    existing['war_derrotas'] = max(existing.get('war_derrotas', 0), player_item.get('war_derrotas', 0))
+                                    existing['war_medals'] = max(existing.get('war_medals', 0), player_item.get('war_medals', 0))
+                                    existing['war_battles_count'] = max(existing.get('war_battles_count', 0), player_item.get('war_battles_count', 0))
                                     if player_fame > existing['fame'] or (player_item.get('war_battles_count', 0) > 0 and not existing.get('deck_1', '')):
                                         existing['fame'] = max(existing['fame'], player_fame)
                                         if player_item.get('deck_1', ''):

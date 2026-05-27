@@ -334,6 +334,36 @@ def migrate_inteligencia_guerra(player_to_tag, player_to_clan, clan_to_tag):
                             'war_battles_count': '0'
                         }
                     
+                    # Filtrar inativos absolutos: salvar apenas quem realmente participou da guerra
+                    decks_raw = rec.get('decks_usados', '0')
+                    decks_val = 0
+                    if '/' in str(decks_raw):
+                        try: decks_val = int(str(decks_raw).split('/')[0])
+                        except: pass
+                    else:
+                        try: decks_val = int(str(decks_raw or 0))
+                        except: pass
+                        
+                    boat_val = 0
+                    try: boat_val = int(rec.get('boat_attacks') or 0)
+                    except: pass
+                    
+                    medals_val = 0
+                    try: medals_val = int(rec.get('war_medals') or 0)
+                    except: pass
+                    
+                    battles_val = 0
+                    try: battles_val = int(rec.get('war_battles_count') or 0)
+                    except: pass
+                    
+                    fame_val = 0
+                    try: fame_val = int(rec.get('player_fame') or 0)
+                    except: pass
+                    
+                    participou = (decks_val > 0 or boat_val > 0 or medals_val > 0 or battles_val > 0 or fame_val > 0)
+                    if not participou:
+                        continue
+                    
                     # Deduplicacao inteligente por chave unica: (data, tag)
                     key = (data_coleta, rec['player_tag'])
                     
