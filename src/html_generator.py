@@ -5167,7 +5167,7 @@ class GitHubPagesHTMLGenerator:
                         clan_tag_from_data = player_rows[0].get('clan_tag', '').replace('#', '') if player_rows else ''
                         is_my_own_clan = (my_clan_tag.replace('#', '') == clan_tag_from_data)
                         max_players = 10 if (is_my_own_clan and mode == 'my-war') else 3
-                        top_players = [p for p in sorted_players if p['fame'] > 0][:max_players]
+                        top_players = [p for p in sorted_players if p['fame'] > 0 and p.get('war_participant', False)][:max_players]
                         
                         clan_daily_fame = 0
                         if u_date in clans_daily_data:
@@ -5364,7 +5364,7 @@ class GitHubPagesHTMLGenerator:
                             clan_tag_from_data = player_rows[0].get('clan_tag', '').replace('#', '') if player_rows else ''
                             is_my_own_clan = (my_clan_tag.replace('#', '') == clan_tag_from_data)
                             max_players = 10 if (is_my_own_clan and mode == 'my-war') else 3
-                            top_players = [p for p in sorted_players if p['fame'] > 0][:max_players]
+                            top_players = [p for p in sorted_players if p['fame'] > 0 and p.get('war_participant', False)][:max_players]
                             
                             total_fame = sum(p['fame'] for p in top_players)
                             
@@ -5567,6 +5567,10 @@ class GitHubPagesHTMLGenerator:
                     
                     player_rows_html = ""
                     for p in clan.get('players', []):
+                        # Pular jogadores sem participacao real e sem fama (inativos)
+                        if not p.get('war_participant', False) and p.get('fame', 0) == 0:
+                            continue
+                        
                         lutou_icon = "🔴" if p.get('lutou', '').lower() == 'sim' else "⚪"
                         attacks = p.get('ataques', '0/4')
                         fame = p.get('fame', 0)

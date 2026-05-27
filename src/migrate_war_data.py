@@ -227,7 +227,7 @@ def migrate_inteligencia_guerra(player_to_tag, player_to_clan, clan_to_tag):
                         # Formato novo rico em dados
                         player_nome = row.get('player_nome', '').strip()
                         player_tag = row.get('player_tag', '').strip()
-                        conta_tipo = row.get('player_tag_conta', 'principal')
+                        conta_tipo = row.get('conta_tipo') or row.get('player_tag_conta', 'principal')
                         
                         if not player_nome:
                             continue
