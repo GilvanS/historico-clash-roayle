@@ -5110,7 +5110,7 @@ class GitHubPagesHTMLGenerator:
                                         safe_int(row.get('player_fame') or 0),
                                         safe_int(row.get('Fama_Hoje') or 0)
                                     )
-                                    if fame_daily > 3600 or fame_daily == 0:
+                                    if fame_daily > 800 or fame_daily == 0:
                                         fame_daily = 500  # Fallback seguro para o reset
                                 else:
                                     # Nos demais dias (Sexta a Segunda), fazemos a subtração do acumulado da data anterior
@@ -5129,14 +5129,26 @@ class GitHubPagesHTMLGenerator:
                                             fame_prev = prev_fames.get(alt_key, 0)
                                     fame_daily = max(0, fame_today - fame_prev)
                                     
-                                    # Fallback se o delta deu zero mas ele participou hoje
+                                    # Corrige multiplicadores exagerados e calcula fama de forma real
+                                    # Se a fama diária der 0 mas o jogador participou hoje, calculamos com base nas batalhas reais
                                     if fame_daily == 0 and participou_hoje:
-                                        fame_daily = (war_vitorias_num * 800) + (war_derrotas_num * 400)
+                                        fame_daily = (war_vitorias_num * 200) + (war_derrotas_num * 100)
                                         if fame_daily == 0:
-                                            fame_daily = max(1, decks_used_num) * 400
-                                            
-                                    if fame_daily > 3600:
-                                        fame_daily = 3600
+                                            fame_daily = max(1, decks_used_num) * 150
+                                    
+                                    # Se o cálculo do delta falhou (ex: dia anterior sem registro) e a fama diária deu um valor
+                                    # impossível (> 900), corrigimos usando as batalhas reais do dia
+                                    elif fame_daily > 900:
+                                        calculated_fame = (war_vitorias_num * 200) + (war_derrotas_num * 100)
+                                        if calculated_fame > 0:
+                                            fame_daily = calculated_fame
+                                        else:
+                                            fame_daily = min(800, fame_daily)
+                                            if fame_daily not in [400, 500, 600, 700, 800]:
+                                                fame_daily = max(1, decks_used_num) * 150
+                                                
+                                    if fame_daily > 800:
+                                        fame_daily = 800
                             
                             player_fame = fame_daily
                             clan_tag_from_row = row.get('clan_tag', '')
@@ -5346,7 +5358,16 @@ class GitHubPagesHTMLGenerator:
                                 war_battles_num = safe_int(row.get('war_battles_count', 0))
                                 war_vitorias_num = safe_int(row.get('war_vitorias', 0))
                                 war_derrotas_num = safe_int(row.get('war_derrotas', 0))
-                                war_participant = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0 or war_vitorias_num > 0 or war_derrotas_num > 0)
+                                
+                                if is_today_reset:
+                                    participou_hoje = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0)
+                                else:
+                                    participou_hoje = (decks_used_num > 0 or boat_num > 0)
+                                
+                                if not participou_hoje:
+                                    war_participant = False
+                                else:
+                                    war_participant = True
                                 
                                 player_item = {
                                     'ranking': ranking,
