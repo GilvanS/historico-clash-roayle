@@ -634,7 +634,14 @@ def collect_river_race_intelligence():
         try: fame_val = int(r.get('player_fame') or 0)
         except: pass
         
-        participou = (decks_val > 0 or boat_val > 0 or medals_val > 0 or battles_val > 0 or fame_val > 0)
+        # Regra rigorosa de participacao:
+        # Em dias de batalha (Dia 1, Dia 2, Dia 3, Dia 4), a participacao exige uso de deck ou ataque de barco.
+        # No dia de Reset (Quinta-feira), permitimos participacao se houver fama/medalhas (fallback do Reset).
+        if dia_batalha == 'Reset':
+            participou = (decks_val > 0 or boat_val > 0 or medals_val > 0 or battles_val > 0 or fame_val > 0)
+        else:
+            participou = (decks_val > 0 or boat_val > 0)
+            
         if not participou:
             continue
             

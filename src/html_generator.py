@@ -5095,7 +5095,10 @@ class GitHubPagesHTMLGenerator:
                             war_vitorias_num = safe_int(row.get('war_vitorias', 0))
                             war_derrotas_num = safe_int(row.get('war_derrotas', 0))
                             
-                            participou_hoje = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0)
+                            if is_today_reset:
+                                participou_hoje = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0)
+                            else:
+                                participou_hoje = (decks_used_num > 0 or boat_num > 0)
                             
                             if not participou_hoje:
                                 fame_daily = 0
@@ -5142,7 +5145,10 @@ class GitHubPagesHTMLGenerator:
                             ranking = safe_int(row.get('clan_posicao') or row.get('Ranking') or row.get('posicao') or row.get('ranking') or 99)
                             
                             # O jogador é participante ativo se utilizou decks ou atacou barcos
-                            war_participant = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0)
+                            if is_today_reset:
+                                war_participant = (decks_used_num > 0 or boat_num > 0 or war_battles_num > 0)
+                            else:
+                                war_participant = (decks_used_num > 0 or boat_num > 0)
                             
                             player_item = {
                                 'ranking': ranking,
