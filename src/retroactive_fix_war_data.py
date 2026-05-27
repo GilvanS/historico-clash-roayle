@@ -318,18 +318,43 @@ def retroactive_fix():
             orig_battles = int(r.get('war_battles_count', '0') or 0)
             new_battles = new_war_stats['war_battles_count']
             
-            # Atualizar os dados no registro
-            r.update(new_war_stats)
-            r.update(new_player_decks)
-            
-            # Se a API retornou fame=0 mas o jogador nao duelou na data logica, manter zerado.
-            # Se o jogador nao jogou nada no dia, garantir que o decks_usados e boat_attacks batam com o real.
-            if new_battles == 0:
-                r['decks_usados'] = '0'
-                r['boat_attacks'] = '0'
+            # PROTECAO CONTRA EXPIRACAO DE BATTLELOG:
+            # Se a API retornou 0 batalhas novas, mas o registro original continha dados validos
+            # de participacao (decks ou vitorias/derrotas), nos PRESERVAMOS os dados originais,
+            # pois as batalhas muito provavelmente expiraram do log recente de 25 batalhas da API.
+            orig_decks = 0
+            try:
+                orig_decks_raw = r.get('decks_usados', '0')
+                if '/' in str(orig_decks_raw):
+                    orig_decks = int(str(orig_decks_raw).split('/')[0])
+                else:
+                    orig_decks = int(str(orig_decks_raw or 0))
+            except:
+                pass
                 
-            if orig_battles != new_battles:
-                fixed_count += 1
+            orig_medals = 0
+            try:
+                orig_medals = int(r.get('war_medals', '0') or 0)
+            except:
+                pass
+                
+            if new_battles == 0 and (orig_decks > 0 or orig_medals > 0 or orig_battles > 0):
+                # Preserva os dados originais coletados em tempo real no dia operacional!
+                # Nao faz o update e nao zera!
+                pass
+            else:
+                # Atualizar os dados no registro
+                r.update(new_war_stats)
+                r.update(new_player_decks)
+                
+                # Se a API retornou fame=0 mas o jogador nao duelou na data logica, manter zerado.
+                # Se o jogador nao jogou nada no dia, garantir que o decks_usados e boat_attacks batam com o real.
+                if new_battles == 0:
+                    r['decks_usados'] = '0'
+                    r['boat_attacks'] = '0'
+                    
+                if orig_battles != new_battles:
+                    fixed_count += 1
                 
         updated_records.append(r)
         
