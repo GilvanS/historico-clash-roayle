@@ -14,18 +14,11 @@ on:
       - 'src/data_chests/**'
   schedule:
     # ---------------------------------------------------------------------------------
-    # Lógica de Agendamento baseada no Ciclo de Guerra do Brasil (Horário de Brasília - BRT / UTC-3)
-    # O início oficial do dia de guerra do Clash Royale no Brasil é às 07:00 BRT (10:00 UTC).
+    # Agendamento de Contingência (Backup da Nuvem)
+    # Roda a cada 3 horas (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
+    # Isso reduz drasticamente o consumo de minutos do GitHub Actions.
     # ---------------------------------------------------------------------------------
-    
-    # 1. Período Ativo (07:00 BRT às 23:30 BRT): Execuções a cada 30 minutos
-    # Conversão: 07:00 BRT = 10:00 UTC | 23:30 BRT = 02:30 UTC (do dia seguinte)
-    - cron: '0 10,11,12,13,14,15,16,17,18,19,20,21,22,23,0,1,2 * * *'
-    - cron: '30 10,11,12,13,14,15,16,17,18,19,20,21,22,23,0,1,2 * * *'
-    
-    # 2. Madrugada / Período Inativo (00:00 BRT às 06:00 BRT): Execuções a cada 1 hora
-    # Conversão: 00:00 BRT = 03:00 UTC | 06:00 BRT = 09:00 UTC
-    - cron: '0 3,4,5,6,7,8,9 * * *'
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 permissions:
