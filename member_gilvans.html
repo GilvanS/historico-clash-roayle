@@ -2135,22 +2135,31 @@
         
         .rd-calendar-day {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px 16px;
+            padding: 8px 10px;
             background: rgba(30, 41, 59, 0.7);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
             white-space: nowrap;
-            min-width: unset;
+            min-width: 80px;
+            gap: 2px;
         }
         .rd-calendar-label {
             color: #94a3b8;
-            font-size: 0.9em;
+            font-size: 0.85em;
             font-weight: 700;
+            text-transform: uppercase;
         }
+        .rd-calendar-medal { font-size: 1.1em; }
+        .rd-calendar-pos { font-size: 0.9em; font-weight: bold; color: #fff; }
+        .rd-calendar-fame { font-size: 0.85em; color: #cbd5e1; }
+        .rd-calendar-boat { font-size: 0.9em; }
+        .rd-calendar-status { font-size: 0.75em; color: #ef4444; }
+
         .rd-calendar-day:hover { 
             background: rgba(59, 130, 246, 0.2); 
             border-color: rgba(96, 165, 250, 0.5);
@@ -2163,6 +2172,7 @@
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.2)) !important; 
             border-color: #3b82f6 !important; 
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.3) !important;
+            transform: scale(1.05);
         }
         .rd-calendar-day-active .rd-calendar-label {
             color: #fff;
@@ -2511,7 +2521,7 @@
         </section>
 
         <footer style="margin-top: 60px; text-align: center; color: #64748b; padding-bottom: 40px;">
-            <p>Perfil gerado em 28/05/2026 19:39:56</p>
+            <p>Perfil gerado em 28/05/2026 20:25:39</p>
             <p>Visto por último: 26 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="clan.html" class="back-btn">← Voltar para Análise do Clã</a>
