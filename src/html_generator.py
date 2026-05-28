@@ -5797,8 +5797,12 @@ class GitHubPagesHTMLGenerator:
                             <button class="rd-mode-btn" onclick="toggleWarMode('{tab_id}', 'global', this)">TOP 3 Todos</button>
                         </div>
                         
-                        <div class="rd-grids-container">
-                            {grids_html}
+                        <div class="rd-grids-wrapper">
+                            <div class="rd-my-war-container">
+                                {grids_html}
+                            </div>
+                            <div class="rd-global-container" style="display: none;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -6477,15 +6481,28 @@ class GitHubPagesHTMLGenerator:
                                 var activeDate = document.getElementById('rd-summary-date-' + tabId).textContent.replace(/-/g, '_');
                                 
                                 if (mode === 'global') {{
-                                    renderTopGlobal(tabId, activeDate);
+                                    var myWarContainer = parent.querySelector('.rd-my-war-container');
+                                    if (myWarContainer) myWarContainer.style.display = 'none';
+                                    
+                                    var globalContainer = parent.querySelector('.rd-global-container');
+                                    if (globalContainer) {{
+                                        globalContainer.style.display = 'block';
+                                        renderTopGlobal(tabId, activeDate);
+                                    }}
                                 }} else {{
+                                    var globalContainer = parent.querySelector('.rd-global-container');
+                                    if (globalContainer) globalContainer.style.display = 'none';
+                                    
+                                    var myWarContainer = parent.querySelector('.rd-my-war-container');
+                                    if (myWarContainer) myWarContainer.style.display = 'block';
+                                    
                                     var target = document.getElementById('rd-grid-' + tabId + '-' + activeDate);
                                     if (target) target.style.display = 'grid';
                                 }}
                             }}
                             function renderTopGlobal(tabId, activeDate) {{
                                 var parent = document.getElementById('rd-day-modal-' + tabId);
-                                var grid = parent.querySelector('.rd-grids-container');
+                                var grid = parent.querySelector('.rd-global-container');
                                 if (!grid || !window.TOP_GLOBAL_DATA) return;
                                 grid.innerHTML = '';
                                 
@@ -9416,9 +9433,25 @@ class GitHubPagesHTMLGenerator:
         }});
         
         // Exibir apenas o grid correspondente ao dia selecionado
+        var myWarContainer = radarContent.querySelector('.rd-my-war-container');
+        if (myWarContainer) {{
+            myWarContainer.style.display = 'block';
+        }}
+        var globalContainer = radarContent.querySelector('.rd-global-container');
+        if (globalContainer) {{
+            globalContainer.style.display = 'none';
+        }}
+        
         var targetGrid = document.getElementById('rd-grid-' + tabId + '-' + date);
         if (targetGrid) {{
             targetGrid.style.display = 'grid';
+        }}
+        
+        // Make sure mode button is synced
+        var myWarBtn = radarContent.querySelector('.rd-mode-btn[onclick*="my-war"]');
+        if (myWarBtn) {{
+            radarContent.querySelectorAll('.rd-mode-btn').forEach(function(b) {{ b.classList.remove('rd-mode-active'); }});
+            myWarBtn.classList.add('rd-mode-active');
         }}
         
         // Se estiver no modo TOP Global, renderiza os dados do TOP Global daquele dia
