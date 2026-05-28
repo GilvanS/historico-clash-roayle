@@ -24,13 +24,15 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SCRIPT_DIR, 'data_clan')
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# Tipos de batalha da Guerra de Rio
-WAR_BATTLE_TYPES = ['clanWarWarDay', 'boatBattle', 'riverRacePvP', 'riverRaceDuel']
+# Tipos de batalha da Guerra de Rio (incluindo as variantes de Coliseu)
+WAR_BATTLE_TYPES = ['clanWarWarDay', 'boatBattle', 'riverRacePvP', 'riverRaceDuel', 'riverRaceDuelColosseum', 'riverRacePvPColosseum']
 BATTLE_TYPE_LABELS = {
     'clanWarWarDay': 'Guerra',
     'boatBattle': 'Barco',
     'riverRacePvP': 'RangeBattle',
-    'riverRaceDuel': 'Duelo'
+    'riverRaceDuel': 'Duelo',
+    'riverRaceDuelColosseum': 'Duelo',
+    'riverRacePvPColosseum': 'RangeBattle'
 }
 
 # Pontuacao por tipo de resultado na guerra
@@ -136,8 +138,8 @@ def collect_war_battles_stats(battles, target_date=None):
             if tower and tower != 'King Tower':
                 stats['war_torre'] = tower
                 
-        # 1. Tratar Duelo de forma especializada
-        if battle_type == 'riverRaceDuel':
+        # 1. Tratar Duelo de forma especializada (normal ou de Coliseu)
+        if battle_type in ['riverRaceDuel', 'riverRaceDuelColosseum']:
             rounds = b.get('rounds', [])
             vits_rodadas = 0
             ders_rodadas = 0
@@ -263,7 +265,7 @@ def collect_decks_from_battlelog(battles, target_date=None):
         if len(decks_collected) >= 4:
             break
         battle_type = b.get('type', '')
-        if battle_type != 'riverRaceDuel':
+        if battle_type not in ['riverRaceDuel', 'riverRaceDuelColosseum']:
             continue
         tipo_label = BATTLE_TYPE_LABELS.get(battle_type, battle_type)
         # Algumas APIs retornam rounds no campo 'rounds' (quando disponivel)
@@ -330,7 +332,7 @@ def collect_top_global_clans(token, limit=5):
                     
                     participants = next((c.get('participants', []) for c in my_clan if c.get('tag') == clan_tag), [])
                     sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
-                    top_players = sorted_players[:5]
+                    top_players = sorted_players  # Coletar TODOS os jogadores do Top Global
                 else:
                     top_players = []
             except:
@@ -434,14 +436,14 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
         sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
         
         # CORRECAO: Para o PROPRIO clan, coletar TODOS os participantes
-        # Para clans adversarios, limitar a 5 (inteligencia de guerra)
+        # Para clans adversarios, também coletar TODOS (para inteligência completa de decks e pontos)
         is_own_clan = (clan_tag == my_clan_tag)
         if is_own_clan:
             top_players = sorted_players  # TODOS os membros do proprio cla
             print(f"  Clan PROPRIO [{clan_name}] ({clan_tag}): {len(top_players)} participantes")
         else:
-            top_players = sorted_players[:5]  # Top 5 dos adversarios
-            print(f"  Clan adversario [{clan_name}] ({clan_tag}): top {len(top_players)}")
+            top_players = sorted_players  # TODOS os membros dos adversarios
+            print(f"  Clan adversario [{clan_name}] ({clan_tag}): {len(top_players)} participantes")
         
         for player_idx, player in enumerate(top_players, 1):
             player_tag_player = player.get('tag', '')

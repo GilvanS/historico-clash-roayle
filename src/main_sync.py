@@ -157,7 +157,7 @@ def main():
                 [sys.executable, '-c',
                  'from collect_river_race_full import collect_river_race_intelligence; collect_river_race_intelligence()'],
                 cwd=os.path.dirname(os.path.abspath(__file__)),
-                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=240
+                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=900
             )
             if result.stdout: war_logs.append(result.stdout)
             if result.stderr: war_logs.append(result.stderr)
