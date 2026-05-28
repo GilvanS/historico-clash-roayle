@@ -8819,8 +8819,8 @@ class GitHubPagesHTMLGenerator:
         .rd-analytics-cards {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
         
         .rd-card-premium {
@@ -8828,7 +8828,7 @@ class GitHubPagesHTMLGenerator:
             background: rgba(15, 23, 42, 0.65);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            padding: 16px;
+            padding: 10px 12px;
             display: flex;
             align-items: center;
             gap: 16px;
@@ -8862,11 +8862,11 @@ class GitHubPagesHTMLGenerator:
         }
         
         .rd-card-icon {
-            font-size: 2.2em;
+            font-size: 1.6em;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            width: 56px;
-            height: 56px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -9056,8 +9056,8 @@ class GitHubPagesHTMLGenerator:
         .rd-calendar-container { 
             background: rgba(15, 23, 42, 0.8); 
             border-radius: 20px; 
-            padding: 24px; 
-            margin-bottom: 30px; 
+            padding: 12px 16px; 
+            margin-bottom: 15px; 
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
@@ -9067,7 +9067,7 @@ class GitHubPagesHTMLGenerator:
             color: #94a3b8; 
             text-transform: uppercase; 
             letter-spacing: 2px; 
-            margin-bottom: 20px; 
+            margin-bottom: 10px; 
             text-align: center;
             display: flex;
             align-items: center;
@@ -9086,9 +9086,9 @@ class GitHubPagesHTMLGenerator:
         .rd-calendar-timeline {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
+            gap: 8px;
             overflow-x: auto;
-            padding-bottom: 10px;
+            padding-bottom: 4px;
             scroll-behavior: smooth;
         }
         
@@ -9097,7 +9097,7 @@ class GitHubPagesHTMLGenerator:
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 18px 12px;
+            padding: 10px 8px;
             background: rgba(30, 41, 59, 0.7);
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 16px;
@@ -9141,13 +9141,13 @@ class GitHubPagesHTMLGenerator:
             font-size: 0.8em; 
             font-weight: 700; 
             color: #94a3b8; 
-            margin-bottom: 10px;
+            margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .rd-calendar-icon { 
-            font-size: 1.8em; 
-            margin-bottom: 8px;
+            font-size: 1.3em; 
+            margin-bottom: 4px;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
         .rd-calendar-pos { 
@@ -9197,19 +9197,19 @@ class GitHubPagesHTMLGenerator:
         
         /* Top 3 Jogadores no Calendário */
         .rd-calendar-players {
-            margin-top: 10px;
-            padding-top: 8px;
+            margin-top: 6px;
+            padding-top: 4px;
             border-top: 1px solid rgba(255,255,255,0.1);
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
         .rd-calendar-player {
             display: flex;
             align-items: center;
-            gap: 4px;
-            font-size: 0.65em;
-            padding: 2px 4px;
+            gap: 2px;
+            font-size: 0.6em;
+            padding: 1px 3px;
             background: rgba(0,0,0,0.2);
             border-radius: 4px;
         }
@@ -9240,8 +9240,8 @@ class GitHubPagesHTMLGenerator:
             background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.9) 100%);
             border: 1px solid rgba(0,255,204,0.25);
             border-radius: 10px;
-            padding: 10px 20px;
-            margin: 8px 0 12px 0;
+            padding: 6px 12px;
+            margin: 4px 0 8px 0;
             animation: rdSummaryFadeIn 0.3s ease;
             box-shadow: 0 0 20px rgba(0,255,204,0.08);
         }
