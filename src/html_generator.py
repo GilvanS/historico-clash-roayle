@@ -5050,8 +5050,20 @@ class GitHubPagesHTMLGenerator:
                         if row_account != 'TOP_GLOBAL':
                             continue
                     else:
-                        is_sec = player_tag and '2220UQQ0UU' in player_tag
-                        expected_accounts = ['#2220UQQ0UU', '2220UQQ0UU'] if is_sec else ['#2QR292P', 'principal']
+                        expected_accounts = []
+                        if player_tag:
+                            tag_clean = player_tag.strip().upper()
+                            if not tag_clean.startswith('#'):
+                                expected_accounts.extend([f"#{tag_clean}", tag_clean])
+                            else:
+                                expected_accounts.extend([tag_clean, tag_clean.replace('#', '')])
+                            
+                            # Suporte a base legada
+                            if '2QR292P' in tag_clean:
+                                expected_accounts.append('principal')
+                            if '2220UQQ0UU' in tag_clean:
+                                expected_accounts.append('secundaria')
+                                
                         if row_account not in expected_accounts:
                             continue
                             
