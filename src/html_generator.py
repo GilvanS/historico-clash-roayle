@@ -9695,21 +9695,39 @@ class GitHubPagesHTMLGenerator:
             e.preventDefault();
             e.stopPropagation();
         }}
-        navigator.clipboard.writeText(link).then(() => {{
-            const originalHTML = btn.innerHTML;
-            const isSmall = originalHTML.includes('📋') || originalHTML.includes('span');
-            btn.innerHTML = isSmall ? '✔️' : '<i class="fas fa-check"></i> Copiado!';
-            btn.style.color = '#4CAF50';
-            btn.style.borderColor = '#4CAF50';
-            setTimeout(() => {{
-                btn.innerHTML = originalHTML;
-                btn.style.color = '';
-                btn.style.borderColor = '';
-            }}, 2000);
-        }}).catch(err => {{
-            console.error('Falha ao copiar:', err);
-            window.open(link, '_blank');
-        }});
+        
+        function fallbackCopy() {{
+            navigator.clipboard.writeText(link).then(() => {{
+                const originalHTML = btn.innerHTML;
+                const isSmall = originalHTML.includes('📋') || originalHTML.includes('span');
+                btn.innerHTML = isSmall ? '✔️' : '<i class="fas fa-check"></i> Copiado!';
+                btn.style.color = '#4CAF50';
+                btn.style.borderColor = '#4CAF50';
+                setTimeout(() => {{
+                    btn.innerHTML = originalHTML;
+                    btn.style.color = '';
+                    btn.style.borderColor = '';
+                }}, 2000);
+            }}).catch(err => {{
+                console.error('Falha ao copiar:', err);
+                window.open(link, '_blank');
+            }});
+        }}
+
+        if (navigator.share) {{
+            navigator.share({{
+                title: 'Deck Clash Royale',
+                text: 'Copie ou abra este deck no Clash Royale:',
+                url: link
+            }}).catch(err => {{
+                if (err.name !== 'AbortError') {{
+                    console.error('Falha ao compartilhar:', err);
+                    fallbackCopy();
+                }}
+            }});
+        }} else {{
+            fallbackCopy();
+        }}
     }}
     </script>
     {self.generate_dashboard_scripts()}
