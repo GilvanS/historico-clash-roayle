@@ -323,7 +323,7 @@ def collect_top_global_clans(token, limit=5):
     data_hoje, dia_batalha = get_logical_date_and_battle_day()
     
     try:
-        r = requests.get(f"{base_url}/locations/global/rankings/clans", headers=headers, timeout=15)
+        r = requests.get(f"{base_url}/locations/global/rankings/clanwars", headers=headers, timeout=15)
         if r.status_code != 200:
             print(f"ERRO ao buscar ranking global: {r.status_code}")
             return []
