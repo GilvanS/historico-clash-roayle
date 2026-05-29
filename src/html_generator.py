@@ -6055,8 +6055,8 @@ class GitHubPagesHTMLGenerator:
                 <div class="deck-row-premium-v2">
                     <div class="deck-meta-header">
                         <span class="deck-index">DECK {i+1}</span>
-                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2">
-                            <i class="fas fa-copy"></i> Copiar
+                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="border: none; padding: 2px 8px; cursor: pointer;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 22px; vertical-align: middle;">
                         </button>
                     </div>
                     <div class="cr-side-container">
@@ -6110,8 +6110,8 @@ class GitHubPagesHTMLGenerator:
                 <div class="deck-row-premium-v2">
                     <div class="deck-meta-header">
                         <span class="deck-index">DECK {i+1}</span>
-                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2">
-                            <i class="fas fa-copy"></i> Copiar
+                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="border: none; padding: 2px 8px; cursor: pointer;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 22px; vertical-align: middle;">
                         </button>
                     </div>
                     <div class="cr-side-container">
