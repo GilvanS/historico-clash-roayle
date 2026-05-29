@@ -5505,24 +5505,42 @@ class GitHubPagesHTMLGenerator:
             
             active_class = "rd-calendar-day-active" if is_active else ""
             
+            # Formatação do ícone de medalha baseado na posição
+            medal_icon = ""
+            if position == 1:
+                medal_icon = "🥇"
+            elif position == 2:
+                medal_icon = "🥈"
+            elif position == 3:
+                medal_icon = "🥉"
+            elif position > 0:
+                medal_icon = "🏅"
+                
+            pos_text = f"#{position}" if position > 0 else "#—"
+            fame_text = f"{fame:,}".replace(',', '.') if fame > 0 else "0"
+            status_text = "Sem dados" if fame == 0 else ""
+            
             days_html += f"""
                 <div class="rd-calendar-day {active_class}" 
                      onclick="selectWarDay('{tab_id}', '{date}', this)"
                      data-date="{date}" data-position="{position}" data-fame="{fame}"
                      data-decks-played="{decks_played}" data-decks-remaining="{decks_remaining}"
                      data-efficiency="{efficiency}" data-projected-fame="{projected_fame}">
-                    <span class="rd-calendar-label">📅 {label}</span>
+                    <div class="rd-calendar-label">{label}</div>
+                    <div class="rd-calendar-medal">{medal_icon}</div>
+                    <div class="rd-calendar-pos">{pos_text}</div>
+                    <div class="rd-calendar-fame">⚔ {fame_text}</div>
+                    <div class="rd-calendar-boat">⚓</div>
+                    <div class="rd-calendar-status">{status_text}</div>
                 </div>
             """
             
         my_clan_safe = my_clan.replace("'", "\\'")
         return f"""
-            <div class="rd-calendar-container" id="rd-calendar-{tab_id}">
                 <div class="rd-calendar-title">&#x1F4C5; Calendario Guerra - {my_clan_safe}</div>
                 <div class="rd-calendar-timeline">
                     {days_html}
                 </div>
-            </div>
         """
         
     def generate_war_radar_html(self, data, player_tag: str = None, tab_id: str = None):
@@ -5729,58 +5747,61 @@ class GitHubPagesHTMLGenerator:
         
         content_html = f"""
             <div id="rd-content-{tab_id}" class="rd-content" style="display: none;">
-                {calendar_html}
-                
-                <!-- Modal Específico do Radar de Guerra para esta tab -->
-                <div id="rd-day-modal-{tab_id}" class="cr-modal-overlay cr-war-modal">
-                    <div class="cr-modal-container" style="max-height: 95vh; max-width: 1450px; padding: 25px;">
-                        <button class="cr-modal-close" onclick="closeWarDayModal('{tab_id}')" style="top: 15px; right: 15px; background: rgba(255,50,50,0.2);">&times;</button>
+                <div class="rd-calendar-container" id="rd-calendar-{tab_id}">
+                    {calendar_html}
+                    
+                    <!-- Analytics Cards Logo Abaixo do Calendário -->
+                    <div class="rd-analytics-cards" id="rd-analytics-cards-{tab_id}">
+                        <div class="rd-card-premium rd-decks-card">
+                            <div class="rd-card-glow"></div>
+                            <div class="rd-card-icon">🎴</div>
+                            <div class="rd-card-details">
+                                <span class="rd-card-title">Decks Utilizados</span>
+                                <span class="rd-card-value" id="rd-decks-value-{tab_id}">0 / 200</span>
+                                <span class="rd-card-sub" id="rd-decks-sub-{tab_id}">200 restantes</span>
+                            </div>
+                        </div>
                         
-                        <div id="rd-war-summary-{tab_id}" class="rd-war-summary" style="display: none;">
-                            <div class="rd-war-summary-inner">
-                                <span class="rd-war-summary-label">📅 Dia selecionado:</span>
-                                <span id="rd-summary-date-{tab_id}" class="rd-war-summary-date">—</span>
-                                <span class="rd-war-summary-sep">|</span>
-                                <span class="rd-war-summary-label">🏆 Posicao:</span>
-                                <span id="rd-summary-pos-{tab_id}" class="rd-war-summary-pos">—</span>
-                                <span class="rd-war-summary-sep">|</span>
-                                <span class="rd-war-summary-label">⭐ Fama:</span>
-                                <span id="rd-summary-fame-{tab_id}" class="rd-war-summary-fame">—</span>
+                        <div class="rd-card-premium rd-efficiency-card">
+                            <div class="rd-card-glow"></div>
+                            <div class="rd-card-icon">⚡</div>
+                            <div class="rd-card-details">
+                                <span class="rd-card-title">Eficiencia Media</span>
+                                <span class="rd-card-value" id="rd-efficiency-value-{tab_id}">0.0%</span>
+                                <span class="rd-card-sub">Baseada em vitorias</span>
                             </div>
                         </div>
+                        
+                        <div class="rd-card-premium rd-projection-card">
+                            <div class="rd-card-glow"></div>
+                            <div class="rd-card-icon">🔮</div>
+                            <div class="rd-card-details">
+                                <span class="rd-card-title">Projecao de Fama</span>
+                                <span class="rd-card-value" id="rd-projection-value-{tab_id}">0 ⭐</span>
+                                <span class="rd-card-sub">Estimativa matematica</span>
+                            </div>
+                        </div>
+                    </div>
 
-                        <!-- Widgets Analiticos Premium de Projecao -->
-                        <div class="rd-analytics-cards" id="rd-analytics-cards-{tab_id}">
-                            <div class="rd-card-premium rd-decks-card">
-                                <div class="rd-card-glow"></div>
-                                <div class="rd-card-icon">🎴</div>
-                                <div class="rd-card-details">
-                                    <span class="rd-card-title">Decks Utilizados</span>
-                                    <span class="rd-card-value" id="rd-decks-value-{tab_id}">0 / 200</span>
-                                    <span class="rd-card-sub" id="rd-decks-sub-{tab_id}">200 restantes</span>
-                                </div>
-                            </div>
-                            
-                            <div class="rd-card-premium rd-efficiency-card">
-                                <div class="rd-card-glow"></div>
-                                <div class="rd-card-icon">⚡</div>
-                                <div class="rd-card-details">
-                                    <span class="rd-card-title">Eficiencia Media</span>
-                                    <span class="rd-card-value" id="rd-efficiency-value-{tab_id}">0.0%</span>
-                                    <span class="rd-card-sub">Baseada em vitorias</span>
-                                </div>
-                            </div>
-                            
-                            <div class="rd-card-premium rd-projection-card">
-                                <div class="rd-card-glow"></div>
-                                <div class="rd-card-icon">🔮</div>
-                                <div class="rd-card-details">
-                                    <span class="rd-card-title">Projecao de Fama</span>
-                                    <span class="rd-card-value" id="rd-projection-value-{tab_id}">0 ⭐</span>
-                                    <span class="rd-card-sub">Estimativa matematica</span>
-                                </div>
-                            </div>
+                    <div id="rd-war-summary-{tab_id}" class="rd-war-summary" style="display: none; margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px;">
+                        <div class="rd-war-summary-inner" style="justify-content: center;">
+                            <span class="rd-war-summary-label">📅 Dia selecionado:</span>
+                            <span id="rd-summary-date-{tab_id}" class="rd-war-summary-date">—</span>
+                            <span class="rd-war-summary-sep">|</span>
+                            <span class="rd-war-summary-label">🏆 Posicao:</span>
+                            <span id="rd-summary-pos-{tab_id}" class="rd-war-summary-pos">—</span>
+                            <span class="rd-war-summary-sep">|</span>
+                            <span class="rd-war-summary-label">⭐ Fama:</span>
+                            <span id="rd-summary-fame-{tab_id}" class="rd-war-summary-fame">—</span>
                         </div>
+                    </div>
+                </div>
+
+                <div id="rd-day-content-{tab_id}" class="cr-war-content-area" style="margin-top: 15px;">
+                        
+                        <!-- rd-war-summary movido para o rd-calendar-container -->
+
+
 
                         <div class="rd-header">
                             <div class="rd-badge">RADAR DE GUERRA</div>
@@ -6469,7 +6490,7 @@ class GitHubPagesHTMLGenerator:
                             window.TOP_GLOBAL_DATA = {top_global_json};
                             window.CARD_IMAGE_PATHS = {card_img_json};
                             function toggleWarMode(tabId, mode, btn) {{
-                                var parent = document.getElementById('rd-day-modal-' + tabId);
+                                var parent = document.getElementById('rd-day-content-' + tabId);
                                 if (!parent) return;
                                 
                                 parent.querySelectorAll('.rd-mode-btn').forEach(function(b) {{ b.classList.remove('rd-mode-active'); }});
@@ -6497,11 +6518,11 @@ class GitHubPagesHTMLGenerator:
                                     if (myWarContainer) myWarContainer.style.display = 'block';
                                     
                                     var target = document.getElementById('rd-grid-' + tabId + '-' + activeDate);
-                                    if (target) target.style.display = 'grid';
+                                    if (target) target.style.display = 'block';
                                 }}
                             }}
                             function renderTopGlobal(tabId, activeDate) {{
-                                var parent = document.getElementById('rd-day-modal-' + tabId);
+                                var parent = document.getElementById('rd-day-content-' + tabId);
                                 var grid = parent.querySelector('.rd-global-container');
                                 if (!grid || !window.TOP_GLOBAL_DATA) return;
                                 grid.innerHTML = '';
@@ -6512,6 +6533,7 @@ class GitHubPagesHTMLGenerator:
                                     return;
                                 }}
                                 
+                                var html = '<div class="rd-grid">';
                                 clansForDate.forEach(function(clan) {{
                                     var playersHtml = '';
                                     clan.players.forEach(function(p) {{
@@ -6550,24 +6572,19 @@ class GitHubPagesHTMLGenerator:
                                             '<span class="rd-stat rd-medals">🏅 ' + p.war_medals + '</span>' +
                                             '<span class="rd-stat rd-battles">⚔️ ' + p.war_battles_count + '</span>' +
                                             '</div>';
-                                        playersHtml += '<div class="rd-player">' +
-                                            '<div class="rd-player-header">' +
-                                            '<span class="rd-rank">#' + p.ranking + '</span>' +
-                                            '<span class="rd-name">' + p.player + '</span>' +
-                                            '<span class="rd-fame">+' + p.fame + '</span>' +
-                                            '<span class="rd-lutou" title="Lutou hoje">' + lutouIcon + '</span>' +
-                                            '<span class="rd-attacks">' + p.ataques + '</span>' +
-                                            '</div>' + warStats + '<div class="rd-decks">' + decksHtml + '</div></div>';
+                                        playersHtml += '<div class="rd-player"><div class="rd-player-header"><div class="rd-player-name">' + lutouIcon + ' ' + p.player + '</div><div class="rd-player-fame">' + p.fame + ' ⭐</div></div>' + decksHtml + warStats + '</div>';
                                     }});
-                                    var meClass = clan.is_me ? ' rd-clan-me' : '';
-                                    var meBadge = clan.is_me ? "<span class='rd-me-badge'>MEU CLÃ</span>" : "";
-                                    grid.innerHTML += '<div class="rd-clan' + meClass + '">' +
+                                    var meClass = clan.is_me ? 'rd-clan-me' : '';
+                                    var meBadge = clan.is_me ? '<span class="rd-me-badge">VOCÊ</span>' : '';
+                                    html += '<div class="rd-clan ' + meClass + '">' +
                                         '<div class="rd-clan-header">' +
                                         '<span class="rd-pos">#' + clan.position + '</span>' +
                                         '<span class="rd-clan-name">' + clan.name + '</span>' + meBadge +
                                         '<span class="rd-clan-fame">' + clan.total_fame.toLocaleString() + ' ⭐</span>' +
                                         '</div><div class="rd-players">' + playersHtml + '</div></div>';
                                 }});
+                                html += '</div>';
+                                grid.innerHTML = html;
                             }}
                         </script>
                     """
@@ -8774,6 +8791,7 @@ class GitHubPagesHTMLGenerator:
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
+            margin-top: 15px;
             margin-bottom: 12px;
         }
         
@@ -9034,22 +9052,31 @@ class GitHubPagesHTMLGenerator:
         
         .rd-calendar-day {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px 16px;
+            padding: 8px 10px;
             background: rgba(30, 41, 59, 0.7);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
             white-space: nowrap;
-            min-width: unset;
+            min-width: 80px;
+            gap: 2px;
         }
         .rd-calendar-label {
             color: #94a3b8;
-            font-size: 0.9em;
+            font-size: 0.85em;
             font-weight: 700;
+            text-transform: uppercase;
         }
+        .rd-calendar-medal { font-size: 1.1em; }
+        .rd-calendar-pos { font-size: 0.9em; font-weight: bold; color: #fff; }
+        .rd-calendar-fame { font-size: 0.85em; color: #cbd5e1; }
+        .rd-calendar-boat { font-size: 0.9em; }
+        .rd-calendar-status { font-size: 0.75em; color: #ef4444; }
+
         .rd-calendar-day:hover { 
             background: rgba(59, 130, 246, 0.2); 
             border-color: rgba(96, 165, 250, 0.5);
@@ -9062,19 +9089,21 @@ class GitHubPagesHTMLGenerator:
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.2)) !important; 
             border-color: #3b82f6 !important; 
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.3) !important;
+            transform: scale(1.05);
         }
         .rd-calendar-day-active .rd-calendar-label {
             color: #fff;
         }
         
         .rd-war-summary {
-            background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.9) 100%);
-            border: 1px solid rgba(0,255,204,0.25);
-            border-radius: 10px;
-            padding: 6px 12px;
-            margin: 4px 0 8px 0;
+            /* Mesclado ao rd-calendar-container */
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 4px 12px;
+            margin: 0;
             animation: rdSummaryFadeIn 0.3s ease;
-            box-shadow: 0 0 20px rgba(0,255,204,0.08);
+            box-shadow: none;
         }
         @keyframes rdSummaryFadeIn {
             from { opacity: 0; transform: translateY(-6px); }
@@ -9491,23 +9520,8 @@ class GitHubPagesHTMLGenerator:
             if (fameEl)  fameEl.textContent  = parseInt(fame).toLocaleString() + ' ⭐';
         }}
         
-        // Se não for carregamento automático, abra o Modal
-        if (!isAutoLoad) {{
-            var modal = document.getElementById('rd-day-modal-' + tabId);
-            if (modal) {{
-                modal.classList.add('active');
-            }}
-        }}
-        
         // Salvar selecao do dia no localStorage por tab
         localStorage.setItem('cr_radar_day_' + tabId, date);
-    }}
-    
-    function closeWarDayModal(tabId) {{
-        var modal = document.getElementById('rd-day-modal-' + tabId);
-        if (modal) {{
-            modal.classList.remove('active');
-        }}
     }}
     
     // Task 3: Restaurar conta e dia selecionado do localStorage ao carregar a pagina
