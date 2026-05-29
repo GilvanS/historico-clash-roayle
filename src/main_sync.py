@@ -13,7 +13,8 @@ from contextlib import redirect_stdout, redirect_stderr
 from datetime import datetime
 
 # Adiciona o diretório src ao path se necessário
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+src_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.extend([src_dir, os.path.join(src_dir, "api"), os.path.join(src_dir, "core"), os.path.join(src_dir, "generators"), os.path.join(src_dir, "utils"), os.path.join(src_dir, "legacy")])
 
 from update_readme_from_csv import ReadmeCSVUpdater
 from html_generator import GitHubPagesHTMLGenerator
@@ -137,7 +138,7 @@ def main():
             import subprocess
             result = subprocess.run(
                 [sys.executable, '-c',
-                 'from collect_war_top_decks import collect_top_decks; collect_top_decks()'],
+                 'import sys, os; sys.path.append(os.path.join(os.getcwd(), "api")); from collect_war_top_decks import collect_top_decks; collect_top_decks()'],
                 cwd=os.path.dirname(os.path.abspath(__file__)),
                 capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=120
             )
@@ -146,7 +147,7 @@ def main():
             
             result = subprocess.run(
                 [sys.executable, '-c',
-                 'from collect_war_weekend import collect_boat_data; collect_boat_data()'],
+                 'import sys, os; sys.path.append(os.path.join(os.getcwd(), "api")); from collect_war_weekend import collect_boat_data; collect_boat_data()'],
                 cwd=os.path.dirname(os.path.abspath(__file__)),
                 capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=120
             )
@@ -155,7 +156,7 @@ def main():
             
             result = subprocess.run(
                 [sys.executable, '-c',
-                 'from collect_river_race_full import collect_river_race_intelligence; collect_river_race_intelligence()'],
+                 'import sys, os; sys.path.append(os.path.join(os.getcwd(), "api")); from collect_river_race_full import collect_river_race_intelligence; collect_river_race_intelligence()'],
                 cwd=os.path.dirname(os.path.abspath(__file__)),
                 capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=900
             )

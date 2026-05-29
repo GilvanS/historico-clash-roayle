@@ -80,7 +80,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        git add src/data_clan/ src/data_csv_oficial/ README.md docs/
+        git add data/csv/ README.md docs/ data/json/ data/backups/
 
         if ! git diff --staged --quiet; then
           HTML_SIZE=$(wc -c < docs/index.html)

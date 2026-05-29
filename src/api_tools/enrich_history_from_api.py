@@ -18,7 +18,7 @@ FIELDNAMES = [
     'posicao_global_jogador', 'posicao_global_oponente', 'nivel_torre_oponente'
 ]
 
-DATA_DIR = 'src/data_csv_oficial'
+DATA_DIR = 'data/csv'
 
 def format_date_brt(battle_time_str):
     try:

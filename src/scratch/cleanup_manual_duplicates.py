@@ -1,7 +1,7 @@
 import csv, os
 from datetime import datetime
 
-DATA_DIR = "src/data_csv_oficial"
+DATA_DIR = "data/csv"
 FILES = [
     "oponentes_dia_20260424.csv",
     "oponentes_dia_20260426.csv",

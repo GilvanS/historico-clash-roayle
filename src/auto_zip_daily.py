@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 def zip_daily_files_older_than(days=2):
     """Zip automaticamente arquivos diários com mais de X dias"""
     
-    csv_dir = "src/data_csv_oficial"
+    csv_dir = "data/csv"
     backup_dir = "src/backup_before_dedup"
     
     # Garantir que diretório de backup existe

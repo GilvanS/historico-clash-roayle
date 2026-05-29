@@ -11,9 +11,10 @@ echo.
 :loop
 echo [%time%] Iniciando sincronizacao...
 git pull --rebase -X theirs origin main
+set PYTHONPATH=%CD%\src;%CD%\src\api;%CD%\src\core;%CD%\src\generators;%CD%\src\utils
 python src/main_sync.py
 
-git add src/data_csv_oficial/ README.md docs/ src/data_clan/
+git add data/csv/  README.md docs/ data/json/ 
 
 git diff --staged --quiet
 if errorlevel 1 (
