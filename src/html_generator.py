@@ -6562,7 +6562,7 @@ class GitHubPagesHTMLGenerator:
                                                         deckCardIds.push(window.CARD_IDS[c]);
                                                     }}
                                                 }});
-                                                var copyLink = deckCardIds.length > 0 ? 'clashroyale://copyDeck?deck=' + deckCardIds.join(';') : '#';
+                                                var copyLink = deckCardIds.length > 0 ? 'https://link.clashroyale.com/deck/pt?deck=' + deckCardIds.join(';') : '#';
                                                 var copyBtnHtml = '<button type="button" onclick="copyDeckLink(event, this, \\'' + copyLink + '\\')" class="cr-copy-btn-v2" style="border: none; padding: 4px 8px; cursor: pointer; background: transparent; margin-left: 8px;" title="Copiar/Compartilhar"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;"></button>';
                                                 decksHtml += '<div class="rd-deck-row"><div class="rd-deck-label" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">' + tipoIcon + ' Deck ' + d + ' (' + tipo + ')' + copyBtnHtml + '</div><div class="rd-deck">';
                                                 row1.forEach(function(card) {{
