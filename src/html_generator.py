@@ -3455,9 +3455,14 @@ class GitHubPagesHTMLGenerator:
                 tower_url: battle.o_tower_url
             };
 
-            const pGrid = getMiniGridJS(battle.my_deck, 'cr-deck-left', 'Voc\u00ea', '', playerMetrics, '', null);
+            const pCardIds = battle.p_deck_list && window.CARD_IDS ? battle.p_deck_list.map(c => window.CARD_IDS[c]).filter(Boolean) : [];
+            const oCardIds = battle.o_deck_list && window.CARD_IDS ? battle.o_deck_list.map(c => window.CARD_IDS[c]).filter(Boolean) : [];
+            const pDeckLink = pCardIds.length >= 8 ? 'https://link.clashroyale.com/pt/?clashroyale://copyDeck?deck=' + pCardIds.join(';') + '&l=Royals&tt=159000000' : '';
+            const oDeckLink = oCardIds.length >= 8 ? 'https://link.clashroyale.com/pt/?clashroyale://copyDeck?deck=' + oCardIds.join(';') + '&l=Royals&tt=159000000' : '';
 
-            const oGrid = getMiniGridJS(battle.opp_deck, 'cr-deck-right', battle.opponent_name || 'Oponente', '', oppMetrics, '', null);
+            const pGrid = getMiniGridJS(battle.my_deck, 'cr-deck-left', 'Voc\u00ea', '', playerMetrics, pDeckLink, null);
+
+            const oGrid = getMiniGridJS(battle.opp_deck, 'cr-deck-right', battle.opponent_name || 'Oponente', '', oppMetrics, oDeckLink, null);
 
             let trophyHtml = '';
             if (trophyChange !== 0) {
@@ -3585,8 +3590,8 @@ class GitHubPagesHTMLGenerator:
                 "time": t,
                 "p_metrics": self._generate_metrics_panel_html_simple(my_m),
                 "o_metrics": self._generate_metrics_panel_html_simple(opp_m),
-                "p_grid": self._generate_deck_grid_html_simple(b['my_deck']),
-                "o_grid": self._generate_deck_grid_html_simple(b['opp_deck']),
+                "p_grid": self._generate_deck_grid_html_simple(b['my_deck'], self.get_copy_deck_link([c.strip() for c in b.get('my_deck','').split('|') if c.strip()])),
+                "o_grid": self._generate_deck_grid_html_simple(b['opp_deck'], self.get_copy_deck_link([c.strip() for c in b.get('opp_deck','').split('|') if c.strip()])),
                 "p_tower_url": my_m['tower_url'],
                 "o_tower_url": opp_m['tower_url'],
                 "p_level": my_m['level'],
@@ -3798,7 +3803,7 @@ class GitHubPagesHTMLGenerator:
                         <img src="{opp_metrics['tower_url']}" style="width: 100%; transform: scaleX(-1); filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.4));">
                     </div>
                     <div style="width: 100%; position: relative; z-index: 5;">
-                        {self._generate_deck_grid_html_simple(battle_data.get('opp_deck', ''))}
+                        {self._generate_deck_grid_html_simple(battle_data.get('opp_deck', ''), self.get_copy_deck_link([c.split('|')[0] for c in battle_data.get('opp_deck', '').split('|') if c]))}
                     </div>
                 </div>
             </div>
@@ -3887,7 +3892,7 @@ class GitHubPagesHTMLGenerator:
                         <div id="o-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #f87171; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{opp_metrics.get('hp', '--')} HP</div>
                     </div>
                     <div id="o-grid-{section_id}" style="width: 100%; position: relative; z-index: 5;">
-                        {self._generate_deck_grid_html_simple(battle_data['opp_deck'])}
+                        {self._generate_deck_grid_html_simple(battle_data['opp_deck'], self.get_copy_deck_link([c.split('|')[0] for c in battle_data['opp_deck'].split('|') if c]))}
                     </div>
                     <div id="opp-metrics-{section_id}" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
                         {self._generate_metrics_panel_html_simple(opp_metrics)}
