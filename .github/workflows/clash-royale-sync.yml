@@ -14,11 +14,32 @@ on:
       - 'src/data_chests/**'
   schedule:
     # ---------------------------------------------------------------------------------
-    # Agendamento de Contingência (Backup da Nuvem)
-    # Roda a cada 3 horas (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
-    # Isso reduz drasticamente o consumo de minutos do GitHub Actions.
+    # Agendamento Inteligente e Variado (Backup da Nuvem)
+    # Durante a madrugada (00h00 às 08h00 BRT / 03:00 às 11:00 UTC)
+    # Segue intervalos irregulares: 30m, 1h, 45m, para não perder batalhas asiáticas
     # ---------------------------------------------------------------------------------
-    - cron: '0 */3 * * *'
+    - cron: '0 3 * * *'    # 00:00 BRT
+    - cron: '30 3 * * *'   # 00:30 BRT (+30m)
+    - cron: '30 4 * * *'   # 01:30 BRT (+1h)
+    - cron: '15 5 * * *'   # 02:15 BRT (+45m)
+    - cron: '45 5 * * *'   # 02:45 BRT (+30m)
+    - cron: '45 6 * * *'   # 03:45 BRT (+1h)
+    - cron: '30 7 * * *'   # 04:30 BRT (+45m)
+    - cron: '0 8 * * *'    # 05:00 BRT (+30m)
+    - cron: '0 9 * * *'    # 06:00 BRT (+1h)
+    - cron: '45 9 * * *'   # 06:45 BRT (+45m)
+    - cron: '15 10 * * *'  # 07:15 BRT (+30m)
+    - cron: '15 11 * * *'  # 08:15 BRT (+1h)
+
+    # ---------------------------------------------------------------------------------
+    # Durante o dia (08h00 às 23h59 BRT), o script .bat roda no PC,
+    # então o GitHub Actions atua só de 3 em 3 horas por segurança.
+    # ---------------------------------------------------------------------------------
+    - cron: '0 14 * * *'   # 11:00 BRT
+    - cron: '0 17 * * *'   # 14:00 BRT
+    - cron: '0 20 * * *'   # 17:00 BRT
+    - cron: '0 23 * * *'   # 20:00 BRT
+    - cron: '0 2 * * *'    # 23:00 BRT
   workflow_dispatch:
 
 permissions:
