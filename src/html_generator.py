@@ -554,7 +554,7 @@ class GitHubPagesHTMLGenerator:
     def get_tower_image_path(self, tower_name: str) -> str:
         """Retorna o caminho local da imagem da torre"""
         if not tower_name or tower_name == 'N/D':
-            return "docs/torreDoRei.png"
+            return "./torreDoRei.png"
         
         # Mapeamento para arquivos locais na pasta docs
         tower_mapping = {
@@ -577,7 +577,7 @@ class GitHubPagesHTMLGenerator:
             elif 'king' in t_name_lower: slug = 'torreDoRei'
             else: slug = 'torreDoRei'
             
-        return f"docs/{slug}.png"
+        return f"./{slug}.png"
 
     def get_card_image_path(self, card_name: str) -> str:
         """Retorna a URL da imagem da carta usando o cards_master_icons.csv"""
@@ -2665,7 +2665,7 @@ class GitHubPagesHTMLGenerator:
                             <span style="font-weight: 900; color: #fff; font-family: 'Krona One', sans-serif;">{my_m_f['avg']}</span>
                         </div>
                         <div class="cr-metric-inline" title="Ciclo 4" style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.75em;">
-                            <img src="docs/ciclo4.png" style="width: 14px; height: 14px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4));">
+                            <img src="./ciclo4.png" style="width: 14px; height: 14px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4));">
                             <span style="font-weight: 900; color: #fff; font-family: 'Krona One', sans-serif;">{my_m_f['cycle']}</span>
                         </div>
                     </div>
@@ -2732,7 +2732,7 @@ class GitHubPagesHTMLGenerator:
                             <span style="font-weight: 900; color: #f59e0b;">{metrics['avg']}</span>
                         </div>
                         <div class="cr-metric-inline" title="Custo de Ciclo (4 cartas)" style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.75em;">
-                            <img src="docs/ciclo4.png" style="width: 14px; height: 14px; filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.4));">
+                            <img src="./ciclo4.png" style="width: 14px; height: 14px; filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.4));">
                             <span style="font-weight: 900; color: #38bdf8;">{metrics['cycle']}</span>
                         </div>
                     </div>
@@ -3680,7 +3680,7 @@ class GitHubPagesHTMLGenerator:
         
         # Ícone de leak: vermelho com glow se vazou, cinza semi-transparente se não vazou
         has_leak = leaked > 0
-        leak_icon = "docs/ElixirVazado.png" if has_leak else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
+        leak_icon = "./ElixirVazado.png" if has_leak else "https://cdn.royaleapi.com/static/img/ui/elixir.png"
         
         # Cor do leak: vermelho se alto, amarelo se médio, branco se zero
         leak_color = "#f87171" if leaked > 0.5 else ("#fbbf24" if leaked > 0 else "#fff")
@@ -3691,7 +3691,7 @@ class GitHubPagesHTMLGenerator:
                 <span style="font-weight: 900; font-size: 1.1em; color: #fff; font-family: 'Krona One', sans-serif;">{metrics['avg']}</span>
             </div>
             <div class="cr-metric-inline" title="Ciclo 4" style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                <img src="docs/ciclo4.png" style="width: 20px; height: 20px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4));">
+                <img src="./ciclo4.png" style="width: 20px; height: 20px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4));">
                 <span style="font-weight: 900; font-size: 1.1em; color: #fff; font-family: 'Krona One', sans-serif;">{metrics['cycle']}</span>
             </div>
             <div class="cr-metric-inline {leak_class}" title="Elixir Vazado" style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 8px; border: 1px solid { 'rgba(248, 113, 113, 0.3)' if leaked > 0 else 'rgba(255,255,255,0.05)' };">
@@ -3699,7 +3699,7 @@ class GitHubPagesHTMLGenerator:
                 <span style="font-weight: 900; font-size: 1.1em; color: {leak_color}; font-family: 'Krona One', sans-serif;">{metrics.get('leaked_label', '0.0')}</span>
             </div>
             <div class="cr-metric-inline" title="HP Restante" style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                <img src="docs/torreDoRei.png" style="width: 20px; height: 20px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
+                <img src="./torreDoRei.png" style="width: 20px; height: 20px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
                 <span style="font-weight: 900; font-size: 1.1em; color: #fff; font-family: 'Krona One', sans-serif;">{t_hp}</span>
             </div>
         """
@@ -4038,7 +4038,7 @@ class GitHubPagesHTMLGenerator:
                             <span style="font-weight: 900; color: #f59e0b;">{metrics['avg']}</span>
                         </div>
                         <div class="cr-metric-inline" title="Custo de Ciclo (4 cartas)" style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.75em;">
-                            <img src="docs/ciclo4.png" style="width: 14px; height: 14px; filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.4));">
+                            <img src="./ciclo4.png" style="width: 14px; height: 14px; filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.4));">
                             <span style="font-weight: 900; color: #38bdf8;">{metrics['cycle']}</span>
                         </div>
                     </div>
@@ -6075,7 +6075,7 @@ class GitHubPagesHTMLGenerator:
                     <div class="cr-side-container">
                         <div class="cr-tower-floating left">
                             <div class="cr-tower-badge">LV 15</div>
-                            <img src="./docs/princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-v2">
+                            <img src="./princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-v2">
                             <div class="cr-hp-bar-v2"><div class="cr-hp-fill-v2" style="width: 100%;"></div></div>
                         </div>
                         <div class="cr-grid-wrapper-premium">
@@ -6130,7 +6130,7 @@ class GitHubPagesHTMLGenerator:
                     <div class="cr-side-container">
                         <div class="cr-tower-floating left">
                             <div class="cr-tower-badge">LV 15</div>
-                            <img src="./docs/princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-v2">
+                            <img src="./princesa-tropa-de-torre-clash-royale.png" class="cr-tower-img-v2">
                             <div class="cr-hp-bar-v2"><div class="cr-hp-fill-v2" style="width: 100%;"></div></div>
                         </div>
                         <div class="cr-grid-wrapper-premium">
