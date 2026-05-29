@@ -6484,15 +6484,21 @@ class GitHubPagesHTMLGenerator:
                     
                     # Criar mapeamento de imagens de cartas para o JavaScript
                     card_img_paths = {}
+                    card_ids_map = {}
                     for card_name in self.cards_master.keys():
                         img_path = self.get_card_image_path(card_name)
                         card_img_paths[card_name] = img_path
+                        info = self.card_info_cache.get(card_name)
+                        if info and 'id' in info:
+                            card_ids_map[card_name] = str(info['id'])
                     card_img_json = json.dumps(card_img_paths, ensure_ascii=False)
+                    card_ids_json = json.dumps(card_ids_map, ensure_ascii=False)
                     
                     top_global_script = f"""
                         <script>
                             window.TOP_GLOBAL_DATA = {top_global_json};
                             window.CARD_IMAGE_PATHS = {card_img_json};
+                            window.CARD_IDS = {card_ids_json};
                             function toggleWarMode(tabId, mode, btn) {{
                                 var parent = document.getElementById('rd-day-content-' + tabId);
                                 if (!parent) return;
@@ -6550,8 +6556,13 @@ class GitHubPagesHTMLGenerator:
                                                 var row2 = cards.slice(4, 8);
                                                 var tipo = p['deck_' + d + '_tipo'] || 'Batalha';
                                                 var tipoIcon = {{'Guerra': '⚔️', 'Barco': '🚣', 'Range Battle': '🎯', 'Duelo': '⚡'}}[tipo] || '🛡️';
-                                                var deckCardsParam = cards.join(';');
-                                                var copyLink = 'clashroyale://copyDeck?deck=' + deckCardsParam;
+                                                var deckCardIds = [];
+                                                cards.forEach(function(c) {{
+                                                    if(window.CARD_IDS && window.CARD_IDS[c]) {{
+                                                        deckCardIds.push(window.CARD_IDS[c]);
+                                                    }}
+                                                }});
+                                                var copyLink = deckCardIds.length > 0 ? 'clashroyale://copyDeck?deck=' + deckCardIds.join(';') : '#';
                                                 var copyBtnHtml = '<button type="button" onclick="copyDeckLink(event, this, \\'' + copyLink + '\\')" class="cr-copy-btn-v2" style="border: none; padding: 4px 8px; cursor: pointer; background: transparent; margin-left: 8px;" title="Copiar/Compartilhar"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;"></button>';
                                                 decksHtml += '<div class="rd-deck-row"><div class="rd-deck-label" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">' + tipoIcon + ' Deck ' + d + ' (' + tipo + ')' + copyBtnHtml + '</div><div class="rd-deck">';
                                                 row1.forEach(function(card) {{
