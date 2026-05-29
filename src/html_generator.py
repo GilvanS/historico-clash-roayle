@@ -185,7 +185,7 @@ class GitHubPagesHTMLGenerator:
         if len(ids) < 8:
             return "#"
             
-        return f"https://link.clashroyale.com/deck/pt?deck={';'.join(ids)}"
+        return f"https://link.clashroyale.com/pt/?clashroyale://copyDeck?deck={';'.join(ids)}"
 
     def _load_upcoming_chests_json(self, player_tag: str = None) -> List[Dict]:
         """Carrega o ciclo de baús do JSON oficial, tentando buscar por tag específica."""
