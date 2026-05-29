@@ -185,7 +185,7 @@ class GitHubPagesHTMLGenerator:
         if len(ids) < 8:
             return "#"
             
-        return f"clashroyale://copyDeck?deck={';'.join(ids)}"
+        return f"https://link.clashroyale.com/deck/pt?deck={';'.join(ids)}"
 
     def _load_upcoming_chests_json(self, player_tag: str = None) -> List[Dict]:
         """Carrega o ciclo de baús do JSON oficial, tentando buscar por tag específica."""
@@ -2983,7 +2983,7 @@ class GitHubPagesHTMLGenerator:
             const isLeak = leaked > 0;
             const leakClass = isLeak ? 'cr-leak-active' : '';
             
-            const copyHtml = deckLink ? `<a href="${deckLink}" class="cr-copy-deck-btn" title="Copiar Deck">📋</a>` : '';
+            const copyHtml = deckLink ? `<button type="button" onclick="copyDeckLink(event, this, '${deckLink}')" class="cr-copy-deck-btn" title="Copiar Deck">📋</button>` : '';
             
             return {
                 playerName,
@@ -3730,7 +3730,7 @@ class GitHubPagesHTMLGenerator:
 
         copy_btn = ""
         if copy_link:
-            copy_btn = f'<a href="{copy_link}" class="cr-copy-deck-btn" title="Copiar Deck"><span><i class="fas fa-copy"></i></span></a>'
+            copy_btn = f'<button type="button" onclick="copyDeckLink(event, this, \'{copy_link}\')" class="cr-copy-deck-btn" title="Copiar Deck"><span><i class="fas fa-copy"></i></span></button>'
 
         return f'<div class="cr-grid-wrapper-premium"><div class="cr-grid-4x2">{html_cards}</div>{copy_btn}</div>'
         
@@ -6055,9 +6055,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="deck-row-premium-v2">
                     <div class="deck-meta-header">
                         <span class="deck-index">DECK {i+1}</span>
-                        <a href="{copy_link}" class="cr-copy-btn-v2">
+                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2">
                             <i class="fas fa-copy"></i> Copiar
-                        </a>
+                        </button>
                     </div>
                     <div class="cr-side-container">
                         <div class="cr-tower-floating left">
@@ -6110,9 +6110,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="deck-row-premium-v2">
                     <div class="deck-meta-header">
                         <span class="deck-index">DECK {i+1}</span>
-                        <a href="{copy_link}" class="cr-copy-btn-v2">
+                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2">
                             <i class="fas fa-copy"></i> Copiar
-                        </a>
+                        </button>
                     </div>
                     <div class="cr-side-container">
                         <div class="cr-tower-floating left">
@@ -9671,6 +9671,29 @@ class GitHubPagesHTMLGenerator:
     }});
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function copyDeckLink(e, btn, link) {{
+        if(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+        }}
+        navigator.clipboard.writeText(link).then(() => {{
+            const originalHTML = btn.innerHTML;
+            const isSmall = originalHTML.includes('📋') || originalHTML.includes('span');
+            btn.innerHTML = isSmall ? '✔️' : '<i class="fas fa-check"></i> Copiado!';
+            btn.style.color = '#4CAF50';
+            btn.style.borderColor = '#4CAF50';
+            setTimeout(() => {{
+                btn.innerHTML = originalHTML;
+                btn.style.color = '';
+                btn.style.borderColor = '';
+            }}, 2000);
+        }}).catch(err => {{
+            console.error('Falha ao copiar:', err);
+            window.open(link, '_blank');
+        }});
+    }}
+    </script>
     {self.generate_dashboard_scripts()}
 </body>
 </html>
