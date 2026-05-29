@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 REM Atualizar issues com descrições detalhadas em PT-BR
 
 echo ============================================

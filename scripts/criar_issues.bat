@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 set REPO=GilvanS/historico-clash-roayle
 set LABELS=radar-guerra
 

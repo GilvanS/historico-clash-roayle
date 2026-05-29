@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 REM Radar de Guerra v2 - Issues Baseadas no Plano Completo
 REM Plano: plano_legado/task_radar_guerra_v2.md
 

@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 setlocal enabledelayedexpansion
 
 echo [INFO] Atualizando a Issue #13 no GitHub via gh api usando a autenticacao global do seu sistema...

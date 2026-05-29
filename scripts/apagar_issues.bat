@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 REM Apagar todas as issues antigas do Radar de Guerra
 
 set REPO=GilvanS/historico-clash-roayle

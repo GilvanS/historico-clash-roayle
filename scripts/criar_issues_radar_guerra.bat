@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 REM Criar Issues para Radar de Guerra v2 - GitHub CLI
 REM Execute: .\criar_issues_radar_guerra.bat
 

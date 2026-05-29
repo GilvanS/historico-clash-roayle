@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 REM Atualizar issues com detalhes completos (labels, milestones, observacoes de QA, etc)
 REM Baseado no plano task_radar_guerra_v2.md
 

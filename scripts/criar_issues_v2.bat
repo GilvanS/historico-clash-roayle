@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 REM Radar Guerra v2 - Criar Issues com Sub-tasks
 set REPO=GilvanS/historico-clash-roayle
 

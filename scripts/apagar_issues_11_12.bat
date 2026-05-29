@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 REM Apagar Issues 11 e 12 (criadas com body vazio)
 set REPO=GilvanS/historico-clash-roayle
 
