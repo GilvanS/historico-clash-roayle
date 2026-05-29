@@ -176,8 +176,12 @@ class GitHubPagesHTMLGenerator:
         
     def get_copy_deck_link(self, deck_list: List[str]) -> str:
         """Gera um link para copiar o deck para o jogo usando os IDs das cartas."""
+        if not deck_list:
+            return "#"
+            
         ids = []
         for card_name in deck_list:
+            card_name = card_name.strip()
             card_info = self.cards_master.get(card_name)
             if card_info and card_info.get('card_id'):
                 ids.append(card_info['card_id'])
