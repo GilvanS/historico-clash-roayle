@@ -563,7 +563,7 @@ def main():
         html_content = generator.generate_member_page(player_tag)
         safe_name = generator.safe_filename(name)
         filename = f"member_{safe_name}.html"
-        filepath = os.path.join(root_dir, filename)
+        filepath = os.path.join(root_dir, 'docs', filename)
         
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(html_content)

@@ -80,17 +80,17 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
 
-        git add src/data_clan/ src/data_csv_oficial/ README.md index.html clan.html member_*.html
+        git add src/data_clan/ src/data_csv_oficial/ README.md docs/
 
         if ! git diff --staged --quiet; then
-          HTML_SIZE=$(wc -c < index.html)
+          HTML_SIZE=$(wc -c < docs/index.html)
           MIN_SIZE=500000
           if [ "$HTML_SIZE" -lt "$MIN_SIZE" ]; then
             echo "AVISO: HTML parece truncado ($HTML_SIZE bytes < $MIN_SIZE). Regenerando..."
             cd src
             python main_sync.py
             cd ..
-            git add index.html clan.html member_*.html
+            git add docs/
           fi
 
           git commit -m "chore: sincronizacao automatica Clash Royale $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"

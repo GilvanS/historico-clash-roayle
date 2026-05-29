@@ -186,7 +186,7 @@ def main():
         
         # Define diretorio de saida
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        index_path = os.path.join(root_dir, 'index.html')
+        index_path = os.path.join(root_dir, 'docs', 'index.html')
         with open(index_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
             
@@ -194,7 +194,7 @@ def main():
         logger.info("FASE 3.2: Gerando pagina do Cla (clan.html na raiz)...")
         clan_gen = ClanAnalyticsGenerator()
         clan_html = clan_gen.generate_clan_html_report()
-        clan_path = os.path.join(root_dir, 'clan.html')
+        clan_path = os.path.join(root_dir, 'docs', 'clan.html')
         with open(clan_path, 'w', encoding='utf-8') as f:
             f.write(clan_html)
         

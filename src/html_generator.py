@@ -9756,7 +9756,7 @@ def main():
     os.makedirs(docs_dir, exist_ok=True)
     
     # Salva HTML e valida tamanho minimo para evitar commits truncados
-    index_path = os.path.join(root_dir, 'index.html')
+    index_path = os.path.join(root_dir, 'docs', 'index.html')
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
     

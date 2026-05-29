@@ -13,7 +13,7 @@ echo [%time%] Iniciando sincronizacao...
 git pull --rebase -X theirs origin main
 python src/main_sync.py
 
-git add src/data_csv_oficial/ README.md index.html clan.html member_*.html src/data_clan/
+git add src/data_csv_oficial/ README.md docs/ src/data_clan/
 
 git diff --staged --quiet
 if errorlevel 1 (

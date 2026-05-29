@@ -23,7 +23,7 @@ python src/main_sync.py
 
 :: 3. Verificar se houve alteracoes para commitar
 echo 3. Preparando envio para o Dashboard Web...
-git add src/data_csv_oficial/ README.md index.html src/data_clan/
+git add src/data_csv_oficial/ README.md docs/ src/data_clan/
 
 :: Verificar se ha algo para commitar
 git diff --staged --quiet
