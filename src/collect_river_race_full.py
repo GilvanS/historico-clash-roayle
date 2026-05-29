@@ -14,6 +14,7 @@ import requests
 import csv
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import concurrent.futures
 
 # Forcar UTF-8 no terminal
 if sys.stdout.encoding != 'utf-8':
@@ -289,6 +290,30 @@ def collect_decks_from_battlelog(battles, target_date=None):
 
     return player_decks
 
+def fetch_battlelogs_concurrently(players, headers, base_url, max_workers=15):
+    """Busca o historico de batalhas de multiplos jogadores em paralelo para evitar timeout."""
+    results = {}
+    
+    def fetch_one(tag):
+        if not tag: return tag, None
+        try:
+            url = f"{base_url}/players/{tag.replace('#', '%23')}/battlelog"
+            r = requests.get(url, headers=headers, timeout=10)
+            if r.status_code == 200:
+                return tag, r.json()
+        except:
+            pass
+        return tag, None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(fetch_one, p.get('tag', '')): p for p in players}
+        for future in concurrent.futures.as_completed(futures):
+            tag, data = future.result()
+            if data is not None:
+                results[tag] = data
+                
+    return results
+
 def collect_top_global_clans(token, limit=5):
     """Coleta os TOP N clas do ranking global e seus top 5 jogadores com decks"""
     headers = {'Authorization': f'Bearer {token}'}
@@ -338,6 +363,10 @@ def collect_top_global_clans(token, limit=5):
             except:
                 top_players = []
             
+            # Buscar battlelogs em paralelo
+            print(f"    Buscando battlelogs de {len(top_players)} jogadores...")
+            battlelogs_cache = fetch_battlelogs_concurrently(top_players, headers, base_url)
+            
             for player_idx, player in enumerate(top_players, 1):
                 player_tag_player = player.get('tag', '')
                 player_name = player.get('name', 'Unknown')
@@ -355,17 +384,10 @@ def collect_top_global_clans(token, limit=5):
                     'war_torre': 'Tower Princess', 'war_tipo_principal': '', 'war_battles_count': 0
                 }
                 
-                if player_tag_player:
-                    try:
-                        p_tag_url = player_tag_player.replace('#', '%23')
-                        br = requests.get(f"{base_url}/players/{p_tag_url}/battlelog", headers=headers, timeout=10)
-                        
-                        if br.status_code == 200:
-                            battles = br.json()
-                            war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
-                            player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
-                    except:
-                        pass
+                if player_tag_player and player_tag_player in battlelogs_cache:
+                    battles = battlelogs_cache[player_tag_player]
+                    war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
+                    player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
                 
                 results.append({
                     'data_coleta': data_hoje,
@@ -445,6 +467,10 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
             top_players = sorted_players  # TODOS os membros dos adversarios
             print(f"  Clan adversario [{clan_name}] ({clan_tag}): {len(top_players)} participantes")
         
+        # Buscar battlelogs em paralelo
+        print(f"    Buscando battlelogs de {len(top_players)} jogadores...")
+        battlelogs_cache = fetch_battlelogs_concurrently(top_players, headers, base_url)
+        
         for player_idx, player in enumerate(top_players, 1):
             player_tag_player = player.get('tag', '')
             player_name = player.get('name', 'Unknown')
@@ -467,21 +493,10 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
                 'war_battles_count': 0
             }
             
-            if player_tag_player:
-                try:
-                    p_tag_url = player_tag_player.replace('#', '%23')
-                    br = requests.get(f"{base_url}/players/{p_tag_url}/battlelog", headers=headers, timeout=10)
-                    
-                    if br.status_code == 200:
-                        battles = br.json()
-                        
-                        # Coletar estatisticas de batalha de guerra
-                        war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
-                        
-                        # Coletar decks (incluindo duelos com multiplos decks)
-                        player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
-                except:
-                    pass
+            if player_tag_player and player_tag_player in battlelogs_cache:
+                battles = battlelogs_cache[player_tag_player]
+                war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
+                player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
             
             # CORRECAO: Se a API retornar fame=0 mas temos batalhas contabilizadas,
             # usar os war_medals calculados como aproximacao real da pontuacao
