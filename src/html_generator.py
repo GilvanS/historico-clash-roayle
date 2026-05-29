@@ -5643,7 +5643,11 @@ class GitHubPagesHTMLGenerator:
                                     'Range Battle': '🎯',
                                     'Duelo': '⚡'
                                 }.get(deck_tipo, '🛡️')
-                                deck_label = f'<div class="rd-deck-label">{tipo_icon} Deck {d} ({deck_tipo})</div>'
+                                
+                                copy_link = self.get_copy_deck_link(cards)
+                                btn_html = f'<button type="button" onclick="copyDeckLink(event, this, \'{copy_link}\')" class="cr-copy-btn-v2" style="border: none; padding: 2px 6px; cursor: pointer; background: transparent; margin-left: 8px;" title="Copiar/Compartilhar"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 18px; vertical-align: middle;"></button>'
+                                
+                                deck_label = f'<div class="rd-deck-label" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">{tipo_icon} Deck {d} ({deck_tipo}){btn_html}</div>'
                                 deck_rows_html += f'<div class="rd-deck-row">{deck_label}<div class="rd-deck">{cards_imgs}</div></div>'
                                 valid_deck_count += 1
                         
