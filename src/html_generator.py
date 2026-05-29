@@ -6488,9 +6488,9 @@ class GitHubPagesHTMLGenerator:
                     for card_name in self.cards_master.keys():
                         img_path = self.get_card_image_path(card_name)
                         card_img_paths[card_name] = img_path
-                        info = self.card_info_cache.get(card_name)
-                        if info and 'id' in info:
-                            card_ids_map[card_name] = str(info['id'])
+                        info = self.cards_master.get(card_name)
+                        if info and 'card_id' in info:
+                            card_ids_map[card_name] = str(info['card_id'])
                     card_img_json = json.dumps(card_img_paths, ensure_ascii=False)
                     card_ids_json = json.dumps(card_ids_map, ensure_ascii=False)
                     
