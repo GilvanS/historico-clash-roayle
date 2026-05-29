@@ -5645,7 +5645,7 @@ class GitHubPagesHTMLGenerator:
                                 }.get(deck_tipo, '🛡️')
                                 
                                 copy_link = self.get_copy_deck_link(cards)
-                                btn_html = f'<button type="button" onclick="copyDeckLink(event, this, \'{copy_link}\')" class="cr-copy-btn-v2" style="border: none; padding: 2px 6px; cursor: pointer; background: transparent; margin-left: 8px;" title="Copiar/Compartilhar"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 18px; vertical-align: middle;"></button>'
+                                btn_html = f'<button type="button" onclick="copyDeckLink(event, this, \'{copy_link}\')" class="cr-copy-btn-v2" style="border: none; padding: 4px 8px; cursor: pointer; background: transparent; margin-left: 8px;" title="Copiar/Compartilhar"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;"></button>'
                                 
                                 deck_label = f'<div class="rd-deck-label" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">{tipo_icon} Deck {d} ({deck_tipo}){btn_html}</div>'
                                 deck_rows_html += f'<div class="rd-deck-row">{deck_label}<div class="rd-deck">{cards_imgs}</div></div>'
@@ -6059,8 +6059,8 @@ class GitHubPagesHTMLGenerator:
                 <div class="deck-row-premium-v2">
                     <div class="deck-meta-header">
                         <span class="deck-index">DECK {i+1}</span>
-                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="border: none; padding: 2px 8px; cursor: pointer;">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 22px; vertical-align: middle;">
+                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="border: none; padding: 4px 8px; cursor: pointer; background: transparent;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
                         </button>
                     </div>
                     <div class="cr-side-container">
@@ -6114,8 +6114,8 @@ class GitHubPagesHTMLGenerator:
                 <div class="deck-row-premium-v2">
                     <div class="deck-meta-header">
                         <span class="deck-index">DECK {i+1}</span>
-                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="border: none; padding: 2px 8px; cursor: pointer;">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 22px; vertical-align: middle;">
+                        <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="border: none; padding: 4px 8px; cursor: pointer; background: transparent;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
                         </button>
                     </div>
                     <div class="cr-side-container">
@@ -6550,7 +6550,10 @@ class GitHubPagesHTMLGenerator:
                                                 var row2 = cards.slice(4, 8);
                                                 var tipo = p['deck_' + d + '_tipo'] || 'Batalha';
                                                 var tipoIcon = {{'Guerra': '⚔️', 'Barco': '🚣', 'Range Battle': '🎯', 'Duelo': '⚡'}}[tipo] || '🛡️';
-                                                decksHtml += '<div class="rd-deck-row"><div class="rd-deck-label">' + tipoIcon + ' ' + tipo + '</div><div class="rd-deck">';
+                                                var deckCardsParam = cards.join(';');
+                                                var copyLink = 'clashroyale://copyDeck?deck=' + deckCardsParam;
+                                                var copyBtnHtml = '<button type="button" onclick="copyDeckLink(event, this, \\'' + copyLink + '\\')" class="cr-copy-btn-v2" style="border: none; padding: 4px 8px; cursor: pointer; background: transparent; margin-left: 8px;" title="Copiar/Compartilhar"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;"></button>';
+                                                decksHtml += '<div class="rd-deck-row"><div class="rd-deck-label" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">' + tipoIcon + ' Deck ' + d + ' (' + tipo + ')' + copyBtnHtml + '</div><div class="rd-deck">';
                                                 row1.forEach(function(card) {{
                                                     var imgPath = window.CARD_IMAGE_PATHS && window.CARD_IMAGE_PATHS[card];
                                                     var imgTag = imgPath 
