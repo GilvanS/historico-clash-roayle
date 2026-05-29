@@ -22,7 +22,7 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(SCRIPT_DIR, 'data_clan')
+DATA_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'data', 'csv')
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # Tipos de batalha da Guerra de Rio (incluindo as variantes de Coliseu)

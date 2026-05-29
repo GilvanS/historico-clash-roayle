@@ -24,7 +24,7 @@ def get_config():
     return headers, base_url, clan_tag_pri, clan_tag_sec
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(script_dir, 'data_clan')
+DATA_DIR = os.path.join(script_dir, '..', '..', 'data', 'csv')
 
 def get_logical_date_and_battle_day():
     """Retorna data coleta logica e dia batalha com base no reset pontual das 07:00:00 da manha BRT."""
