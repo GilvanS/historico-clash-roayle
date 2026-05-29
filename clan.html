@@ -1876,8 +1876,9 @@
         .rd-analytics-cards {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 12px;
         }
         
         .rd-card-premium {
@@ -1885,7 +1886,7 @@
             background: rgba(15, 23, 42, 0.65);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            padding: 16px;
+            padding: 10px 12px;
             display: flex;
             align-items: center;
             gap: 16px;
@@ -1919,11 +1920,11 @@
         }
         
         .rd-card-icon {
-            font-size: 2.2em;
+            font-size: 1.6em;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            width: 56px;
-            height: 56px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2085,7 +2086,7 @@
         .rd-mode-selector { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
         .rd-mode-btn { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8em; transition: all 0.3s; }
         .rd-mode-btn:hover { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #fff; }
-        .rd-mode-btn[data-active="true"] { background: var(--primary); border-color: var(--primary); color: white; }
+        .rd-mode-btn.rd-mode-active { background: var(--primary); border-color: var(--primary); color: white; }
         
         /* Estatísticas de Guerra do Jogador */
         .rd-player-stats {
@@ -2109,12 +2110,12 @@
         .rd-battles { color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
         .rd-torre { color: #a78bfa; background: rgba(167, 139, 250, 0.1); }
         
-        /* Calendário de Dias de Guerra - NOVO LAYOUT TIMELINE HORIZONTAL */
+        /* Calendário de Dias de Guerra - NOVO LAYOUT REDUZIDO */
         .rd-calendar-container { 
             background: rgba(15, 23, 42, 0.8); 
             border-radius: 20px; 
-            padding: 24px; 
-            margin-bottom: 30px; 
+            padding: 12px 16px; 
+            margin-bottom: 15px; 
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
@@ -2124,242 +2125,110 @@
             color: #94a3b8; 
             text-transform: uppercase; 
             letter-spacing: 2px; 
-            margin-bottom: 20px; 
+            margin-bottom: 10px; 
             text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .rd-calendar-title::before,
-        .rd-calendar-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.5), transparent);
         }
         
-        /* Timeline Horizontal com CSS Grid */
         .rd-calendar-timeline {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            scroll-behavior: smooth;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         
-        /* Card de Dia - Design melhorado */
         .rd-calendar-day {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 18px 12px;
+            justify-content: center;
+            padding: 8px 10px;
             background: rgba(30, 41, 59, 0.7);
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-width: 100px;
-            position: relative;
-            overflow: hidden;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            min-width: 80px;
+            gap: 2px;
         }
-        .rd-calendar-day::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-            opacity: 0;
-            transition: opacity 0.3s;
+        .rd-calendar-label {
+            color: #94a3b8;
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
         }
+        .rd-calendar-medal { font-size: 1.1em; }
+        .rd-calendar-pos { font-size: 0.9em; font-weight: bold; color: #fff; }
+        .rd-calendar-fame { font-size: 0.85em; color: #cbd5e1; }
+        .rd-calendar-boat { font-size: 0.9em; }
+        .rd-calendar-status { font-size: 0.75em; color: #ef4444; }
+
         .rd-calendar-day:hover { 
-            background: rgba(59, 130, 246, 0.15); 
-            border-color: rgba(96, 165, 250, 0.4);
-            transform: translateY(-4px); 
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+            background: rgba(59, 130, 246, 0.2); 
+            border-color: rgba(96, 165, 250, 0.5);
+            transform: translateY(-2px);
         }
-        .rd-calendar-day:hover::before {
-            opacity: 1;
+        .rd-calendar-day:hover .rd-calendar-label {
+            color: #e2e8f0;
         }
         .rd-calendar-day-active { 
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.2)) !important; 
             border-color: #3b82f6 !important; 
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.1) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3) !important;
+            transform: scale(1.05);
         }
-        .rd-calendar-day-active::before {
-            opacity: 1;
-        }
-        
-        /* Elementos do Card de Dia */
-        .rd-calendar-label { 
-            font-size: 0.8em; 
-            font-weight: 700; 
-            color: #94a3b8; 
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .rd-calendar-icon { 
-            font-size: 1.8em; 
-            margin-bottom: 8px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-        .rd-calendar-pos { 
-            font-size: 1.1em; 
-            font-weight: 900; 
+        .rd-calendar-day-active .rd-calendar-label {
             color: #fff;
-            margin-bottom: 4px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .rd-calendar-fame { 
-            font-size: 0.75em; 
-            color: #fbbf24; 
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
         
-        /* Medalhas Coloridas */
-        .rd-calendar-gold { 
-            border-color: #fbbf24 !important; 
-            background: rgba(251, 191, 36, 0.15) !important;
-        }
-        .rd-calendar-gold .rd-calendar-icon { filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6)); }
-        .rd-calendar-silver { 
-            border-color: #94a3b8 !important; 
-            background: rgba(148, 163, 184, 0.1) !important; 
-        }
-        .rd-calendar-silver .rd-calendar-icon { filter: drop-shadow(0 0 6px rgba(148, 163, 184, 0.4)); }
-        .rd-calendar-bronze { 
-            border-color: #cd7f32 !important; 
-            background: rgba(205, 127, 50, 0.1) !important; 
-        }
-        .rd-calendar-bronze .rd-calendar-icon { filter: drop-shadow(0 0 6px rgba(205, 127, 50, 0.4)); }
-        
-        /* Status de Barco */
-        .rd-calendar-boat {
-            font-size: 0.7em;
-            margin-top: 6px;
-            padding: 4px 8px;
-            border-radius: 10px;
-            background: rgba(0,0,0,0.3);
-        }
-        .rd-calendar-boat.complete { color: #4ade80; }
-        .rd-calendar-boat.repairing { color: #fbbf24; }
-        .rd-calendar-boat.destroyed { color: #f87171; }
-        
-        /* Top 3 Jogadores no Calendário */
-        .rd-calendar-players {
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .rd-calendar-player {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.65em;
-            padding: 2px 4px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 4px;
-        }
-        .rd-medal {
-            font-size: 0.8em;
-            min-width: 14px;
-        }
-        .rd-player-name {
-            color: #e2e8f0;
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .rd-player-fame {
-            color: #4ade80;
-            font-weight: 700;
-        }
-        .rd-calendar-no-players {
-            font-size: 0.6em;
-            color: #64748b;
-            text-align: center;
-            padding: 4px;
-        }
-        
-        /* Task 3: Painel de resumo dinamico do dia selecionado */
         .rd-war-summary {
-            background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.9) 100%);
-            border: 1px solid rgba(0,255,204,0.25);
-            border-radius: 10px;
-            padding: 10px 20px;
-            margin: 8px 0 12px 0;
+            /* Mesclado ao rd-calendar-container */
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 4px 12px;
+            margin: 0;
             animation: rdSummaryFadeIn 0.3s ease;
-            box-shadow: 0 0 20px rgba(0,255,204,0.08);
+            box-shadow: none;
         }
-        @keyframes rdSummaryFadeIn {{
-            from {{ opacity: 0; transform: translateY(-6px); }}
-            to   {{ opacity: 1; transform: translateY(0); }}
-        }}
-        .rd-war-summary-inner {{
+        @keyframes rdSummaryFadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .rd-war-summary-inner {
             display: flex;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
-        }}
-        .rd-war-summary-label {{
+        }
+        .rd-war-summary-label {
             color: #94a3b8;
             font-size: 0.78em;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-        }}
-        .rd-war-summary-date {{
+        }
+        .rd-war-summary-date {
             color: #e2e8f0;
             font-size: 0.85em;
             font-weight: 700;
             font-family: monospace;
-        }}
-        .rd-war-summary-pos {{
+        }
+        .rd-war-summary-pos {
             color: #fbbf24;
             font-size: 0.95em;
             font-weight: 800;
-        }}
-        .rd-war-summary-fame {{
+        }
+        .rd-war-summary-fame {
             color: #00ffcc;
             font-size: 0.95em;
             font-weight: 800;
-        }}
-        .rd-war-summary-sep {{
+        }
+        .rd-war-summary-sep {
             color: #334155;
             font-size: 0.9em;
-        }}
-        
-        /* Responsivo Mobile */
-        @media (max-width: 768px) { 
-            .rd-calendar-timeline {
-                grid-template-columns: repeat(5, minmax(90px, 1fr));
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scroll-snap-type: x mandatory;
-            }
-            .rd-calendar-day {
-                scroll-snap-align: start;
-                min-width: 90px;
-            }
-            .rd-war-summary-inner {{
-                gap: 6px;
-                font-size: 0.9em;
-            }}
         }
         
-        @media (max-width: 768px) { .rd-grid { grid-template-columns: 1fr; } }
-
         /* Modal Glassmorphism v2 */
         .cr-modal-overlay {
             position: fixed;
@@ -2424,13 +2293,6 @@
         .cr-modal-close:hover {
             background: var(--primary);
             transform: rotate(90deg);
-        }
-
-        /* Popover Premium Compacto para Histórico de Decks */
-        .cr-history-dot-wrap:hover .cr-dot-popover {
-            display: block !important;
-            opacity: 1 !important;
-            visibility: visible !important;
         }
         
         
@@ -2716,7 +2578,7 @@
         </div>
 
         <div class="footer">
-            <p>Relatório gerado em 2026-05-28 22:50:47</p>
+            <p>Relatório gerado em 2026-05-28 21:57:14</p>
             <p>Última atualização dos dados: 25 days ago</p>
             <div style="margin-top: 20px;">
                 <a href="index.html" class="back-link">← Dashboard</a>
