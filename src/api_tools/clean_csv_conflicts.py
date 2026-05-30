@@ -1,8 +1,16 @@
 import os
 import glob
+import sys
+
+# Ensure config can be imported
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    import config
+    csv_dir = config.DATA_DIR
+except ImportError:
+    csv_dir = r'a:\Workspace\historico-clash-roayle\data\csv'
 
 def clean_csv_conflicts():
-    csv_dir = r'a:\Workspace\historico-clash-roayle\src\data_csv_oficial'
     files = glob.glob(os.path.join(csv_dir, "*.csv"))
     
     markers = ["<<<<<<<", "=======", ">>>>>>>"]

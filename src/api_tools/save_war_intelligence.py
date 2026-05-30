@@ -14,7 +14,12 @@ if sys.stdout.encoding != 'utf-8':
 def get_account_clans():
     """Lê players.csv e retorna os clãs de todas as contas."""
     accounts = []
-    players_path = os.path.join('src', 'data_csv_oficial', 'players.csv')
+    try:
+        import sys; sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        import config
+        players_path = os.path.join(config.DATA_DIR, 'players.csv')
+    except:
+        players_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'csv', 'players.csv')
     
     if os.path.exists(players_path):
         with open(players_path, 'r', encoding='utf-8-sig') as f:
@@ -132,7 +137,7 @@ def collect_all_wars():
     
     print(f"\n🚀 Iniciando coleta de Inteligencia de Guerra para {len(accounts)} conta(s)...")
     
-    os.makedirs('src/data_clan', exist_ok=True)
+    os.makedirs('data/csv', exist_ok=True)
     today = datetime.now().strftime('%Y_%m_%d')
     
     for account in accounts:
@@ -142,9 +147,9 @@ def collect_all_wars():
         
         # Nome do arquivo: inteligencia_guerra_SEC_YYYY_MM_DD.csv para secundaria
         if '2220UQQ0UU' in player_tag:
-            output_file = f'src/data_clan/inteligencia_guerra_sec_{today}.csv'
+            output_file = f'data/csv/inteligencia_guerra_sec_{today}.csv'
         else:
-            output_file = f'src/data_clan/inteligencia_guerra_{today}.csv'
+            output_file = f'data/csv/inteligencia_guerra_{today}.csv'
         
         print(f"\n{'='*50}")
         print(f"  Conta: {player_tag} | Clã: {clan_name}")

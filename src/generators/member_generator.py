@@ -536,9 +536,9 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
 
 def main():
     """Generate member pages for all clan members"""
-    # Get the repository root directory (one level up from src)
+    # Get the repository root directory (two levels up from generators)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    root_dir = os.path.dirname(script_dir)
+    root_dir = os.path.dirname(os.path.dirname(script_dir))
     
     generator = MemberPageGenerator(output_path=root_dir)
     generated_pages = []

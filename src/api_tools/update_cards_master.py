@@ -63,7 +63,12 @@ def update_cards_master():
     
     # Caminho absoluto para evitar erros
     project_root = r'a:\Workspace\historico-clash-roayle'
-    output_path = os.path.join(project_root, 'src', 'data_csv_oficial', 'cards_master_icons.csv')
+    try:
+        import sys; sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        import config
+        output_path = os.path.join(config.DATA_DIR, 'cards_master_icons.csv')
+    except:
+        output_path = os.path.join(project_root, 'data', 'csv', 'cards_master_icons.csv')
     
     # Garantir que o diretorio existe
     os.makedirs(os.path.dirname(output_path), exist_ok=True)

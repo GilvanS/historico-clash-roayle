@@ -10,7 +10,7 @@ echo.
 
 :loop
 echo [%time%] Iniciando sincronizacao...
-git pull --rebase -X theirs origin main
+git pull --rebase --autostash -X theirs origin main
 set PYTHONPATH=%CD%\src;%CD%\src\api;%CD%\src\core;%CD%\src\generators;%CD%\src\utils
 python src/main_sync.py
 
@@ -28,7 +28,7 @@ if errorlevel 1 (
                 set PUSH_SUCCESS=1
             ) else (
                 echo Tentativa %%i falhou, rebase...
-                git pull --rebase -X theirs origin main
+                git pull --rebase --autostash -X theirs origin main
             )
         )
     )

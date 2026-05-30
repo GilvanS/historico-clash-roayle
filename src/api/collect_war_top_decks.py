@@ -23,7 +23,7 @@ WAR_FIELDNAMES = [
 ]
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(script_dir, 'data_csv_oficial')
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(script_dir)), 'data', 'csv')
 
 def get_clan_tag():
     token = os.getenv('CR_API_TOKEN')

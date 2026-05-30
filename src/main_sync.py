@@ -75,6 +75,19 @@ def main():
     # Buffer para capturar logs das coletas
     collection_logs = []
 
+    # FASE 0: Pre-flight check (Remover conflitos Git dos CSVs para nao quebrar)
+    try:
+        logger.info("FASE 0: Verificando e limpando conflitos Git nos arquivos CSV...")
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            from api_tools.clean_csv_conflicts import clean_csv_conflicts
+            clean_csv_conflicts()
+        collection_logs.append(("Git Clean", buf.getvalue()))
+    except Exception as e:
+        logger.error(f"Erro na FASE 0 (Git Clean): {e}")
+        collection_logs.append(("Git Clean", f"ERRO: {e}"))
+
+
     # FASE 1: Coletar batalhas
     try:
         logger.info("FASE 1: Coletando batalhas da API e atualizando CSVs...")
@@ -140,7 +153,7 @@ def main():
                 [sys.executable, '-c',
                  'import sys, os; sys.path.append(os.path.join(os.getcwd(), "api")); from collect_war_top_decks import collect_top_decks; collect_top_decks()'],
                 cwd=os.path.dirname(os.path.abspath(__file__)),
-                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=120
+                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300
             )
             if result.stdout: war_logs.append(result.stdout)
             if result.stderr: war_logs.append(result.stderr)

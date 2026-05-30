@@ -21,7 +21,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(SCRIPT_DIR, 'data_clan')
+DATA_DIR = os.path.join(SCRIPT_DIR, 'data/csv')
 GUERRA_HIST_FILE = os.path.join(DATA_DIR, 'guerra_historico.csv')
 BARCOS_HIST_FILE = os.path.join(DATA_DIR, 'status_barcos_historico.csv')
 

@@ -23,14 +23,14 @@ def format_date(timestamp_str):
 
 def collect_data():
     headers, base_url, clan_tag = get_config()
-    os.makedirs('src/data_clan', exist_ok=True)
+    os.makedirs('data/csv', exist_ok=True)
     today = datetime.now().strftime('%Y_%m_%d')
 
     # 1. Coleta Membros (Doações e Atividade)
     r_members = requests.get(f"{base_url}/clans/{clan_tag}/members", headers=headers)
     if r_members.status_code == 200:
         members = r_members.json().get('items', [])
-        filename = f'src/data_clan/membros_stats_{today}.csv'
+        filename = f'data/csv/membros_stats_{today}.csv'
         with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
             writer = csv.writer(f, delimiter=';')
             writer.writerow(['Nome', 'Cargo', 'Trofeus', 'Doacoes_Feitas', 'Doacoes_Recebidas', 'Ultimo_Acesso'])
@@ -50,7 +50,7 @@ def collect_data():
     if r_war.status_code == 200:
         war_data = r_war.json()
         participants = war_data.get('clan', {}).get('participants', [])
-        filename_war = f'src/data_clan/guerra_stats_{today}.csv'
+        filename_war = f'data/csv/guerra_stats_{today}.csv'
         with open(filename_war, 'w', newline='', encoding='utf-8-sig') as f:
             writer = csv.writer(f, delimiter=';')
             writer.writerow(['Nome', 'Tag', 'Fama_Contribuida', 'Pontos_Reparo', 'Decks_Usados'])

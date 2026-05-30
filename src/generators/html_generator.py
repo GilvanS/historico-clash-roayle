@@ -109,8 +109,8 @@ def safe_int(val, default=0):
 class GitHubPagesHTMLGenerator:
     def __init__(self, db_path: str = None):
         self.src_dir = os.path.dirname(os.path.abspath(__file__))
-        self.project_root = os.path.dirname(self.src_dir)
-        self.data_csv_dir = os.path.join(self.src_dir, '..', 'data', 'csv')
+        self.project_root = os.path.dirname(os.path.dirname(self.src_dir))
+        self.data_csv_dir = os.path.join(self.project_root, 'data', 'csv')
 
         # Inicializa o gerenciador de CSV (Sem SQL)
         self.csv_manager = CSVManager()
@@ -4144,7 +4144,7 @@ class GitHubPagesHTMLGenerator:
 
     def get_war_decks_from_csv(self):
         """Busca os melhores jogadores (Clã e Global) do arquivo de guerra, exibindo todos os decks."""
-        war_decks_path = os.path.join(self.src_dir, "data_csv_oficial", "war_decks_top_players.csv")
+        war_decks_path = os.path.join(self.project_root, "data", "csv", "war_decks_top_players.csv")
         players = {'clan': [], 'global': []}
         
         if not os.path.exists(war_decks_path):
@@ -4225,7 +4225,7 @@ class GitHubPagesHTMLGenerator:
 
     def get_meta_brasil_data(self):
         """Lê os dados do ranking Top 100 Brasil do JSON com filtro de reset."""
-        file_path = os.path.join(self.src_dir, "data_csv_oficial", "meta_brasil_top100.json")
+        file_path = os.path.join(self.project_root, "data", "csv", "meta_brasil_top100.json")
         if not os.path.exists(file_path):
             return []
         
@@ -4255,7 +4255,7 @@ class GitHubPagesHTMLGenerator:
     def get_war_day_history(self, days_back: int = 7) -> List[Dict]:
         """Coleta histórico de status_barcos para os últimos dias."""
         # 1. Tenta buscar do historico consolidado status_barcos_historico.csv
-        historico_path = os.path.join(self.src_dir, "data_clan", "status_barcos_historico.csv")
+        historico_path = os.path.join(self.project_root, "data", "csv", "status_barcos_historico.csv")
         if os.path.exists(historico_path):
             try:
                 with open(historico_path, 'r', encoding='utf-8-sig') as f:
@@ -4303,7 +4303,7 @@ class GitHubPagesHTMLGenerator:
         # Fallback para o comportamento legado de glob fisico
         history = []
         import glob
-        boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
+        boat_files = glob.glob(os.path.join(self.project_root, "data", "csv", "status_barcos_*.csv"))
         
         if not boat_files:
             return history
@@ -4355,8 +4355,8 @@ class GitHubPagesHTMLGenerator:
             
         war_day_labels = {3: "Reset", 4: "Dia 1", 5: "Dia 2", 6: "Dia 3", 0: "Dia 4"}
         
-        guerra_hist_path = os.path.join(self.src_dir, "data_clan", "guerra_historico.csv")
-        status_hist_path = os.path.join(self.src_dir, "data_clan", "status_barcos_historico.csv")
+        guerra_hist_path = os.path.join(self.project_root, "data", "csv", "guerra_historico.csv")
+        status_hist_path = os.path.join(self.project_root, "data", "csv", "status_barcos_historico.csv")
         
         # Se os consolidados existem, faz a leitura unificada
         if os.path.exists(guerra_hist_path) and os.path.exists(status_hist_path):
@@ -4659,7 +4659,7 @@ class GitHubPagesHTMLGenerator:
                 
                 # Procura arquivo de barco correspondente
                 boat_file = None
-                boat_files_found = glob.glob(os.path.join(self.src_dir, "data_clan", f"status_barcos_*_{date_str}.csv"))
+                boat_files_found = glob.glob(os.path.join(self.project_root, "data", "csv", f"status_barcos_*_{date_str}.csv"))
                 if boat_files_found:
                     for f in boat_files_found:
                         if suffix and f"status_barcos{suffix}_" in os.path.basename(f):
@@ -4674,14 +4674,14 @@ class GitHubPagesHTMLGenerator:
                         boat_file = boat_files_found[0]
                 else:
                     # Tenta arquivo sem sufixo
-                    single_file = os.path.join(self.src_dir, "data_clan", f"status_barcos_{date_str}.csv")
+                    single_file = os.path.join(self.project_root, "data", "csv", f"status_barcos_{date_str}.csv")
                     if os.path.exists(single_file):
                         boat_file = single_file
                 
                 # Procura arquivo de inteligencia correspondente
-                intel_file = os.path.join(self.src_dir, "data_clan", f"inteligencia_guerra_{day_date.strftime('%Y-%m-%d')}.csv")
+                intel_file = os.path.join(self.project_root, "data", "csv", f"inteligencia_guerra_{day_date.strftime('%Y-%m-%d')}.csv")
                 if not os.path.exists(intel_file):
-                    intel_file = os.path.join(self.src_dir, "data_clan", f"inteligencia_guerra_{date_str}.csv")
+                    intel_file = os.path.join(self.project_root, "data", "csv", f"inteligencia_guerra_{date_str}.csv")
                 if not os.path.exists(intel_file):
                     intel_file = None
                 
@@ -4771,8 +4771,8 @@ class GitHubPagesHTMLGenerator:
     
     def get_war_intelligence_data(self):
         """Coleta dados de inteligencia de guerra (Dia 4)."""
-        guerra_hist_path = os.path.join(self.src_dir, "data_clan", "guerra_historico.csv")
-        status_hist_path = os.path.join(self.src_dir, "data_clan", "status_barcos_historico.csv")
+        guerra_hist_path = os.path.join(self.project_root, "data", "csv", "guerra_historico.csv")
+        status_hist_path = os.path.join(self.project_root, "data", "csv", "status_barcos_historico.csv")
         
         # Tenta buscar dos consolidados
         if os.path.exists(guerra_hist_path) and os.path.exists(status_hist_path):
@@ -4825,7 +4825,7 @@ class GitHubPagesHTMLGenerator:
                 
                 my_clan = "Tropa Do Bruxo"
                 try:
-                    players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+                    players_file = os.path.join(self.project_root, "data", "csv", "players.csv")
                     if os.path.exists(players_file):
                         with open(players_file, 'r', encoding='utf-8-sig') as f:
                             reader = csv.DictReader(f, delimiter=';')
@@ -4852,7 +4852,7 @@ class GitHubPagesHTMLGenerator:
             }
             
             import glob
-            boat_files = glob.glob(os.path.join(self.src_dir, "data_clan", "status_barcos_*.csv"))
+            boat_files = glob.glob(os.path.join(self.project_root, "data", "csv", "status_barcos_*.csv"))
             if boat_files:
                 latest_boat = max(boat_files)
                 try:
@@ -4862,7 +4862,7 @@ class GitHubPagesHTMLGenerator:
                 except Exception as e:
                     logger.warning(f"Erro ao ler boats: {e}")
             
-            intel_files = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+            intel_files = glob.glob(os.path.join(self.project_root, "data", "csv", "inteligencia_guerra_*.csv"))
             if intel_files:
                 latest_intel = max(intel_files)
                 try:
@@ -4879,7 +4879,7 @@ class GitHubPagesHTMLGenerator:
                 
             my_clan = "Tropa Do Bruxo"
             try:
-                players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+                players_file = os.path.join(self.project_root, "data", "csv", "players.csv")
                 if os.path.exists(players_file):
                     with open(players_file, 'r', encoding='utf-8-sig') as f:
                         reader = csv.DictReader(f, delimiter=';')
@@ -4930,7 +4930,7 @@ class GitHubPagesHTMLGenerator:
             target_dates_dash = [dash]
             target_dates_under = [under]
             
-        guerra_hist_path = os.path.join(self.src_dir, "data_clan", "guerra_historico.csv")
+        guerra_hist_path = os.path.join(self.project_root, "data", "csv", "guerra_historico.csv")
         clans_by_date = {}
         for u_date in target_dates_under:
             clans_by_date[u_date] = []
@@ -4941,7 +4941,7 @@ class GitHubPagesHTMLGenerator:
                 my_clan = ''
                 my_clan_tag = ''
                 try:
-                    players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+                    players_file = os.path.join(self.project_root, "data", "csv", "players.csv")
                     if os.path.exists(players_file):
                         with open(players_file, 'r', encoding='utf-8-sig') as f:
                             reader = csv.DictReader(f, delimiter=';')
@@ -4949,6 +4949,8 @@ class GitHubPagesHTMLGenerator:
                                 if row.get('player_tag') == player_tag:
                                     my_clan = row.get('clan_name', '')
                                     my_clan_tag = row.get('clan_tag', '')
+                                    if my_clan_tag and not my_clan_tag.startswith('#'):
+                                        my_clan_tag = '#' + my_clan_tag
                                     break
                 except Exception as e:
                     logger.warning(f"Erro ao ler players.csv: {e}")
@@ -4977,7 +4979,7 @@ class GitHubPagesHTMLGenerator:
                 
                 # Vamos carregar os dados de status_barcos_historico.csv para obter a fama diária e a posição diária reais de cada clã
                 clans_daily_data = {}  # date_str -> clan_nome -> {fama_diaria, posicao_diaria}
-                status_hist_path = os.path.join(self.src_dir, "data_clan", "status_barcos_historico.csv")
+                status_hist_path = os.path.join(self.project_root, "data", "csv", "status_barcos_historico.csv")
                 if os.path.exists(status_hist_path):
                     try:
                         pref_suffix = '_pri'
@@ -5085,6 +5087,60 @@ class GitHubPagesHTMLGenerator:
                         grouped_data[d_dash][cla] = []
                     grouped_data[d_dash][cla].append(row)
                 
+                # --- PREENCHIMENTO DE GAPS ---
+                # Caso o guerra_historico.csv não tenha os dados de d_dash (ex: Reset), buscamos os CSVs individuais
+                import glob
+                intel_files_found = glob.glob(os.path.join(self.project_root, "data", "csv", "inteligencia_guerra_*.csv"))
+                intel_files_found = [f for f in intel_files_found if '_full_' not in f and '_pri_' not in f and '_sec_' not in f]
+                
+                intel_by_date = {}
+                for fpath in intel_files_found:
+                    fname = os.path.basename(fpath)
+                    import re
+                    match = re.search(r'inteligencia_guerra_(\d{4}[-_]\d{2}[-_]\d{2})\.csv', fname)
+                    if match:
+                        d_norm = match.group(1).replace('_', '-')
+                        intel_by_date[d_norm] = fpath
+
+                for d_dash in target_dates_dash:
+                    if not grouped_data.get(d_dash):
+                        fpath = intel_by_date.get(d_dash)
+                        if fpath and os.path.exists(fpath):
+                            try:
+                                with open(fpath, 'r', encoding='utf-8-sig') as f:
+                                    reader = csv.DictReader(f, delimiter=';')
+                                    for row in reader:
+                                        row_account = row.get('conta_tipo', '') or row.get('player_tag_conta', '')
+                                        if mode == 'top-global':
+                                            if row_account != 'TOP_GLOBAL':
+                                                continue
+                                        else:
+                                            expected_accounts = []
+                                            if player_tag:
+                                                tag_clean = player_tag.strip().upper()
+                                                if not tag_clean.startswith('#'):
+                                                    expected_accounts.extend([f"#{tag_clean}", tag_clean])
+                                                else:
+                                                    expected_accounts.extend([tag_clean, tag_clean.replace('#', '')])
+                                                if '2QR292P' in tag_clean:
+                                                    expected_accounts.append('principal')
+                                                if '2220UQQ0UU' in tag_clean:
+                                                    expected_accounts.append('secundaria')
+                                                    
+                                            if expected_accounts and row_account not in expected_accounts:
+                                                continue
+                                                
+                                        cla = row.get('clan_nome') or row.get('Cla', 'Unknown')
+                                        if not cla or cla.strip() == '':
+                                            continue
+                                            
+                                        if cla not in grouped_data[d_dash]:
+                                            grouped_data[d_dash][cla] = []
+                                        grouped_data[d_dash][cla].append(row)
+                            except Exception as e:
+                                logger.error(f"Erro ao ler {fpath} para preencher gaps: {e}")
+                # -----------------------------
+
                 cron_dates_dash = sorted(target_dates_dash)
                 for d_dash, u_date in zip(target_dates_dash, target_dates_under):
                     # Obter a data anterior para o cálculo diário dos jogadores
@@ -5249,7 +5305,7 @@ class GitHubPagesHTMLGenerator:
                                         existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                 seen_players[player_name] = existing
                         
-                        sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_participant', False), x['fame']), reverse=True)
+                        sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_participant', False), x['fame'], x.get('war_vitorias', 0), -safe_int(x.get('ranking', 99))), reverse=True)
                         clan_tag_from_data = player_rows[0].get('clan_tag', '').replace('#', '') if player_rows else ''
                         is_my_own_clan = (my_clan_tag.replace('#', '') == clan_tag_from_data)
                         max_players = 10 if (is_my_own_clan and mode == 'my-war') else 3
@@ -5320,7 +5376,7 @@ class GitHubPagesHTMLGenerator:
             my_clan = ''
             my_clan_tag = ''
             try:
-                players_file = os.path.join(self.src_dir, "data_csv_oficial", "players.csv")
+                players_file = os.path.join(self.project_root, "data", "csv", "players.csv")
                 if os.path.exists(players_file):
                     with open(players_file, 'r', encoding='utf-8-sig') as f:
                         reader = csv.DictReader(f, delimiter=';')
@@ -5328,11 +5384,13 @@ class GitHubPagesHTMLGenerator:
                             if row.get('player_tag') == player_tag:
                                 my_clan = row.get('clan_name', '')
                                 my_clan_tag = row.get('clan_tag', '')
+                                if my_clan_tag and not my_clan_tag.startswith('#'):
+                                    my_clan_tag = '#' + my_clan_tag
                                 break
             except Exception as e:
                 logger.warning(f"Erro ao ler players.csv: {e}")
             
-            intel_files_found = glob.glob(os.path.join(self.src_dir, "data_clan", "inteligencia_guerra_*.csv"))
+            intel_files_found = glob.glob(os.path.join(self.project_root, "data", "csv", "inteligencia_guerra_*.csv"))
             intel_files_found = [f for f in intel_files_found if '_full_' not in f and '_pri_' not in f and '_sec_' not in f]
             
             intel_by_date = {}
@@ -5456,7 +5514,7 @@ class GitHubPagesHTMLGenerator:
                                             existing['deck_4_tipo'] = player_item['deck_4_tipo']
                                     seen_players[player_name] = existing
                             
-                            sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_participant', False), x['fame']), reverse=True)
+                            sorted_players = sorted(seen_players.values(), key=lambda x: (x.get('war_participant', False), x['fame'], x.get('war_vitorias', 0), -safe_int(x.get('ranking', 99))), reverse=True)
                             clan_tag_from_data = player_rows[0].get('clan_tag', '').replace('#', '') if player_rows else ''
                             is_my_own_clan = (my_clan_tag.replace('#', '') == clan_tag_from_data)
                             max_players = 10 if (is_my_own_clan and mode == 'my-war') else 3
@@ -5759,7 +5817,7 @@ class GitHubPagesHTMLGenerator:
         """
         
         content_html = f"""
-            <div id="rd-content-{tab_id}" class="rd-content" style="display: none;">
+            <div id="rd-content-{tab_id}" class="rd-content">
                 <div class="rd-calendar-container" id="rd-calendar-{tab_id}">
                     {calendar_html}
                     
@@ -5840,7 +5898,6 @@ class GitHubPagesHTMLGenerator:
                         </div>
                     </div>
                 </div>
-            </div>
         """
         
         return {'content': content_html, 'tab': tab_html, 'tab_id': tab_id}
@@ -6440,6 +6497,18 @@ class GitHubPagesHTMLGenerator:
                     
                     # Tab Content
                     content_html = self._generate_account_content_html(tag, stats)
+                    
+                    # Radar de Guerra
+                    try:
+                        radar_data = self.get_war_radar_data(tag)
+                        tab_id = "pri" if idx == 0 else "sec"
+                        radar_result = self.generate_war_radar_html(radar_data, tag, tab_id)
+                        radar_content = radar_result['content']
+                        if radar_content:
+                            content_html += f'<div class="section"><h2 class="clash-font" style="margin-bottom: 20px;">🎯 Radar de Guerra</h2>{radar_content}</div>'
+                    except Exception as e:
+                        logger.error(f"Error generating war radar for {tag}: {e}")
+                        
                     account_contents_html += f'<div id="account-tab-{clean_tag}" class="cr-tab-content {active_class}">{content_html}</div>'
                 except Exception as e:
                     logger.error(f"Error processing account {tag}: {e}")
@@ -6461,30 +6530,8 @@ class GitHubPagesHTMLGenerator:
             war_intel_html = ""
 
             war_radar_html = ""
-            war_radar_tabs = ""
             top_global_script = ""
             try:
-                day_history = self.get_war_day_history(7)
-                
-                # Criar tabs para TODAS as contas tracked (mesmo sem dados)
-                for idx, tag in enumerate(self.tracked_tags):
-                    tab_id = "pri" if idx == 0 else "sec"
-                    account_label = "CONTA PRINCIPAL" if idx == 0 else "CONTA SECUNDÁRIA"
-                    tab_html = f"""
-                        <button class="rd-tab" onclick="switchRadarTab('{tab_id}', this)" data-tag="{tag}">
-                            {account_label}
-                        </button>
-                    """
-                    war_radar_tabs += tab_html
-                
-                # Agora buscar dados e gerar conteúdo para cada conta
-                for tag in self.tracked_tags:
-                    radar_data = self.get_war_radar_data(tag)
-                    idx = self.tracked_tags.index(tag)
-                    tab_id = "pri" if idx == 0 else "sec"
-                    result = self.generate_war_radar_html(radar_data, tag, tab_id)
-                    war_radar_html += result['content']
-                
                 # Gerar dados do TOP Global
                 top_global_data = self.get_war_radar_data(None, mode='top-global')
                 if top_global_data.get('clans_by_date'):
@@ -6618,17 +6665,7 @@ class GitHubPagesHTMLGenerator:
             except Exception as e:
                 logger.error(f"Error generating TOP Global script: {e}")
             
-            if war_radar_tabs and len(self.tracked_tags) > 1:
-                war_radar_html = f"""
-                    <div class="rd-tabs-container">
-                        <div class="rd-tabs-header">
-                            {war_radar_tabs}
-                        </div>
-                        {war_radar_html}
-                    </div>
-                """
-            
-            war_radar_html += top_global_script;
+            war_radar_html += top_global_script
             
             return self.generate_full_html(account_tabs_html, account_contents_html, 
                                          clan_member_activity_html, war_intel_html, war_radar_html)
@@ -9253,7 +9290,7 @@ class GitHubPagesHTMLGenerator:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Royale Analytics - Dashboard Multi-Contas</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/charts.css/dist/charts.min.css">
     <style>{css_styles}</style>
 </head>

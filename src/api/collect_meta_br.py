@@ -63,7 +63,7 @@ def collect_meta_br():
         
         # Define diretório de saída
         root_dir = os.path.dirname(os.path.abspath(__file__))
-        output_dir = os.path.join(root_dir, 'data_csv_oficial')
+        output_dir = os.path.join(project_root, 'data', 'csv')
         os.makedirs(output_dir, exist_ok=True)
         
         output_path = os.path.join(output_dir, 'meta_brasil_top100.json')
