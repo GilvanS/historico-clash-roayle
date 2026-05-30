@@ -4935,6 +4935,7 @@ class GitHubPagesHTMLGenerator:
         for u_date in target_dates_under:
             clans_by_date[u_date] = []
             
+        player_last_known_decks = {}
         # Tenta buscar direto do guerra_historico.csv consolidado
         if os.path.exists(guerra_hist_path):
             try:
@@ -4959,6 +4960,28 @@ class GitHubPagesHTMLGenerator:
                 with open(guerra_hist_path, 'r', encoding='utf-8-sig') as f:
                     reader = csv.DictReader(f, delimiter=';')
                     rows = list(reader)
+                
+                # Popular cache de últimos decks conhecidos dos jogadores para fallback inteligente
+                sorted_hist_rows = sorted(rows, key=lambda x: x.get('data_coleta', ''))
+                for r in sorted_hist_rows:
+                    tag = r.get('player_tag')
+                    name = r.get('player_nome') or r.get('Jogador', '')
+                    d1 = r.get('deck_1', '')
+                    if d1 and d1 != 'N/A' and d1 != 'Deck nao encontrado no log recente' and d1.strip():
+                        deck_info = {
+                            'deck_1': r.get('deck_1', ''),
+                            'deck_1_tipo': r.get('deck_1_tipo', 'Guerra'),
+                            'deck_2': r.get('deck_2', ''),
+                            'deck_2_tipo': r.get('deck_2_tipo', ''),
+                            'deck_3': r.get('deck_3', ''),
+                            'deck_3_tipo': r.get('deck_3_tipo', ''),
+                            'deck_4': r.get('deck_4', ''),
+                            'deck_4_tipo': r.get('deck_4_tipo', '')
+                        }
+                        if tag:
+                            player_last_known_decks[tag] = deck_info
+                        if name:
+                            player_last_known_decks[name] = deck_info
                 
                 rows = [row for row in rows if row.get('data_coleta') in target_dates_dash]
                 
@@ -5251,6 +5274,27 @@ class GitHubPagesHTMLGenerator:
                             clan_tag_from_row = row.get('clan_tag', '')
                             deck_1 = row.get('deck_1', '')
                             
+                            # Fallback inteligente se o deck estiver vazio
+                            if not deck_1 or deck_1 == 'N/A' or deck_1 == 'Deck nao encontrado no log recente' or not deck_1.strip():
+                                tag_key = player_tag_row
+                                name_key = player_name
+                                hist_deck = None
+                                if tag_key and tag_key in player_last_known_decks:
+                                    hist_deck = player_last_known_decks[tag_key]
+                                elif name_key and name_key in player_last_known_decks:
+                                    hist_deck = player_last_known_decks[name_key]
+                                    
+                                if hist_deck:
+                                    deck_1 = hist_deck['deck_1']
+                                    row['deck_1'] = deck_1
+                                    row['deck_1_tipo'] = hist_deck['deck_1_tipo']
+                                    row['deck_2'] = hist_deck['deck_2']
+                                    row['deck_2_tipo'] = hist_deck['deck_2_tipo']
+                                    row['deck_3'] = hist_deck['deck_3']
+                                    row['deck_3_tipo'] = hist_deck['deck_3_tipo']
+                                    row['deck_4'] = hist_deck['deck_4']
+                                    row['deck_4_tipo'] = hist_deck['deck_4_tipo']
+                            
                             ranking = safe_int(row.get('clan_posicao') or row.get('Ranking') or row.get('posicao') or row.get('ranking') or 99)
                             
                             # O jogador é participante ativo se utilizou decks ou atacou barcos
@@ -5438,11 +5482,33 @@ class GitHubPagesHTMLGenerator:
                             seen_players = {}
                             for row in player_rows:
                                 player_name = row.get('player_nome') or row.get('Jogador', '')
+                                player_tag_row = row.get('player_tag', '')
                                 player_fame = safe_int(row.get('player_fame') or row.get('Fama_Hoje', 0))
                                 clan_tag_from_row = row.get('clan_tag', '')
                                 decks_used_raw = row.get('decks_usados') or '0'
                                 boat_attacks = row.get('boat_attacks', '0')
                                 deck_1 = row.get('deck_1', '')
+                                
+                                # Fallback inteligente se o deck estiver vazio
+                                if not deck_1 or deck_1 == 'N/A' or deck_1 == 'Deck nao encontrado no log recente' or not deck_1.strip():
+                                    tag_key = player_tag_row
+                                    name_key = player_name
+                                    hist_deck = None
+                                    if tag_key and tag_key in player_last_known_decks:
+                                        hist_deck = player_last_known_decks[tag_key]
+                                    elif name_key and name_key in player_last_known_decks:
+                                        hist_deck = player_last_known_decks[name_key]
+                                        
+                                    if hist_deck:
+                                        deck_1 = hist_deck['deck_1']
+                                        row['deck_1'] = deck_1
+                                        row['deck_1_tipo'] = hist_deck['deck_1_tipo']
+                                        row['deck_2'] = hist_deck['deck_2']
+                                        row['deck_2_tipo'] = hist_deck['deck_2_tipo']
+                                        row['deck_3'] = hist_deck['deck_3']
+                                        row['deck_3_tipo'] = hist_deck['deck_3_tipo']
+                                        row['deck_4'] = hist_deck['deck_4']
+                                        row['deck_4_tipo'] = hist_deck['deck_4_tipo']
                                 
                                 ranking = safe_int(row.get('clan_posicao') or row.get('Ranking', 99), 99)
                                 
