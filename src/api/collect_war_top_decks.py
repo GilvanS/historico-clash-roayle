@@ -207,9 +207,24 @@ def collect_top_decks():
         else:
             data_map[key] = new_row
 
+    def safe_int(val):
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            return 999
+
+    def safe_date(val):
+        try:
+            return datetime.strptime(val, '%Y-%m-%d')
+        except (ValueError, TypeError):
+            try:
+                return datetime.strptime(val, '%d/%m/%Y')
+            except:
+                return datetime.min
+
     # Converter de volta para lista e ordenar por data (desc) e posicao
     final_results = list(data_map.values())
-    final_results.sort(key=lambda x: (datetime.strptime(x['data_coleta'], '%Y-%m-%d'), -int(x['posicao_no_top'])), reverse=True)
+    final_results.sort(key=lambda x: (safe_date(x['data_coleta']), -safe_int(x.get('posicao_no_top', 999))), reverse=True)
 
     with open(file_path, 'w', newline='', encoding='utf-8-sig') as f:
         writer = csv.DictWriter(f, fieldnames=WAR_FIELDNAMES, delimiter=';')
@@ -219,22 +234,6 @@ def collect_top_decks():
         writer.writerows(cleaned_results)
 
     print(f"\nSucesso! Decks atualizados em {file_path}")
-    
-    # Trigger HTML Generation
-    try:
-        print("Atualizando Dashboard HTML...")
-        from html_generator import GitHubPagesHTMLGenerator
-        gen = GitHubPagesHTMLGenerator()
-        html_content = gen.generate_html_report()
-        # Salvar o arquivo no diretório raiz
-        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        index_path = os.path.join(root_dir, 'index.html')
-        with open(index_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
-        print(f"Dashboard atualizado com sucesso em {index_path}!")
-
-    except Exception as e:
-        print(f"Erro ao atualizar HTML: {e}")
 
 if __name__ == "__main__":
     collect_top_decks()
