@@ -25,12 +25,16 @@ WAR_FIELDNAMES = [
 script_dir = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(script_dir)), 'data', 'csv')
 
-def get_clan_tag():
+def get_clan_tag(player_tag):
+    if not player_tag: return None
     token = os.getenv('CR_API_TOKEN')
-    player_tag = os.getenv('CR_PLAYER_TAG').replace('#', '%23')
-    r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{player_tag}", headers={'Authorization': f'Bearer {token}'})
-    if r.status_code == 200:
-        return r.json().get('clan', {}).get('tag')
+    player_tag_url = player_tag.replace('#', '%23')
+    try:
+        r = requests.get(f"https://proxy.royaleapi.dev/v1/players/{player_tag_url}", headers={'Authorization': f'Bearer {token}'}, timeout=15)
+        if r.status_code == 200:
+            return r.json().get('clan', {}).get('tag')
+    except Exception as e:
+        print(f"Erro ao obter clan tag para {player_tag}: {e}")
     return None
 
 def format_deck(cards):
@@ -39,61 +43,82 @@ def format_deck(cards):
 
 def collect_top_decks():
     token = os.getenv('CR_API_TOKEN')
-    my_clan_tag = get_clan_tag()
-    if not token or not my_clan_tag:
-        print("Erro: Credenciais ou Clan Tag nao encontrados.")
+    if not token:
+        print("Erro: Credenciais nao encontradas no .env.")
         return
 
-    print(f"Buscando dados da guerra para o cla {my_clan_tag}...")
-    clan_url = my_clan_tag.replace('#', '%23')
-    r = requests.get(f"https://proxy.royaleapi.dev/v1/clans/{clan_url}/currentriverrace", headers={'Authorization': f'Bearer {token}'})
+    player_tag_pri = os.getenv('CR_PLAYER_TAG')
+    player_tag_sec = os.getenv('CR_PLAYER_TAG_SEC')
     
-    if r.status_code != 200:
-        print(f"Erro ao buscar guerra: {r.status_code}")
+    clan_tags = []
+    if player_tag_pri:
+        c_tag = get_clan_tag(player_tag_pri)
+        if c_tag: clan_tags.append(c_tag)
+    if player_tag_sec:
+        c_tag = get_clan_tag(player_tag_sec)
+        if c_tag: clan_tags.append(c_tag)
+        
+    clan_tags = list(dict.fromkeys(clan_tags))
+    
+    if not clan_tags:
+        print("Erro: Nao foi possivel obter nenhuma tag de cla.")
         return
 
-    race_data = r.json()
-    all_participants = []
-    my_clan_participants = []
-    
-    # Coletar participantes
-    for clan in race_data.get('clans', []):
-        c_tag = clan.get('tag')
-        c_name = clan.get('name')
-        for p in clan.get('participants', []):
-            p['clanTag'] = c_tag
-            p['clanName'] = c_name
-            all_participants.append(p)
-            if c_tag == my_clan_tag:
-                my_clan_participants.append(p)
-
-    # Ordenar por fama (descendente)
-    all_participants.sort(key=lambda x: x.get('fame', 0), reverse=True)
-    my_clan_participants.sort(key=lambda x: x.get('fame', 0), reverse=True)
-    
-    top_global = all_participants[:10]
-    top_clan = my_clan_participants[:10]
-
-    # Unir e remover duplicatas (usando a tag)
     players_to_fetch = []
     seen_tags = set()
 
-    for p in top_clan:
-        if p['tag'] not in seen_tags:
-            p['categoria'] = 'Top Cla'
-            players_to_fetch.append(p)
-            seen_tags.add(p['tag'])
+    for my_clan_tag in clan_tags:
+        print(f"Buscando dados da guerra para o cla {my_clan_tag}...")
+        clan_url = my_clan_tag.replace('#', '%23')
+        try:
+            r = requests.get(f"https://proxy.royaleapi.dev/v1/clans/{clan_url}/currentriverrace", headers={'Authorization': f'Bearer {token}'}, timeout=15)
+        except Exception as e:
+            print(f"Erro de conexao ao buscar guerra para o cla {my_clan_tag}: {e}")
+            continue
             
-    for p in top_global:
-        if p['tag'] not in seen_tags:
-            p['categoria'] = 'Top Global'
-            players_to_fetch.append(p)
-            seen_tags.add(p['tag'])
-        else:
-            # Se ja esta no top cla, marcamos como ambos
-            for ptf in players_to_fetch:
-                if ptf['tag'] == p['tag']:
-                    ptf['categoria'] = 'Top Cla/Global'
+        if r.status_code != 200:
+            print(f"Erro ao buscar guerra para o cla {my_clan_tag}: {r.status_code}")
+            continue
+
+        race_data = r.json()
+        all_participants = []
+        my_clan_participants = []
+        
+        # Coletar participantes
+        for clan in race_data.get('clans', []):
+            c_tag = clan.get('tag')
+            c_name = clan.get('name')
+            for p in clan.get('participants', []):
+                p['clanTag'] = c_tag
+                p['clanName'] = c_name
+                all_participants.append(p)
+                if c_tag == my_clan_tag:
+                    my_clan_participants.append(p)
+
+        # Ordenar por fama (descendente)
+        all_participants.sort(key=lambda x: x.get('fame', 0), reverse=True)
+        my_clan_participants.sort(key=lambda x: x.get('fame', 0), reverse=True)
+        
+        top_global = all_participants[:10]
+        top_clan = my_clan_participants[:10]
+
+        # Adicionar à lista de coleta com priorização
+        for p in top_clan:
+            if p['tag'] not in seen_tags:
+                p['categoria'] = 'Top Cla'
+                players_to_fetch.append(p)
+                seen_tags.add(p['tag'])
+                
+        for p in top_global:
+            if p['tag'] not in seen_tags:
+                p['categoria'] = 'Top Global'
+                players_to_fetch.append(p)
+                seen_tags.add(p['tag'])
+            else:
+                # Se ja esta na lista, podemos atualizar a categoria
+                for ptf in players_to_fetch:
+                    if ptf['tag'] == p['tag'] and ptf['categoria'] == 'Top Cla':
+                        ptf['categoria'] = 'Top Cla/Global'
 
     print(f"Identificados {len(players_to_fetch)} jogadores de elite. Coletando decks (Guerra + Barco)...")
     
