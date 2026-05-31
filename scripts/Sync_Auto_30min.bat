@@ -35,7 +35,7 @@ if errorlevel 1 (
             git push origin main
             if !errorlevel! equ 0 (
                 set PUSH_SUCCESS=1
-                echo [SUCESSO] Dados enviados e unificados no GitHub com sucesso!
+                echo [SUCESSO] Dados enviados e unificados no GitHub com sucesso.
             ) else (
                 echo(
                 echo [AVISO] A nuvem contem dados novos. Tentativa %%i/3 falhou.
@@ -52,7 +52,7 @@ if errorlevel 1 (
         echo Nao foi possivel enviar os dados para a nuvem apos 3 tentativas.
         echo Isso acontece porque o GitHub Actions remoto ou outro computador
         echo comitou dados novos no mesmo instante.
-        echo Fique tranquilo! Seus dados locais estao salvos com seguranca.
+        echo Fique tranquilo. Seus dados locais estao salvos com seguranca.
         echo =======================================================================
         echo(
     )
@@ -79,7 +79,7 @@ if !PUSH_SUCCESS! equ 0 (
     )
 ) else (
     set CONSECUTIVE_FAILURES=0
-    echo [%time%] Sincronizacao concluida com sucesso! Aguardando 30 minutos...
+    echo [%time%] Sincronizacao concluida com sucesso. Aguardando 30 minutos...
     ping -n 1801 127.0.0.1 >nul
 )
 
