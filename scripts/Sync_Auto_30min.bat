@@ -59,18 +59,27 @@ if errorlevel 1 (
 )
 
 if !PUSH_SUCCESS! equ 0 (
-    set /A CONSECUTIVE_FAILURES+=1
-    if !CONSECUTIVE_FAILURES! leq 3 (
-        echo [%time%] Sincronizacao falhou (Falhas consecutivas: !CONSECUTIVE_FAILURES!/3). Tentando rodada de emergencia em 1 minuto...
-        ping -n 61 127.0.0.1 >nul
+    set IS_WAR=0
+    for /f "tokens=*" %%x in ('python -c "import datetime; hoje=datetime.datetime.now(); h=hoje.hour; d=hoje.weekday(); print(1 if ((d==3 and h>=7) or d in [4,5,6] or (d==0 and h<7)) else 0)"') do set IS_WAR=%%x
+    
+    if "!IS_WAR!" equ "1" (
+        set /A CONSECUTIVE_FAILURES+=1
+        if !CONSECUTIVE_FAILURES! leq 3 (
+            echo [%time%] Sincronizacao falhou em periodo de guerra (Falhas consecutivas: !CONSECUTIVE_FAILURES!/3). Tentando rodada de emergencia em 1 minuto...
+            ping -n 61 127.0.0.1 >nul
+        ) else (
+            echo [%time%] Sincronizacao falhou por 3 vezes seguidas na guerra. Retornando ao fallback de seguranca de 30 minutos...
+            set CONSECUTIVE_FAILURES=0
+            ping -n 1801 127.0.0.1 >nul
+        )
     ) else (
-        echo [%time%] Sincronizacao falhou por 3 vezes seguidas. Retornando ao fallback de seguranca de 30 minutos...
+        echo [%time%] Sincronizacao falhou fora do periodo de guerra. Retornando ao intervalo padrao de 30 minutos...
         set CONSECUTIVE_FAILURES=0
         ping -n 1801 127.0.0.1 >nul
     )
 ) else (
     set CONSECUTIVE_FAILURES=0
-    echo [%time%] Sincronizacao concluida! Aguardando 30 minutos...
+    echo [%time%] Sincronizacao concluida com sucesso! Aguardando 30 minutos...
     ping -n 1801 127.0.0.1 >nul
 )
 
