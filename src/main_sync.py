@@ -26,6 +26,9 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
 
+    # Captura tempo inicial para relatorio de performance
+    start_time = datetime.now()
+
     # Carrega variaveis de ambiente de forma robusta (raiz do projeto)
     from dotenv import load_dotenv
     src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -288,6 +291,24 @@ def main():
                 guerra_status = "Ativa (coleta concluida e consolidada)"
                 
     print(f"  -> Status da Guerra: {guerra_status}")
+    print("=" * 60)
+
+    # FASE 5: Exibir Tempo de Execucao (Metricas de Performance)
+    end_time = datetime.now()
+    duration = end_time - start_time
+    inicio_str = start_time.strftime('%Hh%M:%S')
+    fim_str = end_time.strftime('%Hh%M:%S')
+    tot_sec = int(duration.total_seconds())
+    hours = tot_sec // 3600
+    minutes = (tot_sec % 3600) // 60
+    seconds = tot_sec % 60
+    duracao_str = f"{hours:02d}h{minutes:02d}:{seconds:02d}"
+
+    print(" ⏱️ TEMPO DE EXECUCAO DO PIPELINE")
+    print("=" * 60)
+    print(f"  -> Inicio: {inicio_str}")
+    print(f"  -> Fim: {fim_str}")
+    print(f"  -> Tempo Total: {duracao_str}")
     print("=" * 60)
 
     logger.info("=" * 60)
