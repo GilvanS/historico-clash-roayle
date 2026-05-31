@@ -32,16 +32,32 @@ if errorlevel 1 (
     git commit -m "chore: sincronizacao local Elite (%date% %time%)"
     
     :: Loop de push com retry (similar ao GitHub Action)
+    set PUSH_SUCCESS=0
     for /L %%i in (1,1,3) do (
-        git push origin main
-        if !errorlevel! equ 0 (
-            echo [SUCESSO] Web Dashboard atualizado!
-            goto :end
+        if !PUSH_SUCCESS! equ 0 (
+            git push origin main
+            if !errorlevel! equ 0 (
+                echo [SUCESSO] Web Dashboard atualizado!
+                set PUSH_SUCCESS=1
+            ) else (
+                echo.
+                echo [AVISO] A nuvem contem dados novos. Tentativa %%i/3 falhou.
+                echo [INFO] Puxando dados novos do GitHub e unificando localmente...
+                git pull --rebase -X theirs origin main
+            )
         )
-        echo [AVISO] Tentativa %%i/3 falhou, tentando rebase...
-        git pull --rebase -X theirs origin main
     )
-    echo [ERRO] Nao foi possivel sincronizar com o GitHub. Verifique sua conexao.
+    if !PUSH_SUCCESS! equ 0 (
+        echo.
+        echo =======================================================================
+        echo [AVISO DE CONCORRENCIA GIT]
+        echo Nao foi possivel atualizar o Dashboard Web apos 3 tentativas.
+        echo Isso ocorre quando o GitHub Actions remoto envia dados no mesmo segundo.
+        echo O seu banco de dados local esta 100%% seguro e atualizado.
+        echo Tente rodar o script novamente em alguns minutos para sincronizar!
+        echo =======================================================================
+        echo.
+    )
 ) else (
     echo [INFO] Nenhuma alteracao nova para enviar.
 )

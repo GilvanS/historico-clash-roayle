@@ -97,10 +97,12 @@ jobs:
 
           for i in 1 2 3; do
             if git push origin HEAD; then
-              echo "Push realizado com sucesso."
+              echo "[SUCESSO] Sincronizacao enviada ao GitHub com sucesso."
               break
             else
-              echo "Tentativa $i/3 falhou, realizando rebase..."
+              echo ""
+              echo "[AVISO DE CONCORRENCIA] O script local enviou dados primeiro. Tentativa $i/3 falhou."
+              echo "[INFO] Puxando alteracoes mais recentes do computador local e unificando na nuvem..."
               sleep 5
               git pull --rebase -X theirs origin main || true
             fi
