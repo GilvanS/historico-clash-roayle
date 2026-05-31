@@ -237,8 +237,61 @@ def main():
                         print(f"  [{name}] {safe_line}")
             print()
 
+    # FASE 4: Exibir Sumario Executivo Simplificado de Lutas e Dados Adicionados
+    novas_lutas_pri = 0
+    novas_lutas_sec = 0
+    lutas_detectadas_pri = 0
+    lutas_detectadas_sec = 0
+    import re
+    
+    for name, log in collection_logs:
+        if name == "Batalhas" and log:
+            partes = log.split("Conta ")
+            for parte in partes:
+                if "Principal" in parte:
+                    m_novas = re.findall(r"oponentes_ano_\d{4}\.csv:\s*\+(\d+)\s*novas", parte)
+                    if m_novas:
+                        novas_lutas_pri = sum(int(x) for x in m_novas)
+                    m_det = re.search(r"Batalhas retornadas pela API:\s*(\d+)", parte)
+                    if m_det:
+                        lutas_detectadas_pri = int(m_det.group(1))
+                elif "Secundaria" in parte or "Secundária" in parte:
+                    m_novas = re.findall(r"oponentes_ano_\d{4}\.csv:\s*\+(\d+)\s*novas", parte)
+                    if m_novas:
+                        novas_lutas_sec = sum(int(x) for x in m_novas)
+                    m_det = re.search(r"Batalhas retornadas pela API:\s*(\d+)", parte)
+                    if m_det:
+                        lutas_detectadas_sec = int(m_det.group(1))
+
+    print("=" * 60)
+    print(" ⚡ SUMARIO EXECUTIVO DE DADOS ARMAZENADOS (LUTAS)")
+    print("=" * 60)
+    print(f"  -> Conta Principal:")
+    print(f"     - Lutas analisadas na API: {lutas_detectadas_pri}")
+    print(f"     - Novas lutas adicionadas no CSV: +{novas_lutas_pri} novas lutas")
+    print()
+    print(f"  -> Conta Secundaria:")
+    print(f"     - Lutas analisadas na API: {lutas_detectadas_sec}")
+    print(f"     - Novas lutas adicionadas no CSV: +{novas_lutas_sec} novas lutas")
+    print()
+    
+    # Verifica se houve coletas de guerra ativas
+    guerra_status = "Inativa (fora de periodo ou sem novos dados)"
+    for name, log in collection_logs:
+        if name == "Guerra" and log:
+            log_lower = log.lower()
+            if "novas" in log_lower or "sucesso" in log_lower or "adicionad" in log_lower:
+                guerra_status = "Ativa (dados de guerra/barcos sincronizados com sucesso)"
+            elif "pulada" in log_lower:
+                guerra_status = "Inativa (fora do periodo de guerra)"
+            else:
+                guerra_status = "Ativa (coleta concluida e consolidada)"
+                
+    print(f"  -> Status da Guerra: {guerra_status}")
+    print("=" * 60)
+
     logger.info("=" * 60)
-    logger.info("SINCRONIZACAO CONCLUÍDA COM SUCESSO!")
+    logger.info("SINCRONIZACAO CONCLUIDA COM SUCESSO!")
     logger.info("=" * 60)
 
 if __name__ == "__main__":
