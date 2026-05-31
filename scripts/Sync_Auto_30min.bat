@@ -30,14 +30,14 @@ if errorlevel 1 (
         if !PUSH_SUCCESS! equ 0 (
             if %%i gtr 1 (
                 echo [INFO] Aguardando 10 segundos antes de tentar novamente...
-                timeout /t 10 /nobreak >nul
+                ping -n 11 127.0.0.1 >nul
             )
             git push origin main
             if !errorlevel! equ 0 (
                 set PUSH_SUCCESS=1
                 echo [SUCESSO] Dados enviados e unificados no GitHub com sucesso!
             ) else (
-                echo.
+                echo(
                 echo [AVISO] A nuvem contem dados novos. Tentativa %%i/3 falhou.
                 echo [INFO] Puxando dados mais recentes do GitHub e realizando o rebase local...
                 git rebase --abort >nul 2>&1
@@ -46,7 +46,7 @@ if errorlevel 1 (
         )
     )
     if !PUSH_SUCCESS! equ 0 (
-        echo.
+        echo(
         echo =======================================================================
         echo [AVISO DE CONCORRENCIA GIT]
         echo Nao foi possivel enviar os dados para a nuvem apos 3 tentativas.
@@ -54,7 +54,7 @@ if errorlevel 1 (
         echo comitou dados novos no mesmo instante.
         echo Fique tranquilo! Seus dados locais estao salvos com seguranca.
         echo =======================================================================
-        echo.
+        echo(
     )
 )
 
@@ -62,16 +62,16 @@ if !PUSH_SUCCESS! equ 0 (
     set /A CONSECUTIVE_FAILURES+=1
     if !CONSECUTIVE_FAILURES! leq 3 (
         echo [%time%] Sincronizacao falhou (Falhas consecutivas: !CONSECUTIVE_FAILURES!/3). Tentando rodada de emergencia em 1 minuto...
-        timeout /t 60 /nobreak
+        ping -n 61 127.0.0.1 >nul
     ) else (
         echo [%time%] Sincronizacao falhou por 3 vezes seguidas. Retornando ao fallback de seguranca de 30 minutos...
         set CONSECUTIVE_FAILURES=0
-        timeout /t 1800 /nobreak
+        ping -n 1801 127.0.0.1 >nul
     )
 ) else (
     set CONSECUTIVE_FAILURES=0
     echo [%time%] Sincronizacao concluida! Aguardando 30 minutos...
-    timeout /t 1800 /nobreak
+    ping -n 1801 127.0.0.1 >nul
 )
 
 goto :loop
