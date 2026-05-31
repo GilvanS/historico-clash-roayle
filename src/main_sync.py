@@ -105,12 +105,17 @@ def main():
 
     # FASE 1.2: Coletar Ciclo de Baús
     try:
-        logger.info("FASE 1.2: Coletando ciclo de baús...")
-        buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
-            from collect_chests import collect_chests
-            collect_chests()
-        collection_logs.append(("Baus", buf.getvalue()))
+        sync_chests = os.environ.get("CR_SYNC_CHESTS", "false").lower() == "true"
+        if sync_chests:
+            logger.info("FASE 1.2: Coletando ciclo de baús...")
+            buf = io.StringIO()
+            with redirect_stdout(buf), redirect_stderr(buf):
+                from collect_chests import collect_chests
+                collect_chests()
+            collection_logs.append(("Baus", buf.getvalue()))
+        else:
+            logger.info("FASE 1.2: Coleta de ciclo de baús desativada por padrao para economizar tempo.")
+            collection_logs.append(("Baus", "Pulada (desativada)"))
     except Exception as e:
         logger.error(f"Erro na FASE 1.2 (Baus): {e}")
         collection_logs.append(("Baus", f"ERRO: {e}"))
