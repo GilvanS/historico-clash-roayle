@@ -272,7 +272,7 @@ def main():
                         lutas_detectadas_sec = int(m_det.group(1))
 
     print("=" * 60)
-    print(" ⚡ SUMARIO EXECUTIVO DE DADOS ARMAZENADOS (LUTAS)")
+    print(" [INFO] SUMARIO EXECUTIVO DE DADOS ARMAZENADOS (LUTAS)")
     print("=" * 60)
     print(f"  -> Conta Principal:")
     print(f"     - Lutas analisadas na API: {lutas_detectadas_pri}")
@@ -309,7 +309,7 @@ def main():
     seconds = tot_sec % 60
     duracao_str = f"{hours:02d}h{minutes:02d}:{seconds:02d}"
 
-    print(" ⏱️ TEMPO DE EXECUCAO DO PIPELINE")
+    print(" [TEMPO] TEMPO DE EXECUCAO DO PIPELINE")
     print("=" * 60)
     print(f"  -> Inicio: {inicio_str}")
     print(f"  -> Fim: {fim_str}")

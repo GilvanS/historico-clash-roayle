@@ -357,7 +357,8 @@ def collect_top_global_clans(token, limit=5):
                     
                     participants = next((c.get('participants', []) for c in my_clan if c.get('tag') == clan_tag), [])
                     sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
-                    top_players = sorted_players  # Coletar TODOS os jogadores do Top Global
+                    # OTIMIZACAO: Coletar apenas os TOP 5 jogadores para poupar chamadas a API
+                    top_players = sorted_players[:5]
                 else:
                     top_players = []
             except:
@@ -414,6 +415,106 @@ def collect_top_global_clans(token, limit=5):
         print(f"ERRO ao coletar TOP Global: {e}")
         return []
 
+def collect_top_brazil_clans(token, limit=5):
+    """Coleta os TOP N clas do ranking brasileiro (Brasil) e seus top 5 jogadores com decks"""
+    headers = {'Authorization': f'Bearer {token}'}
+    base_url = "https://proxy.royaleapi.dev/v1"
+    
+    results = []
+    data_hoje, dia_batalha = get_logical_date_and_battle_day()
+    
+    try:
+        r = requests.get(f"{base_url}/locations/57000038/rankings/clanwars", headers=headers, timeout=15)
+        if r.status_code != 200:
+            print(f"ERRO ao buscar ranking do Brasil: {r.status_code}")
+            return []
+        
+        data = r.json()
+        clans = data.get('items', [])
+        
+        print(f"\n{'='*60}")
+        print(f"COLLECTING TOP BRAZIL WAR - TOP {limit} CLANS")
+        print(f"{'='*60}")
+        
+        for clan_idx, clan in enumerate(clans[:limit], 1):
+            clan_name = clan.get('name', 'Unknown')
+            clan_tag = clan.get('tag', '')
+            clan_fame = clan.get('fame', 0)
+            
+            print(f"\n#{clan_idx} {clan_name} ({clan_tag}) - Fame: {clan_fame}")
+            
+            try:
+                clan_url = clan_tag.replace('#', '%23')
+                cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=15)
+                
+                if cr.status_code == 200:
+                    race_data = cr.json()
+                    my_clan = race_data.get('clans', [])
+                    clan_race = next((c for c in my_clan if c.get('tag') == clan_tag), None)
+                    
+                    if clan_race:
+                        clan_fame = clan_race.get('fame', 0)
+                    
+                    participants = next((c.get('participants', []) for c in my_clan if c.get('tag') == clan_tag), [])
+                    sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
+                    # OTIMIZACAO: Coletar apenas os TOP 5 jogadores para poupar chamadas
+                    top_players = sorted_players[:5]
+                else:
+                    top_players = []
+            except:
+                top_players = []
+            
+            # Buscar battlelogs em paralelo
+            print(f"    Buscando battlelogs de {len(top_players)} jogadores...")
+            battlelogs_cache = fetch_battlelogs_concurrently(top_players, headers, base_url)
+            
+            for player_idx, player in enumerate(top_players, 1):
+                player_tag_player = player.get('tag', '')
+                player_name = player.get('name', 'Unknown')
+                player_fame = player.get('fame', 0)
+                decks_used = player.get('decksUsed', 0)
+                boat_attacks = player.get('boatAttacks', 0)
+                
+                player_decks = {
+                    'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
+                    'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''
+                }
+                
+                war_stats = {
+                    'war_vitorias': 0, 'war_derrotas': 0, 'war_medals': 0,
+                    'war_torre': 'Tower Princess', 'war_tipo_principal': '', 'war_battles_count': 0
+                }
+                
+                if player_tag_player and player_tag_player in battlelogs_cache:
+                    battles = battlelogs_cache[player_tag_player]
+                    war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
+                    player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
+                
+                results.append({
+                    'data_coleta': data_hoje,
+                    'player_tag_conta': 'TOP_BRAZIL',
+                    'clan_posicao': clan_idx,
+                    'clan_nome': clan_name,
+                    'clan_tag': clan_tag,
+                    'clan_fame': clan_fame,
+                    'player_posicao': player_idx,
+                    'player_nome': player_name,
+                    'player_tag': player_tag_player,
+                    'player_fame': player_fame,
+                    'decks_usados': decks_used,
+                    'boat_attacks': boat_attacks,
+                    **player_decks,
+                    **war_stats
+                })
+                
+                print(f"  - Player #{player_idx}: {player_name} ({player_fame} fame)")
+        
+        return results
+        
+    except Exception as e:
+        print(f"ERRO ao coletar TOP Brazil: {e}")
+        return []
+
 def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallback=None):
     """
     Coleta TODOS os participantes do proprio cla do jogador rastreado.
@@ -457,15 +558,15 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
         participants = clan.get('participants', [])
         sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
         
-        # CORRECAO: Para o PROPRIO clan, coletar TODOS os participantes
-        # Para clans adversarios, também coletar TODOS (para inteligência completa de decks e pontos)
+        # CORRECAO E OTIMIZACAO: Para o PROPRIO clan, coletar TODOS os participantes
+        # Para clans adversarios, coletar apenas os TOP 5 participantes (inteligência de guerra focada)
         is_own_clan = (clan_tag == my_clan_tag)
         if is_own_clan:
             top_players = sorted_players  # TODOS os membros do proprio cla
             print(f"  Clan PROPRIO [{clan_name}] ({clan_tag}): {len(top_players)} participantes")
         else:
-            top_players = sorted_players  # TODOS os membros dos adversarios
-            print(f"  Clan adversario [{clan_name}] ({clan_tag}): {len(top_players)} participantes")
+            top_players = sorted_players[:5]  # Apenas os TOP 5 membros dos adversarios
+            print(f"  Clan adversario [{clan_name}] ({clan_tag}): Apenas {len(top_players)} participantes (Top 5)")
         
         # Buscar battlelogs em paralelo
         print(f"    Buscando battlelogs de {len(top_players)} jogadores...")
