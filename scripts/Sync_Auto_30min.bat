@@ -67,21 +67,25 @@ if !PUSH_SUCCESS! equ 0 (
         set /A CONSECUTIVE_FAILURES+=1
         if !CONSECUTIVE_FAILURES! leq 3 (
             echo [%time%] Sincronizacao falhou em periodo de guerra - Falhas consecutivas: !CONSECUTIVE_FAILURES!/3. Tentando rodada de emergencia em 1 minuto...
-            ping -n 61 127.0.0.1 >nul
+            timeout /t 60
+            if !errorlevel! neq 0 ping -n 61 127.0.0.1 >nul
         ) else (
             echo [%time%] Sincronizacao falhou por 3 vezes seguidas na guerra. Retornando ao fallback de seguranca de 30 minutos...
             set CONSECUTIVE_FAILURES=0
-            ping -n 1801 127.0.0.1 >nul
+            timeout /t 1800
+            if !errorlevel! neq 0 ping -n 1801 127.0.0.1 >nul
         )
     ) else (
         echo [%time%] Sincronizacao falhou fora do periodo de guerra. Retornando ao intervalo padrao de 30 minutos...
         set CONSECUTIVE_FAILURES=0
-        ping -n 1801 127.0.0.1 >nul
+        timeout /t 1800
+        if !errorlevel! neq 0 ping -n 1801 127.0.0.1 >nul
     )
 ) else (
     set CONSECUTIVE_FAILURES=0
     echo [%time%] Sincronizacao concluida com sucesso. Aguardando 30 minutos...
-    ping -n 1801 127.0.0.1 >nul
+    timeout /t 1800
+    if !errorlevel! neq 0 ping -n 1801 127.0.0.1 >nul
 )
 
 goto :loop
