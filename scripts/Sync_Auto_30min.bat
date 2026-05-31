@@ -19,6 +19,10 @@ python src/main_sync.py
 
 git add data/csv/  README.md docs/ data/json/ 
 
+:: Detectar se estamos em periodo de guerra de forma plana (evita erros de parser do CMD com parenteses)
+set IS_WAR=0
+for /f "tokens=*" %%x in ('python -c "import datetime; hoje=datetime.datetime.now(); h=hoje.hour; d=hoje.weekday(); print(1 if ((d==3 and h>=7) or d in [4,5,6] or (d==0 and h<7)) else 0)"') do set IS_WAR=%%x
+
 set PUSH_SUCCESS=1
 
 git diff --staged --quiet
@@ -59,9 +63,6 @@ if errorlevel 1 (
 )
 
 if !PUSH_SUCCESS! equ 0 (
-    set IS_WAR=0
-    for /f "tokens=*" %%x in ('python -c "import datetime; hoje=datetime.datetime.now(); h=hoje.hour; d=hoje.weekday(); print(1 if ((d==3 and h>=7) or d in [4,5,6] or (d==0 and h<7)) else 0)"') do set IS_WAR=%%x
-    
     if "!IS_WAR!" equ "1" (
         set /A CONSECUTIVE_FAILURES+=1
         if !CONSECUTIVE_FAILURES! leq 3 (
