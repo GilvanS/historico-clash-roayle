@@ -1883,6 +1883,60 @@ class GitHubPagesHTMLGenerator:
             </div>
         '''
         
+        # Calcular estatísticas do período (mês/30 dias do histograma)
+        total_wins = sum(day.get('wins', 0) for day in daily_stats)
+        total_losses = sum(day.get('losses', 0) for day in daily_stats)
+        total_draws = sum(day.get('draws', 0) for day in daily_stats)
+        total_battles = sum(day.get('total_battles', 0) for day in daily_stats)
+        
+        win_rate = (total_wins / total_battles) * 100 if total_battles > 0 else 0.0
+        active_days = sum(1 for day in daily_stats if day.get('total_battles', 0) > 0)
+        avg_battles = total_battles / active_days if active_days > 0 else 0.0
+        
+        # Bloco de resumo estatístico Glassmorphism premium
+        summary_html = f'''
+        <div class="histogram-summary" style="
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 15px auto 10px auto;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            max-width: 95%;
+            flex-wrap: wrap;
+            gap: 12px;
+        ">
+            <div class="summary-card" style="text-align: center; flex: 1; min-width: 80px;">
+                <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Vitórias</div>
+                <div style="font-size: 1.4rem; color: #2ecc71; font-weight: 700; margin-top: 2px;">{total_wins}</div>
+            </div>
+            <div style="width: 1px; height: 30px; background: rgba(255, 255, 255, 0.1); align-self: center;"></div>
+            <div class="summary-card" style="text-align: center; flex: 1; min-width: 80px;">
+                <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Derrotas</div>
+                <div style="font-size: 1.4rem; color: #e74c3c; font-weight: 700; margin-top: 2px;">{total_losses}</div>
+            </div>
+            <div style="width: 1px; height: 30px; background: rgba(255, 255, 255, 0.1); align-self: center;"></div>
+            <div class="summary-card" style="text-align: center; flex: 1; min-width: 80px;">
+                <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Partidas</div>
+                <div style="font-size: 1.4rem; color: #3498db; font-weight: 700; margin-top: 2px;">{total_battles}</div>
+            </div>
+            <div style="width: 1px; height: 30px; background: rgba(255, 255, 255, 0.1); align-self: center;"></div>
+            <div class="summary-card" style="text-align: center; flex: 1.2; min-width: 100px;">
+                <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Vitórias (%)</div>
+                <div style="font-size: 1.4rem; color: #f1c40f; font-weight: 700; margin-top: 2px;">{win_rate:.1f}%</div>
+            </div>
+            <div style="width: 1px; height: 30px; background: rgba(255, 255, 255, 0.1); align-self: center;"></div>
+            <div class="summary-card" style="text-align: center; flex: 1.2; min-width: 100px;">
+                <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Média Diária</div>
+                <div style="font-size: 1.4rem; color: #e67e22; font-weight: 700; margin-top: 2px;">{avg_battles:.1f}</div>
+            </div>
+        </div>
+        '''
+        
         # Add legend only if requested
         legend_html = ""
         if include_legend:
@@ -1903,7 +1957,7 @@ class GitHubPagesHTMLGenerator:
             </div>
             '''
         
-        return histogram_html + legend_html
+        return histogram_html + summary_html + legend_html
     
     def generate_clan_rankings_html(self, clan_rankings: List[Dict], player_name: str) -> str:
         """Generate HTML for clan rankings with progression indicators"""
