@@ -13,9 +13,9 @@ import csv
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-# Forçar UTF-8 no terminal
-if sys.stdout.encoding != 'utf-8':
-    import io
+# Forçar UTF-8 no terminal apenas quando chamado diretamente (sys.stdout real tem .buffer)
+import io
+if hasattr(sys.stdout, 'buffer') and getattr(sys.stdout, 'encoding', 'utf-8') != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 load_dotenv()
