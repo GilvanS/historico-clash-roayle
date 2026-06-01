@@ -132,6 +132,18 @@ def main():
         logger.error(f"Erro na FASE 1.3 (Meta BR): {e}")
         collection_logs.append(("Meta BR", f"ERRO: {e}"))
 
+    # FASE 1.4: Coletar Decks Meta Global e Brasil Dinâmicos (Top Global)
+    try:
+        logger.info("FASE 1.4: Coletando decks do Top 5 Global e Top 5 Brasil (Dynamic Meta)...")
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            from collect_top_meta_global import collect_top_meta_decks
+            collect_top_meta_decks()
+        collection_logs.append(("Meta Global", buf.getvalue()))
+    except Exception as e:
+        logger.error(f"Erro na FASE 1.4 (Meta Global): {e}")
+        collection_logs.append(("Meta Global", f"ERRO: {e}"))
+
     # FASE 1.5: Coletar Decks de Guerra (Quinta 7h00 a Segunda 6h59)
     try:
         hoje = datetime.now()
