@@ -2551,7 +2551,7 @@ class GitHubPagesHTMLGenerator:
                             'source': row.get('source', 'Global Meta')
                         })
                 if meta_list:
-                    return meta_list[:5]
+                    return meta_list # Removemos o [:5] para retornar tudo o que estiver no CSV
             except Exception as e:
                 logger.error(f"Erro ao ler decks_meta_global.csv: {e}")
 
@@ -2738,7 +2738,28 @@ class GitHubPagesHTMLGenerator:
         if not winning_data: return '<div class="cr-empty-state">Dados globais insuficientes para o Top Vencedores.</div>'
         
         # Usar grid de colunas para telas médias/grandes
-        html = '<div class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">'
+        html = '''
+        <div style="margin-bottom: 15px; text-align: right;">
+            <label style="color: #fff; font-size: 0.8em; margin-right: 10px;">Mostrar:</label>
+            <select id="deckFilter" onchange="filterDecks(this.value)" style="background: #0f172a; color: #fff; border: 1px solid #334155; padding: 5px; border-radius: 6px;">
+                <option value="5">5 Decks</option>
+                <option value="10">10 Decks</option>
+                <option value="999">Todos</option>
+            </select>
+        </div>
+        <div id="deckGrid" class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+        <script>
+        function filterDecks(limit) {
+            const container = document.getElementById('deckGrid');
+            const cards = container.getElementsByClassName('cr-deck-card');
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].style.display = (i < limit) ? 'block' : 'none';
+            }
+        }
+        // Inicializar com 5
+        document.addEventListener("DOMContentLoaded", () => filterDecks(5));
+        </script>
+        '''
         
         for i, deck in enumerate(winning_data, 1):
             total = deck['total']
