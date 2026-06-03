@@ -2812,7 +2812,7 @@ class GitHubPagesHTMLGenerator:
             '''
         
         # Script DEPOIS dos cards — garante que os cr-deck-card já existem no DOM
-        # Script DEPOIS dos cards
+        # Usa style.display em vez de hidden attribute (hidden não funciona dentro de display:grid)
         html += f'''<script>
 (function(){{
     var grid = document.getElementById('{grid_id}');
@@ -2820,11 +2820,7 @@ class GitHubPagesHTMLGenerator:
     function {func_name}(limit) {{
         limit = parseInt(limit, 10) || 999;
         for (var i = 0; i < cards.length; i++) {{
-            if (i < limit) {{
-                cards[i].removeAttribute('hidden');
-            }} else {{
-                cards[i].setAttribute('hidden', '');
-            }}
+            cards[i].style.display = (i < limit) ? '' : 'none';
         }}
     }}
     {func_name}(5);
