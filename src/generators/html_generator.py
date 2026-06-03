@@ -2812,19 +2812,27 @@ class GitHubPagesHTMLGenerator:
             '''
         
         # Script DEPOIS dos cards — garante que os cr-deck-card já existem no DOM
-        html += f'''
-        <script>
-        function {func_name}(limit) {{
-            const container = document.getElementById('{grid_id}');
-            const cards = container.getElementsByClassName('cr-deck-card');
-            for (let i = 0; i < cards.length; i++) {{
-                cards[i].style.display = (i < limit) ? 'block' : 'none';
+        # Script DEPOIS dos cards - garante que os cr-deck-card ja existem no DOM
+        html += f'''<script>
+(function(){{
+    var grid = document.getElementById('{grid_id}');
+    var cards = grid.querySelectorAll('.cr-deck-card');
+    function {func_name}(limit) {{
+        limit = parseInt(limit, 10) || 999;
+        for (var i = 0; i < cards.length; i++) {{
+            if (i < limit) {{
+                cards[i].style.display = '';
+            }} else {{
+                cards[i].style.display = 'none';
             }}
         }}
-        // Inicializar com 5 (cards já estão no DOM neste ponto)
-        {func_name}(5);
-        </script>
-        '''
+    }}
+    // Inicializar com 5
+    {func_name}(5);
+    // Expor funcao globalmente para o onchange do select
+    window['{func_name}'] = {func_name};
+}})();
+</script>'''
         
         return html + '</div>'
 
