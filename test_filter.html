@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head><title>Teste Filtro</title></head>
+<body>
+<h1>Teste de Filtro de Decks</h1>
+
+<div style="margin-bottom: 15px; text-align: right;">
+    <label>Mostrar:</label>
+    <select id="acc-test-deckFilter" onchange="filterDecks_acc_test(this.value)">
+        <option value="5">5 Decks</option>
+        <option value="10">10 Decks</option>
+        <option value="999">Todos</option>
+    </select>
+</div>
+
+<div id="acc-test-deckGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 1 - WR 60%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 2 - WR 58%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 3 - WR 55%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 4 - WR 53%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 5 - WR 52%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 6 - WR 50%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 7 - WR 48%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 8 - WR 45%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 9 - WR 43%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 10 - WR 40%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 11 - WR 38%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 12 - WR 35%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 13 - WR 33%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 14 - WR 30%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 15 - WR 28%</div>
+    <div class="cr-deck-card" style="background: #333; color: #fff; padding: 20px; border-radius: 8px;">Deck 16 - WR 25%</div>
+
+<script>
+(function(){
+    var grid = document.getElementById('acc-test-deckGrid');
+    var cards = grid.querySelectorAll('.cr-deck-card');
+    function filterDecks_acc_test(limit) {
+        limit = parseInt(limit, 10) || 999;
+        for (var i = 0; i < cards.length; i++) {
+            cards[i].style.display = (i < limit) ? '' : 'none';
+        }
+    }
+    filterDecks_acc_test(5);
+    window['filterDecks_acc_test'] = filterDecks_acc_test;
+})();
+</script>
+</div>
+
+<p id="status">Carregando...</p>
+</body>
+</html>

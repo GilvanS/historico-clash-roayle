@@ -2741,7 +2741,8 @@ class GitHubPagesHTMLGenerator:
         # IDs únicos por conta para evitar conflitos de DOM entre Conta Principal e Secundária
         filter_id = f"{p_prefix}-deckFilter"
         grid_id = f"{p_prefix}-deckGrid"
-        func_name = f"filterDecks_{p_prefix}"
+        # Nome da função JS não pode ter hífen (seria interpretado como subtração)
+        func_name = f"filterDecks_{p_prefix.replace('-', '_')}"
         
         # Usar grid de colunas para telas médias/grandes
         html = f'''
@@ -9666,7 +9667,7 @@ class GitHubPagesHTMLGenerator:
             const gridEl = target.querySelector('[id$="-deckGrid"]');
             if (gridEl) {{
                 const gridId = gridEl.id;
-                const funcName = 'filterDecks_' + gridId.replace('-deckGrid', '');
+                const funcName = 'filterDecks_' + gridId.replace('-deckGrid', '').replace(/-/g, '_');
                 if (typeof window[funcName] === 'function') {{
                     // Recupera o valor selecionado no select do filtro
                     const filterEl = target.querySelector('[id$="-deckFilter"]');
