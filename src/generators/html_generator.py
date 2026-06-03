@@ -2342,13 +2342,16 @@ class GitHubPagesHTMLGenerator:
         csv_repeated = self.get_repeated_opponents_from_csv(player_tag=player_tag)
         repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated)
         
-        # Aba 4: Decks Mais Vencedores (Global/Clã)
-        winning_data = self.get_top_winning_decks_weekly()
-
         # Prefixo único por conta para evitar conflitos de IDs no DOM entre Conta Principal e Secundária
         p_prefix = f"acc-{player_tag.replace('#', '')}" if player_tag else "acc-main"
 
+        # Aba 4: Decks Mais Vencedores (Global/Clã)
+        winning_data = self.get_top_winning_decks_weekly()
         winning_decks_html = self.generate_winning_decks_html(winning_data, p_prefix=p_prefix)
+
+        # Aba 5: Melhores Decks para Desafios da Semana
+        challenge_data = self.get_challenge_decks_from_csv(player_tag=player_tag)
+        challenge_decks_html = self.generate_challenge_decks_html(challenge_data, p_prefix=p_prefix)
 
         # Inteligência de tab ativa: se não houver oponentes repetidos reais (> 1 batalha) no VS Stage,
         # ativamos "Meus Decks" por padrão para deixar a experiência mais compacta e rica na conta secundária
@@ -2365,6 +2368,7 @@ class GitHubPagesHTMLGenerator:
                 <button class="cr-tab {active_dec}" onclick="switchInnerTab(event, '{p_prefix}-weekly-decks')">Meus Decks</button>
                 <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-lethal-decks')">Decks Letais</button>
                 <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-winning-decks')">Top Global</button>
+                <button class="cr-tab" onclick="switchInnerTab(event, '{p_prefix}-challenge-decks')">Desafios</button>
             </div>
 
             <div id="{p_prefix}-repeated-opponents" class="cr-tab-content {active_rep}">
@@ -2381,6 +2385,10 @@ class GitHubPagesHTMLGenerator:
             
             <div id="{p_prefix}-winning-decks" class="cr-tab-content">
                 {winning_decks_html}
+            </div>
+
+            <div id="{p_prefix}-challenge-decks" class="cr-tab-content">
+                {challenge_decks_html}
             </div>
         </div>
         """
@@ -2532,6 +2540,157 @@ class GitHubPagesHTMLGenerator:
         # ORDENAÇÃO: Decks usados RECENTEMENTE e com maior volume de batalhas no topo
         final_list.sort(key=lambda x: (x['recent_total'], x['total'], x['win_rate']), reverse=True)
         return final_list[:10]
+
+    def get_challenge_decks_from_csv(self, player_tag: str = None) -> List[Dict]:
+        """Consolida os melhores decks de desafios a partir do CSV challenge_decks_semanal.csv.
+        Agrupa por deck_cards + tipo_desafio + semana_iso, somando wins/losses/draws/total.
+        Retorna lista ordenada por win rate (decks com melhor performance primeiro).
+        """
+        csv_path = os.path.join(self.data_csv_dir, 'challenge_decks_semanal.csv')
+        if not os.path.exists(csv_path):
+            return []
+
+        deck_stats = {}
+
+        with open(csv_path, 'r', encoding='utf-8-sig', newline='') as f:
+            reader = csv.DictReader(f, delimiter=';')
+            for row in reader:
+                tag_p = row.get('player_tag', '').strip()
+                # Filtrar por conta se player_tag fornecido
+                if player_tag:
+                    req_tag = player_tag.strip().upper()
+                    if not req_tag.startswith('#'):
+                        req_tag = '#' + req_tag
+                    if tag_p.upper() != req_tag.upper():
+                        continue
+
+                cards = row.get('deck_jogador', '').strip()
+                if not cards:
+                    continue
+
+                tipo = row.get('tipo_desafio', 'Desconhecido').strip()
+                semana = row.get('semana_iso', '').strip()
+
+                # Chave unica: deck + tipo de desafio + semana
+                key = (cards, tipo, semana)
+
+                res = row.get('resultado', '').strip().lower()
+                if key not in deck_stats:
+                    deck_stats[key] = {
+                        'deck_cards': cards,
+                        'wins': 0,
+                        'losses': 0,
+                        'draws': 0,
+                        'total': 0,
+                        'tipo_desafio': tipo,
+                        'semana_iso': semana,
+                    }
+
+                deck_stats[key]['total'] += 1
+                if res in ['vitoria', 'victory']:
+                    deck_stats[key]['wins'] += 1
+                elif res in ['derrota', 'defeat']:
+                    deck_stats[key]['losses'] += 1
+                else:
+                    deck_stats[key]['draws'] += 1
+
+        final_list = []
+        for d in deck_stats.values():
+            d['win_rate'] = round((d['wins'] / d['total'] * 100), 1) if d['total'] > 0 else 0
+            final_list.append(d)
+
+        # Ordenacao: maior win rate, depois maior total de partidas
+        final_list.sort(key=lambda x: (x['win_rate'], x['total']), reverse=True)
+        return final_list[:15]
+
+    def generate_challenge_decks_html(self, challenge_data: List[Dict], p_prefix: str = "acc-main") -> str:
+        """Gera HTML da aba 'Desafios' com os melhores decks para eventos/desafios."""
+        if not challenge_data:
+            return '<div class="cr-empty-state">Nenhum dado de desafio encontrado. rode collect_challenge_decks.py primeiro.</div>'
+
+        filter_id = f"{p_prefix}-challengeDeckFilter"
+        grid_id = f"{p_prefix}-challengeDeckGrid"
+        func_name = f"filterDecks_{p_prefix.replace('-', '_')}_challenge"
+
+        html = f'''
+        <div style="margin-bottom: 15px; text-align: right;">
+            <label style="color: #fff; font-size: 0.8em; margin-right: 10px;">Mostrar:</label>
+            <select id="{filter_id}" onchange="{func_name}(this.value)" style="background: #0f172a; color: #fff; border: 1px solid #334155; padding: 5px; border-radius: 6px;">
+                <option value="5">5 Decks</option>
+                <option value="10">10 Decks</option>
+                <option value="999">Todos</option>
+            </select>
+        </div>
+        <div id="{grid_id}" class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">'''
+
+        for i, deck in enumerate(challenge_data, 1):
+            total = deck['total']
+            win_rate = deck['win_rate']
+            wins_pct = round((deck['wins']/total*100), 1) if total > 0 else 0
+            losses_pct = round((deck['losses']/total*100), 1) if total > 0 else 0
+            draws_pct = round(max(0, 100 - wins_pct - losses_pct), 1)
+
+            wr_c = '#48bb78' if win_rate >= 60 else ('#f56565' if win_rate <= 40 else '#718096')
+            tipo_desafio = deck.get('tipo_desafio', 'Desconhecido')
+            semana_iso = deck.get('semana_iso', '')
+
+            html += f'''
+            <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 12px; overflow: visible; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; background: rgba(15,23,42,0.4);">
+                <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
+                    <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
+                        <span style="background:#f59e0b; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em;">#{i}</span>
+                        <span style="color: #fff; font-size: 0.85em; font-weight: 700;">WR: <span style="color: {wr_c}; font-weight:900;">{win_rate}%</span></span>
+                        <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}33; color: {wr_c}; font-weight: 900; font-size: 0.7em; padding: 2px 8px; border-radius: 6px;">{total} partidas</span>
+                    </div>
+                </div>
+
+                <div style="height: 3px; background: rgba(0,0,0,0.3); display: flex;">
+                    <div style="width:{wins_pct}%; background: #48bb78;"></div>
+                    <div style="width:{draws_pct}%; background: #718096;"></div>
+                    <div style="width:{losses_pct}%; background: #f56565;"></div>
+                </div>
+
+                <div style="padding: 6px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.65em; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                    🏆 {tipo_desafio} &bull; {semana_iso}
+                </div>
+
+                <div style="padding: 12px !important; background: transparent;">
+                    <div style="width: 100%; max-width: 320px; margin: 0 auto 10px auto;">
+                        {self._generate_deck_grid_html_simple(deck['deck_cards'], self.get_copy_deck_link([c.split('|')[0] for c in deck['deck_cards'].split('|') if c]))}
+                    </div>
+
+                    <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 8px;">
+                        <div style="text-align: center; padding: 4px 10px; background: rgba(72,187,120,0.1); border-radius: 8px; border: 1px solid rgba(72,187,120,0.2);">
+                            <div style="font-size: 0.8em; font-weight: 900; color: #48bb78;">{deck['wins']}V</div>
+                        </div>
+                        <div style="text-align: center; padding: 4px 10px; background: rgba(113,128,150,0.1); border-radius: 8px; border: 1px solid rgba(113,128,150,0.2);">
+                            <div style="font-size: 0.8em; font-weight: 900; color: #718096;">{deck['draws']}E</div>
+                        </div>
+                        <div style="text-align: center; padding: 4px 10px; background: rgba(245,101,101,0.1); border-radius: 8px; border: 1px solid rgba(245,101,101,0.2);">
+                            <div style="font-size: 0.8em; font-weight: 900; color: #f56565;">{deck['losses']}D</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            '''
+
+        html += '</div>'
+        # Script IIFE do filtro
+        html += f'''<script>
+(function(){{
+    var grid = document.getElementById('{grid_id}');
+    var cards = grid.querySelectorAll('.cr-deck-card');
+    function {func_name}(limit) {{
+        limit = parseInt(limit, 10) || 999;
+        for (var i = 0; i < cards.length; i++) {{
+            cards[i].style.display = (i < limit) ? '' : 'none';
+        }}
+    }}
+    {func_name}(5);
+    window['{func_name}'] = {func_name};
+}})();
+</script>'''
+        return html
 
     def get_top_winning_decks_weekly(self) -> List[Dict]:
         """Consolida os decks com maior taxa de vitória na semana priorizando dados mundiais do CSV."""
@@ -9654,16 +9813,15 @@ class GitHubPagesHTMLGenerator:
             console.error('Target not found:', targetId);
         }}
         
-        // Re-aplicar filtro de decks se a aba ativada for "Top Global" (winning-decks)
+        // Re-aplicar filtro de decks se a aba ativada for "Top Global" (winning-decks) ou "Desafios" (challenge-decks)
         // Isso garante que o filtro funcione mesmo quando a conta secundária troca de aba
-        if (targetId.includes('-winning-decks')) {{
-            const gridEl = target.querySelector('[id$="-deckGrid"]');
+        if (targetId.includes('-winning-decks') || targetId.includes('-challenge-decks')) {{
+            const gridEl = target.querySelector('[id$="-deckGrid"], [id$="-challengeDeckGrid"]');
             if (gridEl) {{
                 const gridId = gridEl.id;
-                const funcName = 'filterDecks_' + gridId.replace('-deckGrid', '').replace(/-/g, '_');
+                const funcName = 'filterDecks_' + gridId.replace('-deckGrid', '').replace('-challengeDeckGrid', '').replace(/-/g, '_');
                 if (typeof window[funcName] === 'function') {{
-                    // Recupera o valor selecionado no select do filtro
-                    const filterEl = target.querySelector('[id$="-deckFilter"]');
+                    const filterEl = target.querySelector('[id$="-deckFilter"], [id$="-challengeDeckFilter"]');
                     const currentLimit = filterEl ? filterEl.value : '5';
                     window[funcName](parseInt(currentLimit));
                     console.log('Filtro re-aplicado:', funcName, 'limit:', currentLimit);
