@@ -2344,10 +2344,11 @@ class GitHubPagesHTMLGenerator:
         
         # Aba 4: Decks Mais Vencedores (Global/Clã)
         winning_data = self.get_top_winning_decks_weekly()
-        winning_decks_html = self.generate_winning_decks_html(winning_data)
 
         # Prefixo único por conta para evitar conflitos de IDs no DOM entre Conta Principal e Secundária
         p_prefix = f"acc-{player_tag.replace('#', '')}" if player_tag else "acc-main"
+
+        winning_decks_html = self.generate_winning_decks_html(winning_data, p_prefix=p_prefix)
 
         # Inteligência de tab ativa: se não houver oponentes repetidos reais (> 1 batalha) no VS Stage,
         # ativamos "Meus Decks" por padrão para deixar a experiência mais compacta e rica na conta secundária
@@ -2733,34 +2734,29 @@ class GitHubPagesHTMLGenerator:
         html += '</div>'
         return html
 
-    def generate_winning_decks_html(self, winning_data: List[Dict]) -> str:
+    def generate_winning_decks_html(self, winning_data: List[Dict], p_prefix: str = "acc-main") -> str:
         """Gera HTML para a aba de melhores decks da semana (Meta/Global) no padrao Premium v2 similar a Meus Decks."""
         if not winning_data: return '<div class="cr-empty-state">Dados globais insuficientes para o Top Vencedores.</div>'
         
+        # IDs únicos por conta para evitar conflitos de DOM entre Conta Principal e Secundária
+        filter_id = f"{p_prefix}-deckFilter"
+        grid_id = f"{p_prefix}-deckGrid"
+        func_name = f"filterDecks_{p_prefix}"
+        
         # Usar grid de colunas para telas médias/grandes
-        html = '''
+        html = f'''
         <div style="margin-bottom: 15px; text-align: right;">
             <label style="color: #fff; font-size: 0.8em; margin-right: 10px;">Mostrar:</label>
-            <select id="deckFilter" onchange="filterDecks(this.value)" style="background: #0f172a; color: #fff; border: 1px solid #334155; padding: 5px; border-radius: 6px;">
+            <select id="{filter_id}" onchange="{func_name}(this.value)" style="background: #0f172a; color: #fff; border: 1px solid #334155; padding: 5px; border-radius: 6px;">
                 <option value="5">5 Decks</option>
                 <option value="10">10 Decks</option>
                 <option value="999">Todos</option>
             </select>
         </div>
-        <div id="deckGrid" class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-        <script>
-        function filterDecks(limit) {
-            const container = document.getElementById('deckGrid');
-            const cards = container.getElementsByClassName('cr-deck-card');
-            for (let i = 0; i < cards.length; i++) {
-                cards[i].style.display = (i < limit) ? 'block' : 'none';
-            }
-        }
-        // Inicializar com 5
-        document.addEventListener("DOMContentLoaded", () => filterDecks(5));
-        </script>
+        <div id="{grid_id}" class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
         '''
-        
+
+        # Gera os cards primeiro
         for i, deck in enumerate(winning_data, 1):
             total = deck['total']
             win_rate = deck['win_rate']
@@ -2814,7 +2810,22 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
             '''
-            
+        
+        # Script DEPOIS dos cards — garante que os cr-deck-card já existem no DOM
+        html += f'''
+        <script>
+        function {func_name}(limit) {{
+            const container = document.getElementById('{grid_id}');
+            const cards = container.getElementsByClassName('cr-deck-card');
+            for (let i = 0; i < cards.length; i++) {{
+                cards[i].style.display = (i < limit) ? 'block' : 'none';
+            }}
+        }}
+        // Inicializar com 5 (cards já estão no DOM neste ponto)
+        {func_name}(5);
+        </script>
+        '''
+        
         return html + '</div>'
 
     def get_repeated_opponents_from_csv(self, player_tag: str = None) -> List[Dict]:
@@ -9645,6 +9656,23 @@ class GitHubPagesHTMLGenerator:
             console.log('Tab activated:', targetId);
         }} else {{
             console.error('Target not found:', targetId);
+        }}
+        
+        // Re-aplicar filtro de decks se a aba ativada for "Top Global" (winning-decks)
+        // Isso garante que o filtro funcione mesmo quando a conta secundária troca de aba
+        if (targetId.includes('-winning-decks')) {{
+            const gridEl = target.querySelector('[id$="-deckGrid"]');
+            if (gridEl) {{
+                const gridId = gridEl.id;
+                const funcName = 'filterDecks_' + gridId.replace('-deckGrid', '');
+                if (typeof window[funcName] === 'function') {{
+                    // Recupera o valor selecionado no select do filtro
+                    const filterEl = target.querySelector('[id$="-deckFilter"]');
+                    const currentLimit = filterEl ? filterEl.value : '5';
+                    window[funcName](parseInt(currentLimit));
+                    console.log('Filtro re-aplicado:', funcName, 'limit:', currentLimit);
+                }}
+            }}
         }}
         
         // Salva a aba interna ativa no localStorage
