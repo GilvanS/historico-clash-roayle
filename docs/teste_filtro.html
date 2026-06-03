@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Teste Filtro</title>
+<style>
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+.card { border: 2px solid #333; padding: 20px; text-align: center; font-size: 1.2em; background: #1a1a2e; color: #fff; border-radius: 8px; }
+button { margin: 5px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
+</style>
+</head>
+<body>
+<h2>Teste de Filtro de Decks</h2>
+<select id="deckFilter" onchange="filterDecks(this.value)" style="padding:8px; font-size:1em;">
+    <option value="5">5 Decks</option>
+    <option value="10">10 Decks</option>
+    <option value="999">Todos</option>
+</select>
+
+<div id="deckGrid" class="grid">
+    <div class="card">#1 Mega Knight</div>
+    <div class="card">#2 Hog Rider</div>
+    <div class="card">#3 P.E.K.K.A</div>
+    <div class="card">#4 Golem</div>
+    <div class="card">#5 Lava Hound</div>
+    <div class="card">#6 X-Bow</div>
+    <div class="card">#7 Mortar</div>
+    <div class="card">#8 Royal Giant</div>
+    <div class="card">#9 Three Musketeers</div>
+    <div class="card">#10 Balloon</div>
+    <div class="card">#11 Giant</div>
+    <div class="card">#12 Witch</div>
+    <div class="card">#13 Valkyrie</div>
+    <div class="card">#14 Wizard</div>
+    <div class="card">#15 Dragon</div>
+    <div class="card">#16 Prince</div>
+</div>
+
+<script>
+(function(){
+    var grid = document.getElementById('deckGrid');
+    var cards = grid.querySelectorAll('.card');
+    console.log('Total cards found:', cards.length);
+    function filterDecks(limit) {
+        limit = parseInt(limit, 10) || 999;
+        console.log('Filtering with limit:', limit, 'cards.length:', cards.length);
+        for (var i = 0; i < cards.length; i++) {
+            if (i < limit) {
+                cards[i].style.display = '';
+            } else {
+                cards[i].style.display = 'none';
+            }
+        }
+        // Count visible
+        var visible = 0;
+        for (var j = 0; j < cards.length; j++) {
+            if (cards[j].style.display !== 'none') visible++;
+        }
+        console.log('Visible after filter:', visible);
+    }
+    filterDecks(5);
+    window['filterDecks'] = filterDecks;
+})();
+</script>
+</body>
+</html>

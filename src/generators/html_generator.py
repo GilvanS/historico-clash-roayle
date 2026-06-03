@@ -2812,7 +2812,7 @@ class GitHubPagesHTMLGenerator:
             '''
         
         # Script DEPOIS dos cards — garante que os cr-deck-card já existem no DOM
-        # Script DEPOIS dos cards - garante que os cr-deck-card ja existem no DOM
+        # Script DEPOIS dos cards
         html += f'''<script>
 (function(){{
     var grid = document.getElementById('{grid_id}');
@@ -2821,15 +2821,13 @@ class GitHubPagesHTMLGenerator:
         limit = parseInt(limit, 10) || 999;
         for (var i = 0; i < cards.length; i++) {{
             if (i < limit) {{
-                cards[i].style.display = '';
+                cards[i].removeAttribute('hidden');
             }} else {{
-                cards[i].style.display = 'none';
+                cards[i].setAttribute('hidden', '');
             }}
         }}
     }}
-    // Inicializar com 5
     {func_name}(5);
-    // Expor funcao globalmente para o onchange do select
     window['{func_name}'] = {func_name};
 }})();
 </script>'''
