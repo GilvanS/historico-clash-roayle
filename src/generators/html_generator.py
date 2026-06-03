@@ -2762,8 +2762,8 @@ class GitHubPagesHTMLGenerator:
                 cards[i].style.display = (i < limit) ? 'block' : 'none';
             }}
         }}
-        // Inicializar com 5
-        document.addEventListener("DOMContentLoaded", () => {func_name}(5));
+        // Inicializar com 5 imediatamente (sem depender de DOMContentLoaded)
+        {func_name}(5);
         </script>
         '''
         
@@ -9651,6 +9651,23 @@ class GitHubPagesHTMLGenerator:
             console.log('Tab activated:', targetId);
         }} else {{
             console.error('Target not found:', targetId);
+        }}
+        
+        // Re-aplicar filtro de decks se a aba ativada for "Top Global" (winning-decks)
+        // Isso garante que o filtro funcione mesmo quando a conta secundária troca de aba
+        if (targetId.includes('-winning-decks')) {{
+            const gridEl = target.querySelector('[id$="-deckGrid"]');
+            if (gridEl) {{
+                const gridId = gridEl.id;
+                const funcName = 'filterDecks_' + gridId.replace('-deckGrid', '');
+                if (typeof window[funcName] === 'function') {{
+                    // Recupera o valor selecionado no select do filtro
+                    const filterEl = target.querySelector('[id$="-deckFilter"]');
+                    const currentLimit = filterEl ? filterEl.value : '5';
+                    window[funcName](parseInt(currentLimit));
+                    console.log('Filtro re-aplicado:', funcName, 'limit:', currentLimit);
+                }}
+            }}
         }}
         
         // Salva a aba interna ativa no localStorage
