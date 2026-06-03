@@ -2631,8 +2631,18 @@ class GitHubPagesHTMLGenerator:
             draws_pct = round(max(0, 100 - wins_pct - losses_pct), 1)
 
             wr_c = '#48bb78' if win_rate >= 60 else ('#f56565' if win_rate <= 40 else '#718096')
+            # Tipo de desafio e semana
             tipo_desafio = deck.get('tipo_desafio', 'Desconhecido')
             semana_iso = deck.get('semana_iso', '')
+            
+            # Info dos Jogadores
+            total_jogadores = deck.get('total_jogadores', 1)
+            player_tag_display = deck.get('jogador_tags', '?')
+            # Nome do jogador ou número de jogadores
+            if total_jogadores == 1:
+                jogador_info = f"👤 {deck.get('jogador_nome', 'Top Player')}"
+            else:
+                jogador_info = f"👥 {total_jogadores} jogadores"
 
             html += f'''
             <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 12px; overflow: visible; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; background: rgba(15,23,42,0.4);">
@@ -2650,8 +2660,9 @@ class GitHubPagesHTMLGenerator:
                     <div style="width:{losses_pct}%; background: #f56565;"></div>
                 </div>
 
-                <div style="padding: 6px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.65em; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                    🏆 {tipo_desafio} &bull; {semana_iso}
+                <div style="padding: 6px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.65em; color: rgba(255,255,255,0.8); font-weight: 800; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #60a5fa;">🎯 {tipo_desafio}</span>
+                    <span>{jogador_info}</span>
                 </div>
 
                 <div style="padding: 12px !important; background: transparent;">
