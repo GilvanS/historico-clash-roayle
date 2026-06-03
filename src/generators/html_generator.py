@@ -2754,19 +2754,9 @@ class GitHubPagesHTMLGenerator:
             </select>
         </div>
         <div id="{grid_id}" class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-        <script>
-        function {func_name}(limit) {{
-            const container = document.getElementById('{grid_id}');
-            const cards = container.getElementsByClassName('cr-deck-card');
-            for (let i = 0; i < cards.length; i++) {{
-                cards[i].style.display = (i < limit) ? 'block' : 'none';
-            }}
-        }}
-        // Inicializar com 5 imediatamente (sem depender de DOMContentLoaded)
-        {func_name}(5);
-        </script>
         '''
-        
+
+        # Gera os cards primeiro
         for i, deck in enumerate(winning_data, 1):
             total = deck['total']
             win_rate = deck['win_rate']
@@ -2820,7 +2810,22 @@ class GitHubPagesHTMLGenerator:
                 </div>
             </div>
             '''
-            
+        
+        # Script DEPOIS dos cards — garante que os cr-deck-card já existem no DOM
+        html += f'''
+        <script>
+        function {func_name}(limit) {{
+            const container = document.getElementById('{grid_id}');
+            const cards = container.getElementsByClassName('cr-deck-card');
+            for (let i = 0; i < cards.length; i++) {{
+                cards[i].style.display = (i < limit) ? 'block' : 'none';
+            }}
+        }}
+        // Inicializar com 5 (cards já estão no DOM neste ponto)
+        {func_name}(5);
+        </script>
+        '''
+        
         return html + '</div>'
 
     def get_repeated_opponents_from_csv(self, player_tag: str = None) -> List[Dict]:
