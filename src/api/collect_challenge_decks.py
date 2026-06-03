@@ -226,6 +226,110 @@ def load_existing_weeks() -> set:
     return weeks
 
 
+def collect_from_csv(player_tag: str) -> list:
+    """Coleta batalhas de desafio do CSV historico (oponentes_ano_2026.csv)."""
+    csv_path = os.path.join(_PROJECT_ROOT, 'data', 'csv', 'oponentes_ano_2026.csv')
+    if not os.path.exists(csv_path):
+        print(f"[AVISO] CSV historico nao encontrado: {csv_path}")
+        return []
+
+    clean_tag = player_tag.strip().upper()
+    if not clean_tag.startswith('#'):
+        clean_tag = f'#{clean_tag}'
+
+    rows = []
+    with open(csv_path, 'r', encoding='utf-8-sig', newline='') as f:
+        reader = csv.DictReader(f, delimiter=';')
+        for row in reader:
+            # Filtrar por player_tag
+            row_tag = row.get('player_tag', '').strip().upper()
+            if row_tag != clean_tag:
+                continue
+
+            modo_jogo = row.get('modo_jogo', '').strip()
+            tipo_batalha = row.get('tipo_batalha', '').strip()
+
+            if not is_challenge(modo_jogo, tipo_batalha):
+                continue
+
+            # Parse da data
+            data_str = row.get('data', '').strip()
+            dt_utc = None
+            for fmt in ['%d/%m/%Y %H:%M', '%d/%m/%Y %H:%M:%S', '%Y-%m-%d %H:%M:%S']:
+                try:
+                    dt_utc = datetime.strptime(data_str, fmt).replace(tzinfo=timezone.utc)
+                    break
+                except ValueError:
+                    continue
+
+            if not dt_utc:
+                continue
+
+            semana_iso = get_week_iso(dt_utc)
+
+            # Mapear resultado
+            resultado = row.get('resultado', '').strip()
+            if resultado not in ('Vitoria', 'Derrota', 'Empate'):
+                try:
+                    coroas_j = int(row.get('coroas_jogador', 0) or 0)
+                    coroas_o = int(row.get('coroas_oponente', 0) or 0)
+                    if coroas_j > coroas_o:
+                        resultado = 'Vitoria'
+                    elif coroas_j < coroas_o:
+                        resultado = 'Derrota'
+                    else:
+                        resultado = 'Empate'
+                except (ValueError, TypeError):
+                    resultado = 'Desconhecido'
+
+            def safe_int(val, default=0):
+                try:
+                    return int(val)
+                except (ValueError, TypeError):
+                    return default
+
+            def safe_float(val, default=0.0):
+                try:
+                    return float(val)
+                except (ValueError, TypeError):
+                    return default
+
+            rows.append({
+                'player_tag': clean_tag,
+                'data': dt_utc.strftime('%d/%m/%Y %H:%M'),
+                'nome_oponente': sanitize(row.get('nome_oponente', 'Desconhecido')),
+                'tag_oponente': row.get('tag_oponente', ''),
+                'nivel_oponente': safe_int(row.get('nivel_oponente', 0)),
+                'trofes_oponente': safe_int(row.get('trofes_oponente', 0)),
+                'clan_oponente': sanitize(row.get('clan_oponente', 'Sem cla')),
+                'resultado': resultado,
+                'coroas_jogador': safe_int(row.get('coroas_jogador', 0)),
+                'coroas_oponente': safe_int(row.get('coroas_oponente', 0)),
+                'mudanca_trofes': safe_int(row.get('mudanca_trofes', 0)),
+                'modo_jogo': modo_jogo,
+                'tipo_batalha': tipo_batalha,
+                'arena': row.get('arena', 'Desconhecido'),
+                'deck_jogador': row.get('deck_jogador', ''),
+                'deck_oponente': row.get('deck_oponente', ''),
+                'elixir_vazado_jogador': 0,
+                'elixir_vazado_oponente': 0,
+                'nivel_torre_jogador': safe_int(row.get('nivel_oponente', 0)),
+                'vida_torre_rei_jogador': 0,
+                'vida_torre_rei_oponente': 0,
+                'torre_jogador': 'Tower Princess',
+                'torre_oponente': 'Tower Princess',
+                'elixir_medio_jogador': safe_float(row.get('elixir_medio_jogador', 0)),
+                'elixir_medio_oponente': safe_float(row.get('elixir_medio_oponente', 0)),
+                'nivel_medio_deck_jogador': safe_float(row.get('nivel_medio_deck_jogador', 0)),
+                'nivel_medio_deck_oponente': safe_float(row.get('nivel_medio_deck_oponente', 0)),
+                'tag_clan_oponente': row.get('tag_clan_oponente', ''),
+                'semana_iso': semana_iso,
+                'tipo_desafio': modo_jogo,
+            })
+
+    return rows
+
+
 def main():
     api_token = get_api_token()
     if not api_token:
@@ -246,26 +350,27 @@ def main():
     all_rows = []
     for tag in tags:
         print(f"[INFO] Coletando batalhas de desafio para {tag}...")
+
+        # 1. Tentar coletar do CSV historico (muito mais batalhas)
+        csv_rows = collect_from_csv(tag)
+        print(f"[OK] {len(csv_rows)} batalhas de desafio do CSV historico para {tag}")
+        all_rows.extend(csv_rows)
+
+        # 2. Tentar coletar da API (batalhas mais recentes que podem nao estar no CSV ainda)
         battles = fetch_battlelog(api_token, tag)
-        if not battles:
-            print(f"[AVISO] Nenhuma batalha retornada para {tag}")
-            continue
-
-        count = 0
-        seen_battles = set()  # evitar duplicatas por battleTime
-
-        for battle in battles:
-            bt = battle.get('battleTime', '')
-            if bt in seen_battles:
-                continue
-            seen_battles.add(bt)
-
-            row = extract_challenge_row(battle, tag)
-            if row:
-                all_rows.append(row)
-                count += 1
-
-        print(f"[OK] {count} batalhas de desafio encontradas para {tag}")
+        if battles:
+            seen_battles = set()
+            api_count = 0
+            for battle in battles:
+                bt = battle.get('battleTime', '')
+                if bt in seen_battles:
+                    continue
+                seen_battles.add(bt)
+                row = extract_challenge_row(battle, tag)
+                if row:
+                    all_rows.append(row)
+                    api_count += 1
+            print(f"[OK] {api_count} batalhas de desafio da API para {tag}")
 
     if not all_rows:
         print("[AVISO] Nenhuma batalha de desafio encontrada.")
@@ -281,8 +386,7 @@ def main():
         print(f"[INFO] {len(rows_to_write)} batalhas de desafio de semanas novas.")
     else:
         rows_to_write = all_rows
-        # Modo append: CSV existe; modo write: CSV novo
-        mode = 'a' if os.path.exists(OUTPUT_CSV) else 'w'
+
     csv_exists = os.path.exists(OUTPUT_CSV)
     with open(OUTPUT_CSV, 'a' if csv_exists else 'w', encoding='utf-8-sig', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES, delimiter=';', extrasaction='ignore')
