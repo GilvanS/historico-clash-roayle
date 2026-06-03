@@ -9604,15 +9604,8 @@ class GitHubPagesHTMLGenerator:
             // 4. Salva a conta ativa no localStorage
             localStorage.setItem('cr_active_account', cleanTag);
             
-            // 5. Restaura a aba interna que estava selecionada para esta conta
-            const savedInnerTabId = localStorage.getItem('cr_inner_tab_' + cleanTag);
-            if (savedInnerTabId) {{
-                const savedTab = targetContent.querySelector(`.cr-tab[onclick*="${{savedInnerTabId}}"]`);
-                if (savedTab) {{
-                    // Simula o click diretamente
-                    savedTab.dispatchEvent(new Event('click', {{ bubbles: true }}));
-                }}
-            }}
+            // 5. Restaurar a aba interna removida - sempre comecaba na aba padrao (VS Stage)
+            // para garantir que o filtro de decks sempre inicie com valor default (5)
             
             // Trigger para redimensionar gráficos se houver
             window.dispatchEvent(new Event('resize'));
