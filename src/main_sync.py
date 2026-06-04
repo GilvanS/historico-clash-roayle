@@ -211,6 +211,8 @@ def main():
         with redirect_stdout(buf), redirect_stderr(buf):
             from collect_challenge_decks import main as collect_challenges
             collect_challenges()
+            from collect_challenge_decks_top import main as collect_challenges_top
+            collect_challenges_top()
         collection_logs.append(("Desafios", buf.getvalue()))
     except Exception as e:
         logger.error(f"Erro na FASE 1.6 (Desafios): {e}")

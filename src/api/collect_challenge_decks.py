@@ -212,18 +212,19 @@ def extract_challenge_row(battle: dict, player_tag: str) -> dict:
     }
 
 
-def load_existing_weeks() -> set:
-    """Carrega semanas ja existentes no CSV para nao duplicar."""
-    weeks = set()
+def load_existing_battles() -> set:
+    """Carrega batalhas ja existentes no CSV para nao duplicar."""
+    battles = set()
     if not os.path.exists(OUTPUT_CSV):
-        return weeks
+        return battles
     with open(OUTPUT_CSV, 'r', encoding='utf-8-sig', newline='') as f:
         reader = csv.DictReader(f, delimiter=';')
         for row in reader:
-            w = row.get('semana_iso', '').strip()
-            if w:
-                weeks.add(w)
-    return weeks
+            tag = row.get('player_tag', '').strip()
+            data = row.get('data', '').strip()
+            if tag and data:
+                battles.add((tag, data))
+    return battles
 
 
 def collect_from_csv(player_tag: str) -> list:
@@ -341,11 +342,9 @@ def main():
         print("[ERRO] Nenhuma tag de jogador configurada no .env")
         sys.exit(1)
 
-    # Carregar semanas ja existentes
-    existing_weeks = load_existing_weeks()
-    today_week = get_week_iso(datetime.now(timezone.utc))
-    print(f"[INFO] Semana atual: {today_week}")
-    print(f"[INFO] Semanas ja existentes: {existing_weeks}")
+    # Carregar batalhas ja existentes
+    existing_battles = load_existing_battles()
+    print(f"[INFO] Batalhas ja existentes: {len(existing_battles)}")
 
     all_rows = []
     for tag in tags:
@@ -376,14 +375,14 @@ def main():
         print("[AVISO] Nenhuma batalha de desafio encontrada.")
         return
 
-    # Filtrar: manter apenas linhas de semanas novas ou todas se CSV nao existe
-    if existing_weeks:
-        new_rows = [r for r in all_rows if r['semana_iso'] not in existing_weeks]
+    # Filtrar: manter apenas batalhas novas
+    if existing_battles:
+        new_rows = [r for r in all_rows if (r['player_tag'], r['data']) not in existing_battles]
         if not new_rows:
-            print(f"[INFO] Todas as semanas ja existem no CSV. Nada a adicionar.")
+            print(f"[INFO] Todas as batalhas coletadas ja existem no CSV. Nada a adicionar.")
             return
         rows_to_write = new_rows
-        print(f"[INFO] {len(rows_to_write)} batalhas de desafio de semanas novas.")
+        print(f"[INFO] {len(rows_to_write)} batalhas de desafio novas para adicionar.")
     else:
         rows_to_write = all_rows
 
