@@ -423,7 +423,8 @@ def main():
         p_source = player['source_type']
         trophies = player.get('trophies', 0)
 
-        print(f"[{i:3d}/{len(top_players)}] {p_name} ({p_tag}) | {trophies} troféus | {p_source}")
+        p_name_safe = sanitize(p_name)
+        print(f"[{i:3d}/{len(top_players)}] {p_name_safe} ({p_tag}) | {trophies} troféus | {p_source}")
 
         battles = fetch_battlelog(api_token, p_tag)
         if not battles:
