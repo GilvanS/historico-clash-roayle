@@ -204,6 +204,18 @@ def main():
         logger.error(f"Erro na FASE 1.5 (Guerra): {e}")
         collection_logs.append(("Guerra", f"ERRO: {e}"))
 
+    # FASE 1.6: Coletar Decks de Desafio da Semana
+    try:
+        logger.info("FASE 1.6: Coletando decks do Desafio da Semana...")
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            from collect_challenge_decks import main as collect_challenges
+            collect_challenges()
+        collection_logs.append(("Desafios", buf.getvalue()))
+    except Exception as e:
+        logger.error(f"Erro na FASE 1.6 (Desafios): {e}")
+        collection_logs.append(("Desafios", f"ERRO: {e}"))
+
     # FASE 2: Atualizar README
     try:
         logger.info("FASE 2: Atualizando README.md com novas estatisticas...")

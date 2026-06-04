@@ -2591,15 +2591,6 @@ class GitHubPagesHTMLGenerator:
         deck_stats = {}
 
         for row in reader:
-            tag_p = row.get('player_tag', '').strip()
-            # Filtrar por conta se player_tag fornecido
-            if player_tag:
-                req_tag = player_tag.strip().upper()
-                if not req_tag.startswith('#'):
-                    req_tag = '#' + req_tag
-                if tag_p.upper() != req_tag.upper():
-                    continue
-
             semana = row.get('semana_iso', '').strip()
             tipo = row.get('tipo_desafio', 'Desconhecido').strip()
 
@@ -2651,15 +2642,23 @@ class GitHubPagesHTMLGenerator:
         filter_id = f"{p_prefix}-challengeDeckFilter"
         grid_id = f"{p_prefix}-challengeDeckGrid"
         func_name = f"filterDecks_{p_prefix.replace('-', '_')}_challenge"
+        
+        tipo_desafio = challenge_data[0].get('tipo_desafio', 'Desconhecido')
+        semana_iso = challenge_data[0].get('semana_iso', '')
 
         html = f'''
-        <div style="margin-bottom: 15px; text-align: right;">
-            <label style="color: #fff; font-size: 0.8em; margin-right: 10px;">Mostrar:</label>
-            <select id="{filter_id}" onchange="{func_name}(this.value)" style="background: #0f172a; color: #fff; border: 1px solid #334155; padding: 5px; border-radius: 6px;">
-                <option value="5">5 Decks</option>
-                <option value="10">10 Decks</option>
-                <option value="999">Todos</option>
-            </select>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="color: #64ffda; font-size: 1.1em; font-weight: bold;">
+                <i class="fas fa-trophy" style="margin-right: 8px;"></i>Desafio Principal ({semana_iso}): <span style="color: #fff;">{tipo_desafio}</span>
+            </div>
+            <div>
+                <label style="color: #fff; font-size: 0.8em; margin-right: 10px;">Mostrar:</label>
+                <select id="{filter_id}" onchange="{func_name}(this.value)" style="background: #0f172a; color: #fff; border: 1px solid #334155; padding: 5px; border-radius: 6px;">
+                    <option value="5">5 Decks</option>
+                    <option value="10">10 Decks</option>
+                    <option value="999">Todos</option>
+                </select>
+            </div>
         </div>
         <div id="{grid_id}" class="cr-decks-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">'''
 
