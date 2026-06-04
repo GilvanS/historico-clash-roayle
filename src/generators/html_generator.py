@@ -2544,55 +2544,95 @@ class GitHubPagesHTMLGenerator:
     def get_challenge_decks_from_csv(self, player_tag: str = None) -> List[Dict]:
         """Consolida os melhores decks de desafios a partir do CSV challenge_decks_semanal.csv.
         Agrupa por deck_cards + tipo_desafio + semana_iso, somando wins/losses/draws/total.
+        Agora filtra dinamicamente apenas o desafio principal da semana mais recente.
         Retorna lista ordenada por win rate (decks com melhor performance primeiro).
         """
         csv_path = os.path.join(self.data_csv_dir, 'challenge_decks_semanal.csv')
         if not os.path.exists(csv_path):
             return []
 
+        with open(csv_path, 'r', encoding='utf-8-sig', newline='') as f:
+            reader = list(csv.DictReader(f, delimiter=';'))
+
+        if not reader:
+            return []
+
+        # 1. Encontrar a semana mais recente
+        semanas = set(row.get('semana_iso', '').strip() for row in reader if row.get('semana_iso', '').strip())
+        if not semanas:
+            return []
+        latest_week = max(semanas)
+
+        # 2. Descobrir o "Desafio da Semana" na semana mais recente
+        # Excluímos modos rotineiros e damos prioridade para eventos/ladder
+        tipo_counts = {}
+        for row in reader:
+            semana = row.get('semana_iso', '').strip()
+            if semana != latest_week:
+                continue
+            tipo = row.get('tipo_desafio', 'Desconhecido').strip()
+            if tipo in ['Showdown_Friendly', 'CW_Duel_1v1', 'ClanWar_BoatBattle']:
+                continue
+            tipo_counts[tipo] = tipo_counts.get(tipo, 0) + 1
+            
+        target_tipo = 'Desconhecido'
+        if tipo_counts:
+            # Prioriza modos que tem '_Ladder' ou 'Challenge', penaliza '_Friendly'
+            def score_tipo(t, count):
+                s = count
+                if '_Ladder' in t or 'Challenge' in t:
+                    s += 10000
+                if '_Friendly' in t:
+                    s -= 2000
+                return s
+            
+            target_tipo = max(tipo_counts.keys(), key=lambda t: score_tipo(t, tipo_counts[t]))
+
         deck_stats = {}
 
-        with open(csv_path, 'r', encoding='utf-8-sig', newline='') as f:
-            reader = csv.DictReader(f, delimiter=';')
-            for row in reader:
-                tag_p = row.get('player_tag', '').strip()
-                # Filtrar por conta se player_tag fornecido
-                if player_tag:
-                    req_tag = player_tag.strip().upper()
-                    if not req_tag.startswith('#'):
-                        req_tag = '#' + req_tag
-                    if tag_p.upper() != req_tag.upper():
-                        continue
-
-                cards = row.get('deck_jogador', '').strip()
-                if not cards:
+        for row in reader:
+            tag_p = row.get('player_tag', '').strip()
+            # Filtrar por conta se player_tag fornecido
+            if player_tag:
+                req_tag = player_tag.strip().upper()
+                if not req_tag.startswith('#'):
+                    req_tag = '#' + req_tag
+                if tag_p.upper() != req_tag.upper():
                     continue
 
-                tipo = row.get('tipo_desafio', 'Desconhecido').strip()
-                semana = row.get('semana_iso', '').strip()
+            semana = row.get('semana_iso', '').strip()
+            tipo = row.get('tipo_desafio', 'Desconhecido').strip()
 
-                # Chave unica: deck + tipo de desafio + semana
-                key = (cards, tipo, semana)
+            # Filtra APENAS o desafio alvo da semana mais recente
+            if semana != latest_week or tipo != target_tipo:
+                continue
 
-                res = row.get('resultado', '').strip().lower()
-                if key not in deck_stats:
-                    deck_stats[key] = {
-                        'deck_cards': cards,
-                        'wins': 0,
-                        'losses': 0,
-                        'draws': 0,
-                        'total': 0,
-                        'tipo_desafio': tipo,
-                        'semana_iso': semana,
-                    }
+            cards = row.get('deck_jogador', '').strip()
+            if not cards:
+                continue
 
-                deck_stats[key]['total'] += 1
-                if res in ['vitoria', 'victory']:
-                    deck_stats[key]['wins'] += 1
-                elif res in ['derrota', 'defeat']:
-                    deck_stats[key]['losses'] += 1
-                else:
-                    deck_stats[key]['draws'] += 1
+            # Chave unica: deck + tipo de desafio + semana
+            key = (cards, tipo, semana)
+
+            res = row.get('resultado', '').strip().lower()
+            if key not in deck_stats:
+                deck_stats[key] = {
+                    'deck_cards': cards,
+                    'wins': 0,
+                    'losses': 0,
+                    'draws': 0,
+                    'total': 0,
+                    'tipo_desafio': tipo,
+                    'semana_iso': semana,
+                }
+
+            deck_stats[key]['total'] += 1
+            if res in ['vitoria', 'victory']:
+                deck_stats[key]['wins'] += 1
+            elif res in ['derrota', 'defeat']:
+                deck_stats[key]['losses'] += 1
+            else:
+                deck_stats[key]['draws'] += 1
 
         final_list = []
         for d in deck_stats.values():
