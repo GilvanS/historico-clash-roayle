@@ -3163,8 +3163,20 @@ class GitHubPagesHTMLGenerator:
         """Gera os scripts globais necessários para a interatividade do dashboard."""
         import json
         card_urls = {}
+        card_ids_map = {}
         for name, data in self.cards_master.items():
             url = data.get('url_icon')
+            card_id = data.get('card_id')
+            if card_id and card_id != 'N/A':
+                c_id = str(card_id)
+                card_ids_map[name] = c_id
+                card_ids_map[name.replace(' ', '')] = c_id
+                card_ids_map[name.replace('.', '')] = c_id
+                if 'Musketeer' in name: card_ids_map['Musk'] = c_id
+                if 'P.E.K.K.A' in name: card_ids_map['Pekka'] = c_id
+                if 'Wall Breakers' in name: card_ids_map['WallBreakers'] = c_id
+                if 'Skeleton' in name and 'Barrel' in name: card_ids_map['SkellyBarrel'] = c_id
+                
             if url and url != 'N/A':
                 card_urls[name] = url
                 # Adicionar aliases comuns para maior robustez
@@ -3190,6 +3202,7 @@ class GitHubPagesHTMLGenerator:
             if 'p-e-k-k-a' in slug: card_urls['pekka'] = url
             if 'mini-p-e-k-k-a' in slug: card_urls['minipekka'] = url
             if 'the-log' in slug: card_urls['log'] = url
+
 
         # Coletar as batalhas de todas as contas em formato JSON limpo
         battles_json_data = {}
@@ -3231,11 +3244,14 @@ class GitHubPagesHTMLGenerator:
         
         battles_json = json.dumps(battles_json_data, ensure_ascii=False)
         card_map_json = json.dumps(card_urls)
+        card_ids_json = json.dumps(card_ids_map, ensure_ascii=False)
 
         return """
         <script>
         const CARD_MAP = """ + card_map_json + """;
         window.PLAYER_BATTLES_DATA = """ + battles_json + """;
+        window.CARD_IDS = """ + card_ids_json + """;
+
 
         function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics, deckLink, icons) {
             if (!deckStr) return { playerName, cardsHtml: `<div class="${sideClass} cr-empty-grid">N/D</div>`, metricsHtml: '' };
@@ -3410,8 +3426,8 @@ class GitHubPagesHTMLGenerator:
                 // Update copy links
                 const pCopyEl = document.getElementById(`p-copy-${oppId}`);
                 const oCopyEl = document.getElementById(`o-copy-${oppId}`);
-                if (pCopyEl) pCopyEl.onclick = () => copyToClipboardDeckDirect(data.p_deck_list);
-                if (oCopyEl) oCopyEl.onclick = () => copyToClipboardDeckDirect(data.o_deck_list);
+                if (pCopyEl) pCopyEl.onclick = (e) => copyToClipboardDeckDirect(e, pCopyEl, data.p_deck_list);
+                if (oCopyEl) oCopyEl.onclick = (e) => copyToClipboardDeckDirect(e, oCopyEl, data.o_deck_list);
                 
 
                 // Update active dot
@@ -4065,9 +4081,10 @@ class GitHubPagesHTMLGenerator:
 
         copy_btn = ""
         if copy_link:
-            copy_btn = f'<button type="button" onclick="copyDeckLink(event, this, \'{copy_link}\')" class="cr-copy-deck-btn" title="Copiar Deck"><span><i class="fas fa-copy"></i></span></button>'
+            copy_btn = f'''<button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="border: none; padding: 4px 8px; cursor: pointer; background: transparent; position: absolute; bottom: 4px; right: 4px; z-index: 10;" title="Copiar Deck"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;"></button>'''
 
         return f'<div class="cr-grid-wrapper-premium"><div class="cr-grid-4x2">{html_cards}</div>{copy_btn}</div>'
+
         
     def _generate_deck_view_html(self, deck_str, battle_data, player_name, player_clan, player_tag, section_id, deck_id, is_opponent=False):
         """Gera visualização de deck similar ao VS Stage para Meus Decks e Top Global."""
@@ -4239,11 +4256,11 @@ class GitHubPagesHTMLGenerator:
                     <span id="rank-o-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.3); font-weight: 800;"><i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank O: {battle_data.get('posicao_global_oponente', 'N/A')}</span>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                     <button id="p-copy-{section_id}" onclick="copyToClipboardDeckDirect({[c.split('|')[0] for c in battle_data['my_deck'].split('|') if c]})" 
+                     <button id="p-copy-{section_id}" onclick="copyToClipboardDeckDirect(event, this, {[c.split('|')[0] for c in battle_data['my_deck'].split('|') if c]})" 
                              style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 5px 12px; border-radius: 8px; font-size: 0.65em; font-weight: 900; cursor: pointer; transition: all 0.2s;">
                          <i class="far fa-copy"></i> MEU DECK
                      </button>
-                     <button id="o-copy-{section_id}" onclick="copyToClipboardDeckDirect({[c.split('|')[0] for c in battle_data['opp_deck'].split('|') if c]})" 
+                     <button id="o-copy-{section_id}" onclick="copyToClipboardDeckDirect(event, this, {[c.split('|')[0] for c in battle_data['opp_deck'].split('|') if c]})" 
                              style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); color: #fca5a5; padding: 5px 12px; border-radius: 8px; font-size: 0.65em; font-weight: 900; cursor: pointer; transition: all 0.2s;">
                          <i class="far fa-copy"></i> OPONENTE
                      </button>
@@ -10207,6 +10224,37 @@ class GitHubPagesHTMLGenerator:
             fallbackCopy();
         }}
     }}
+
+    function copyToClipboardDeckDirect(e, btn, cardNames) {{
+        if(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+        }}
+        if (!cardNames || !Array.isArray(cardNames) || cardNames.length === 0) {{
+            console.error('Nenhum card fornecido para copia');
+            return;
+        }}
+        
+        const ids = [];
+        const map = window.CARD_IDS || {{}};
+        
+        cardNames.forEach(name => {{
+            const cleanedName = name.trim();
+            const id = map[cleanedName];
+            if (id) {{
+                ids.push(id);
+            }} else {{
+                console.warn('Card ID nao encontrado para:', cleanedName);
+            }}
+        }});
+        
+        if (ids.length < 8) {{
+            console.warn('Menos de 8 cards mapeados para IDs:', ids);
+        }}
+        
+        const link = 'https://link.clashroyale.com/deck/en?deck=' + ids.join(';');
+        copyDeckLink(e, btn, link);
+    }}
     </script>
     {self.generate_dashboard_scripts()}
 </body>
@@ -10220,7 +10268,7 @@ def main():
     
     # Ensure docs directory exists
     # O script pode ser rodado da raiz ou de dentro de src/
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     docs_dir = os.path.join(root_dir, 'docs')
     os.makedirs(docs_dir, exist_ok=True)
     
