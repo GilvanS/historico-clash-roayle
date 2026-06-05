@@ -342,6 +342,10 @@ def main():
         print("[ERRO] Nenhuma tag de jogador configurada no .env")
         sys.exit(1)
 
+    # Determinar a semana ISO atual para filtrar
+    current_week_iso = datetime.now(timezone.utc).strftime('%G-W%V')
+    print(f"[INFO] Semana ISO atual: {current_week_iso}")
+
     # Carregar batalhas ja existentes
     existing_battles = load_existing_battles()
     print(f"[INFO] Batalhas ja existentes: {len(existing_battles)}")
@@ -350,26 +354,27 @@ def main():
     for tag in tags:
         print(f"[INFO] Coletando batalhas de desafio para {tag}...")
 
-        # 1. Tentar coletar do CSV historico (muito mais batalhas)
+        # 1. Tentar coletar do CSV historico (apenas batalhas da semana atual)
         csv_rows = collect_from_csv(tag)
-        print(f"[OK] {len(csv_rows)} batalhas de desafio do CSV historico para {tag}")
-        all_rows.extend(csv_rows)
+        csv_rows_filtered = [r for r in csv_rows if r.get('semana_iso') == current_week_iso]
+        print(f"[OK] {len(csv_rows_filtered)} batalhas de desafio da semana {current_week_iso} do CSV historico para {tag} (de {len(csv_rows)} totais)")
+        all_rows.extend(csv_rows_filtered)
 
         # 2. Tentar coletar da API (batalhas mais recentes que podem nao estar no CSV ainda)
         battles = fetch_battlelog(api_token, tag)
-        if battles:
-            seen_battles = set()
-            api_count = 0
-            for battle in battles:
-                bt = battle.get('battleTime', '')
-                if bt in seen_battles:
-                    continue
-                seen_battles.add(bt)
-                row = extract_challenge_row(battle, tag)
-                if row:
-                    all_rows.append(row)
-                    api_count += 1
-            print(f"[OK] {api_count} batalhas de desafio da API para {tag}")
+    if battles:
+        seen_battles = set()
+        api_count = 0
+        for battle in battles:
+            bt = battle.get('battleTime', '')
+            if bt in seen_battles:
+                continue
+            seen_battles.add(bt)
+            row = extract_challenge_row(battle, tag)
+            if row:
+                all_rows.append(row)
+                api_count += 1
+        print(f"[OK] {api_count} batalhas de desafio da API para {tag}")
 
     if not all_rows:
         print("[AVISO] Nenhuma batalha de desafio encontrada.")
