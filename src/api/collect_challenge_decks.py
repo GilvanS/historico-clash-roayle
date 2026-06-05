@@ -39,18 +39,13 @@ FIELDNAMES = [
     'semana_iso', 'tipo_desafio'
 ]
 
-# Keywords para identificar modos de desafio/evento
-CHALLENGE_KEYWORDS = [
-    'challenge', 'draft', 'event', 'showdown', 'touchdown',
-    'heist', 'pickmode', 'crazy', 'overtime', 'rampup',
-    'doubleelixir', 'tripleelixir', '7xelixir', 'blizzard',
-    'floodhounds', '1v1_showdown', 'boatbattle', 'duel'
-]
+# Keywords para identificar modos de desafio/evento — apenas Triple Elixir
+CHALLENGE_KEYWORDS = ['tripleelixir']
 
 
 def is_challenge(game_mode_name: str, battle_type: str) -> bool:
-    """Verifica se a batalha eh um desafio/evento especial."""
-    combined = (game_mode_name + ' ' + battle_type).lower().replace(' ', '').replace('_', '')
+    """Verifica se a batalha eh um desafio Triple Elixir."""
+    combined = (game_mode_name + ' ' + battle_type).lower().replace(' ', '').replace('_', '').replace('-', '')
     return any(kw.replace('_', '') in combined for kw in CHALLENGE_KEYWORDS)
 
 
@@ -354,10 +349,12 @@ def main():
     for tag in tags:
         print(f"[INFO] Coletando batalhas de desafio para {tag}...")
 
-        # 1. Tentar coletar do CSV historico (apenas batalhas da semana atual)
+        # 1. Tentar coletar do CSV historico (apenas Triple Elixir da semana atual)
         csv_rows = collect_from_csv(tag)
-        csv_rows_filtered = [r for r in csv_rows if r.get('semana_iso') == current_week_iso]
-        print(f"[OK] {len(csv_rows_filtered)} batalhas de desafio da semana {current_week_iso} do CSV historico para {tag} (de {len(csv_rows)} totais)")
+        csv_rows_filtered = [r for r in csv_rows 
+                            if r.get('semana_iso') == current_week_iso
+                            and 'triple' in r.get('tipo_desafio','').lower().replace(' ','')]
+        print(f"[OK] {len(csv_rows_filtered)} batalhas Triple Elixir da {current_week_iso} para {tag} (de {len(csv_rows)} totais)")
         all_rows.extend(csv_rows_filtered)
 
         # 2. Tentar coletar da API (batalhas mais recentes que podem nao estar no CSV ainda)

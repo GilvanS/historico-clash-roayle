@@ -24,6 +24,7 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.normpath(os.path.join(_SCRIPT_DIR, '..', '..'))
 DATA_DIR = os.path.join(_PROJECT_ROOT, 'data', 'csv')
 OUTPUT_CSV = os.path.join(DATA_DIR, 'challenge_decks_semanal.csv')
+PROCESSED_JSON = os.path.join(DATA_DIR, 'processed_challenge_top_battles.json')
 
 FIELDNAMES = [
     'player_tag', 'data', 'nome_oponente', 'tag_oponente', 'nivel_oponente',
@@ -41,14 +42,8 @@ FIELDNAMES = [
 ]
 
 CHALLENGE_KEYWORDS = [
-    'challenge', 'draft', 'event', 'showdown', 'touchdown',
-    'heist', 'pickmode', 'crazy', 'overtime', 'rampup',
-    'doubleelixir', 'tripleelixir', '7xelixir', 'blizzard',
-    'floodhounds', '1v1_showdown', 'boatbattle', 'duel',
-    'rampupelixir'
+    'tripleelixir'
 ]
-
-PROCESSED_JSON = os.path.join(DATA_DIR, 'processed_challenge_top_battles.json')
 
 
 def is_challenge(game_mode_name: str, battle_type: str) -> bool:
@@ -392,6 +387,8 @@ def save_processed(processed: set):
 
 
 def main():
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(errors='replace')
     api_token = get_api_token()
     headers = {"Authorization": f"Bearer {api_token}"}
     os.makedirs(DATA_DIR, exist_ok=True)
