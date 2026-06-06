@@ -206,14 +206,31 @@ def main():
 
     # FASE 1.6: Coletar Decks de Desafio da Semana
     try:
-        logger.info("FASE 1.6: Coletando decks do Desafio da Semana...")
-        buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
-            from collect_challenge_decks import main as collect_challenges
-            collect_challenges()
-            from collect_challenge_decks_top import main as collect_challenges_top
-            collect_challenges_top()
-        collection_logs.append(("Desafios", buf.getvalue()))
+        hoje = datetime.now()
+        hora = hoje.hour
+        dia_semana = hoje.weekday()  # 0=Seg, 1=Ter, 2=Qua, 3=Qui, 4=Sex, 5=Sab, 6=Dom
+        
+        # Desafio: de Terca 7h00 ate Sabado 6h59
+        is_challenge_period = False
+        if dia_semana == 1 and hora >= 7:  # Terca apos 7h
+            is_challenge_period = True
+        elif dia_semana in [2, 3, 4]:  # Quarta, Quinta, Sexta
+            is_challenge_period = True
+        elif dia_semana == 5 and hora < 7:  # Sabado antes de 7h
+            is_challenge_period = True
+            
+        if is_challenge_period:
+            logger.info("FASE 1.6: Periodo de Desafio ativo! Coletando decks da semana...")
+            buf = io.StringIO()
+            with redirect_stdout(buf), redirect_stderr(buf):
+                from collect_challenge_decks import main as collect_challenges
+                collect_challenges()
+                from collect_challenge_decks_top import main as collect_challenges_top
+                collect_challenges_top()
+            collection_logs.append(("Desafios", buf.getvalue()))
+        else:
+            logger.info("FASE 1.6: Fora do periodo de desafio. Pulando coleta.")
+            collection_logs.append(("Desafios", "Pulada (fora do periodo)"))
     except Exception as e:
         logger.error(f"Erro na FASE 1.6 (Desafios): {e}")
         collection_logs.append(("Desafios", f"ERRO: {e}"))
