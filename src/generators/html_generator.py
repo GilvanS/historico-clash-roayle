@@ -10300,7 +10300,7 @@ class GitHubPagesHTMLGenerator:
             console.warn('Menos de 8 cards mapeados para IDs:', ids);
         }}
         
-        const link = 'https://link.clashroyale.com/deck/en?deck=' + ids.join(';');
+        const link = 'https://link.clashroyale.com/pt/?clashroyale://copyDeck?deck=' + ids.join(';') + '&l=Royals&tt=159000000';
         copyDeckLink(e, btn, link);
     }}
     </script>
