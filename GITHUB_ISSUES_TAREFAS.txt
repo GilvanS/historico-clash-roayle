@@ -79,3 +79,22 @@ O dashboard index.html travava a interatividade das abas no navegador (excecao J
     - Analise sintatica do index.html de 18.353 linhas.
     - Validacao de fechamento correto de tags estruturais e presenca de abas ativas para ambas as contas: conta principal (account-tab-2QR292P) na Linha 2204 e secundaria (account-tab-2220UQQ0UU) na Linha 9693.
     - Atestado no relatorio de diagnostico (scratch/corruption_report.txt) que o HTML esta 100% integro e reativo no navegador.
+
+----------------------------------------------------------------------
+
+## ISSUE 5: Inclusao do Recurso de Copiar Decks em Todas as Abas e Correcoes do VS Stage
+* Titulo: [Dashboard] Inclusao do Recurso de Copiar Decks em Todas as Abas e Correcao de Links no VS Stage
+* Tipo: Feature / Bug Fix
+* Status: Concluida
+* Tags: dashboard, frontend, copy-deck, bug-fix, feature
+
+### Descricao da Issue:
+Atualmente, o recurso de copiar decks (via link do Clash Royale) esta habilitado apenas para a aba de Decks de Guerra. As outras abas ativas do painel ("Meus Decks", "Top Global", "Desafios" e "Decks Letais") possuem o botao de copiar deck com o icone de copia do Font Awesome ou estao inativos. Esta issue visa padronizar visualmente os botoes de copiar decks em todas as abas, utilizando obrigatoriamente a imagem oficial do Goblin no Foguete (https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400), assim como ja ocorre na aba de guerra. Alem disso, no "VS Stage", os botoes "MEU DECK" e "OPONENTE" tentam executar a funcao JS copyToClipboardDeckDirect que nao foi definida no dashboard. Nas paginas individuais de membros, a quebra de cartas do deck utiliza split(',') que falha em strings separadas por pipes (|), gerando links invalidos (#). Esta issue adiciona suporte completo a copia de decks em todas as abas e repara os botoes inoperantes.
+
+### Checklist de Tarefas Efetuadas:
+[X] Padronizar o botao de copiar em todas as abas de exibicao de decks de html_generator.py usando a imagem oficial do Goblin no Foguete.
+[X] Correcao do Split de Cartas em member_generator.py para suportar pipes (|) de forma resiliente.
+[X] Implementacao da funcao copyToClipboardDeckDirect no Javascript global do dashboard em html_generator.py.
+[X] Garantia de inicializacao global do objeto CARD_IDS mapeando nomes para IDs de cartas.
+[X] Ajuste dos botoes do VS Stage para passagem correta de argumentos (event e this).
+[X] Regeneracao do HTML e validacao no navegador.

@@ -191,6 +191,36 @@ class GitHubPagesHTMLGenerator:
             
         return f"https://link.clashroyale.com/pt/?clashroyale://copyDeck?deck={';'.join(ids)}&l=Royals&tt=159000000"
 
+    def _extract_card_names(self, deck_str: str) -> List[str]:
+        """Extrai apenas os nomes das cartas de uma string de deck no formato Clash Royale."""
+        if not deck_str or deck_str == 'N/D':
+            return []
+        
+        # Se contiver virgula, separa por virgula
+        if ',' in deck_str:
+            cards_raw = deck_str.split(',')
+            names = []
+            for c in cards_raw:
+                parts = c.split('|')
+                if parts:
+                    names.append(parts[0].strip())
+            return names
+        
+        # Caso contrario, assume que esta separado por pipes
+        parts = [p.strip() for p in deck_str.replace(' | ', '|').split('|') if p.strip()]
+        
+        if len(parts) >= 8:
+            is_triple = False
+            if len(parts) >= 3:
+                # Se o segundo elemento for numero ou o terceiro for bool
+                if parts[1].isdigit() or parts[2].lower() in ['true', 'false']:
+                    is_triple = True
+            
+            if is_triple:
+                return [parts[i] for i in range(0, len(parts), 3) if i < len(parts)]
+            
+        return parts
+
     def _load_upcoming_chests_json(self, player_tag: str = None) -> List[Dict]:
         """Carrega o ciclo de baús do JSON oficial, tentando buscar por tag específica."""
         filename = 'upcoming_chests.json'
@@ -2340,7 +2370,7 @@ class GitHubPagesHTMLGenerator:
 
         # Aba 2: Oponentes Repetidos - usa estatisticas consolidadas do cache CSV com deduplicacao
         csv_repeated = self.get_repeated_opponents_from_csv(player_tag=player_tag)
-        repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated)
+        repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated, player_tag=player_tag)
         
         # Prefixo único por conta para evitar conflitos de IDs no DOM entre Conta Principal e Secundária
         p_prefix = f"acc-{player_tag.replace('#', '')}" if player_tag else "acc-main"
@@ -2688,6 +2718,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
                         <span style="background:#f59e0b; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em;">#{i}</span>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(deck['deck_cards'])})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <span style="color: #fff; font-size: 0.85em; font-weight: 700;">WR: <span style="color: {wr_c}; font-weight:900;">{win_rate}%</span></span>
                         <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}33; color: {wr_c}; font-weight: 900; font-size: 0.7em; padding: 2px 8px; border-radius: 6px;">{total} partidas</span>
                     </div>
@@ -2706,7 +2739,7 @@ class GitHubPagesHTMLGenerator:
 
                 <div style="padding: 12px !important; background: transparent;">
                     <div style="width: 100%; max-width: 320px; margin: 0 auto 10px auto;">
-                        {self._generate_deck_grid_html_simple(deck['deck_cards'], self.get_copy_deck_link([c.split('|')[0] for c in deck['deck_cards'].split('|') if c]))}
+                        {self._generate_deck_grid_html_simple(deck['deck_cards'], self.get_copy_deck_link(self._extract_card_names(deck['deck_cards'])))}
                     </div>
 
                     <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 8px;">
@@ -2903,6 +2936,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
                         <span style="background:#4299e1; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em;">#{i}</span>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(deck['deck_cards'])})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <span style="color: #fff; font-size: 0.85em; font-weight: 700;">WR: <span style="color: {wr_c}; font-weight:900;">{win_rate}%</span> <span style="opacity: 0.5; font-size: 0.8em;">({deck['recent_total']} partidas)</span></span>
                         <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}33; color: {wr_c}; font-weight: 900; font-size: 0.7em; padding: 2px 8px; border-radius: 6px;">{total} TOTAL</span>
                     </div>
@@ -2919,7 +2955,7 @@ class GitHubPagesHTMLGenerator:
                 <div style="padding: 12px !important; background: transparent;">
                     <!-- Grid 4x2 do Deck do Jogador -->
                     <div style="width: 100%; max-width: 320px; margin: 0 auto 10px auto;">
-                        {self._generate_deck_grid_html_simple(deck['deck_cards'], self.get_copy_deck_link([c.split('|')[0] for c in deck['deck_cards'].split('|') if c]))}
+                        {self._generate_deck_grid_html_simple(deck['deck_cards'], self.get_copy_deck_link(self._extract_card_names(deck['deck_cards'])))}
                     </div>
                     
                     <!-- Badges de Elixir Médio e Ciclo 4 -->
@@ -2979,8 +3015,7 @@ class GitHubPagesHTMLGenerator:
             metrics = self._get_deck_metrics(deck_cards)
             wr_c = '#48bb78' if win_rate >= 55 else ('#4299e1' if win_rate >= 50 else '#f87171')
             
-            cards_for_copy = [c.split('|')[0] for c in deck_cards.split('|') if c]
-            copy_link = self.get_copy_deck_link(cards_for_copy)
+            copy_link = self.get_copy_deck_link(self._extract_card_names(deck_cards))
             
             html += f'''
             <div class="cr-deck-card cr-glass-premium" style="margin-bottom: 12px; overflow: visible; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; background: rgba(15,23,42,0.4);">
@@ -2988,6 +3023,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
                         <span style="background:{wr_c}; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em; font-family: 'Krona One', sans-serif;">#{i}</span>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(deck_cards)})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <span style="color: #fff; font-size: 0.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">{source_label}</span>
                         <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}33; color: {wr_c}; font-weight: 950; font-size: 0.8em; padding: 2px 8px; border-radius: 6px; font-family: 'Krona One', sans-serif;">{win_rate}% WR</span>
                     </div>
@@ -3163,8 +3201,20 @@ class GitHubPagesHTMLGenerator:
         """Gera os scripts globais necessários para a interatividade do dashboard."""
         import json
         card_urls = {}
+        card_ids_map = {}
         for name, data in self.cards_master.items():
             url = data.get('url_icon')
+            card_id = data.get('card_id')
+            if card_id and card_id != 'N/A':
+                c_id = str(card_id)
+                card_ids_map[name] = c_id
+                card_ids_map[name.replace(' ', '')] = c_id
+                card_ids_map[name.replace('.', '')] = c_id
+                if 'Musketeer' in name: card_ids_map['Musk'] = c_id
+                if 'P.E.K.K.A' in name: card_ids_map['Pekka'] = c_id
+                if 'Wall Breakers' in name: card_ids_map['WallBreakers'] = c_id
+                if 'Skeleton' in name and 'Barrel' in name: card_ids_map['SkellyBarrel'] = c_id
+                
             if url and url != 'N/A':
                 card_urls[name] = url
                 # Adicionar aliases comuns para maior robustez
@@ -3190,6 +3240,7 @@ class GitHubPagesHTMLGenerator:
             if 'p-e-k-k-a' in slug: card_urls['pekka'] = url
             if 'mini-p-e-k-k-a' in slug: card_urls['minipekka'] = url
             if 'the-log' in slug: card_urls['log'] = url
+
 
         # Coletar as batalhas de todas as contas em formato JSON limpo
         battles_json_data = {}
@@ -3231,11 +3282,14 @@ class GitHubPagesHTMLGenerator:
         
         battles_json = json.dumps(battles_json_data, ensure_ascii=False)
         card_map_json = json.dumps(card_urls)
+        card_ids_json = json.dumps(card_ids_map, ensure_ascii=False)
 
         return """
         <script>
         const CARD_MAP = """ + card_map_json + """;
         window.PLAYER_BATTLES_DATA = """ + battles_json + """;
+        window.CARD_IDS = """ + card_ids_json + """;
+
 
         function getMiniGridJS(deckStr, sideClass, playerName, clanName, metrics, deckLink, icons) {
             if (!deckStr) return { playerName, cardsHtml: `<div class="${sideClass} cr-empty-grid">N/D</div>`, metricsHtml: '' };
@@ -3285,8 +3339,6 @@ class GitHubPagesHTMLGenerator:
             const isLeak = leaked > 0;
             const leakClass = isLeak ? 'cr-leak-active' : '';
             
-            const copyHtml = deckLink ? `<button type="button" onclick="copyDeckLink(event, this, '${deckLink}')" class="cr-copy-deck-btn" title="Copiar Deck">📋</button>` : '';
-            
             return {
                 playerName,
                 towerUrl,
@@ -3298,7 +3350,6 @@ class GitHubPagesHTMLGenerator:
                         <div class="cr-grid-4x2">
                             ${cardsHtml}
                         </div>
-                        ${copyHtml}
                     </div>`,
                 metricsHtml: `
                     <div class="cr-metric-inline" title="HP Torre">
@@ -3410,8 +3461,8 @@ class GitHubPagesHTMLGenerator:
                 // Update copy links
                 const pCopyEl = document.getElementById(`p-copy-${oppId}`);
                 const oCopyEl = document.getElementById(`o-copy-${oppId}`);
-                if (pCopyEl) pCopyEl.onclick = () => copyToClipboardDeckDirect(data.p_deck_list);
-                if (oCopyEl) oCopyEl.onclick = () => copyToClipboardDeckDirect(data.o_deck_list);
+                if (pCopyEl) pCopyEl.onclick = (e) => copyToClipboardDeckDirect(e, pCopyEl, data.p_deck_list);
+                if (oCopyEl) oCopyEl.onclick = (e) => copyToClipboardDeckDirect(e, oCopyEl, data.o_deck_list);
                 
 
                 // Update active dot
@@ -3916,16 +3967,16 @@ class GitHubPagesHTMLGenerator:
                 "time": t,
                 "p_metrics": self._generate_metrics_panel_html_simple(my_m),
                 "o_metrics": self._generate_metrics_panel_html_simple(opp_m),
-                "p_grid": self._generate_deck_grid_html_simple(b['my_deck'], self.get_copy_deck_link([c.strip() for c in b.get('my_deck','').split('|') if c.strip()])),
-                "o_grid": self._generate_deck_grid_html_simple(b['opp_deck'], self.get_copy_deck_link([c.strip() for c in b.get('opp_deck','').split('|') if c.strip()])),
+                "p_grid": self._generate_deck_grid_html_simple(b['my_deck'], self.get_copy_deck_link(self._extract_card_names(b.get('my_deck','')))),
+                "o_grid": self._generate_deck_grid_html_simple(b['opp_deck'], self.get_copy_deck_link(self._extract_card_names(b.get('opp_deck','')))),
                 "p_tower_url": my_m['tower_url'],
                 "o_tower_url": opp_m['tower_url'],
                 "p_level": my_m['level'],
                 "o_level": opp_m['level'],
                 "p_hp": my_m.get('hp', '--'),
                 "o_hp": opp_m.get('hp', '--'),
-                "p_deck_list": [c.strip() for c in b.get('my_deck','').split('|') if c.strip()],
-                "o_deck_list": [c.strip() for c in b.get('opp_deck','').split('|') if c.strip()],
+                "p_deck_list": self._extract_card_names(b.get('my_deck','')),
+                "o_deck_list": self._extract_card_names(b.get('opp_deck','')),
                 "p_name": p_name,
                 "p_tag": self.player_tag,
                 "p_clan": p_clan,
@@ -3946,7 +3997,7 @@ class GitHubPagesHTMLGenerator:
             <div class="cr-history-dot {active_class}" 
                  style="border-bottom: 2px solid {res_color};"
                  data-battle="{data_attr}"
-                 onclick="updateOpponentView({section_idx}, this)"
+                 onclick="updateOpponentView('{section_idx}', this)"
                  title="{d} {t} - {res}">
                 <span class="dot-res" style="color: {res_color}">{res}</span>
                 <span class="dot-time">{t}</span>
@@ -4063,11 +4114,8 @@ class GitHubPagesHTMLGenerator:
                     {level_badge}
                 </div>'''
 
-        copy_btn = ""
-        if copy_link:
-            copy_btn = f'<button type="button" onclick="copyDeckLink(event, this, \'{copy_link}\')" class="cr-copy-deck-btn" title="Copiar Deck"><span><i class="fas fa-copy"></i></span></button>'
+        return f'<div class="cr-grid-wrapper-premium"><div class="cr-grid-4x2">{html_cards}</div></div>'
 
-        return f'<div class="cr-grid-wrapper-premium"><div class="cr-grid-4x2">{html_cards}</div>{copy_btn}</div>'
         
     def _generate_deck_view_html(self, deck_str, battle_data, player_name, player_clan, player_tag, section_id, deck_id, is_opponent=False):
         """Gera visualização de deck similar ao VS Stage para Meus Decks e Top Global."""
@@ -4092,7 +4140,12 @@ class GitHubPagesHTMLGenerator:
                 <!-- Jogador -->
                 <div style="text-align: left; flex: 1;">
                     <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{player_tag}</div>
-                    <div style="font-size: 0.9em; font-weight: 950; color: #fff; font-family: 'Outfit', sans-serif;">{player_name}</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(deck_str)})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar" style="height: 28px; vertical-align: middle;">
+                        </button>
+                        <div style="font-size: 0.9em; font-weight: 950; color: #fff; font-family: 'Outfit', sans-serif;">{player_name}</div>
+                    </div>
                 </div>
 
                 <!-- Centro: Placar -->
@@ -4106,7 +4159,12 @@ class GitHubPagesHTMLGenerator:
                 <!-- Oponente -->
                 <div style="text-align: right; flex: 1;">
                     <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{battle_data.get('tag_oponente', '000000')[:10]}</div>
-                    <div style="font-size: 0.9em; font-weight: 950; color: #f87171; font-family: 'Outfit', sans-serif;">{battle_data.get('nome_oponente', 'Oponente')[:15]}</div>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                        <div style="font-size: 0.9em; font-weight: 950; color: #f87171; font-family: 'Outfit', sans-serif;">{battle_data.get('nome_oponente', 'Oponente')[:15]}</div>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(battle_data.get('opp_deck', ''))})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar" style="height: 28px; vertical-align: middle;">
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -4119,7 +4177,7 @@ class GitHubPagesHTMLGenerator:
                         <img src="{my_metrics['tower_url']}" style="width: 100%; filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.4));">
                     </div>
                     <div style="width: 100%; position: relative; z-index: 5;">
-                        {self._generate_deck_grid_html_simple(deck_str, self.get_copy_deck_link([c.split('|')[0] for c in deck_str.split('|') if c]))}
+                        {self._generate_deck_grid_html_simple(deck_str, self.get_copy_deck_link(self._extract_card_names(deck_str)))}
                     </div>
                 </div>
 
@@ -4129,7 +4187,7 @@ class GitHubPagesHTMLGenerator:
                         <img src="{opp_metrics['tower_url']}" style="width: 100%; transform: scaleX(-1); filter: drop-shadow(0 0 10px rgba(248, 113, 113, 0.4));">
                     </div>
                     <div style="width: 100%; position: relative; z-index: 5;">
-                        {self._generate_deck_grid_html_simple(battle_data.get('opp_deck', ''), self.get_copy_deck_link([c.split('|')[0] for c in battle_data.get('opp_deck', '').split('|') if c]))}
+                        {self._generate_deck_grid_html_simple(battle_data.get('opp_deck', ''), self.get_copy_deck_link(self._extract_card_names(battle_data.get('opp_deck', ''))))}
                     </div>
                 </div>
             </div>
@@ -4165,14 +4223,20 @@ class GitHubPagesHTMLGenerator:
         trophy_sign = '+' if trophy_val > 0 else ''
 
         return f"""
-        <div class="cr-vs-stage-v2" id="vs-content-{section_id}">
+        <div class="cr-vs-stage-v2" id="vs-stage-{section_id}">
             
             <!-- Linha 1: Info e Placar (Topo) - Layout Compacto -->
             <div class="cr-vs-top-row-v2" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; gap: 20px;">
                 <!-- Jogador -->
                 <div class="cr-vs-side-info player" style="text-align: left; flex: 1;">
                     <div id="p-tag-{section_id}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{player_info['tag']}</div>
-                    <div id="p-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{player_info['name']}</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button id="p-copy-{section_id}" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(battle_data['my_deck'])})" 
+                                style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;" class="cr-copy-btn-v2" title="Copiar Deck do Jogador">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
+                        <div id="p-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{player_info['name']}</div>
+                    </div>
                     <div id="p-clan-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{player_info.get('clan', 'Sem Clã')}</div>
                 </div>
 
@@ -4189,7 +4253,13 @@ class GitHubPagesHTMLGenerator:
                 <!-- Oponente -->
                 <div class="cr-vs-side-info opponent" style="text-align: right; flex: 1;">
                     <div id="o-tag-{section_id}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{opp_info['tag']}</div>
-                    <div id="o-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #f87171; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{opp_info['name']}</div>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                        <div id="o-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #f87171; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{opp_info['name']}</div>
+                        <button id="o-copy-{section_id}" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(battle_data['opp_deck'])})" 
+                                style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;" class="cr-copy-btn-v2" title="Copiar Deck do Oponente">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
+                    </div>
                     <div id="o-clan-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{opp_info.get('clan', '')}</div>
                 </div>
             </div>
@@ -4204,7 +4274,7 @@ class GitHubPagesHTMLGenerator:
                         <div id="p-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #4ade80; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{my_metrics.get('hp', '--')} HP</div>
                     </div>
                     <div id="p-grid-{section_id}" style="width: 100%; position: relative; z-index: 5;">
-                        {self._generate_deck_grid_html_simple(battle_data['my_deck'], self.get_copy_deck_link([c.split('|')[0] for c in battle_data['my_deck'].split('|') if c]))}
+                        {self._generate_deck_grid_html_simple(battle_data['my_deck'], self.get_copy_deck_link(self._extract_card_names(battle_data['my_deck'])))}
                     </div>
                     <div id="player-metrics-{section_id}" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
                         {self._generate_metrics_panel_html_simple(my_metrics)}
@@ -4218,7 +4288,7 @@ class GitHubPagesHTMLGenerator:
                         <div id="o-tower-hp-{section_id}" style="text-align: center; font-size: 0.6em; font-weight: 950; color: #f87171; margin-top: -5px; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 10px;">{opp_metrics.get('hp', '--')} HP</div>
                     </div>
                     <div id="o-grid-{section_id}" style="width: 100%; position: relative; z-index: 5;">
-                        {self._generate_deck_grid_html_simple(battle_data['opp_deck'], self.get_copy_deck_link([c.split('|')[0] for c in battle_data['opp_deck'].split('|') if c]))}
+                        {self._generate_deck_grid_html_simple(battle_data['opp_deck'], self.get_copy_deck_link(self._extract_card_names(battle_data['opp_deck'])))}
                     </div>
                     <div id="opp-metrics-{section_id}" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
                         {self._generate_metrics_panel_html_simple(opp_metrics)}
@@ -4238,27 +4308,18 @@ class GitHubPagesHTMLGenerator:
                     <span id="rank-p-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.3); font-weight: 800;"><i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank P: {battle_data.get('posicao_global_jogador', 'N/A')}</span>
                     <span id="rank-o-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.3); font-weight: 800;"><i class="fas fa-globe" style="margin-right: 4px; opacity: 0.7;"></i> Rank O: {battle_data.get('posicao_global_oponente', 'N/A')}</span>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                     <button id="p-copy-{section_id}" onclick="copyToClipboardDeckDirect({[c.split('|')[0] for c in battle_data['my_deck'].split('|') if c]})" 
-                             style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 5px 12px; border-radius: 8px; font-size: 0.65em; font-weight: 900; cursor: pointer; transition: all 0.2s;">
-                         <i class="far fa-copy"></i> MEU DECK
-                     </button>
-                     <button id="o-copy-{section_id}" onclick="copyToClipboardDeckDirect({[c.split('|')[0] for c in battle_data['opp_deck'].split('|') if c]})" 
-                             style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); color: #fca5a5; padding: 5px 12px; border-radius: 8px; font-size: 0.65em; font-weight: 900; cursor: pointer; transition: all 0.2s;">
-                         <i class="far fa-copy"></i> OPONENTE
-                     </button>
-                </div>
             </div>
         </div>
         """
 
 
-    def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
+    def generate_repeated_opponents_html(self, opponents: List[Dict], player_tag: str = None) -> str:
         """Gera HTML para oponentes repetidos com match cards inline usando layout Premium v2."""
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
         
-        player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
-        player_clan = next((p.get('clan_name', '') for p in self.players_cache if p.get('player_tag') == self.player_tag), '')
+        tag_to_use = player_tag or self.player_tag
+        player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == tag_to_use), 'Jogador')
+        player_clan = next((p.get('clan_name', '') for p in self.players_cache if p.get('player_tag') == tag_to_use), '')
         
         html = '<div class="cr-opponents-list" style="display: grid; gap: 30px;">'
         
@@ -4272,13 +4333,14 @@ class GitHubPagesHTMLGenerator:
             first_b = stats_list[0]
             
             # Info necessária para o build_battle_preview_v2
-            player_info = {'tag': self.player_tag, 'name': player_name, 'clan': player_clan}
+            player_info = {'tag': tag_to_use, 'name': player_name, 'clan': player_clan}
             opp_info = {'tag': opp['opponent_tag'], 'name': opp['opponent_name'], 'clan': opp.get('opp_clan', '')}
 
-            vs_stage_html = self.build_battle_preview_v2(first_b, player_info, opp_info, i)
+            p_prefix = f"acc-{tag_to_use.replace('#', '')}" if tag_to_use else "acc-main"
+            vs_stage_html = self.build_battle_preview_v2(first_b, player_info, opp_info, f"{p_prefix}-{i}")
 
             html += f'''
-            <div class="cr-deck-card cr-glass-premium" id="opp-section-{i}" style="margin-bottom: 0 !important; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="cr-deck-card cr-glass-premium" id="opp-section-{p_prefix}-{i}" style="margin-bottom: 0 !important; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
                 <div class="cr-deck-header" style="padding: 15px 25px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 24px 24px 0 0;">
                     <div style="display: flex; align-items: center; gap: 20px; width: 100%;">
                         <div class="cr-opp-rank" style="background: #fbbf24; color: #000; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 950; font-size: 1.1em; box-shadow: 0 0 20px rgba(251,191,36,0.3); font-family: 'Krona One', sans-serif;">{i}</div>
@@ -4307,7 +4369,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            {self._generate_history_dots(i, stats_list, player_name, player_clan, opp["opponent_name"], opp.get('opp_clan', ''), opp['opponent_tag'])}
+                            {self._generate_history_dots(f"{p_prefix}-{i}", stats_list, player_name, player_clan, opp["opponent_name"], opp.get('opp_clan', ''), opp['opponent_tag'])}
                         </div>
                     </div>
                 </div>
@@ -4339,6 +4401,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
                         <span style="background:#ef4444; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em; font-family: 'Krona One', sans-serif;">#{i}</span>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {opp_cards_for_copy})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <span style="color: #fff; font-size: 0.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">DECK INIMIGO</span>
                         <span style="margin-left: auto; background:rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; font-weight: 950; font-size: 0.8em; padding: 2px 8px; border-radius: 6px; font-family: 'Krona One', sans-serif;">{losses} Quedas</span>
                     </div>
@@ -10207,6 +10272,37 @@ class GitHubPagesHTMLGenerator:
             fallbackCopy();
         }}
     }}
+
+    function copyToClipboardDeckDirect(e, btn, cardNames) {{
+        if(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+        }}
+        if (!cardNames || !Array.isArray(cardNames) || cardNames.length === 0) {{
+            console.error('Nenhum card fornecido para copia');
+            return;
+        }}
+        
+        const ids = [];
+        const map = window.CARD_IDS || {{}};
+        
+        cardNames.forEach(name => {{
+            const cleanedName = name.trim();
+            const id = map[cleanedName];
+            if (id) {{
+                ids.push(id);
+            }} else {{
+                console.warn('Card ID nao encontrado para:', cleanedName);
+            }}
+        }});
+        
+        if (ids.length < 8) {{
+            console.warn('Menos de 8 cards mapeados para IDs:', ids);
+        }}
+        
+        const link = 'https://link.clashroyale.com/deck/en?deck=' + ids.join(';');
+        copyDeckLink(e, btn, link);
+    }}
     </script>
     {self.generate_dashboard_scripts()}
 </body>
@@ -10220,7 +10316,7 @@ def main():
     
     # Ensure docs directory exists
     # O script pode ser rodado da raiz ou de dentro de src/
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     docs_dir = os.path.join(root_dir, 'docs')
     os.makedirs(docs_dir, exist_ok=True)
     

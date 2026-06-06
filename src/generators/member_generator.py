@@ -232,7 +232,17 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
             status_badge = '<span class="status-badge current">Atual</span>' if is_current else '<span class="status-badge past">Anterior</span>'
             
             deck_cards_html = self.generate_deck_cards_html(deck['deck_cards'], show_names=False)
-            copy_link = self.get_copy_deck_link(deck['deck_cards'].split(','))
+            
+            # Divisão resiliente de cartas usando pipe ou vírgula
+            if ' | ' in deck['deck_cards']:
+                cards_list = deck['deck_cards'].split(' | ')
+            elif '|' in deck['deck_cards']:
+                cards_list = deck['deck_cards'].split('|')
+            else:
+                cards_list = deck['deck_cards'].split(',')
+                
+            copy_link = self.get_copy_deck_link(cards_list)
+
             
             timeline_html += f'''
                 <div class="timeline-item {timeline_class} glass-panel">
@@ -250,7 +260,7 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
                                     <span class="meta-item">⭐ {deck['favorite_card'] or 'Nenhuma'}</span>
                                 </div>
                             </div>
-                            <a href="{copy_link}" class="copy-btn">Copiar Deck</a>
+                            <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;" title="Copiar Deck"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;"></button>
                         </div>
                         <div class="timeline-deck-grid">
                             {deck_cards_html}
@@ -415,20 +425,18 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
         .status-badge.past { background: rgba(255,255,255,0.1); color: #94a3b8; }
 
         .copy-btn {
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 0.85em;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px var(--primary-glow);
+            background: transparent;
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .copy-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px var(--primary-glow);
+            transform: scale(1.1);
         }
 
         .timeline-deck-grid {

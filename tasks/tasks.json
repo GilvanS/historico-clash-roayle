@@ -296,11 +296,22 @@
         "dependencies": [],
         "priority": "high",
         "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Inclusão do Recurso de Copiar Decks em Todas as Abas",
+        "description": "Implementar e corrigir o recurso de cópia de decks (link do Clash Royale) em todas as abas do dashboard (Meus Decks, Top Global, Desafios, Decks Letais) e na linha do tempo de membros, consertando o bug do botão de copiar deck no VS Stage.",
+        "details": "",
+        "testStrategy": "",
+        "status": "in-progress",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2026-05-13T23:50:00.560Z",
-      "updated": "2026-05-13T23:50:36.886Z",
+      "updated": "2026-06-05T19:08:37.984Z",
       "description": "Tag created on 13/05/2026"
     }
   }
