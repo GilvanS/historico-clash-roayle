@@ -2718,9 +2718,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
                         <span style="background:#f59e0b; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em;">#{i}</span>
-                        <a href="{self.get_copy_deck_link(self._extract_card_names(deck['deck_cards']))}" target="_blank" class="cr-copy-btn-v2" title="Copiar para o Clash Royale" style="background: transparent; border: none; padding: 0; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.2s;">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 24px; vertical-align: middle;">
-                        </a>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(deck['deck_cards'])})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <span style="color: #fff; font-size: 0.85em; font-weight: 700;">WR: <span style="color: {wr_c}; font-weight:900;">{win_rate}%</span></span>
                         <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}33; color: {wr_c}; font-weight: 900; font-size: 0.7em; padding: 2px 8px; border-radius: 6px;">{total} partidas</span>
                     </div>
@@ -2936,9 +2936,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
                         <span style="background:#4299e1; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em;">#{i}</span>
-                        <a href="{self.get_copy_deck_link(self._extract_card_names(deck['deck_cards']))}" target="_blank" class="cr-copy-btn-v2" title="Copiar para o Clash Royale" style="background: transparent; border: none; padding: 0; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.2s;">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 24px; vertical-align: middle;">
-                        </a>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(deck['deck_cards'])})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <span style="color: #fff; font-size: 0.85em; font-weight: 700;">WR: <span style="color: {wr_c}; font-weight:900;">{win_rate}%</span> <span style="opacity: 0.5; font-size: 0.8em;">({deck['recent_total']} partidas)</span></span>
                         <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}33; color: {wr_c}; font-weight: 900; font-size: 0.7em; padding: 2px 8px; border-radius: 6px;">{total} TOTAL</span>
                     </div>
@@ -3023,9 +3023,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
                         <span style="background:{wr_c}; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em; font-family: 'Krona One', sans-serif;">#{i}</span>
-                        <a href="{copy_link}" target="_blank" class="cr-copy-btn-v2" title="Copiar para o Clash Royale" style="background: transparent; border: none; padding: 0; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.2s;">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 24px; vertical-align: middle;">
-                        </a>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(deck_cards)})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <span style="color: #fff; font-size: 0.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">{source_label}</span>
                         <span style="margin-left: auto; background:{wr_c}22; border: 1px solid {wr_c}33; color: {wr_c}; font-weight: 950; font-size: 0.8em; padding: 2px 8px; border-radius: 6px; font-family: 'Krona One', sans-serif;">{win_rate}% WR</span>
                     </div>
@@ -3997,7 +3997,7 @@ class GitHubPagesHTMLGenerator:
             <div class="cr-history-dot {active_class}" 
                  style="border-bottom: 2px solid {res_color};"
                  data-battle="{data_attr}"
-                 onclick="updateOpponentView({section_idx}, this)"
+                 onclick="updateOpponentView('{section_idx}', this)"
                  title="{d} {t} - {res}">
                 <span class="dot-res" style="color: {res_color}">{res}</span>
                 <span class="dot-time">{t}</span>
@@ -4141,9 +4141,9 @@ class GitHubPagesHTMLGenerator:
                 <div style="text-align: left; flex: 1;">
                     <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{player_tag}</div>
                     <div style="display: flex; align-items: center; gap: 6px;">
-                        <a href="{self.get_copy_deck_link(self._extract_card_names(deck_str))}" target="_blank" class="cr-copy-btn-v2" title="Copiar Deck" style="text-decoration: none;">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar" style="height: 20px; vertical-align: middle;">
-                        </a>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(deck_str)})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <div style="font-size: 0.9em; font-weight: 950; color: #fff; font-family: 'Outfit', sans-serif;">{player_name}</div>
                     </div>
                 </div>
@@ -4161,9 +4161,9 @@ class GitHubPagesHTMLGenerator:
                     <div style="font-size: 0.55em; color: rgba(255,255,255,0.25); font-weight: 800;">#{battle_data.get('tag_oponente', '000000')[:10]}</div>
                     <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
                         <div style="font-size: 0.9em; font-weight: 950; color: #f87171; font-family: 'Outfit', sans-serif;">{battle_data.get('nome_oponente', 'Oponente')[:15]}</div>
-                        <a href="{self.get_copy_deck_link(self._extract_card_names(battle_data.get('opp_deck', '')))}" target="_blank" class="cr-copy-btn-v2" title="Copiar Deck" style="text-decoration: none;">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar" style="height: 20px; vertical-align: middle;">
-                        </a>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(battle_data.get('opp_deck', ''))})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar" style="height: 28px; vertical-align: middle;">
+                        </button>
                     </div>
                 </div>
             </div>
@@ -4223,7 +4223,7 @@ class GitHubPagesHTMLGenerator:
         trophy_sign = '+' if trophy_val > 0 else ''
 
         return f"""
-        <div class="cr-vs-stage-v2" id="vs-content-{section_id}">
+        <div class="cr-vs-stage-v2" id="vs-stage-{section_id}">
             
             <!-- Linha 1: Info e Placar (Topo) - Layout Compacto -->
             <div class="cr-vs-top-row-v2" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; gap: 20px;">
@@ -4232,8 +4232,8 @@ class GitHubPagesHTMLGenerator:
                     <div id="p-tag-{section_id}" style="font-size: 0.6em; color: rgba(255,255,255,0.2); font-weight: 800; font-family: 'Krona One', sans-serif;">#{player_info['tag']}</div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <button id="p-copy-{section_id}" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(battle_data['my_deck'])})" 
-                                style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s;" class="cr-copy-btn-v2" title="Copiar Deck do Jogador">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 24px; vertical-align: middle;">
+                                style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;" class="cr-copy-btn-v2" title="Copiar Deck do Jogador">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
                         </button>
                         <div id="p-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{player_info['name']}</div>
                     </div>
@@ -4256,8 +4256,8 @@ class GitHubPagesHTMLGenerator:
                     <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
                         <div id="o-name-{section_id}" style="font-size: 1.1em; font-weight: 950; color: #f87171; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Krona One', sans-serif;">{opp_info['name']}</div>
                         <button id="o-copy-{section_id}" onclick="copyToClipboardDeckDirect(event, this, {self._extract_card_names(battle_data['opp_deck'])})" 
-                                style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s;" class="cr-copy-btn-v2" title="Copiar Deck do Oponente">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 24px; vertical-align: middle;">
+                                style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;" class="cr-copy-btn-v2" title="Copiar Deck do Oponente">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
                         </button>
                     </div>
                     <div id="o-clan-{section_id}" style="font-size: 0.7em; color: rgba(255,255,255,0.4); font-weight: 700;">{opp_info.get('clan', '')}</div>
@@ -4336,10 +4336,11 @@ class GitHubPagesHTMLGenerator:
             player_info = {'tag': tag_to_use, 'name': player_name, 'clan': player_clan}
             opp_info = {'tag': opp['opponent_tag'], 'name': opp['opponent_name'], 'clan': opp.get('opp_clan', '')}
 
-            vs_stage_html = self.build_battle_preview_v2(first_b, player_info, opp_info, i)
+            p_prefix = f"acc-{tag_to_use.replace('#', '')}" if tag_to_use else "acc-main"
+            vs_stage_html = self.build_battle_preview_v2(first_b, player_info, opp_info, f"{p_prefix}-{i}")
 
             html += f'''
-            <div class="cr-deck-card cr-glass-premium" id="opp-section-{i}" style="margin-bottom: 0 !important; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="cr-deck-card cr-glass-premium" id="opp-section-{p_prefix}-{i}" style="margin-bottom: 0 !important; overflow: visible; border: 1px solid rgba(255,255,255,0.1);">
                 <div class="cr-deck-header" style="padding: 15px 25px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 24px 24px 0 0;">
                     <div style="display: flex; align-items: center; gap: 20px; width: 100%;">
                         <div class="cr-opp-rank" style="background: #fbbf24; color: #000; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 950; font-size: 1.1em; box-shadow: 0 0 20px rgba(251,191,36,0.3); font-family: 'Krona One', sans-serif;">{i}</div>
@@ -4368,7 +4369,7 @@ class GitHubPagesHTMLGenerator:
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            {self._generate_history_dots(i, stats_list, player_name, player_clan, opp["opponent_name"], opp.get('opp_clan', ''), opp['opponent_tag'])}
+                            {self._generate_history_dots(f"{p_prefix}-{i}", stats_list, player_name, player_clan, opp["opponent_name"], opp.get('opp_clan', ''), opp['opponent_tag'])}
                         </div>
                     </div>
                 </div>
@@ -4400,9 +4401,9 @@ class GitHubPagesHTMLGenerator:
                 <div class="cr-deck-header" style="padding: 10px 15px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 16px 16px 0 0;">
                     <div style="display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;">
                         <span style="background:#ef4444; color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 900; font-size: 0.75em; font-family: 'Krona One', sans-serif;">#{i}</span>
-                        <a href="{opp_copy_link}" target="_blank" class="cr-copy-btn-v2" title="Copiar para o Clash Royale" style="background: transparent; border: none; padding: 0; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.2s;">
-                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 24px; vertical-align: middle;">
-                        </a>
+                        <button type="button" onclick="copyToClipboardDeckDirect(event, this, {opp_cards_for_copy})" class="cr-copy-btn-v2" title="Copiar Deck" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;">
+                        </button>
                         <span style="color: #fff; font-size: 0.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">DECK INIMIGO</span>
                         <span style="margin-left: auto; background:rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; font-weight: 950; font-size: 0.8em; padding: 2px 8px; border-radius: 6px; font-family: 'Krona One', sans-serif;">{losses} Quedas</span>
                     </div>

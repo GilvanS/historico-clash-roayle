@@ -260,7 +260,7 @@ class MemberPageGenerator(GitHubPagesHTMLGenerator):
                                     <span class="meta-item">⭐ {deck['favorite_card'] or 'Nenhuma'}</span>
                                 </div>
                             </div>
-                            <a href="{copy_link}" class="copy-btn" title="Copiar Deck"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;"></a>
+                            <button type="button" onclick="copyDeckLink(event, this, '{copy_link}')" class="cr-copy-btn-v2" style="background: transparent; border: none; padding: 0; cursor: pointer; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;" title="Copiar Deck"><img src="https://media.ffycdn.net/eu/supercell/jsmnnT9Z8mF79QiwDcsW.png?width=2400" alt="Copiar Deck" style="height: 28px; vertical-align: middle;"></button>
                         </div>
                         <div class="timeline-deck-grid">
                             {deck_cards_html}
