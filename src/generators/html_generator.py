@@ -2370,7 +2370,7 @@ class GitHubPagesHTMLGenerator:
 
         # Aba 2: Oponentes Repetidos - usa estatisticas consolidadas do cache CSV com deduplicacao
         csv_repeated = self.get_repeated_opponents_from_csv(player_tag=player_tag)
-        repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated)
+        repeated_opponents_html = self.generate_repeated_opponents_html(csv_repeated, player_tag=player_tag)
         
         # Prefixo único por conta para evitar conflitos de IDs no DOM entre Conta Principal e Secundária
         p_prefix = f"acc-{player_tag.replace('#', '')}" if player_tag else "acc-main"
@@ -4313,12 +4313,13 @@ class GitHubPagesHTMLGenerator:
         """
 
 
-    def generate_repeated_opponents_html(self, opponents: List[Dict]) -> str:
+    def generate_repeated_opponents_html(self, opponents: List[Dict], player_tag: str = None) -> str:
         """Gera HTML para oponentes repetidos com match cards inline usando layout Premium v2."""
         if not opponents: return '<div class="cr-empty-state">Nenhum oponente repetido encontrado no histórico recente.</div>'
         
-        player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == self.player_tag), 'Jogador')
-        player_clan = next((p.get('clan_name', '') for p in self.players_cache if p.get('player_tag') == self.player_tag), '')
+        tag_to_use = player_tag or self.player_tag
+        player_name = self.player_name_override or next((p.get('name', 'Jogador') for p in self.players_cache if p.get('player_tag') == tag_to_use), 'Jogador')
+        player_clan = next((p.get('clan_name', '') for p in self.players_cache if p.get('player_tag') == tag_to_use), '')
         
         html = '<div class="cr-opponents-list" style="display: grid; gap: 30px;">'
         
@@ -4332,7 +4333,7 @@ class GitHubPagesHTMLGenerator:
             first_b = stats_list[0]
             
             # Info necessária para o build_battle_preview_v2
-            player_info = {'tag': self.player_tag, 'name': player_name, 'clan': player_clan}
+            player_info = {'tag': tag_to_use, 'name': player_name, 'clan': player_clan}
             opp_info = {'tag': opp['opponent_tag'], 'name': opp['opponent_name'], 'clan': opp.get('opp_clan', '')}
 
             vs_stage_html = self.build_battle_preview_v2(first_b, player_info, opp_info, i)
