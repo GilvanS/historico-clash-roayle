@@ -2577,7 +2577,11 @@ class GitHubPagesHTMLGenerator:
         Agora filtra dinamicamente apenas o desafio principal da semana mais recente.
         Retorna lista ordenada por win rate (decks com melhor performance primeiro).
         """
-        csv_path = os.path.join(self.data_csv_dir, 'challenge_decks_semanal.csv')
+        csv_path_semanal = os.path.join(self.data_csv_dir, 'challenge_decks_semanal.csv')
+        csv_path_historico = os.path.join(self.data_csv_dir, 'challenge_decks_historico.csv')
+        
+        csv_path = csv_path_historico if os.path.exists(csv_path_historico) else csv_path_semanal
+        
         if not os.path.exists(csv_path):
             return []
 
