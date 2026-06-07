@@ -90,6 +90,18 @@ def main():
         logger.error(f"Erro na FASE 0 (Git Clean): {e}")
         collection_logs.append(("Git Clean", f"ERRO: {e}"))
 
+    # FASE 0.5: Consolidar CSVs historicos
+    try:
+        logger.info("FASE 0.5: Consolidando arquivos CSV de desafios...")
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(buf):
+            from api_tools import consolidate_csvs
+            consolidate_csvs.clean_challenges()
+        collection_logs.append(("CSV Consolidator", buf.getvalue()))
+    except Exception as e:
+        logger.error(f"Erro na FASE 0.5 (Consolidador): {e}")
+        collection_logs.append(("CSV Consolidator", f"ERRO: {e}"))
+
 
     # FASE 1: Coletar batalhas
     try:
