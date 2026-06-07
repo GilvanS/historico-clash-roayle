@@ -24,6 +24,10 @@ except ImportError:
     UTC = timezone.utc
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
+import sys
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.normpath(os.path.join(_SCRIPT_DIR, '..', '..'))
+sys.path.append(os.path.join(_PROJECT_ROOT, 'src', 'core'))
 from csv_database_manager import CSVManager
 from war_prediction_engine import WarPredictionEngine
 
@@ -2662,7 +2666,9 @@ class GitHubPagesHTMLGenerator:
         final_list = []
         for d in deck_stats.values():
             d['win_rate'] = round((d['wins'] / d['total'] * 100), 1) if d['total'] > 0 else 0
-            final_list.append(d)
+            # Mostrar APENAS os decks que possuem vitórias (dados de vitória)
+            if d['wins'] > 0:
+                final_list.append(d)
 
         # Ordenacao: maior win rate, depois maior total de partidas
         final_list.sort(key=lambda x: (x['win_rate'], x['total']), reverse=True)
