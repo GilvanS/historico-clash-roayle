@@ -415,3 +415,7 @@ These commands make AI calls and may take up to a minute:
 ---
 
 _This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._
+
+## ?? REGRAS DO CLASH ROYALE API (COMPORTAMENTO DE GUERRA)
+- **BUG DO ÚLTIMO DIA (DIA 4)**: Na Guerra de Clãs, quando um clã cruza a linha de chegada, ele pode "sumir" temporariamente do endpoint de currentriverrace dependendo de como a API atualiza o cache no último dia.
+- **SOLUÇÃO OBRIGATÓRIA**: Todo script de coleta de guerra (como collect_river_race_full.py) **DEVE** ter um mecanismo de fallback. Se a API retornar poucos clãs do Top Global (ex: menos de 25) no último dia de guerra (Domingo/Segunda), o script deve buscar no arquivo CSV do dia anterior (histórico) os clãs globais que estão faltando e processá-los, para não quebrar a exibição do dashboard no site.
