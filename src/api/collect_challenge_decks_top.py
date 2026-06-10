@@ -84,6 +84,7 @@ def get_week_iso(dt_utc: datetime) -> str:
     Subtraimos 34 horas (1 dia + 10 horas) para que terca 10:00 UTC
     seja segunda-feira 00:00 UTC, iniciando a nova semana ISO exatamente no momento certo.
     """
+    from datetime import timedelta
     dt_shifted = dt_utc - timedelta(hours=34)
     return dt_shifted.strftime('%G-W%V')
 
