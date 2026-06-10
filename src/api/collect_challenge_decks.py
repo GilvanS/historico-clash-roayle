@@ -39,19 +39,48 @@ FIELDNAMES = [
     'semana_iso', 'tipo_desafio'
 ]
 
-# Keywords para identificar modos de desafio/evento — apenas Triple Elixir
-CHALLENGE_KEYWORDS = ['tripleelixir']
+# Modos e tipos de batalha padrao que NAO sao o desafio semanal
+NON_CHALLENGE_TYPES = {
+    'pvp', 'pathoflegend', 'riverracepvp', 'riverraceduel', 
+    'riverraceduelcolosseum', 'boatbattle', 'clanwarwar', 'friendly', 'tournament'
+}
+
+NON_CHALLENGE_MODES = {
+    'ladder', 'ranked1v1_newarena', 'showdown_friendly', 
+    'clanwar_boatbattle', 'challenge', 'grandchallenge', 'tournament'
+}
 
 
 def is_challenge(game_mode_name: str, battle_type: str) -> bool:
-    """Verifica se a batalha eh um desafio Triple Elixir."""
-    combined = (game_mode_name + ' ' + battle_type).lower().replace(' ', '').replace('_', '').replace('-', '')
-    return any(kw.replace('_', '') in combined for kw in CHALLENGE_KEYWORDS)
+    """Verifica se a batalha eh um desafio baseado em exclusao de modos padrao e guerra."""
+    b_type = battle_type.lower()
+    g_mode = game_mode_name.lower()
+    
+    if b_type in NON_CHALLENGE_TYPES:
+        return False
+        
+    if g_mode in NON_CHALLENGE_MODES:
+        return False
+        
+    if '2v2' in b_type or '2v2' in g_mode or 'teamvsteam' in g_mode:
+        return False
+        
+    if 'friendly' in g_mode:
+        return False
+        
+    return True
 
 
 def get_week_iso(dt_utc: datetime) -> str:
-    """Retorna a semana ISO no formato YYYY-WNN (ex: 2026-W23)."""
-    return dt_utc.strftime('%G-W%V')
+    """
+    Retorna a semana ISO customizada para Desafios (YYYY-WNN).
+    O desafio muda terca-feira as 10:00 UTC (07:00 BRT).
+    Subtraimos 34 horas (1 dia + 10 horas) para que terca 10:00 UTC
+    seja segunda-feira 00:00 UTC, iniciando a nova semana ISO exatamente no momento certo.
+    """
+    from datetime import timedelta
+    dt_shifted = dt_utc - timedelta(hours=34)
+    return dt_shifted.strftime('%G-W%V')
 
 
 def get_api_token() -> str:
@@ -337,8 +366,8 @@ def main():
         print("[ERRO] Nenhuma tag de jogador configurada no .env")
         sys.exit(1)
 
-    # Determinar a semana ISO atual para filtrar
-    current_week_iso = datetime.now(timezone.utc).strftime('%G-W%V')
+    # Determinar a semana ISO atual para filtrar (considerando a virada na terca)
+    current_week_iso = get_week_iso(datetime.now(timezone.utc))
     print(f"[INFO] Semana ISO atual: {current_week_iso}")
 
     # Carregar batalhas ja existentes
@@ -349,12 +378,11 @@ def main():
     for tag in tags:
         print(f"[INFO] Coletando batalhas de desafio para {tag}...")
 
-        # 1. Tentar coletar do CSV historico (apenas Triple Elixir da semana atual)
+        # 1. Tentar coletar do CSV historico
         csv_rows = collect_from_csv(tag)
         csv_rows_filtered = [r for r in csv_rows 
-                            if r.get('semana_iso') == current_week_iso
-                            and 'triple' in r.get('tipo_desafio','').lower().replace(' ','')]
-        print(f"[OK] {len(csv_rows_filtered)} batalhas Triple Elixir da {current_week_iso} para {tag} (de {len(csv_rows)} totais)")
+                            if r.get('semana_iso') == current_week_iso]
+        print(f"[OK] {len(csv_rows_filtered)} batalhas de desafio da {current_week_iso} para {tag} (de {len(csv_rows)} totais)")
         all_rows.extend(csv_rows_filtered)
 
         # 2. Tentar coletar da API (batalhas mais recentes que podem nao estar no CSV ainda)

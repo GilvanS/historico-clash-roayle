@@ -41,18 +41,51 @@ FIELDNAMES = [
     'deck_key', 'jogador_tags', 'total_jogadores'
 ]
 
-CHALLENGE_KEYWORDS = [
-    'tripleelixir'
-]
+# Modos e tipos de batalha padrao que NAO sao o desafio semanal
+NON_CHALLENGE_TYPES = {
+    'pvp', 'pathoflegend', 'riverracepvp', 'riverraceduel', 
+    'riverraceduelcolosseum', 'boatbattle', 'clanwarwar', 'friendly', 'tournament'
+}
+
+NON_CHALLENGE_MODES = {
+    'ladder', 'ranked1v1_newarena', 'showdown_friendly', 
+    'clanwar_boatbattle', 'challenge', 'grandchallenge', 'tournament'
+}
 
 
 def is_challenge(game_mode_name: str, battle_type: str) -> bool:
-    combined = (game_mode_name + ' ' + battle_type).lower().replace(' ', '').replace('_', '').replace('-', '')
-    return any(kw.replace('_', '').replace('-', '') in combined for kw in CHALLENGE_KEYWORDS)
+    """Verifica se a batalha eh um desafio baseado em exclusao de modos padrao e guerra."""
+    b_type = battle_type.lower()
+    g_mode = game_mode_name.lower()
+    
+    if b_type in NON_CHALLENGE_TYPES:
+        return False
+        
+    if g_mode in NON_CHALLENGE_MODES:
+        return False
+        
+    if '2v2' in b_type or '2v2' in g_mode or 'teamvsteam' in g_mode:
+        return False
+        
+    if 'friendly' in g_mode:
+        return False
+        
+    # Nao precisamos coletar top decks para modos aleatorios/draft
+    if 'random' in g_mode or 'draft' in g_mode or 'pick' in g_mode:
+        return False
+        
+    return True
 
 
 def get_week_iso(dt_utc: datetime) -> str:
-    return dt_utc.strftime('%G-W%V')
+    """
+    Retorna a semana ISO customizada para Desafios (YYYY-WNN).
+    O desafio muda terca-feira as 10:00 UTC (07:00 BRT).
+    Subtraimos 34 horas (1 dia + 10 horas) para que terca 10:00 UTC
+    seja segunda-feira 00:00 UTC, iniciando a nova semana ISO exatamente no momento certo.
+    """
+    dt_shifted = dt_utc - timedelta(hours=34)
+    return dt_shifted.strftime('%G-W%V')
 
 
 def get_api_token() -> str:
@@ -386,6 +419,29 @@ def save_processed(processed: set):
         print(f"[WARN] Falha ao salvar processed: {e}")
 
 
+def check_if_current_challenge_is_random(api_token) -> tuple:
+    """Verifica nas batalhas do proprio usuario se o desafio ativo eh aleatorio/draft."""
+    tags_str = os.getenv('CR_PLAYER_TAGS', '')
+    user_tags = [t.strip() for t in tags_str.split(',') if t.strip()]
+    
+    for tag in user_tags:
+        battles = fetch_battlelog(api_token, tag)
+        if not battles:
+            continue
+        for b in battles:
+            b_type = b.get('type', '').lower()
+            g_mode = b.get('gameMode', {}).get('name', '').lower()
+            
+            # Se for um desafio (mesmo padrao)
+            if b_type not in NON_CHALLENGE_TYPES and g_mode not in NON_CHALLENGE_MODES and '2v2' not in b_type and '2v2' not in g_mode and 'teamvsteam' not in g_mode and 'friendly' not in g_mode:
+                if 'random' in g_mode or 'draft' in g_mode or 'pick' in g_mode:
+                    return True, g_mode
+                else:
+                    # Encontrou um desafio que NAO eh random, podemos parar de checar
+                    return False, g_mode
+    return False, None
+
+
 def main():
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(errors='replace')
@@ -396,6 +452,12 @@ def main():
     # Carregar batalhas já processadas (por battleTime)
     processed = load_processed()
     print(f"[INFO] Batalhas ja processadas: {len(processed)}")
+
+    is_random, rand_mode = check_if_current_challenge_is_random(api_token)
+    if is_random:
+        print(f"\n[INFO] O desafio atual ({rand_mode}) eh aleatorio/draft/pick.")
+        print("[INFO] Pulando coleta do Top Global para economizar processamento e API.")
+        sys.exit(0)
 
     # 1. Buscar top 100 players
     print("\n" + "=" * 60)

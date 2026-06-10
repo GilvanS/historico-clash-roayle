@@ -71,7 +71,7 @@ def format_date_brt(dt_utc: datetime) -> str:
 def format_deck(cards: list) -> str:
     """Formata lista de cartas como string separada por ' | ' na ordem original da API."""
     if not cards:
-        return ''
+        return 'Aleatório'
     return ' | '.join(card.get('name', '') for card in cards)
 
 
