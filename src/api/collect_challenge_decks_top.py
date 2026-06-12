@@ -422,8 +422,9 @@ def save_processed(processed: set):
 
 def check_if_current_challenge_is_random(api_token) -> tuple:
     """Verifica nas batalhas do proprio usuario se o desafio ativo eh aleatorio/draft."""
-    tags_str = os.getenv('CR_PLAYER_TAGS', '')
-    user_tags = [t.strip() for t in tags_str.split(',') if t.strip()]
+    primary = os.getenv('CR_PLAYER_TAG', '')
+    secondary = os.getenv('CR_PLAYER_TAG_SEC', '')
+    user_tags = [t.strip() for t in [primary, secondary] if t.strip()]
     
     for tag in user_tags:
         battles = fetch_battlelog(api_token, tag)
@@ -435,7 +436,7 @@ def check_if_current_challenge_is_random(api_token) -> tuple:
             
             # Se for um desafio (mesmo padrao)
             if b_type not in NON_CHALLENGE_TYPES and g_mode not in NON_CHALLENGE_MODES and '2v2' not in b_type and '2v2' not in g_mode and 'teamvsteam' not in g_mode and 'friendly' not in g_mode:
-                if 'random' in g_mode or 'draft' in g_mode or 'pick' in g_mode:
+                if 'random' in g_mode or 'draft' in g_mode or 'pick' in g_mode or 'eventdeck' in g_mode or 'noset' in g_mode:
                     return True, g_mode
                 else:
                     # Encontrou um desafio que NAO eh random, podemos parar de checar

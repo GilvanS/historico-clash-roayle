@@ -202,6 +202,8 @@ def collect_top_meta_decks():
     
     # 4. Buscar battlelogs dos jogadores
     new_battles_count = 0
+    failed_players = []
+    
     for idx, p in enumerate(selected_players, 1):
         tag = p.get('tag')
         name = p.get('name')
@@ -267,6 +269,67 @@ def collect_top_meta_decks():
         except Exception as e:
             print(f"    [Erro] Falha ao obter dados do battlelog do jogador {name}: {e}")
             sys.stdout.flush()
+            failed_players.append(p)
+            
+    # Retentativa no final para os jogadores que falharam
+    if failed_players:
+        print(f"\n[Meta] Tentando novamente {len(failed_players)} jogador(es) que falhou(aram) por timeout...")
+        sys.stdout.flush()
+        for p in failed_players:
+            tag = p.get('tag')
+            name = p.get('name')
+            source_type = p.get('source_type')
+            print(f"  [Retentativa] Analisando battlelog de: {name} ({tag})")
+            sys.stdout.flush()
+            
+            tag_url = tag.replace('#', '%23')
+            battlelog_url = f"https://proxy.royaleapi.dev/v1/players/{tag_url}/battlelog"
+            
+            try:
+                r = requests.get(battlelog_url, headers=headers, timeout=30) # Aumentando timeout na retentativa
+                if r.status_code != 200:
+                    print(f"    [Aviso] Falha ao buscar battlelog na retentativa para {name}: {r.status_code}")
+                    continue
+                    
+                battles = r.json()
+                for b in battles:
+                    battle_type = b.get('type', '')
+                    if battle_type in ['pathOfLegend', 'pathOfLegends', 'ladder']:
+                        team = b.get('team', [{}])[0]
+                        opp = b.get('opponent', [{}])[0]
+                        
+                        battle_time = b.get('battleTime', '')
+                        battle_id = f"{battle_time}_{tag}"
+                        
+                        if battle_id in processed_battles:
+                            continue
+                        
+                        cards = team.get('cards', [])
+                        deck_str = format_deck(cards)
+                        
+                        if not deck_str or len(cards) < 8:
+                            continue
+                            
+                        p_crowns = team.get('crowns', 0)
+                        o_crowns = opp.get('crowns', 0)
+                        is_victory = p_crowns > o_crowns
+                        
+                        processed_battles.add(battle_id)
+                        new_battles_count += 1
+                        
+                        if deck_str not in deck_stats:
+                            deck_stats[deck_str] = {
+                                'deck_cards': deck_str, 'total': 0, 'wins': 0, 'losses': 0, 'win_rate': 0.0, 'source': source_type
+                            }
+                        
+                        deck_stats[deck_str]['total'] += 1
+                        if is_victory:
+                            deck_stats[deck_str]['wins'] += 1
+                        else:
+                            deck_stats[deck_str]['losses'] += 1
+            except Exception as e:
+                print(f"    [Erro Crítico] Falha definitiva para o jogador {name} na retentativa: {e}")
+                sys.stdout.flush()
 
     print(f"[Meta] Processamento concluído. {new_battles_count} novas batalhas agregadas.")
     sys.stdout.flush()

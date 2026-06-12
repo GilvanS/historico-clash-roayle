@@ -2,8 +2,30 @@
 """
 Mestre da Sincronização Clash Royale (30 MIN)
 Orquestra: Coleta -> Consolidação -> README -> Dashboard HTML
-Logs de coleta sao capturados e exibidos APENAS no final para clareza.
+Logs de coleta são exibidos em tempo real.
 """
+
+import json
+import subprocess
+
+class Tee:
+    """Classe auxiliar para escrever no console e em um buffer simultaneamente."""
+    def __init__(self, stream1, stream2):
+        self.stream1 = stream1
+        self.stream2 = stream2
+
+    def write(self, data):
+        try:
+            self.stream1.write(data)
+        except UnicodeEncodeError:
+            # Proteção para caracteres que o console do Windows não suporta
+            safe_data = data.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(sys.stdout.encoding or 'utf-8')
+            self.stream1.write(safe_data)
+        self.stream2.write(data)
+
+    def flush(self):
+        self.stream1.flush()
+        self.stream2.flush()
 
 import os
 import sys
@@ -82,7 +104,8 @@ def main():
     try:
         logger.info("FASE 0: Verificando e limpando conflitos Git nos arquivos CSV...")
         buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
+        tee = Tee(sys.stdout, buf)
+        with redirect_stdout(tee), redirect_stderr(tee):
             from api_tools.clean_csv_conflicts import clean_csv_conflicts
             clean_csv_conflicts()
         collection_logs.append(("Git Clean", buf.getvalue()))
@@ -94,7 +117,8 @@ def main():
     try:
         logger.info("FASE 0.5: Consolidando arquivos CSV de desafios...")
         buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
+        tee = Tee(sys.stdout, buf)
+        with redirect_stdout(tee), redirect_stderr(tee):
             from api_tools import consolidate_csvs
             consolidate_csvs.clean_challenges()
         collection_logs.append(("CSV Consolidator", buf.getvalue()))
@@ -107,7 +131,8 @@ def main():
     try:
         logger.info("FASE 1: Coletando batalhas da API e atualizando CSVs...")
         buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
+        tee = Tee(sys.stdout, buf)
+        with redirect_stdout(tee), redirect_stderr(tee):
             from collect_battles_csv import main as collect_main
             collect_main()
         collection_logs.append(("Batalhas", buf.getvalue()))
@@ -121,7 +146,8 @@ def main():
         if sync_chests:
             logger.info("FASE 1.2: Coletando ciclo de baús...")
             buf = io.StringIO()
-            with redirect_stdout(buf), redirect_stderr(buf):
+            tee = Tee(sys.stdout, buf)
+            with redirect_stdout(tee), redirect_stderr(tee):
                 from collect_chests import collect_chests
                 collect_chests()
             collection_logs.append(("Baus", buf.getvalue()))
@@ -136,7 +162,8 @@ def main():
     try:
         logger.info("FASE 1.3: Coletando ranking Top 100 Brasil (Meta)...")
         buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
+        tee = Tee(sys.stdout, buf)
+        with redirect_stdout(tee), redirect_stderr(tee):
             from collect_meta_br import collect_meta_br
             collect_meta_br()
         collection_logs.append(("Meta BR", buf.getvalue()))
@@ -148,7 +175,8 @@ def main():
     try:
         logger.info("FASE 1.4: Coletando decks do Top 5 Global e Top 5 Brasil (Dynamic Meta)...")
         buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
+        tee = Tee(sys.stdout, buf)
+        with redirect_stdout(tee), redirect_stderr(tee):
             from collect_top_meta_global import collect_top_meta_decks
             collect_top_meta_decks()
         collection_logs.append(("Meta Global", buf.getvalue()))
@@ -177,38 +205,35 @@ def main():
         
         if is_war_period:
             logger.info("FASE 1.5: Periodo de Guerra ativo! Coletando decks dos melhores jogadores...")
-            war_logs = []
-            # Nota: Alguns scripts de guerra usam sys.stdout.buffer, incompativel com redirect_stdout
-            # Executamos normalmente e capturamos apenas o que for possivel
-            import subprocess
-            result = subprocess.run(
-                [sys.executable, '-c',
-                 'import sys, os; sys.path.append(os.path.join(os.getcwd(), "api")); from collect_war_top_decks import collect_top_decks; collect_top_decks()'],
-                cwd=os.path.dirname(os.path.abspath(__file__)),
-                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300
-            )
-            if result.stdout: war_logs.append(result.stdout)
-            if result.stderr: war_logs.append(result.stderr)
+            buf = io.StringIO()
+            tee = Tee(sys.stdout, buf)
             
-            result = subprocess.run(
-                [sys.executable, '-c',
-                 'import sys, os; sys.path.append(os.path.join(os.getcwd(), "api")); from collect_war_weekend import collect_boat_data; collect_boat_data()'],
-                cwd=os.path.dirname(os.path.abspath(__file__)),
-                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=120
-            )
-            if result.stdout: war_logs.append(result.stdout)
-            if result.stderr: war_logs.append(result.stderr)
+            fase_start = datetime.now()
+            with redirect_stdout(tee), redirect_stderr(tee):
+                try:
+                    from collect_war_top_decks import collect_top_decks
+                    collect_top_decks()
+                except Exception as e:
+                    print(f"Erro em collect_top_decks: {e}")
+                    
+                try:
+                    from collect_war_weekend import collect_boat_data
+                    collect_boat_data()
+                except Exception as e:
+                    print(f"Erro em collect_boat_data: {e}")
+                    
+                try:
+                    from collect_river_race_full import collect_river_race_intelligence
+                    collect_river_race_intelligence()
+                except Exception as e:
+                    print(f"Erro em collect_river_race_intelligence: {e}")
+                    
+            fase_end = datetime.now()
+            duration = int((fase_end - fase_start).total_seconds())
             
-            result = subprocess.run(
-                [sys.executable, '-c',
-                 'import sys, os; sys.path.append(os.path.join(os.getcwd(), "api")); from collect_river_race_full import collect_river_race_intelligence; collect_river_race_intelligence()'],
-                cwd=os.path.dirname(os.path.abspath(__file__)),
-                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=900
-            )
-            if result.stdout: war_logs.append(result.stdout)
-            if result.stderr: war_logs.append(result.stderr)
-            
-            collection_logs.append(("Guerra", "\n".join(war_logs)))
+            log_content = buf.getvalue()
+            log_content += f"\n[Tempo da Guerra: {duration} segundos]"
+            collection_logs.append(("Guerra", log_content))
         else:
             logger.info("FASE 1.5: Fora do periodo de guerra. Pulando coleta de decks.")
             collection_logs.append(("Guerra", "Pulada (fora do periodo de guerra)"))
@@ -234,7 +259,8 @@ def main():
         if is_challenge_period:
             logger.info("FASE 1.6: Periodo de Desafio ativo! Coletando decks da semana...")
             buf = io.StringIO()
-            with redirect_stdout(buf), redirect_stderr(buf):
+            tee = Tee(sys.stdout, buf)
+            with redirect_stdout(tee), redirect_stderr(tee):
                 from collect_challenge_decks import main as collect_challenges
                 collect_challenges()
                 from collect_challenge_decks_top import main as collect_challenges_top

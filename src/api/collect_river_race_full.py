@@ -345,10 +345,22 @@ def collect_top_global_clans(token, limit=5):
             
             try:
                 clan_url = clan_tag.replace('#', '%23')
-                cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=15)
+                cr = None
+                race_data = None
                 
-                if cr.status_code == 200:
-                    race_data = cr.json()
+                for attempt in range(1, 4):
+                    try:
+                        current_timeout = 15 + (attempt - 1) * 10 # 15s, 25s, 35s
+                        cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=current_timeout)
+                        if cr.status_code == 200:
+                            race_data = cr.json()
+                            break
+                        else:
+                            print(f"      [Aviso] Tentativa {attempt}/3 falhou com status {cr.status_code} para {clan_name}")
+                    except Exception as e:
+                        print(f"      [Aviso] Tentativa {attempt}/3 falhou (timeout={current_timeout}s) para {clan_name}: {e}")
+                
+                if race_data:
                     my_clan = race_data.get('clans', [])
                     clan_race = next((c for c in my_clan if c.get('tag') == clan_tag), None)
                     
@@ -445,10 +457,22 @@ def collect_top_brazil_clans(token, limit=5):
             
             try:
                 clan_url = clan_tag.replace('#', '%23')
-                cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=15)
+                cr = None
+                race_data = None
                 
-                if cr.status_code == 200:
-                    race_data = cr.json()
+                for attempt in range(1, 4):
+                    try:
+                        current_timeout = 15 + (attempt - 1) * 10 # 15s, 25s, 35s
+                        cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=current_timeout)
+                        if cr.status_code == 200:
+                            race_data = cr.json()
+                            break
+                        else:
+                            print(f"      [Aviso] Tentativa {attempt}/3 falhou com status {cr.status_code} para {clan_name}")
+                    except Exception as e:
+                        print(f"      [Aviso] Tentativa {attempt}/3 falhou (timeout={current_timeout}s) para {clan_name}: {e}")
+                
+                if race_data:
                     my_clan = race_data.get('clans', [])
                     clan_race = next((c for c in my_clan if c.get('tag') == clan_tag), None)
                     
@@ -531,15 +555,25 @@ def collect_river_race_for_account(token, player_tag, suffix="", clan_tag_fallba
     print(f"Coletando para {player_tag} - Clan: {my_clan_tag}")
     
     clan_url = my_clan_tag.replace('#', '%23')
-    try:
-        r = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=15)
-        if r.status_code != 200:
-            print(f"ERRO ao buscar corrida: {r.status_code}")
-            return []
-        data = r.json()
-    except Exception as e:
-        print(f"ERRO de conexao ao buscar corrida: {e}")
+    
+    max_retries = 3
+    data = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            current_timeout = 15 + (attempt - 1) * 10 # 15s, 25s, 35s
+            r = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=current_timeout)
+            if r.status_code == 200:
+                data = r.json()
+                break
+            else:
+                print(f"    [Aviso] Tentativa {attempt}/{max_retries} falhou com status: {r.status_code}")
+        except Exception as e:
+            print(f"    [Aviso] Tentativa {attempt}/{max_retries} de conexao falhou (timeout={current_timeout}s): {e}")
+            
+    if not data:
+        print(f"ERRO FATAL: Nao foi possivel buscar corrida apos {max_retries} tentativas.")
         return []
+        
     clans = data.get('clans', [])
     
     if not clans:
