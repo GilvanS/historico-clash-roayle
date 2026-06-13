@@ -459,7 +459,7 @@ def main():
     if is_random:
         print(f"\n[INFO] O desafio atual ({rand_mode}) eh aleatorio/draft/pick.")
         print("[INFO] Pulando coleta do Top Global para economizar processamento e API.")
-        sys.exit(0)
+        return
 
     # 1. Buscar top 100 players
     print("\n" + "=" * 60)

@@ -14,6 +14,10 @@ class Tee:
         self.stream1 = stream1
         self.stream2 = stream2
 
+    @property
+    def encoding(self):
+        return 'utf-8'
+
     def write(self, data):
         try:
             self.stream1.write(data)
@@ -261,10 +265,23 @@ def main():
             buf = io.StringIO()
             tee = Tee(sys.stdout, buf)
             with redirect_stdout(tee), redirect_stderr(tee):
-                from collect_challenge_decks import main as collect_challenges
-                collect_challenges()
-                from collect_challenge_decks_top import main as collect_challenges_top
-                collect_challenges_top()
+                try:
+                    from collect_challenge_decks import main as collect_challenges
+                    collect_challenges()
+                except SystemExit as e:
+                    if e.code != 0:
+                        print(f"Erro em collect_challenges (Exit code {e.code})")
+                except Exception as e:
+                    print(f"Erro em collect_challenges: {e}")
+
+                try:
+                    from collect_challenge_decks_top import main as collect_challenges_top
+                    collect_challenges_top()
+                except SystemExit as e:
+                    if e.code != 0:
+                        print(f"Erro em collect_challenges_top (Exit code {e.code})")
+                except Exception as e:
+                    print(f"Erro em collect_challenges_top: {e}")
             collection_logs.append(("Desafios", buf.getvalue()))
         else:
             logger.info("FASE 1.6: Fora do periodo de desafio. Pulando coleta.")
