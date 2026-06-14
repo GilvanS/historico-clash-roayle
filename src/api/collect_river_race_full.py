@@ -17,9 +17,38 @@ from dotenv import load_dotenv
 import concurrent.futures
 
 # Forcar UTF-8 no terminal
-if sys.stdout.encoding != 'utf-8':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+try:
+    if sys.stdout.encoding != 'utf-8':
+        sys.stdout.reconfigure(encoding='utf-8')
+    if sys.stderr.encoding != 'utf-8':
+        sys.stderr.reconfigure(encoding='utf-8')
+except AttributeError:
+    try:
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    except:
+        pass
+
+# Substituir print por versao resiliente para evitar UnicodeEncodeError em terminais Windows
+_original_print = print
+def print(*args, **kwargs):
+    try:
+        _original_print(*args, **kwargs)
+    except UnicodeEncodeError:
+        encoding = sys.stdout.encoding or 'utf-8'
+        new_args = []
+        for arg in args:
+            if isinstance(arg, str):
+                new_args.append(arg.encode(encoding, errors='replace').decode(encoding))
+            else:
+                new_args.append(arg)
+        try:
+            _original_print(*new_args, **kwargs)
+        except Exception:
+            pass
+    except Exception:
+        pass
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'data', 'csv')
@@ -344,82 +373,86 @@ def collect_top_global_clans(token, limit=5):
             print(f"\n#{clan_idx} {clan_name} ({clan_tag}) - Fame: {clan_fame}")
             
             try:
-                clan_url = clan_tag.replace('#', '%23')
-                cr = None
-                race_data = None
-                
-                for attempt in range(1, 4):
-                    try:
-                        current_timeout = 15 + (attempt - 1) * 10 # 15s, 25s, 35s
-                        cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=current_timeout)
-                        if cr.status_code == 200:
-                            race_data = cr.json()
-                            break
-                        else:
-                            print(f"      [Aviso] Tentativa {attempt}/3 falhou com status {cr.status_code} para {clan_name}")
-                    except Exception as e:
-                        print(f"      [Aviso] Tentativa {attempt}/3 falhou (timeout={current_timeout}s) para {clan_name}: {e}")
-                
-                if race_data:
-                    my_clan = race_data.get('clans', [])
-                    clan_race = next((c for c in my_clan if c.get('tag') == clan_tag), None)
+                try:
+                    clan_url = clan_tag.replace('#', '%23')
+                    cr = None
+                    race_data = None
                     
-                    if clan_race:
-                        clan_fame = clan_race.get('fame', 0)
+                    for attempt in range(1, 4):
+                        try:
+                            current_timeout = 15 + (attempt - 1) * 10 # 15s, 25s, 35s
+                            cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=current_timeout)
+                            if cr.status_code == 200:
+                                race_data = cr.json()
+                                break
+                            else:
+                                print(f"      [Aviso] Tentativa {attempt}/3 falhou com status {cr.status_code} para {clan_name}")
+                        except Exception as e:
+                            print(f"      [Aviso] Tentativa {attempt}/3 falhou (timeout={current_timeout}s) para {clan_name}: {e}")
                     
-                    participants = next((c.get('participants', []) for c in my_clan if c.get('tag') == clan_tag), [])
-                    sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
-                    # OTIMIZACAO: Coletar apenas os TOP 5 jogadores para poupar chamadas a API
-                    top_players = sorted_players[:5]
-                else:
+                    if race_data:
+                        my_clan = race_data.get('clans', [])
+                        clan_race = next((c for c in my_clan if c.get('tag') == clan_tag), None)
+                        
+                        if clan_race:
+                            clan_fame = clan_race.get('fame', 0)
+                        
+                        participants = next((c.get('participants', []) for c in my_clan if c.get('tag') == clan_tag), [])
+                        sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
+                        # OTIMIZACAO: Coletar apenas os TOP 5 jogadores para poupar chamadas a API
+                        top_players = sorted_players[:5]
+                    else:
+                        top_players = []
+                except Exception as e:
+                    print(f"    [Aviso] Falha ao parsear dados basicos do clan {clan_name}: {e}")
                     top_players = []
-            except:
-                top_players = []
-            
-            # Buscar battlelogs em paralelo
-            print(f"    Buscando battlelogs de {len(top_players)} jogadores...")
-            battlelogs_cache = fetch_battlelogs_concurrently(top_players, headers, base_url)
-            
-            for player_idx, player in enumerate(top_players, 1):
-                player_tag_player = player.get('tag', '')
-                player_name = player.get('name', 'Unknown')
-                player_fame = player.get('fame', 0)
-                decks_used = player.get('decksUsed', 0)
-                boat_attacks = player.get('boatAttacks', 0)
                 
-                player_decks = {
-                    'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
-                    'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''
-                }
+                # Buscar battlelogs em paralelo
+                print(f"    Buscando battlelogs de {len(top_players)} jogadores...")
+                battlelogs_cache = fetch_battlelogs_concurrently(top_players, headers, base_url)
                 
-                war_stats = {
-                    'war_vitorias': 0, 'war_derrotas': 0, 'war_medals': 0,
-                    'war_torre': 'Tower Princess', 'war_tipo_principal': '', 'war_battles_count': 0
-                }
-                
-                if player_tag_player and player_tag_player in battlelogs_cache:
-                    battles = battlelogs_cache[player_tag_player]
-                    war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
-                    player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
-                
-                results.append({
-                    'data_coleta': data_hoje,
-                    'player_tag_conta': 'TOP_GLOBAL',
-                    'clan_posicao': clan_idx,
-                    'clan_nome': clan_name,
-                    'clan_tag': clan_tag,
-                    'clan_fame': clan_fame,
-                    'player_posicao': player_idx,
-                    'player_nome': player_name,
-                    'player_tag': player_tag_player,
-                    'player_fame': player_fame,
-                    'decks_usados': decks_used,
-                    'boat_attacks': boat_attacks,
-                    **player_decks,
-                    **war_stats
-                })
-                
-                print(f"  - Player #{player_idx}: {player_name} ({player_fame} fame)")
+                for player_idx, player in enumerate(top_players, 1):
+                    player_tag_player = player.get('tag', '')
+                    player_name = player.get('name', 'Unknown')
+                    player_fame = player.get('fame', 0)
+                    decks_used = player.get('decksUsed', 0)
+                    boat_attacks = player.get('boatAttacks', 0)
+                    
+                    player_decks = {
+                        'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
+                        'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''
+                    }
+                    
+                    war_stats = {
+                        'war_vitorias': 0, 'war_derrotas': 0, 'war_medals': 0,
+                        'war_torre': 'Tower Princess', 'war_tipo_principal': '', 'war_battles_count': 0
+                    }
+                    
+                    if player_tag_player and player_tag_player in battlelogs_cache:
+                        battles = battlelogs_cache[player_tag_player]
+                        war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
+                        player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
+                    
+                    results.append({
+                        'data_coleta': data_hoje,
+                        'player_tag_conta': 'TOP_GLOBAL',
+                        'clan_posicao': clan_idx,
+                        'clan_nome': clan_name,
+                        'clan_tag': clan_tag,
+                        'clan_fame': clan_fame,
+                        'player_posicao': player_idx,
+                        'player_nome': player_name,
+                        'player_tag': player_tag_player,
+                        'player_fame': player_fame,
+                        'decks_usados': decks_used,
+                        'boat_attacks': boat_attacks,
+                        **player_decks,
+                        **war_stats
+                    })
+                    
+                    print(f"  - Player #{player_idx}: {player_name} ({player_fame} fame)")
+            except Exception as e:
+                print(f"ERRO ao coletar ou processar dados para o clan #{clan_idx} {clan_name}: {e}")
         
         return results
         
@@ -456,82 +489,86 @@ def collect_top_brazil_clans(token, limit=5):
             print(f"\n#{clan_idx} {clan_name} ({clan_tag}) - Fame: {clan_fame}")
             
             try:
-                clan_url = clan_tag.replace('#', '%23')
-                cr = None
-                race_data = None
-                
-                for attempt in range(1, 4):
-                    try:
-                        current_timeout = 15 + (attempt - 1) * 10 # 15s, 25s, 35s
-                        cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=current_timeout)
-                        if cr.status_code == 200:
-                            race_data = cr.json()
-                            break
-                        else:
-                            print(f"      [Aviso] Tentativa {attempt}/3 falhou com status {cr.status_code} para {clan_name}")
-                    except Exception as e:
-                        print(f"      [Aviso] Tentativa {attempt}/3 falhou (timeout={current_timeout}s) para {clan_name}: {e}")
-                
-                if race_data:
-                    my_clan = race_data.get('clans', [])
-                    clan_race = next((c for c in my_clan if c.get('tag') == clan_tag), None)
+                try:
+                    clan_url = clan_tag.replace('#', '%23')
+                    cr = None
+                    race_data = None
                     
-                    if clan_race:
-                        clan_fame = clan_race.get('fame', 0)
+                    for attempt in range(1, 4):
+                        try:
+                            current_timeout = 15 + (attempt - 1) * 10 # 15s, 25s, 35s
+                            cr = requests.get(f"{base_url}/clans/{clan_url}/currentriverrace", headers=headers, timeout=current_timeout)
+                            if cr.status_code == 200:
+                                race_data = cr.json()
+                                break
+                            else:
+                                print(f"      [Aviso] Tentativa {attempt}/3 falhou com status {cr.status_code} para {clan_name}")
+                        except Exception as e:
+                            print(f"      [Aviso] Tentativa {attempt}/3 falhou (timeout={current_timeout}s) para {clan_name}: {e}")
                     
-                    participants = next((c.get('participants', []) for c in my_clan if c.get('tag') == clan_tag), [])
-                    sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
-                    # OTIMIZACAO: Coletar apenas os TOP 5 jogadores para poupar chamadas
-                    top_players = sorted_players[:5]
-                else:
+                    if race_data:
+                        my_clan = race_data.get('clans', [])
+                        clan_race = next((c for c in my_clan if c.get('tag') == clan_tag), None)
+                        
+                        if clan_race:
+                            clan_fame = clan_race.get('fame', 0)
+                        
+                        participants = next((c.get('participants', []) for c in my_clan if c.get('tag') == clan_tag), [])
+                        sorted_players = sorted(participants, key=lambda x: x.get('fame', 0), reverse=True)
+                        # OTIMIZACAO: Coletar apenas os TOP 5 jogadores para poupar chamadas
+                        top_players = sorted_players[:5]
+                    else:
+                        top_players = []
+                except Exception as e:
+                    print(f"    [Aviso] Falha ao parsear dados basicos do clan {clan_name}: {e}")
                     top_players = []
-            except:
-                top_players = []
-            
-            # Buscar battlelogs em paralelo
-            print(f"    Buscando battlelogs de {len(top_players)} jogadores...")
-            battlelogs_cache = fetch_battlelogs_concurrently(top_players, headers, base_url)
-            
-            for player_idx, player in enumerate(top_players, 1):
-                player_tag_player = player.get('tag', '')
-                player_name = player.get('name', 'Unknown')
-                player_fame = player.get('fame', 0)
-                decks_used = player.get('decksUsed', 0)
-                boat_attacks = player.get('boatAttacks', 0)
                 
-                player_decks = {
-                    'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
-                    'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''
-                }
+                # Buscar battlelogs em paralelo
+                print(f"    Buscando battlelogs de {len(top_players)} jogadores...")
+                battlelogs_cache = fetch_battlelogs_concurrently(top_players, headers, base_url)
                 
-                war_stats = {
-                    'war_vitorias': 0, 'war_derrotas': 0, 'war_medals': 0,
-                    'war_torre': 'Tower Princess', 'war_tipo_principal': '', 'war_battles_count': 0
-                }
-                
-                if player_tag_player and player_tag_player in battlelogs_cache:
-                    battles = battlelogs_cache[player_tag_player]
-                    war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
-                    player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
-                
-                results.append({
-                    'data_coleta': data_hoje,
-                    'player_tag_conta': 'TOP_BRAZIL',
-                    'clan_posicao': clan_idx,
-                    'clan_nome': clan_name,
-                    'clan_tag': clan_tag,
-                    'clan_fame': clan_fame,
-                    'player_posicao': player_idx,
-                    'player_nome': player_name,
-                    'player_tag': player_tag_player,
-                    'player_fame': player_fame,
-                    'decks_usados': decks_used,
-                    'boat_attacks': boat_attacks,
-                    **player_decks,
-                    **war_stats
-                })
-                
-                print(f"  - Player #{player_idx}: {player_name} ({player_fame} fame)")
+                for player_idx, player in enumerate(top_players, 1):
+                    player_tag_player = player.get('tag', '')
+                    player_name = player.get('name', 'Unknown')
+                    player_fame = player.get('fame', 0)
+                    decks_used = player.get('decksUsed', 0)
+                    boat_attacks = player.get('boatAttacks', 0)
+                    
+                    player_decks = {
+                        'deck_1': '', 'deck_2': '', 'deck_3': '', 'deck_4': '',
+                        'deck_1_tipo': '', 'deck_2_tipo': '', 'deck_3_tipo': '', 'deck_4_tipo': ''
+                    }
+                    
+                    war_stats = {
+                        'war_vitorias': 0, 'war_derrotas': 0, 'war_medals': 0,
+                        'war_torre': 'Tower Princess', 'war_tipo_principal': '', 'war_battles_count': 0
+                    }
+                    
+                    if player_tag_player and player_tag_player in battlelogs_cache:
+                        battles = battlelogs_cache[player_tag_player]
+                        war_stats = collect_war_battles_stats(battles, target_date=data_hoje)
+                        player_decks = collect_decks_from_battlelog(battles, target_date=data_hoje)
+                    
+                    results.append({
+                        'data_coleta': data_hoje,
+                        'player_tag_conta': 'TOP_BRAZIL',
+                        'clan_posicao': clan_idx,
+                        'clan_nome': clan_name,
+                        'clan_tag': clan_tag,
+                        'clan_fame': clan_fame,
+                        'player_posicao': player_idx,
+                        'player_nome': player_name,
+                        'player_tag': player_tag_player,
+                        'player_fame': player_fame,
+                        'decks_usados': decks_used,
+                        'boat_attacks': boat_attacks,
+                        **player_decks,
+                        **war_stats
+                    })
+                    
+                    print(f"  - Player #{player_idx}: {player_name} ({player_fame} fame)")
+            except Exception as e:
+                print(f"ERRO ao coletar ou processar dados para o clan #{clan_idx} {clan_name}: {e}")
         
         return results
         
@@ -762,6 +799,7 @@ def collect_river_race_intelligence():
                                 new_row = row.copy()
                                 new_row['data_coleta'] = data_hoje
                                 new_row['dia_batalha'] = dia_batalha
+                                new_row['is_fallback'] = True
                                 results_global.append(new_row)
                     
                     if not has_real_data_pri:
@@ -772,6 +810,7 @@ def collect_river_race_intelligence():
                                 new_row = row.copy()
                                 new_row['data_coleta'] = data_hoje
                                 new_row['dia_batalha'] = dia_batalha
+                                new_row['is_fallback'] = True
                                 results_pri.append(new_row)
                                 
                     if not has_real_data_sec:
@@ -782,6 +821,7 @@ def collect_river_race_intelligence():
                                 new_row = row.copy()
                                 new_row['data_coleta'] = data_hoje
                                 new_row['dia_batalha'] = dia_batalha
+                                new_row['is_fallback'] = True
                                 results_sec.append(new_row)
             except Exception as e:
                 print(f"Aviso: Erro ao buscar dados do historico para fallback: {e}")
@@ -838,7 +878,9 @@ def collect_river_race_intelligence():
         # Regra rigorosa de participacao:
         # Em dias de batalha (Dia 1, Dia 2, Dia 3, Dia 4), a participacao exige uso de deck ou ataque de barco.
         # No dia de Reset (Quinta-feira), permitimos participacao se houver fama/medalhas (fallback do Reset).
-        if dia_batalha == 'Reset':
+        if r.get('is_fallback') or conta_tipo_val in ('TOP_GLOBAL', 'TOP_BRAZIL'):
+            participou = True
+        elif dia_batalha == 'Reset':
             participou = (decks_val > 0 or boat_val > 0 or medals_val > 0 or battles_val > 0 or fame_val > 0)
         else:
             participou = (decks_val > 0 or boat_val > 0)
