@@ -9,9 +9,47 @@
 
 ### 📊 Estatísticas Atuais
 
-**Última atualização:** 14/06/2026 15:15:04
+**Última atualização:** 14/06/2026 15:47:10
 
 ### 📈 Estatísticas Gerais
+
+- **Total de Batalhas:** 3383
+- **Vitórias:** 1707 (50.5%)
+- **Derrotas:** 1675
+- **Mudança Total de Troféus:** +0
+
+### 🎴 Deck Atual (Mais Recente)
+
+- **Deck:** Royal Delivery, Evolved Skeletons, Goblin Gang, Goblins, Barbarian Barrel, Elite Barbarians, Skeleton Barrel, Monk
+- **Último Resultado:** DERROTA
+- **Data da Última Batalha:** 21/08/2023 04:44
+
+### 🏆 Deck com Melhor Performance
+
+- **Deck:** Bowler, Knight, Musketeer, Cannon, Hog Rider, Minions, Arrows, Skeletons
+- **Win Rate:** 100.0%
+- **Batalhas:** 6 (6V - 0D)
+- **Troféus:** +181
+
+### ⚔️ Últimas Batalhas
+
+1. ❌ **DERROTA** vs Monkey D rip - 0-1 coroas (+0 troféus) - 21/08/2023 04:44
+2. ❌ **DERROTA** vs MOKRANE - 0-3 coroas (+0 troféus) - 07/01/2024 11:30
+3. ❌ **DERROTA** vs NRC - 0-1 coroas (+0 troféus) - 13/05/2024 07:33
+4. ✅ **VITORIA** vs giaky - 2-1 coroas (+0 troféus) - 14/05/2024 09:33
+5. ❌ **DERROTA** vs X_X - 0-3 coroas (+0 troféus) - 15/05/2024 09:33
+
+### ✅ O que está funcionando
+
+- ✅ **Deck com melhor performance** (100.0% win rate) está acima de 50%
+- ✅ **Win rate geral** (50.5%) está acima de 50%
+- ⚠️ **Troféus totais** negativos (0)
+
+### ❌ O que não está funcionando
+
+
+
+## 📈 Estatísticas Gerais
 
 - **Total de Batalhas:** 3381
 - **Vitórias:** 1707 (50.5%)
