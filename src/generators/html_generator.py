@@ -9525,7 +9525,7 @@ class GitHubPagesHTMLGenerator:
         .rd-legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
         .rd-red { background: #ef4444; }
         .rd-gray { background: #6b7280; }
-        .rd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .rd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
         .rd-clan { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; }
         .rd-clan:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
         .rd-clan-me { border-color: rgba(96, 165, 250, 0.5) !important; box-shadow: 0 0 20px rgba(96, 165, 250, 0.15); }
@@ -9550,7 +9550,7 @@ class GitHubPagesHTMLGenerator:
         .rd-deck-break { width: 100%; height: 4px; }
         .rd-clan { border-bottom: 1px solid rgba(96, 165, 250, 0.3); padding-bottom: 15px; margin-bottom: 15px; }
         .rd-clan:last-child { border-bottom: none; }
-        .rd-card { width: 40px; height: 40px; border-radius: 6px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+        .rd-card { width: 38px; height: 38px; border-radius: 6px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
         .rd-card img { width: 100%; height: 100%; object-fit: cover; }
         .rd-no-deck { color: #475569; font-size: 0.7em; font-style: italic; padding: 4px 0; }
         .rd-deck-count { font-size: 0.6em; color: #475569; text-align: right; margin-top: 2px; }
@@ -9567,16 +9567,16 @@ class GitHubPagesHTMLGenerator:
         /* Estatísticas de Guerra do Jogador */
         .rd-player-stats {
             display: flex;
-            gap: 8px;
+            gap: 4px;
             flex-wrap: wrap;
             margin-bottom: 8px;
-            padding: 6px 8px;
+            padding: 5px 6px;
             background: rgba(0,0,0,0.3);
             border-radius: 8px;
         }
         .rd-stat {
-            font-size: 0.7em;
-            padding: 2px 8px;
+            font-size: 0.65em;
+            padding: 2px 5px;
             border-radius: 4px;
             font-weight: 600;
         }
