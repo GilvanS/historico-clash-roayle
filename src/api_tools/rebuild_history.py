@@ -22,7 +22,7 @@ def rebuild():
     data_dir = 'a:/Workspace/historico-clash-roayle/src/data_csv_oficial'
     files = glob.glob(os.path.join(data_dir, 'oponentes_*.csv'))
     # Include the recovered file
-    files.append(os.path.join(data_dir, 'oponentes_ano_2026_recovered.csv'))
+    files.append(os.path.join(data_dir, f'oponentes_ano_{datetime.now().year}_recovered.csv'))
     
     all_battles = {} # Key: (time, opponent_tag)
     
@@ -141,7 +141,7 @@ def rebuild():
     # Sort
     sorted_battles = sorted(all_battles.values(), key=lambda x: x[0], reverse=True)
 
-    output_path = os.path.join(data_dir, 'oponentes_ano_2026_consolidated.csv')
+    output_path = os.path.join(data_dir, f'oponentes_ano_{datetime.now().year}_consolidated.csv')
     with open(output_path, 'w', encoding='utf-8-sig', newline='') as f: # Use utf-8-sig for Excel compatibility
         writer = csv.writer(f, delimiter=';')
         writer.writerow(header)

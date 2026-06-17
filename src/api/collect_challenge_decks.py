@@ -253,7 +253,7 @@ def load_existing_battles() -> set:
 
 def collect_from_csv(player_tag: str) -> list:
     """Coleta batalhas de desafio do CSV historico (oponentes_ano_2026.csv)."""
-    csv_path = os.path.join(_PROJECT_ROOT, 'data', 'csv', 'oponentes_ano_2026.csv')
+    csv_path = os.path.join(_PROJECT_ROOT, 'data', 'csv', f'oponentes_ano_{datetime.now().year}.csv')
     if not os.path.exists(csv_path):
         print(f"[AVISO] CSV historico nao encontrado: {csv_path}")
         return []

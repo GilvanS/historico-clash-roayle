@@ -275,7 +275,7 @@ def main():
     enricher = SafeClashRoyaleEnricher(api_key)
     
     # Enriquecer dados
-    csv_path = "data/csv/oponentes_ano_2026.csv"
+    csv_path = f"data/csv/oponentes_ano_{datetime.now().year}.csv"
     
     print("🚀 Iniciando enriquecimento...")
     print("📝 Modifique YOUR_PLAYER_TAG no código com sua tag real!")

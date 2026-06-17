@@ -63,7 +63,7 @@ def get_local_card_info(card_name):
 def enrich_local_data():
     """Enrich data using local card database"""
     
-    csv_path = "data/csv/oponentes_ano_2026.csv"
+    csv_path = f"data/csv/oponentes_ano_{datetime.now().year}.csv"
     
     print("Lendo arquivo CSV...")
     df = pd.read_csv(csv_path, sep=';', encoding='utf-8')

@@ -20,7 +20,7 @@ class CSVManager:
         else:
             self.data_dir = data_dir
             
-    def load_battles(self, file_name: str = 'oponentes_ano_2026.csv') -> List[Dict]:
+    def load_battles(self, file_name: str = f'oponentes_ano_{datetime.now().year}.csv') -> List[Dict]:
         """
         Loads battles from a specific CSV file.
         Returns a list of battle dictionaries.

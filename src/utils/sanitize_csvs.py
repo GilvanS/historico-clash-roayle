@@ -1,9 +1,10 @@
+from datetime import datetime
 import os
 import csv
 
 def verify_csv_files(data_dir):
     """Verifica integridade dos CSVs sem modificar nada."""
-    arquivo = os.path.join(data_dir, 'oponentes_ano_2026.csv')
+    arquivo = os.path.join(data_dir, f'oponentes_ano_{datetime.now().year}.csv')
     
     if not os.path.exists(arquivo):
         print(f"Arquivo nao encontrado: {arquivo}")

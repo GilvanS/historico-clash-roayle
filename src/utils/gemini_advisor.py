@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import json
 import csv
@@ -30,7 +31,7 @@ class GeminiDeckCoach:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         base_path = os.path.join(base_dir, '..', 'data', 'csv')
         # Tenta o arquivo consolidado de 2026
-        csv_file = os.path.join(base_path, "oponentes_ano_2026.csv")
+        csv_file = os.path.join(base_path, f"oponentes_ano_{datetime.now().year}.csv")
         
         print(f"Lendo arquivo para IA: {csv_file}")
             
