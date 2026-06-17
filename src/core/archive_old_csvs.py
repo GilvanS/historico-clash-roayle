@@ -1,69 +1,77 @@
 """
-Arquiva e compacta arquivos CSV antigos para economizar espaco.
-Arquivos diarios e semanais mais antigos que 2 dias sao zipados na pasta 'arquivados' e depois excluidos.
+Arquiva CSVs diários e semanais antigos em ZIPs organizados por mês.
+Configurável via variável de ambiente CSV_ARCHIVE_DAYS (padrão: 90 dias).
+Destino: data/backups/archive/YYYY-MM/
 """
 import os
 import glob
 import zipfile
-from datetime import datetime, timedelta
 import re
 import sys
+from datetime import datetime, timedelta
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'data', 'csv')
-ARCHIVE_DIR = os.path.join(DATA_DIR, 'arquivados')
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-if not os.path.exists(ARCHIVE_DIR):
-    os.makedirs(ARCHIVE_DIR)
+_DAYS = int(os.getenv('CSV_ARCHIVE_DAYS', '90'))
+_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'data', 'csv')
+_BACKUP_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'data', 'backups', 'archive')
 
-now = datetime.now()
-# 2 dias de limite para arquivamento
-threshold_date = now - timedelta(days=2)
 
-def add_to_zip(zip_path, file_path, arcname):
-    already_exists = False
+def _add_to_zip(zip_path: str, file_path: str, arcname: str) -> None:
+    existing = set()
     if os.path.exists(zip_path):
-        with zipfile.ZipFile(zip_path, 'r') as zipf:
-            if arcname in zipf.namelist():
-                already_exists = True
-                
-    if not already_exists:
-        with zipfile.ZipFile(zip_path, 'a', zipfile.ZIP_DEFLATED) as zipf:
-            zipf.write(file_path, arcname=arcname)
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            existing = set(zf.namelist())
+    if arcname not in existing:
+        with zipfile.ZipFile(zip_path, 'a', zipfile.ZIP_DEFLATED) as zf:
+            zf.write(file_path, arcname=arcname)
 
-# 1. Arquivar arquivos diários
-daily_files = glob.glob(os.path.join(DATA_DIR, "oponentes_dia_*.csv"))
-count_daily = 0
-for filepath in daily_files:
-    filename = os.path.basename(filepath)
-    match = re.search(r'oponentes_dia_(\d{8})\.csv', filename)
-    if match:
-        date_str = match.group(1)
+
+def run(days: int = _DAYS, data_dir: str = _DATA_DIR, backup_root: str = _BACKUP_ROOT) -> dict:
+    threshold = datetime.now() - timedelta(days=days)
+    counts = {'daily': 0, 'weekly': 0}
+
+    for filepath in glob.glob(os.path.join(data_dir, 'oponentes_dia_*.csv')):
+        filename = os.path.basename(filepath)
+        m = re.search(r'oponentes_dia_(\d{8})\.csv', filename)
+        if not m:
+            continue
         try:
-            file_date = datetime.strptime(date_str, '%Y%m%d')
-            if file_date < threshold_date:
-                month_str = file_date.strftime('%Y%m')
-                zip_filename = os.path.join(ARCHIVE_DIR, f"arquivados_dia_{month_str}.zip")
-                print(f"Compactando {filename} em {os.path.basename(zip_filename)}...")
-                add_to_zip(zip_filename, filepath, filename)
-                os.remove(filepath)
-                count_daily += 1
+            file_date = datetime.strptime(m.group(1), '%Y%m%d')
         except ValueError:
-            pass
-
-# 2. Arquivar arquivos semanais
-weekly_files = glob.glob(os.path.join(DATA_DIR, "oponentes_semana_*.csv"))
-count_weekly = 0
-for filepath in weekly_files:
-    filename = os.path.basename(filepath)
-    # Para semanais, baseamos na data de modificacao do arquivo
-    mtime = datetime.fromtimestamp(os.path.getmtime(filepath))
-    if mtime < threshold_date:
-        zip_filename = os.path.join(ARCHIVE_DIR, "arquivados_semana.zip")
-        print(f"Compactando {filename} em {os.path.basename(zip_filename)}...")
-        add_to_zip(zip_filename, filepath, filename)
+            continue
+        if file_date >= threshold:
+            continue
+        month_dir = os.path.join(backup_root, file_date.strftime('%Y-%m'))
+        os.makedirs(month_dir, exist_ok=True)
+        zip_path = os.path.join(month_dir, f"diarios_{file_date.strftime('%Y%m')}.zip")
+        print(f"  arquivando {filename} -> {os.path.relpath(zip_path)}")
+        _add_to_zip(zip_path, filepath, filename)
         os.remove(filepath)
-        count_weekly += 1
+        counts['daily'] += 1
 
-print(f"Processo de arquivamento concluido. {count_daily} diarios e {count_weekly} semanais arquivados.")
+    for filepath in glob.glob(os.path.join(data_dir, 'oponentes_semana_*.csv')):
+        filename = os.path.basename(filepath)
+        mtime = datetime.fromtimestamp(os.path.getmtime(filepath))
+        if mtime >= threshold:
+            continue
+        month_dir = os.path.join(backup_root, mtime.strftime('%Y-%m'))
+        os.makedirs(month_dir, exist_ok=True)
+        zip_path = os.path.join(month_dir, f"semanais_{mtime.strftime('%Y%m')}.zip")
+        print(f"  arquivando {filename} -> {os.path.relpath(zip_path)}")
+        _add_to_zip(zip_path, filepath, filename)
+        os.remove(filepath)
+        counts['weekly'] += 1
+
+    print(f"Arquivamento concluido: {counts['daily']} diarios, {counts['weekly']} semanais (limite: {days} dias)")
+    return counts
+
+
+if __name__ == '__main__':
+    run()

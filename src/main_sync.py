@@ -396,6 +396,15 @@ def main():
     print(f"  -> Status da Guerra: {guerra_status}")
     print("=" * 60)
 
+    # FASE 4.5: Arquivar CSVs antigos (opcional, controlado por CSV_ARCHIVE_DAYS)
+    if os.getenv('CSV_ARCHIVE_DAYS'):
+        try:
+            logger.info("FASE 4.5: Arquivando CSVs antigos...")
+            from archive_old_csvs import run as archive_csvs
+            archive_csvs()
+        except Exception as e:
+            logger.error(f"Erro na FASE 4.5 (Arquivamento): {e}")
+
     # FASE 5: Exibir Tempo de Execucao (Metricas de Performance)
     end_time = datetime.now()
     duration = end_time - start_time
