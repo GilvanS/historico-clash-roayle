@@ -166,7 +166,7 @@ def main():
     
     try:
         enricher = GitHubEnricher()
-        csv_path = "data/csv/oponentes_ano_2026.csv"
+        csv_path = f"data/csv/oponentes_ano_{datetime.now().year}.csv"
         enricher.run(csv_path)
         
     except ValueError as e:

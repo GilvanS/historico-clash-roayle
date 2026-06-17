@@ -1,7 +1,9 @@
 import csv
 from datetime import datetime
 
-file_path = r'a:\Workspace\historico-clash-roayle\src\data_csv_oficial\oponentes_ano_2026.csv'
+import os
+_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+file_path = os.path.join(_root, 'data', 'csv', f'oponentes_ano_{datetime.now().year}.csv')
 try:
     with open(file_path, 'r', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f, delimiter=';')

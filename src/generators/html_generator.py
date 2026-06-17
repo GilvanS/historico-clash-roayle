@@ -296,7 +296,7 @@ class GitHubPagesHTMLGenerator:
     def _load_all_battles_from_csv(self, player_tag: str = None) -> List[Dict]:
         """Loads all battles from the consolidated CSV files with robust detection."""
         battles_dict = {}
-        official_file = os.path.join(self.data_csv_dir, 'oponentes_ano_2026.csv')
+        official_file = os.path.join(self.data_csv_dir, f'oponentes_ano_{datetime.now().year}.csv')
         
         files = []
         if os.path.exists(official_file):

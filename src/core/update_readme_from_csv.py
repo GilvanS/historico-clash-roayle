@@ -166,61 +166,52 @@ class ReadmeCSVUpdater:
         recent = data[-limit:] if len(data) > limit else data
         return list(reversed(recent))  # Mais recente primeiro
     
+    MARKER_START = "<!-- STATS_START -->"
+    MARKER_END = "<!-- STATS_END -->"
+
     def update_readme(self, csv_file: Optional[str] = None):
         """Atualiza o README com as estatisticas do CSV"""
         if not csv_file:
             csv_file = self.find_latest_csv()
-        
+
         if not csv_file or not os.path.exists(csv_file):
             print(f"CSV nao encontrado: {csv_file}")
             return
-        
+
         print(f"Lendo dados de: {csv_file}")
         stats = self.get_deck_stats_from_csv(csv_file)
-        
+
         if not stats or not stats['stats_gerais']:
             print("Nenhuma estatistica encontrada no CSV")
             return
-        
+
         if not os.path.exists(self.readme_path):
             print(f"README nao encontrado: {self.readme_path}")
             return
-        
-        # Le o README atual
+
         with open(self.readme_path, 'r', encoding='utf-8') as f:
             readme_content = f.read()
-        
-        # Procura pela secao de estatisticas ou cria uma nova
-        stats_section_start = "## 📊 Estatísticas Atuais"
-        stats_section_end = "## "
-        
-        # Se a secao ja existe, substitui
-        if stats_section_start in readme_content:
-            # Encontra o inicio da secao
-            start_idx = readme_content.find(stats_section_start)
-            # Encontra o proximo ## apos a secao
-            next_section_idx = readme_content.find(stats_section_end, start_idx + len(stats_section_start))
-            
-            if next_section_idx != -1:
-                # Remove a secao antiga
-                readme_content = readme_content[:start_idx] + readme_content[next_section_idx:]
-        
-        # Gera a nova secao de estatisticas
+
         recent_battles = self.get_recent_battles(csv_file, 5)
         stats_section = self.generate_stats_section(stats, recent_battles)
-        
-        # Insere a secao apos o primeiro ## (apos o titulo principal)
-        first_section_idx = readme_content.find("## ", readme_content.find("# "))
-        if first_section_idx != -1:
-            readme_content = readme_content[:first_section_idx] + stats_section + "\n\n" + readme_content[first_section_idx:]
+        new_block = f"{self.MARKER_START}\n{stats_section}\n{self.MARKER_END}"
+
+        if self.MARKER_START in readme_content and self.MARKER_END in readme_content:
+            start = readme_content.index(self.MARKER_START)
+            end = readme_content.index(self.MARKER_END) + len(self.MARKER_END)
+            readme_content = readme_content[:start] + new_block + readme_content[end:]
         else:
-            # Se nao encontrar, adiciona no final
-            readme_content += "\n\n" + stats_section
-        
-        # Salva o README atualizado
+            # Marcadores ausentes: reconstrói o README com estrutura limpa
+            readme_content = (
+                "# Clash Royale History\n\n"
+                "Automated Clash Royale battle analytics published to GitHub Pages, "
+                "updated hourly via GitHub Actions.\n\n"
+                f"{new_block}\n"
+            )
+
         with open(self.readme_path, 'w', encoding='utf-8') as f:
             f.write(readme_content)
-        
+
         print("README atualizado com sucesso!")
     
     def generate_stats_section(self, stats: Dict, recent_battles: List[Dict]) -> str:
