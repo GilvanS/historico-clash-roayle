@@ -40,7 +40,7 @@ from datetime import datetime
 
 # Adiciona o diretório src ao path se necessário
 src_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.extend([src_dir, os.path.join(src_dir, "api"), os.path.join(src_dir, "core"), os.path.join(src_dir, "generators"), os.path.join(src_dir, "utils"), os.path.join(src_dir, "legacy")])
+sys.path.extend([src_dir, os.path.join(src_dir, "api"), os.path.join(src_dir, "core"), os.path.join(src_dir, "generators"), os.path.join(src_dir, "utils")])
 
 from update_readme_from_csv import ReadmeCSVUpdater
 from html_generator import GitHubPagesHTMLGenerator
