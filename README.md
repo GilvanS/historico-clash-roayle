@@ -5,13 +5,13 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 <!-- STATS_START -->
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 18/06/2026 23:32:51
+**Última atualização:** 19/06/2026 00:07:02
 
 ### 📈 Estatísticas Gerais
 
-- **Total de Batalhas:** 3451
-- **Vitórias:** 1749 (50.7%)
-- **Derrotas:** 1701
+- **Total de Batalhas:** 3457
+- **Vitórias:** 1752 (50.7%)
+- **Derrotas:** 1704
 - **Mudança Total de Troféus:** +0
 
 ### 🎴 Deck Atual (Mais Recente)
@@ -22,10 +22,10 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 
 ### 🏆 Deck com Melhor Performance
 
-- **Deck:** Bowler, Knight, Musketeer, Cannon, Hog Rider, Minions, Arrows, Skeletons
+- **Deck:** Musketeer, Bowler, Knight, Princess, Hog Rider, Goblin Barrel, Arrows, Cannon
 - **Win Rate:** 100.0%
 - **Batalhas:** 6 (6V - 0D)
-- **Troféus:** +181
+- **Troféus:** +117
 
 ### ⚔️ Últimas Batalhas
 
