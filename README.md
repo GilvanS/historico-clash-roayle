@@ -5,12 +5,12 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 <!-- STATS_START -->
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 21/06/2026 20:17:12
+**Última atualização:** 21/06/2026 20:49:09
 
 ### 📈 Estatísticas Gerais
 
-- **Total de Batalhas:** 3506
-- **Vitórias:** 1782 (50.8%)
+- **Total de Batalhas:** 3507
+- **Vitórias:** 1783 (50.8%)
 - **Derrotas:** 1723
 - **Mudança Total de Troféus:** +0
 
