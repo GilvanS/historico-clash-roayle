@@ -5,7 +5,7 @@ Automated Clash Royale battle analytics published to GitHub Pages, updated hourl
 <!-- STATS_START -->
 ## 📊 Estatísticas Atuais
 
-**Última atualização:** 22/06/2026 14:32:44
+**Última atualização:** 22/06/2026 15:03:15
 
 ### 📈 Estatísticas Gerais
 
