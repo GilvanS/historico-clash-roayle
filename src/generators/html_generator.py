@@ -6724,7 +6724,7 @@ class GitHubPagesHTMLGenerator:
             rank = p.get('rank', '-')
             name = p.get('name', 'N/D')
             clan = p.get('clan', {}).get('name', '-')
-            score = p.get('trophies') or p.get('score') or '-'
+            score = p.get('trophies') or p.get('eloRating') or p.get('score') or '-'
             
             html += f"""
             <div class="meta-br-item-v2">

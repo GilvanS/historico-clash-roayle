@@ -40,10 +40,12 @@ def collect_meta_br():
         sys.stdout.flush()
         return
 
-    url = f"https://proxy.royaleapi.dev/v1/locations/{location_id}/rankings/players?limit=100"
+    # Endpoint legado (rankings/players = Ladder antigo) foi descontinuado pela Supercell
+    # e sempre retorna items vazio. Path of Legends substituiu o Ladder; use pathoflegend/players.
+    url = f"https://proxy.royaleapi.dev/v1/locations/{location_id}/pathoflegend/players?limit=100"
     headers = {'Authorization': f'Bearer {token}'}
-    
-    print(f"Buscando Top 100 Brasil (Ladder)...")
+
+    print(f"Buscando Top 100 Brasil (Path of Legends)...")
     sys.stdout.flush()
     
     try:
@@ -62,7 +64,8 @@ def collect_meta_br():
         data['collected_at'] = brt_now.strftime('%Y-%m-%dT%H:%M:%S')
         
         # Define diretório de saída
-        root_dir = os.path.dirname(os.path.abspath(__file__))
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(script_dir))
         output_dir = os.path.join(project_root, 'data', 'csv')
         os.makedirs(output_dir, exist_ok=True)
         

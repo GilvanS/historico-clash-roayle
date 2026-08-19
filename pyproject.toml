@@ -5,7 +5,20 @@ description = "Clash Royale Analytics for GitHub Pages"
 requires-python = ">=3.11"
 dependencies = [
     "requests>=2.31.0",
+    "pandas>=2.3.3",
+    "python-dotenv>=1.2.1",
+    "google-genai>=1.49.0",
+    "pywin32>=311; sys_platform == 'win32'",
 ]
 
-[tool.uv]
-dev-dependencies = []
+[dependency-groups]
+dev = [
+    "pytest>=7.4.3",
+    "playwright>=1.59.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["scratch", "tools", "backup_recuperacao", "plano_legado", ".venv", ".git"]
+pythonpath = ["src", "src/api", "src/api_tools", "src/core", "src/generators", "src/utils"]
+addopts = "--ignore=tests/test_token.py"
