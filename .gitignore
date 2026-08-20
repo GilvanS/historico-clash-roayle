@@ -40,6 +40,9 @@ scratch/
 
 executar_relatorio.bat
 
+# Estado local do watcher de falhas do Actions
+scripts/.watcher_last_run_id.txt
+
 # Task files
 # tasks.json
 # tasks/ 

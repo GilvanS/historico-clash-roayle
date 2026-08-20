@@ -2,6 +2,9 @@
 cd /d "%~dp0.."
 setlocal enabledelayedexpansion
 
+set SILENT=0
+if "%~1"=="silent" set SILENT=1
+
 echo ============================================================
 echo [SINCRONIZACAO ELITE] Clash Royale - Local para Web
 echo ============================================================
@@ -9,8 +12,8 @@ echo ============================================================
 :: Verificar se estamos em um repositorio Git
 if not exist .git (
     echo [ERRO] Este script deve ser executado na raiz do projeto.
-    pause
-    exit /b
+    if %SILENT%==0 pause
+    exit /b 1
 )
 
 :: 1. Sincronizar com o remoto para evitar conflitos
@@ -23,7 +26,7 @@ python src/main_sync.py
 
 :: 3. Verificar se houve alteracoes para commitar
 echo 3. Preparando envio para o Dashboard Web...
-git add src/data_csv_oficial/ README.md docs/ src/data_clan/
+git add data/csv/ README.md docs/ data/json/
 
 :: Verificar se ha algo para commitar
 git diff --staged --quiet
@@ -66,4 +69,4 @@ if errorlevel 1 (
 echo ============================================================
 echo PROCESSO CONCLUIDO!
 echo ============================================================
-pause
+if %SILENT%==0 pause
