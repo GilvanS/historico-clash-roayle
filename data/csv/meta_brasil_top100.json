@@ -39,11 +39,23 @@
             }
         },
         {
+            "tag": "#QRCJP8PQR",
+            "name": "Rainbow",
+            "expLevel": 62,
+            "eloRating": 3116,
+            "rank": 5,
+            "clan": {
+                "tag": "#R8P2VLC9",
+                "name": "afundado hog eq",
+                "badgeId": 16000109
+            }
+        },
+        {
             "tag": "#20Y0GGGUP2",
             "name": "加急Sinistro™",
             "expLevel": 64,
             "eloRating": 3101,
-            "rank": 5,
+            "rank": 6,
             "clan": {
                 "tag": "#GJYCCYV2",
                 "name": "Live tik tok",
@@ -55,7 +67,7 @@
             "name": "João™",
             "expLevel": 72,
             "eloRating": 3078,
-            "rank": 6,
+            "rank": 7,
             "clan": {
                 "tag": "#GCRJCCRL",
                 "name": "fica.",
@@ -67,14 +79,14 @@
             "name": "Pedro™️",
             "expLevel": 86,
             "eloRating": 3056,
-            "rank": 7
+            "rank": 8
         },
         {
             "tag": "#9G28ULYR",
             "name": "Lucas✨杰克",
             "expLevel": 90,
             "eloRating": 3051,
-            "rank": 8,
+            "rank": 9,
             "clan": {
                 "tag": "#JYGLUR0V",
                 "name": "LegendsNeverDie",
@@ -86,23 +98,11 @@
             "name": "⚡One1_Stryker⚡",
             "expLevel": 79,
             "eloRating": 3030,
-            "rank": 9,
+            "rank": 10,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
                 "badgeId": 16000058
-            }
-        },
-        {
-            "tag": "#QRCJP8PQR",
-            "name": "Rainbow",
-            "expLevel": 62,
-            "eloRating": 3020,
-            "rank": 10,
-            "clan": {
-                "tag": "#R8P2VLC9",
-                "name": "afundado hog eq",
-                "badgeId": 16000109
             }
         },
         {
@@ -233,11 +233,18 @@
             }
         },
         {
+            "tag": "#VG0V0Y2LJ",
+            "name": "Vague",
+            "expLevel": 65,
+            "eloRating": 2816,
+            "rank": 22
+        },
+        {
             "tag": "#2GQUJJCUQ",
             "name": "I.LORDFIRE.I",
             "expLevel": 82,
             "eloRating": 2807,
-            "rank": 22,
+            "rank": 23,
             "clan": {
                 "tag": "#GJUJ2PU9",
                 "name": "RISE GRAVEYARD™",
@@ -249,14 +256,14 @@
             "name": "Gustavo",
             "expLevel": 85,
             "eloRating": 2803,
-            "rank": 23
+            "rank": 24
         },
         {
             "tag": "#QJGVCYR",
             "name": "shadowking",
             "expLevel": 86,
             "eloRating": 2801,
-            "rank": 24,
+            "rank": 25,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -268,21 +275,21 @@
             "name": "CAL Sub ™️✨Kun",
             "expLevel": 90,
             "eloRating": 2794,
-            "rank": 25
+            "rank": 26
         },
         {
             "tag": "#VYPY9VQL9",
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
             "eloRating": 2771,
-            "rank": 26
+            "rank": 27
         },
         {
             "tag": "#2UJLGRJVC",
             "name": "LMT I Kenedy☔️",
             "expLevel": 71,
             "eloRating": 2770,
-            "rank": 27,
+            "rank": 28,
             "clan": {
                 "tag": "#8J09GL80",
                 "name": "Rei Da Guerra",
@@ -290,18 +297,35 @@
             }
         },
         {
-            "tag": "#VG0V0Y2LJ",
-            "name": "Vague",
-            "expLevel": 65,
-            "eloRating": 2756,
-            "rank": 28
+            "tag": "#ULYGRPPPG",
+            "name": "キス丨Sency 99",
+            "expLevel": 55,
+            "eloRating": 2761,
+            "rank": 29,
+            "clan": {
+                "tag": "#J8292R09",
+                "name": "Panela Royale",
+                "badgeId": 16000153
+            }
+        },
+        {
+            "tag": "#2LQU0JRR",
+            "name": "Tanjo, o anjo",
+            "expLevel": 83,
+            "eloRating": 2726,
+            "rank": 30,
+            "clan": {
+                "tag": "#GJPJJPYP",
+                "name": "BIM",
+                "badgeId": 16000132
+            }
         },
         {
             "tag": "#GJ2L2QQP9",
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 2719,
-            "rank": 29,
+            "rank": 31,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -313,7 +337,7 @@
             "name": "Dance",
             "expLevel": 83,
             "eloRating": 2718,
-            "rank": 30,
+            "rank": 32,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -325,7 +349,7 @@
             "name": "mini Mistery",
             "expLevel": 61,
             "eloRating": 2711,
-            "rank": 31,
+            "rank": 33,
             "clan": {
                 "tag": "#QC2JLUVC",
                 "name": "IMT Gaming",
@@ -337,7 +361,7 @@
             "name": "TTK:vitin_loon",
             "expLevel": 73,
             "eloRating": 2711,
-            "rank": 32,
+            "rank": 34,
             "clan": {
                 "tag": "#YQJRU8Y9",
                 "name": "FOX",
@@ -349,7 +373,7 @@
             "name": "Luizito",
             "expLevel": 1,
             "eloRating": 2708,
-            "rank": 33,
+            "rank": 35,
             "clan": {
                 "tag": "#J0GYVC8Y",
                 "name": "TTK luizito_123",
@@ -361,14 +385,14 @@
             "name": "Ruivo❤️Demon",
             "expLevel": 82,
             "eloRating": 2699,
-            "rank": 34
+            "rank": 36
         },
         {
             "tag": "#UJ9R0CQ80",
             "name": "Tiagö",
             "expLevel": 73,
             "eloRating": 2696,
-            "rank": 35,
+            "rank": 37,
             "clan": {
                 "tag": "#9YJGVCPQ",
                 "name": "LimiT eSports",
@@ -380,7 +404,7 @@
             "name": "TTK LORDFIRE",
             "expLevel": 78,
             "eloRating": 2694,
-            "rank": 36,
+            "rank": 38,
             "clan": {
                 "tag": "#RPCJQ90C",
                 "name": "GRAVEYARD VERSE",
@@ -392,14 +416,14 @@
             "name": "Bielvinis CR",
             "expLevel": 86,
             "eloRating": 2673,
-            "rank": 37
+            "rank": 39
         },
         {
             "tag": "#2CJJ2LY9Y",
             "name": "LEO_-KIRA",
             "expLevel": 73,
             "eloRating": 2660,
-            "rank": 38,
+            "rank": 40,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -411,7 +435,7 @@
             "name": "CausticBug53",
             "expLevel": 66,
             "eloRating": 2654,
-            "rank": 39,
+            "rank": 41,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -419,27 +443,15 @@
             }
         },
         {
-            "tag": "#2LQU0JRR",
-            "name": "Tanjo, o anjo",
-            "expLevel": 83,
-            "eloRating": 2643,
-            "rank": 40,
+            "tag": "#2C88CYV9L",
+            "name": "Seiya de Pégaso",
+            "expLevel": 73,
+            "eloRating": 2630,
+            "rank": 42,
             "clan": {
-                "tag": "#GJPJJPYP",
-                "name": "BIM",
-                "badgeId": 16000132
-            }
-        },
-        {
-            "tag": "#ULYGRPPPG",
-            "name": "キス丨Sency 99",
-            "expLevel": 55,
-            "eloRating": 2637,
-            "rank": 41,
-            "clan": {
-                "tag": "#J8292R09",
-                "name": "Panela Royale",
-                "badgeId": 16000153
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
             }
         },
         {
@@ -447,7 +459,7 @@
             "name": "Kauã❤️Braz™",
             "expLevel": 67,
             "eloRating": 2611,
-            "rank": 42,
+            "rank": 43,
             "clan": {
                 "tag": "#QUY202GQ",
                 "name": "Master War",
@@ -459,7 +471,7 @@
             "name": "dzinnz",
             "expLevel": 83,
             "eloRating": 2610,
-            "rank": 43,
+            "rank": 44,
             "clan": {
                 "tag": "#YQJRU8Y9",
                 "name": "FOX",
@@ -471,7 +483,7 @@
             "name": "NANDO FLA 5",
             "expLevel": 83,
             "eloRating": 2610,
-            "rank": 44,
+            "rank": 45,
             "clan": {
                 "tag": "#G0RJ2GVL",
                 "name": "LIVE ON YT/TTK",
@@ -483,7 +495,7 @@
             "name": "Nando xs",
             "expLevel": 78,
             "eloRating": 2610,
-            "rank": 45,
+            "rank": 46,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -495,7 +507,7 @@
             "name": "Cench Cassio",
             "expLevel": 70,
             "eloRating": 2609,
-            "rank": 46,
+            "rank": 47,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -507,7 +519,7 @@
             "name": "Bruno sem gemas",
             "expLevel": 67,
             "eloRating": 2602,
-            "rank": 47,
+            "rank": 48,
             "clan": {
                 "tag": "#GJUJ2PU9",
                 "name": "RISE GRAVEYARD™",
@@ -519,18 +531,6 @@
             "name": "GT Light✨安之神",
             "expLevel": 76,
             "eloRating": 2602,
-            "rank": 48,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
-        },
-        {
-            "tag": "#2C88CYV9L",
-            "name": "Seiya de Pégaso",
-            "expLevel": 73,
-            "eloRating": 2601,
             "rank": 49,
             "clan": {
                 "tag": "#G89QUY2P",
@@ -551,23 +551,23 @@
             }
         },
         {
+            "tag": "#CRP9YV2GJ",
+            "name": "Marcøs",
+            "expLevel": 78,
+            "eloRating": 2570,
+            "rank": 51,
+            "clan": {
+                "tag": "#GLULRRYQ",
+                "name": "BloodRiver",
+                "badgeId": 16000026
+            }
+        },
+        {
             "tag": "#290VGG28",
             "name": "YT PedroTm CR",
             "expLevel": 84,
             "eloRating": 2568,
-            "rank": 51
-        },
-        {
-            "tag": "#2YL2YYGPL",
-            "name": "Klinker",
-            "expLevel": 64,
-            "eloRating": 2559,
-            "rank": 52,
-            "clan": {
-                "tag": "#LGRUCVJV",
-                "name": "Adultos Juniors",
-                "badgeId": 16000023
-            }
+            "rank": 52
         },
         {
             "tag": "#8PP8CYCV",
@@ -625,30 +625,18 @@
             }
         },
         {
-            "tag": "#CRP9YV2GJ",
-            "name": "Marcøs",
-            "expLevel": 78,
-            "eloRating": 2542,
-            "rank": 58,
-            "clan": {
-                "tag": "#GLULRRYQ",
-                "name": "BloodRiver",
-                "badgeId": 16000026
-            }
-        },
-        {
             "tag": "#V8Q2R8UYR",
             "name": "DosekPixVinis",
             "expLevel": 77,
             "eloRating": 2537,
-            "rank": 59
+            "rank": 58
         },
         {
             "tag": "#VLJL9UL00",
             "name": "『PHX』Carllos",
             "expLevel": 74,
             "eloRating": 2534,
-            "rank": 60,
+            "rank": 59,
             "clan": {
                 "tag": "#GRUQG8JL",
                 "name": "Guerreiros",
@@ -660,7 +648,7 @@
             "name": "GabiGolRDL",
             "expLevel": 42,
             "eloRating": 2524,
-            "rank": 61,
+            "rank": 60,
             "clan": {
                 "tag": "#GYPCP0VR",
                 "name": "Hunter’s Army",
@@ -672,7 +660,7 @@
             "name": "Hichigo",
             "expLevel": 40,
             "eloRating": 2523,
-            "rank": 62,
+            "rank": 61,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -684,7 +672,7 @@
             "name": "Armando BR™オピ",
             "expLevel": 72,
             "eloRating": 2522,
-            "rank": 63,
+            "rank": 62,
             "clan": {
                 "tag": "#Y8U9VLJJ",
                 "name": "BRASIL IMPÉRIO",
@@ -692,23 +680,11 @@
             }
         },
         {
-            "tag": "#VPLGP88YC",
-            "name": "SanTheGoat✨️",
-            "expLevel": 1,
-            "eloRating": 2521,
-            "rank": 64,
-            "clan": {
-                "tag": "#J8292R09",
-                "name": "Panela Royale",
-                "badgeId": 16000153
-            }
-        },
-        {
             "tag": "#2PY9PCCCY",
             "name": "INØSUKE⚡️™オピ",
             "expLevel": 48,
             "eloRating": 2508,
-            "rank": 65,
+            "rank": 63,
             "clan": {
                 "tag": "#Y8U9VLJJ",
                 "name": "BRASIL IMPÉRIO",
@@ -720,14 +696,14 @@
             "name": "⚡Maicon.G⚡",
             "expLevel": 72,
             "eloRating": 2506,
-            "rank": 66
+            "rank": 64
         },
         {
             "tag": "#G92C9J988",
             "name": "｢OLR™｣ ᴇʀɪᴄᴋ",
             "expLevel": 64,
             "eloRating": 2502,
-            "rank": 67,
+            "rank": 65,
             "clan": {
                 "tag": "#GJ0LYGQQ",
                 "name": "Maculados BR",
@@ -739,7 +715,7 @@
             "name": "Miguel Junior 龙",
             "expLevel": 59,
             "eloRating": 2501,
-            "rank": 68,
+            "rank": 66,
             "clan": {
                 "tag": "#GQUJR9GC",
                 "name": "CKY - UK",
@@ -751,7 +727,7 @@
             "name": "Brazilian storm",
             "expLevel": 67,
             "eloRating": 2500,
-            "rank": 69,
+            "rank": 67,
             "clan": {
                 "tag": "#G2QR2YC8",
                 "name": "The Boys",
@@ -763,11 +739,35 @@
             "name": "Aqua",
             "expLevel": 80,
             "eloRating": 2500,
-            "rank": 70,
+            "rank": 68,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
                 "badgeId": 16000170
+            }
+        },
+        {
+            "tag": "#2YL2YYGPL",
+            "name": "Klinker",
+            "expLevel": 64,
+            "eloRating": 2499,
+            "rank": 69,
+            "clan": {
+                "tag": "#LGRUCVJV",
+                "name": "Adultos Juniors",
+                "badgeId": 16000023
+            }
+        },
+        {
+            "tag": "#VPLGP88YC",
+            "name": "SanTheGoat✨️",
+            "expLevel": 1,
+            "eloRating": 2491,
+            "rank": 70,
+            "clan": {
+                "tag": "#J8292R09",
+                "name": "Panela Royale",
+                "badgeId": 16000153
             }
         },
         {
@@ -862,23 +862,11 @@
             }
         },
         {
-            "tag": "#U9LLPUUV9",
-            "name": "GOAT xuxu ✨",
-            "expLevel": 52,
-            "eloRating": 2442,
-            "rank": 79,
-            "clan": {
-                "tag": "#J8292R09",
-                "name": "Panela Royale",
-                "badgeId": 16000153
-            }
-        },
-        {
             "tag": "#PJ0R8VCV",
             "name": "DAN TREM ⚡️",
             "expLevel": 76,
             "eloRating": 2436,
-            "rank": 80,
+            "rank": 79,
             "clan": {
                 "tag": "#QUQYUVJV",
                 "name": "@DANTREM99",
@@ -890,11 +878,23 @@
             "name": "LegenD✨Tito™",
             "expLevel": 78,
             "eloRating": 2435,
-            "rank": 81,
+            "rank": 80,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
                 "badgeId": 16000170
+            }
+        },
+        {
+            "tag": "#QLVYPQ08U",
+            "name": "°ITACHI_69",
+            "expLevel": 61,
+            "eloRating": 2428,
+            "rank": 81,
+            "clan": {
+                "tag": "#GRRYGJYY",
+                "name": "Faceless Men",
+                "badgeId": 16000158
             }
         },
         {
@@ -917,26 +917,26 @@
             "rank": 83
         },
         {
-            "tag": "#9ULYP0V02",
-            "name": "Victor✨火槍手",
-            "expLevel": 46,
-            "eloRating": 2419,
-            "rank": 84,
-            "clan": {
-                "tag": "#RPYRULRV",
-                "name": "Freestyle",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#VGJ0UY0LG",
             "name": "Droga, éoSantos",
             "expLevel": 72,
             "eloRating": 2419,
-            "rank": 85,
+            "rank": 84,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
+        },
+        {
+            "tag": "#9ULYP0V02",
+            "name": "Victor✨火槍手",
+            "expLevel": 46,
+            "eloRating": 2418,
+            "rank": 85,
+            "clan": {
+                "tag": "#RPYRULRV",
+                "name": "Freestyle",
                 "badgeId": 16000058
             }
         },
@@ -948,11 +948,23 @@
             "rank": 86
         },
         {
+            "tag": "#U9LLPUUV9",
+            "name": "GOAT xuxu ✨",
+            "expLevel": 52,
+            "eloRating": 2414,
+            "rank": 87,
+            "clan": {
+                "tag": "#J8292R09",
+                "name": "Panela Royale",
+                "badgeId": 16000153
+            }
+        },
+        {
             "tag": "#8U2JCJLVY",
             "name": "聖殿騎士",
             "expLevel": 76,
             "eloRating": 2413,
-            "rank": 87,
+            "rank": 88,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -964,7 +976,7 @@
             "name": "Passito cr™",
             "expLevel": 73,
             "eloRating": 2410,
-            "rank": 88,
+            "rank": 89,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -976,7 +988,7 @@
             "name": "EROS⚡",
             "expLevel": 42,
             "eloRating": 2408,
-            "rank": 89,
+            "rank": 90,
             "clan": {
                 "tag": "#JYPPU80R",
                 "name": "Arcanum",
@@ -988,7 +1000,7 @@
             "name": "Big ⚡",
             "expLevel": 67,
             "eloRating": 2408,
-            "rank": 90,
+            "rank": 91,
             "clan": {
                 "tag": "#JY9UJ92Q",
                 "name": "BIG GOAT !!!",
@@ -1000,7 +1012,7 @@
             "name": "!Lucas✨文",
             "expLevel": 79,
             "eloRating": 2408,
-            "rank": 91,
+            "rank": 92,
             "clan": {
                 "tag": "#YJJVRV22",
                 "name": "Revenge",
@@ -1012,7 +1024,7 @@
             "name": "JooRibeir0",
             "expLevel": 76,
             "eloRating": 2407,
-            "rank": 92,
+            "rank": 93,
             "clan": {
                 "tag": "#GLQ28JLC",
                 "name": "STORM⚡️PT",
@@ -1024,7 +1036,7 @@
             "name": "Surg TS",
             "expLevel": 84,
             "eloRating": 2407,
-            "rank": 93,
+            "rank": 94,
             "clan": {
                 "tag": "#LVV8VUV8",
                 "name": "HAIL STATE",
@@ -1036,7 +1048,7 @@
             "name": "R0N1 011",
             "expLevel": 75,
             "eloRating": 2404,
-            "rank": 94,
+            "rank": 95,
             "clan": {
                 "tag": "#L00UR290",
                 "name": "Lost Hell",
@@ -1048,7 +1060,7 @@
             "name": "Renan><",
             "expLevel": 73,
             "eloRating": 2403,
-            "rank": 95,
+            "rank": 96,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
@@ -1060,7 +1072,7 @@
             "name": "Lucena❤️shine",
             "expLevel": 70,
             "eloRating": 2402,
-            "rank": 96,
+            "rank": 97,
             "clan": {
                 "tag": "#JYGP9C82",
                 "name": "follow jesus",
@@ -1072,7 +1084,7 @@
             "name": "karmaa:/空の×™",
             "expLevel": 78,
             "eloRating": 2402,
-            "rank": 97,
+            "rank": 98,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -1084,7 +1096,7 @@
             "name": "叶上初阳❄️",
             "expLevel": 78,
             "eloRating": 2402,
-            "rank": 98,
+            "rank": 99,
             "clan": {
                 "tag": "#QL2GG8LP",
                 "name": "LENDÁRIOS ELITE",
@@ -1096,22 +1108,10 @@
             "name": "『ВЯ』Bola™",
             "expLevel": 82,
             "eloRating": 2400,
-            "rank": 99,
+            "rank": 100,
             "clan": {
                 "tag": "#Y8U9VLJJ",
                 "name": "BRASIL IMPÉRIO",
-                "badgeId": 16000058
-            }
-        },
-        {
-            "tag": "#9RC9GRR",
-            "name": "Davizeeгa™",
-            "expLevel": 77,
-            "eloRating": 2400,
-            "rank": 100,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
                 "badgeId": 16000058
             }
         }
@@ -1121,5 +1121,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-08-26T08:26:17"
+    "collected_at": "2026-08-26T08:59:23"
 }
