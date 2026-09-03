@@ -259,7 +259,12 @@
             "name": "⚡Maicon.G⚡",
             "expLevel": 72,
             "eloRating": 3140,
-            "rank": 23
+            "rank": 23,
+            "clan": {
+                "tag": "#QYQRG220",
+                "name": "Clika",
+                "badgeId": 16000139
+            }
         },
         {
             "tag": "#899R8QYL",
@@ -325,7 +330,7 @@
             "tag": "#UUJ8VJ20L",
             "name": "Bruno sem gemas",
             "expLevel": 67,
-            "eloRating": 3093,
+            "eloRating": 3092,
             "rank": 29,
             "clan": {
                 "tag": "#GJUJ2PU9",
@@ -607,30 +612,18 @@
             "rank": 53
         },
         {
-            "tag": "#UGCYV8GJV",
-            "name": "mini Mistery",
-            "expLevel": 61,
-            "eloRating": 2919,
-            "rank": 54,
-            "clan": {
-                "tag": "#QC2JLUVC",
-                "name": "IMT Gaming",
-                "badgeId": 16000014
-            }
-        },
-        {
             "tag": "#VG0V0Y2LJ",
             "name": "Vague",
             "expLevel": 65,
             "eloRating": 2917,
-            "rank": 55
+            "rank": 54
         },
         {
             "tag": "#L2JVLPRCR",
             "name": "Gl_da_011",
             "expLevel": 70,
             "eloRating": 2903,
-            "rank": 56,
+            "rank": 55,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
@@ -642,7 +635,7 @@
             "name": "Nando❤️Log Bait",
             "expLevel": 72,
             "eloRating": 2902,
-            "rank": 57,
+            "rank": 56,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -654,7 +647,7 @@
             "name": "VTX Igor O.o",
             "expLevel": 74,
             "eloRating": 2890,
-            "rank": 58,
+            "rank": 57,
             "clan": {
                 "tag": "#QGVJ2J9J",
                 "name": "Vortex eSports",
@@ -666,7 +659,7 @@
             "name": "単純 Lz ❤️✨",
             "expLevel": 74,
             "eloRating": 2875,
-            "rank": 59,
+            "rank": 58,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -678,7 +671,7 @@
             "name": "Emma❤️Palestine",
             "expLevel": 75,
             "eloRating": 2867,
-            "rank": 60,
+            "rank": 59,
             "clan": {
                 "tag": "#PPP9U9G0",
                 "name": "Dark Dragon",
@@ -690,18 +683,30 @@
             "name": "Lucas✨杰克",
             "expLevel": 90,
             "eloRating": 2859,
-            "rank": 61
+            "rank": 60
         },
         {
             "tag": "#VJYJLLJV8",
             "name": "THE BOSS ™",
             "expLevel": 30,
             "eloRating": 2858,
-            "rank": 62,
+            "rank": 61,
             "clan": {
                 "tag": "#J9YURQGP",
                 "name": "....",
                 "badgeId": 16000130
+            }
+        },
+        {
+            "tag": "#UGCYV8GJV",
+            "name": "mini Mistery",
+            "expLevel": 61,
+            "eloRating": 2856,
+            "rank": 62,
+            "clan": {
+                "tag": "#QC2JLUVC",
+                "name": "IMT Gaming",
+                "badgeId": 16000014
             }
         },
         {
@@ -873,23 +878,11 @@
             }
         },
         {
-            "tag": "#Y9VQC9UPG",
-            "name": "TG I Guwice™",
-            "expLevel": 81,
-            "eloRating": 2808,
-            "rank": 77,
-            "clan": {
-                "tag": "#GJ0LYGQQ",
-                "name": "Maculados BR",
-                "badgeId": 16000002
-            }
-        },
-        {
             "tag": "#U8VLJVVUQ",
             "name": "EROS⚡",
             "expLevel": 42,
             "eloRating": 2801,
-            "rank": 78,
+            "rank": 77,
             "clan": {
                 "tag": "#JYPPU80R",
                 "name": "Arcanum",
@@ -901,7 +894,7 @@
             "name": "maserati",
             "expLevel": 81,
             "eloRating": 2794,
-            "rank": 79,
+            "rank": 78,
             "clan": {
                 "tag": "#Q2229VPG",
                 "name": "Sem Guerra",
@@ -913,7 +906,7 @@
             "name": "『PHX』Carllos",
             "expLevel": 74,
             "eloRating": 2790,
-            "rank": 80,
+            "rank": 79,
             "clan": {
                 "tag": "#J0UL2PRU",
                 "name": "LSP",
@@ -925,7 +918,7 @@
             "name": "Alex!",
             "expLevel": 81,
             "eloRating": 2784,
-            "rank": 81,
+            "rank": 80,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -937,7 +930,7 @@
             "name": "IMT Lucas✨",
             "expLevel": 62,
             "eloRating": 2779,
-            "rank": 82,
+            "rank": 81,
             "clan": {
                 "tag": "#QC2JLUVC",
                 "name": "IMT Gaming",
@@ -949,18 +942,30 @@
             "name": "｢OLR™｣ ᴇʀɪᴄᴋ",
             "expLevel": 64,
             "eloRating": 2762,
-            "rank": 83
+            "rank": 82
         },
         {
             "tag": "#CCCQLCRGL",
             "name": "zezim SCCP",
             "expLevel": 80,
             "eloRating": 2754,
-            "rank": 84,
+            "rank": 83,
             "clan": {
                 "tag": "#GP2J0PRV",
                 "name": "Golden Hog",
                 "badgeId": 16000014
+            }
+        },
+        {
+            "tag": "#Y9VQC9UPG",
+            "name": "TG I Guwice™",
+            "expLevel": 81,
+            "eloRating": 2750,
+            "rank": 84,
+            "clan": {
+                "tag": "#GJ0LYGQQ",
+                "name": "Maculados BR",
+                "badgeId": 16000002
             }
         },
         {
@@ -1156,5 +1161,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-09-03T03:51:50"
+    "collected_at": "2026-09-03T04:24:13"
 }
