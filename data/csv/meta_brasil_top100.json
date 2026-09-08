@@ -1,11 +1,23 @@
 {
     "items": [
         {
+            "tag": "#QRCJP8PQR",
+            "name": "Rainbow",
+            "expLevel": 62,
+            "eloRating": 1817,
+            "rank": 1,
+            "clan": {
+                "tag": "#GJ02U22R",
+                "name": "milinha❤️",
+                "badgeId": 16000110
+            }
+        },
+        {
             "tag": "#29PRVVRC8",
             "name": "Aqua",
             "expLevel": 80,
             "eloRating": 1816,
-            "rank": 1,
+            "rank": 2,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
@@ -16,5 +28,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-08T13:51:49"
+    "collected_at": "2026-09-08T14:15:54"
 }
