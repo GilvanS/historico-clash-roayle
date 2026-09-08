@@ -4,7 +4,7 @@
             "tag": "#QRCJP8PQR",
             "name": "Rainbow",
             "expLevel": 62,
-            "eloRating": 1832,
+            "eloRating": 1841,
             "rank": 1,
             "clan": {
                 "tag": "#GJ02U22R",
@@ -25,27 +25,27 @@
             }
         },
         {
-            "tag": "#2P29Q0GQ",
-            "name": "Beltrão",
-            "expLevel": 75,
-            "eloRating": 1773,
-            "rank": 3
-        },
-        {
             "tag": "#CVY98",
             "name": "Flakes",
             "expLevel": 90,
-            "eloRating": 1722,
-            "rank": 4,
+            "eloRating": 1757,
+            "rank": 3,
             "clan": {
                 "tag": "#RY90U8C0",
                 "name": "Grupo Flakes",
                 "badgeId": 16000058
             }
+        },
+        {
+            "tag": "#2P29Q0GQ",
+            "name": "Beltrão",
+            "expLevel": 75,
+            "eloRating": 1653,
+            "rank": 4
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-08T17:13:54"
+    "collected_at": "2026-09-08T18:22:30"
 }
