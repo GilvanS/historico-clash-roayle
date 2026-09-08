@@ -1,15 +1,15 @@
 {
     "items": [
         {
-            "tag": "#QRCJP8PQR",
-            "name": "Rainbow",
-            "expLevel": 62,
-            "eloRating": 1841,
+            "tag": "#CVY98",
+            "name": "Flakes",
+            "expLevel": 90,
+            "eloRating": 1821,
             "rank": 1,
             "clan": {
-                "tag": "#GJ02U22R",
-                "name": "milinha❤️",
-                "badgeId": 16000110
+                "tag": "#RY90U8C0",
+                "name": "Grupo Flakes",
+                "badgeId": 16000058
             }
         },
         {
@@ -25,15 +25,15 @@
             }
         },
         {
-            "tag": "#CVY98",
-            "name": "Flakes",
-            "expLevel": 90,
-            "eloRating": 1757,
+            "tag": "#QRCJP8PQR",
+            "name": "Rainbow",
+            "expLevel": 62,
+            "eloRating": 1815,
             "rank": 3,
             "clan": {
-                "tag": "#RY90U8C0",
-                "name": "Grupo Flakes",
-                "badgeId": 16000058
+                "tag": "#GJ02U22R",
+                "name": "milinha❤️",
+                "badgeId": 16000110
             }
         },
         {
@@ -47,5 +47,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-08T18:22:30"
+    "collected_at": "2026-09-08T18:38:20"
 }
