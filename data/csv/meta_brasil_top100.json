@@ -54,10 +54,22 @@
             "expLevel": 75,
             "eloRating": 1763,
             "rank": 5
+        },
+        {
+            "tag": "#VJYJLLJV8",
+            "name": "THE BOSS ™",
+            "expLevel": 30,
+            "eloRating": 1747,
+            "rank": 6,
+            "clan": {
+                "tag": "#RYCGYQYP",
+                "name": "Gestão LiFe",
+                "badgeId": 16000058
+            }
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-08T21:53:42"
+    "collected_at": "2026-09-08T22:27:23"
 }
