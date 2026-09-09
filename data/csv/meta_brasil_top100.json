@@ -13,11 +13,23 @@
             }
         },
         {
+            "tag": "#80C8VUCUJ",
+            "name": "Biringão",
+            "expLevel": 64,
+            "eloRating": 1818,
+            "rank": 2,
+            "clan": {
+                "tag": "#LJRGJV80",
+                "name": "GUERREIROS PT 2",
+                "badgeId": 16000058
+            }
+        },
+        {
             "tag": "#29PRVVRC8",
             "name": "Aqua",
             "expLevel": 80,
             "eloRating": 1816,
-            "rank": 2,
+            "rank": 3,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
@@ -29,23 +41,11 @@
             "name": "Renan Light❤️",
             "expLevel": 62,
             "eloRating": 1815,
-            "rank": 3,
+            "rank": 4,
             "clan": {
                 "tag": "#GJ02U22R",
                 "name": "milinha❤️",
                 "badgeId": 16000110
-            }
-        },
-        {
-            "tag": "#80C8VUCUJ",
-            "name": "Biringão",
-            "expLevel": 64,
-            "eloRating": 1792,
-            "rank": 4,
-            "clan": {
-                "tag": "#LJRGJV80",
-                "name": "GUERREIROS PT 2",
-                "badgeId": 16000058
             }
         },
         {
@@ -119,5 +119,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-09T04:36:09"
+    "collected_at": "2026-09-09T04:49:25"
 }
