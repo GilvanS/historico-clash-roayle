@@ -37,27 +37,27 @@
             }
         },
         {
-            "tag": "#2CJU0LU98",
-            "name": "Nyx",
-            "expLevel": 84,
-            "eloRating": 1800,
-            "rank": 4,
-            "clan": {
-                "tag": "#GYQ2VU80",
-                "name": "German Eagle",
-                "badgeId": 16000168
-            }
-        },
-        {
             "tag": "#VC0JRC2JU",
             "name": "TKK.jackbest2.6",
             "expLevel": 1,
             "eloRating": 1792,
-            "rank": 5,
+            "rank": 4,
             "clan": {
                 "tag": "#JYCC228Q",
                 "name": "Rei da Mesa 94",
                 "badgeId": 16000033
+            }
+        },
+        {
+            "tag": "#80C8VUCUJ",
+            "name": "Biringão",
+            "expLevel": 64,
+            "eloRating": 1791,
+            "rank": 5,
+            "clan": {
+                "tag": "#LJRGJV80",
+                "name": "GUERREIROS PT 2",
+                "badgeId": 16000058
             }
         },
         {
@@ -73,11 +73,23 @@
             }
         },
         {
+            "tag": "#2CJU0LU98",
+            "name": "Nyx",
+            "expLevel": 84,
+            "eloRating": 1749,
+            "rank": 7,
+            "clan": {
+                "tag": "#GYQ2VU80",
+                "name": "German Eagle",
+                "badgeId": 16000168
+            }
+        },
+        {
             "tag": "#P9VUPGCLL",
             "name": "Ruivo❤️Demon",
             "expLevel": 82,
             "eloRating": 1720,
-            "rank": 7,
+            "rank": 8,
             "clan": {
                 "tag": "#J9PYRRPY",
                 "name": "dudaclash",
@@ -89,14 +101,14 @@
             "name": "Beltrão",
             "expLevel": 75,
             "eloRating": 1707,
-            "rank": 8
+            "rank": 9
         },
         {
             "tag": "#U8LLVR2Y9",
             "name": "by.Gl_da_011",
             "expLevel": 77,
             "eloRating": 1576,
-            "rank": 9,
+            "rank": 10,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
@@ -107,5 +119,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-09T02:46:48"
+    "collected_at": "2026-09-09T04:05:57"
 }
