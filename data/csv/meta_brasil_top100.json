@@ -1,23 +1,23 @@
 {
     "items": [
         {
+            "tag": "#VG0V0Y2LJ",
+            "name": "Vague",
+            "expLevel": 65,
+            "eloRating": 1904,
+            "rank": 1,
+            "clan": {
+                "tag": "#QCGJ0VYU",
+                "name": "Cross Guild",
+                "badgeId": 16000060
+            }
+        },
+        {
             "tag": "#2C88CYV9L",
             "name": "Seiya de Pégaso",
             "expLevel": 73,
             "eloRating": 1872,
-            "rank": 1
-        },
-        {
-            "tag": "#GJ2L2QQP9",
-            "name": "Lamine yamal 友ッ",
-            "expLevel": 81,
-            "eloRating": 1862,
-            "rank": 2,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
+            "rank": 2
         },
         {
             "tag": "#Y0PLR20U0",
@@ -32,23 +32,11 @@
             }
         },
         {
-            "tag": "#VG0V0Y2LJ",
-            "name": "Vague",
-            "expLevel": 65,
-            "eloRating": 1843,
-            "rank": 4,
-            "clan": {
-                "tag": "#QCGJ0VYU",
-                "name": "Cross Guild",
-                "badgeId": 16000060
-            }
-        },
-        {
             "tag": "#80C8VUCUJ",
             "name": "Biringão",
             "expLevel": 64,
             "eloRating": 1830,
-            "rank": 5,
+            "rank": 4,
             "clan": {
                 "tag": "#R28RGU8L",
                 "name": "YT: Him_CR",
@@ -60,11 +48,23 @@
             "name": "Aqua",
             "expLevel": 80,
             "eloRating": 1816,
-            "rank": 6,
+            "rank": 5,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
                 "badgeId": 16000170
+            }
+        },
+        {
+            "tag": "#GJ2L2QQP9",
+            "name": "Lamine yamal 友ッ",
+            "expLevel": 81,
+            "eloRating": 1800,
+            "rank": 6,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
             }
         },
         {
@@ -174,7 +174,7 @@
             "tag": "#2CJU0LU98",
             "name": "Nyx",
             "expLevel": 84,
-            "eloRating": 1543,
+            "eloRating": 1527,
             "rank": 16,
             "clan": {
                 "tag": "#GYQ2VU80",
@@ -186,5 +186,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-09T14:11:20"
+    "collected_at": "2026-09-09T14:31:00"
 }
