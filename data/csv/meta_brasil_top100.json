@@ -37,27 +37,27 @@
             }
         },
         {
-            "tag": "#VC0JRC2JU",
-            "name": "TKK.jackbest2.6",
-            "expLevel": 1,
-            "eloRating": 1792,
-            "rank": 4,
-            "clan": {
-                "tag": "#JYCC228Q",
-                "name": "Rei da Mesa 94",
-                "badgeId": 16000033
-            }
-        },
-        {
             "tag": "#80C8VUCUJ",
             "name": "Biringão",
             "expLevel": 64,
-            "eloRating": 1791,
-            "rank": 5,
+            "eloRating": 1792,
+            "rank": 4,
             "clan": {
                 "tag": "#LJRGJV80",
                 "name": "GUERREIROS PT 2",
                 "badgeId": 16000058
+            }
+        },
+        {
+            "tag": "#VC0JRC2JU",
+            "name": "TKK.jackbest2.6",
+            "expLevel": 1,
+            "eloRating": 1792,
+            "rank": 5,
+            "clan": {
+                "tag": "#JYCC228Q",
+                "name": "Rei da Mesa 94",
+                "badgeId": 16000033
             }
         },
         {
@@ -119,5 +119,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-09T04:05:57"
+    "collected_at": "2026-09-09T04:36:09"
 }
