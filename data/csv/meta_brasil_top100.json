@@ -13,11 +13,23 @@
             }
         },
         {
+            "tag": "#QRCJP8PQR",
+            "name": "Renan Light❤️",
+            "expLevel": 62,
+            "eloRating": 1827,
+            "rank": 2,
+            "clan": {
+                "tag": "#GJ02U22R",
+                "name": "milinha❤️",
+                "badgeId": 16000110
+            }
+        },
+        {
             "tag": "#CVY98",
             "name": "Flakes",
             "expLevel": 90,
             "eloRating": 1821,
-            "rank": 2,
+            "rank": 3,
             "clan": {
                 "tag": "#RY90U8C0",
                 "name": "Grupo Flakes",
@@ -29,23 +41,11 @@
             "name": "Aqua",
             "expLevel": 80,
             "eloRating": 1816,
-            "rank": 3,
+            "rank": 4,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
                 "badgeId": 16000170
-            }
-        },
-        {
-            "tag": "#QRCJP8PQR",
-            "name": "Renan Light❤️",
-            "expLevel": 62,
-            "eloRating": 1815,
-            "rank": 4,
-            "clan": {
-                "tag": "#GJ02U22R",
-                "name": "milinha❤️",
-                "badgeId": 16000110
             }
         },
         {
@@ -97,39 +97,39 @@
             }
         },
         {
+            "tag": "#2CJU0LU98",
+            "name": "Nyx",
+            "expLevel": 84,
+            "eloRating": 1585,
+            "rank": 9,
+            "clan": {
+                "tag": "#GYQ2VU80",
+                "name": "German Eagle",
+                "badgeId": 16000168
+            }
+        },
+        {
             "tag": "#2P29Q0GQ",
             "name": "Beltrão",
             "expLevel": 75,
             "eloRating": 1582,
-            "rank": 9
+            "rank": 10
         },
         {
             "tag": "#U8LLVR2Y9",
             "name": "by.Gl_da_011",
             "expLevel": 77,
             "eloRating": 1576,
-            "rank": 10,
+            "rank": 11,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
                 "badgeId": 16000028
-            }
-        },
-        {
-            "tag": "#2CJU0LU98",
-            "name": "Nyx",
-            "expLevel": 84,
-            "eloRating": 1504,
-            "rank": 11,
-            "clan": {
-                "tag": "#GYQ2VU80",
-                "name": "German Eagle",
-                "badgeId": 16000168
             }
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-09T12:01:02"
+    "collected_at": "2026-09-09T12:18:30"
 }
