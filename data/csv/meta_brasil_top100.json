@@ -7,9 +7,9 @@
             "eloRating": 1830,
             "rank": 1,
             "clan": {
-                "tag": "#LJRGJV80",
-                "name": "GUERREIROS PT 2",
-                "badgeId": 16000058
+                "tag": "#R28RGU8L",
+                "name": "YT: Him_CR",
+                "badgeId": 16000150
             }
         },
         {
@@ -73,23 +73,11 @@
             }
         },
         {
-            "tag": "#2CJU0LU98",
-            "name": "Nyx",
-            "expLevel": 84,
-            "eloRating": 1701,
-            "rank": 7,
-            "clan": {
-                "tag": "#GYQ2VU80",
-                "name": "German Eagle",
-                "badgeId": 16000168
-            }
-        },
-        {
             "tag": "#VC0JRC2JU",
             "name": "TKK.jackbest2.6",
             "expLevel": 1,
-            "eloRating": 1699,
-            "rank": 8,
+            "eloRating": 1680,
+            "rank": 7,
             "clan": {
                 "tag": "#JYCC228Q",
                 "name": "Rei da Mesa 94",
@@ -101,7 +89,7 @@
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 1603,
-            "rank": 9,
+            "rank": 8,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -113,23 +101,35 @@
             "name": "Beltrão",
             "expLevel": 75,
             "eloRating": 1582,
-            "rank": 10
+            "rank": 9
         },
         {
             "tag": "#U8LLVR2Y9",
             "name": "by.Gl_da_011",
             "expLevel": 77,
             "eloRating": 1576,
-            "rank": 11,
+            "rank": 10,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
                 "badgeId": 16000028
+            }
+        },
+        {
+            "tag": "#2CJU0LU98",
+            "name": "Nyx",
+            "expLevel": 84,
+            "eloRating": 1504,
+            "rank": 11,
+            "clan": {
+                "tag": "#GYQ2VU80",
+                "name": "German Eagle",
+                "badgeId": 16000168
             }
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-09T10:22:50"
+    "collected_at": "2026-09-09T12:01:02"
 }
