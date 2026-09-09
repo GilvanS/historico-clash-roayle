@@ -68,23 +68,11 @@
             }
         },
         {
-            "tag": "#VC0JRC2JU",
-            "name": "TKK.jackbest2.6",
-            "expLevel": 1,
-            "eloRating": 1818,
-            "rank": 7,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#29PRVVRC8",
             "name": "Aqua",
             "expLevel": 80,
             "eloRating": 1816,
-            "rank": 8,
+            "rank": 7,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
@@ -96,7 +84,7 @@
             "name": "Gui X 希望",
             "expLevel": 89,
             "eloRating": 1808,
-            "rank": 9,
+            "rank": 8,
             "clan": {
                 "tag": "#J0V29VCU",
                 "name": "mini tripa",
@@ -108,7 +96,7 @@
             "name": "meu nome é bond",
             "expLevel": 74,
             "eloRating": 1799,
-            "rank": 10,
+            "rank": 9,
             "clan": {
                 "tag": "#GV2CV8RY",
                 "name": "Lágrimas de Fé",
@@ -120,7 +108,7 @@
             "name": "単純 Lz ❤️✨",
             "expLevel": 74,
             "eloRating": 1745,
-            "rank": 11,
+            "rank": 10,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -132,6 +120,18 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 1744,
+            "rank": 11,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
+        },
+        {
+            "tag": "#VC0JRC2JU",
+            "name": "TKK.jackbest2.6",
+            "expLevel": 1,
+            "eloRating": 1729,
             "rank": 12,
             "clan": {
                 "tag": "#G89QUY2P",
@@ -258,5 +258,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-09T18:08:16"
+    "collected_at": "2026-09-09T18:34:35"
 }
