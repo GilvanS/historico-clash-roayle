@@ -1,11 +1,23 @@
 {
     "items": [
         {
+            "tag": "#VC0JRC2JU",
+            "name": "TKK.jackbest2.6",
+            "expLevel": 1,
+            "eloRating": 1866,
+            "rank": 1,
+            "clan": {
+                "tag": "#JYCC228Q",
+                "name": "Rei da Mesa 94",
+                "badgeId": 16000033
+            }
+        },
+        {
             "tag": "#CVY98",
             "name": "Flakes",
             "expLevel": 90,
             "eloRating": 1821,
-            "rank": 1,
+            "rank": 2,
             "clan": {
                 "tag": "#RY90U8C0",
                 "name": "Grupo Flakes",
@@ -17,7 +29,7 @@
             "name": "Aqua",
             "expLevel": 80,
             "eloRating": 1816,
-            "rank": 2,
+            "rank": 3,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
@@ -29,7 +41,7 @@
             "name": "Renan Light❤️",
             "expLevel": 62,
             "eloRating": 1815,
-            "rank": 3,
+            "rank": 4,
             "clan": {
                 "tag": "#GJ02U22R",
                 "name": "milinha❤️",
@@ -41,7 +53,7 @@
             "name": "Nyx",
             "expLevel": 84,
             "eloRating": 1800,
-            "rank": 4,
+            "rank": 5,
             "clan": {
                 "tag": "#GYQ2VU80",
                 "name": "German Eagle",
@@ -49,27 +61,46 @@
             }
         },
         {
-            "tag": "#2P29Q0GQ",
-            "name": "Beltrão",
-            "expLevel": 75,
-            "eloRating": 1763,
-            "rank": 5
-        },
-        {
             "tag": "#VJYJLLJV8",
             "name": "THE BOSS ™",
             "expLevel": 30,
-            "eloRating": 1747,
+            "eloRating": 1764,
             "rank": 6,
             "clan": {
                 "tag": "#RYCGYQYP",
                 "name": "Gestão LiFe",
                 "badgeId": 16000058
             }
+        },
+        {
+            "tag": "#P9VUPGCLL",
+            "name": "Ruivo❤️Demon",
+            "expLevel": 82,
+            "eloRating": 1720,
+            "rank": 7
+        },
+        {
+            "tag": "#2P29Q0GQ",
+            "name": "Beltrão",
+            "expLevel": 75,
+            "eloRating": 1707,
+            "rank": 8
+        },
+        {
+            "tag": "#U8LLVR2Y9",
+            "name": "by.Gl_da_011",
+            "expLevel": 77,
+            "eloRating": 1576,
+            "rank": 9,
+            "clan": {
+                "tag": "#RPYPPLJP",
+                "name": "Os Outliers",
+                "badgeId": 16000028
+            }
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-08T22:27:23"
+    "collected_at": "2026-09-09T02:08:27"
 }
