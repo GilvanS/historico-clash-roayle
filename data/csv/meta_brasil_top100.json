@@ -4,7 +4,7 @@
             "tag": "#GJ2L2QQP9",
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
-            "eloRating": 1996,
+            "eloRating": 2019,
             "rank": 1,
             "clan": {
                 "tag": "#G89QUY2P",
@@ -61,11 +61,23 @@
             }
         },
         {
+            "tag": "#CVY98",
+            "name": "Flakes",
+            "expLevel": 90,
+            "eloRating": 1865,
+            "rank": 6,
+            "clan": {
+                "tag": "#RY90U8C0",
+                "name": "Grupo Flakes",
+                "badgeId": 16000058
+            }
+        },
+        {
             "tag": "#28YGC0VPU",
             "name": "Barroso teté",
             "expLevel": 71,
             "eloRating": 1864,
-            "rank": 6,
+            "rank": 7,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -77,14 +89,19 @@
             "name": "Ruivo❤️Demon",
             "expLevel": 82,
             "eloRating": 1863,
-            "rank": 7
+            "rank": 8,
+            "clan": {
+                "tag": "#J9PYRRPY",
+                "name": "dudaclash",
+                "badgeId": 16000132
+            }
         },
         {
             "tag": "#Y0PLR20U0",
             "name": "Acua",
             "expLevel": 67,
             "eloRating": 1856,
-            "rank": 8,
+            "rank": 9,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -95,23 +112,11 @@
             "tag": "#2C88CYV9L",
             "name": "Seiya de Pégaso",
             "expLevel": 73,
-            "eloRating": 1853,
-            "rank": 9,
+            "eloRating": 1840,
+            "rank": 10,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
-        },
-        {
-            "tag": "#CVY98",
-            "name": "Flakes",
-            "expLevel": 90,
-            "eloRating": 1847,
-            "rank": 10,
-            "clan": {
-                "tag": "#RY90U8C0",
-                "name": "Grupo Flakes",
                 "badgeId": 16000058
             }
         },
@@ -200,11 +205,23 @@
             }
         },
         {
+            "tag": "#CJQGVV08Q",
+            "name": "⚡Maicon.G⚡",
+            "expLevel": 72,
+            "eloRating": 1779,
+            "rank": 18,
+            "clan": {
+                "tag": "#GYGYU8GP",
+                "name": "Lava❤Eclipse",
+                "badgeId": 16000108
+            }
+        },
+        {
             "tag": "#VYPY9VQL9",
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
             "eloRating": 1778,
-            "rank": 18,
+            "rank": 19,
             "clan": {
                 "tag": "#GCCJUVRP",
                 "name": "CR7❤️",
@@ -216,17 +233,17 @@
             "name": "Beltrão",
             "expLevel": 75,
             "eloRating": 1765,
-            "rank": 19
+            "rank": 20
         },
         {
-            "tag": "#CJQGVV08Q",
-            "name": "⚡Maicon.G⚡",
-            "expLevel": 72,
-            "eloRating": 1757,
-            "rank": 20,
+            "tag": "#VLRRGQQ89",
+            "name": "ルキス丨iury",
+            "expLevel": 67,
+            "eloRating": 1751,
+            "rank": 21,
             "clan": {
-                "tag": "#QCP2YJ0C",
-                "name": "Os Lendários",
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
                 "badgeId": 16000058
             }
         },
@@ -235,7 +252,7 @@
             "name": "Vague",
             "expLevel": 65,
             "eloRating": 1747,
-            "rank": 21,
+            "rank": 22,
             "clan": {
                 "tag": "#QCGJ0VYU",
                 "name": "Cross Guild",
@@ -247,18 +264,6 @@
             "name": "Luiz™",
             "expLevel": 75,
             "eloRating": 1746,
-            "rank": 22,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
-        },
-        {
-            "tag": "#VLRRGQQ89",
-            "name": "ルキス丨iury",
-            "expLevel": 67,
-            "eloRating": 1736,
             "rank": 23,
             "clan": {
                 "tag": "#G89QUY2P",
@@ -466,5 +471,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-10T13:41:40"
+    "collected_at": "2026-09-10T14:02:25"
 }
