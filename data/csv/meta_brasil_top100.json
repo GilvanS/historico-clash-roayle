@@ -1,11 +1,23 @@
 {
     "items": [
         {
+            "tag": "#VC0JRC2JU",
+            "name": "TKK.jackbest2.6",
+            "expLevel": 1,
+            "eloRating": 1960,
+            "rank": 1,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
+        },
+        {
             "tag": "#GJ2L2QQP9",
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 1950,
-            "rank": 1,
+            "rank": 2,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -17,23 +29,11 @@
             "name": "Gui X 希望",
             "expLevel": 89,
             "eloRating": 1938,
-            "rank": 2,
+            "rank": 3,
             "clan": {
                 "tag": "#GJ0Y8QQV",
                 "name": "chaval",
                 "badgeId": 16000029
-            }
-        },
-        {
-            "tag": "#VC0JRC2JU",
-            "name": "TKK.jackbest2.6",
-            "expLevel": 1,
-            "eloRating": 1920,
-            "rank": 3,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
             }
         },
         {
@@ -399,5 +399,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-09-10T04:31:58"
+    "collected_at": "2026-09-10T04:47:08"
 }
