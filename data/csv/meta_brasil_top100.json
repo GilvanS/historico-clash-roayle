@@ -1,32 +1,32 @@
 {
     "items": [
         {
-            "tag": "#V2LR8GP9C",
-            "name": "Storm™️",
-            "expLevel": 60,
-            "eloRating": 1776,
-            "rank": 1,
-            "clan": {
-                "tag": "#J9G8GRCC",
-                "name": "Sandstorm",
-                "badgeId": 16000097
-            }
-        },
-        {
             "tag": "#GJ2L2QQP9",
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
-            "eloRating": 1705,
-            "rank": 2,
+            "eloRating": 1760,
+            "rank": 1,
             "clan": {
                 "tag": "#GJ8C89LJ",
                 "name": "Me largaaaaaaaa",
                 "badgeId": 16000128
+            }
+        },
+        {
+            "tag": "#V2LR8GP9C",
+            "name": "Storm™️",
+            "expLevel": 60,
+            "eloRating": 1748,
+            "rank": 2,
+            "clan": {
+                "tag": "#J9G8GRCC",
+                "name": "Sandstorm",
+                "badgeId": 16000097
             }
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-06T18:31:01"
+    "collected_at": "2026-10-06T18:54:01"
 }
