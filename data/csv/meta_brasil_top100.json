@@ -1,11 +1,23 @@
 {
     "items": [
         {
+            "tag": "#2C88CYV9L",
+            "name": "Seiya de Pégaso",
+            "expLevel": 73,
+            "eloRating": 1825,
+            "rank": 1,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
+        },
+        {
             "tag": "#GJ2L2QQP9",
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 1740,
-            "rank": 1,
+            "rank": 2,
             "clan": {
                 "tag": "#GJJR2YVL",
                 "name": "EGOLEM ARISES",
@@ -17,7 +29,7 @@
             "name": "Nando xs",
             "expLevel": 78,
             "eloRating": 1728,
-            "rank": 2,
+            "rank": 3,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -29,7 +41,7 @@
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 1672,
-            "rank": 3,
+            "rank": 4,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
@@ -40,5 +52,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-06T20:42:22"
+    "collected_at": "2026-10-06T21:00:55"
 }
