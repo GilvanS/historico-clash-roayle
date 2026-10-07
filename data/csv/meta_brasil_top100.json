@@ -13,11 +13,23 @@
             }
         },
         {
+            "tag": "#LJ9GRU0P0",
+            "name": "Zezão gostoso",
+            "expLevel": 74,
+            "eloRating": 1808,
+            "rank": 2,
+            "clan": {
+                "tag": "#GGVLVYP2",
+                "name": "TOP ROYALE",
+                "badgeId": 16000081
+            }
+        },
+        {
             "tag": "#CVJ89V8Q8",
             "name": "Cench Cassio",
             "expLevel": 70,
             "eloRating": 1800,
-            "rank": 2,
+            "rank": 3,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -25,11 +37,23 @@
             }
         },
         {
+            "tag": "#CRP9YV2GJ",
+            "name": "Marcøs",
+            "expLevel": 78,
+            "eloRating": 1800,
+            "rank": 4,
+            "clan": {
+                "tag": "#GLULRRYQ",
+                "name": "BloodRiver",
+                "badgeId": 16000026
+            }
+        },
+        {
             "tag": "#V2VCGGGGY",
             "name": "Nando xs",
             "expLevel": 78,
             "eloRating": 1795,
-            "rank": 3,
+            "rank": 5,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -41,7 +65,7 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 1784,
-            "rank": 4,
+            "rank": 6,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -53,7 +77,7 @@
             "name": "Aegon Targaryen",
             "expLevel": 62,
             "eloRating": 1760,
-            "rank": 5,
+            "rank": 7,
             "clan": {
                 "tag": "#RJ8VYV28",
                 "name": "4:20 BR",
@@ -65,7 +89,7 @@
             "name": "Noah",
             "expLevel": 58,
             "eloRating": 1737,
-            "rank": 6,
+            "rank": 8,
             "clan": {
                 "tag": "#GG902GCL",
                 "name": "Avenida Shingek",
@@ -77,7 +101,7 @@
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 1634,
-            "rank": 7,
+            "rank": 9,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -89,7 +113,7 @@
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 1625,
-            "rank": 8,
+            "rank": 10,
             "clan": {
                 "tag": "#GCVU299J",
                 "name": "20 wins",
@@ -100,8 +124,8 @@
             "tag": "#2PR09PCQY",
             "name": "elias900",
             "expLevel": 82,
-            "eloRating": 1601,
-            "rank": 9,
+            "eloRating": 1525,
+            "rank": 11,
             "clan": {
                 "tag": "#JL2QPRJV",
                 "name": "push early",
@@ -112,5 +136,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-07T16:21:09"
+    "collected_at": "2026-10-07T16:44:40"
 }
