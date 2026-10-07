@@ -47,10 +47,22 @@
                 "name": "Brazil Empire",
                 "badgeId": 16000020
             }
+        },
+        {
+            "tag": "#2PR09PCQY",
+            "name": "elias900",
+            "expLevel": 82,
+            "eloRating": 1641,
+            "rank": 5,
+            "clan": {
+                "tag": "#R8YGVY0V",
+                "name": "push end season",
+                "badgeId": 16000058
+            }
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-06T23:40:29"
+    "collected_at": "2026-10-07T03:27:41"
 }
