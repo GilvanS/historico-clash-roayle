@@ -25,11 +25,23 @@
             }
         },
         {
+            "tag": "#V2VCGGGGY",
+            "name": "Nando xs",
+            "expLevel": 78,
+            "eloRating": 1795,
+            "rank": 3,
+            "clan": {
+                "tag": "#RL0VJYL9",
+                "name": "Brazil Empire",
+                "badgeId": 16000020
+            }
+        },
+        {
             "tag": "#VLRRGQQ89",
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 1784,
-            "rank": 3,
+            "rank": 4,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -41,23 +53,11 @@
             "name": "Aegon Targaryen",
             "expLevel": 62,
             "eloRating": 1760,
-            "rank": 4,
+            "rank": 5,
             "clan": {
                 "tag": "#RJ8VYV28",
                 "name": "4:20 BR",
                 "badgeId": 16000091
-            }
-        },
-        {
-            "tag": "#V2VCGGGGY",
-            "name": "Nando xs",
-            "expLevel": 78,
-            "eloRating": 1738,
-            "rank": 5,
-            "clan": {
-                "tag": "#RL0VJYL9",
-                "name": "Brazil Empire",
-                "badgeId": 16000020
             }
         },
         {
@@ -76,7 +76,7 @@
             "tag": "#V2LR8GP9C",
             "name": "Storm™️",
             "expLevel": 60,
-            "eloRating": 1699,
+            "eloRating": 1721,
             "rank": 7,
             "clan": {
                 "tag": "#GCVU299J",
@@ -100,7 +100,7 @@
             "tag": "#2PR09PCQY",
             "name": "elias900",
             "expLevel": 82,
-            "eloRating": 1611,
+            "eloRating": 1601,
             "rank": 9,
             "clan": {
                 "tag": "#JL2QPRJV",
@@ -112,5 +112,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-07T13:01:56"
+    "collected_at": "2026-10-07T14:41:46"
 }
