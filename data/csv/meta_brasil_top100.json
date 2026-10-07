@@ -44,18 +44,11 @@
             }
         },
         {
-            "tag": "#CVJ89V8Q8",
-            "name": "Cench Cassio",
-            "expLevel": 70,
-            "eloRating": 1815,
-            "rank": 5
-        },
-        {
             "tag": "#V2VCGGGGY",
             "name": "Nando xs",
             "expLevel": 78,
             "eloRating": 1795,
-            "rank": 6,
+            "rank": 5,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -67,12 +60,19 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 1784,
-            "rank": 7,
+            "rank": 6,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
                 "badgeId": 16000058
             }
+        },
+        {
+            "tag": "#CVJ89V8Q8",
+            "name": "Cench Cassio",
+            "expLevel": 70,
+            "eloRating": 1782,
+            "rank": 7
         },
         {
             "tag": "#G029R8PPR",
@@ -111,11 +111,23 @@
             }
         },
         {
+            "tag": "#2UQ0GCQQ",
+            "name": "Dance",
+            "expLevel": 83,
+            "eloRating": 1728,
+            "rank": 11,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
+        },
+        {
             "tag": "#P9VUPGCLL",
             "name": "Ruivo❤️Demon",
             "expLevel": 82,
             "eloRating": 1696,
-            "rank": 11,
+            "rank": 12,
             "clan": {
                 "tag": "#R8R0JR8J",
                 "name": "shelovemypigs",
@@ -127,7 +139,7 @@
             "name": "Zezão gostoso",
             "expLevel": 74,
             "eloRating": 1674,
-            "rank": 12,
+            "rank": 13,
             "clan": {
                 "tag": "#GGVLVYP2",
                 "name": "TOP ROYALE",
@@ -139,7 +151,7 @@
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 1602,
-            "rank": 13,
+            "rank": 14,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -151,14 +163,14 @@
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 1599,
-            "rank": 14
+            "rank": 15
         },
         {
             "tag": "#2PR09PCQY",
             "name": "elias900",
             "expLevel": 82,
             "eloRating": 1401,
-            "rank": 15,
+            "rank": 16,
             "clan": {
                 "tag": "#JL2QPRJV",
                 "name": "push early",
@@ -169,5 +181,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-07T20:17:28"
+    "collected_at": "2026-10-07T20:32:06"
 }
