@@ -25,23 +25,11 @@
             }
         },
         {
-            "tag": "#V2LR8GP9C",
-            "name": "Storm™️",
-            "expLevel": 60,
-            "eloRating": 1732,
-            "rank": 3,
-            "clan": {
-                "tag": "#J9G8GRCC",
-                "name": "Sandstorm",
-                "badgeId": 16000097
-            }
-        },
-        {
             "tag": "#V2VCGGGGY",
             "name": "Nando xs",
             "expLevel": 78,
             "eloRating": 1728,
-            "rank": 4,
+            "rank": 3,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -49,10 +37,22 @@
             }
         },
         {
+            "tag": "#V2LR8GP9C",
+            "name": "Storm™️",
+            "expLevel": 60,
+            "eloRating": 1699,
+            "rank": 4,
+            "clan": {
+                "tag": "#J9G8GRCC",
+                "name": "Sandstorm",
+                "badgeId": 16000097
+            }
+        },
+        {
             "tag": "#2PR09PCQY",
             "name": "elias900",
             "expLevel": 82,
-            "eloRating": 1641,
+            "eloRating": 1606,
             "rank": 5,
             "clan": {
                 "tag": "#R8YGVY0V",
@@ -64,5 +64,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-07T06:43:10"
+    "collected_at": "2026-10-07T09:24:41"
 }
