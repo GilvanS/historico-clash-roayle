@@ -20,18 +20,11 @@
             }
         },
         {
-            "tag": "#CVJ89V8Q8",
-            "name": "Cench Cassio",
-            "expLevel": 70,
-            "eloRating": 1851,
-            "rank": 3
-        },
-        {
             "tag": "#CRP9YV2GJ",
             "name": "Marcøs",
             "expLevel": 78,
             "eloRating": 1835,
-            "rank": 4,
+            "rank": 3,
             "clan": {
                 "tag": "#GLULRRYQ",
                 "name": "BloodRiver",
@@ -43,12 +36,19 @@
             "name": "Wallace",
             "expLevel": 90,
             "eloRating": 1828,
-            "rank": 5,
+            "rank": 4,
             "clan": {
                 "tag": "#GCVUVCG9",
                 "name": "RISE✨ARABIA",
                 "badgeId": 16000032
             }
+        },
+        {
+            "tag": "#CVJ89V8Q8",
+            "name": "Cench Cassio",
+            "expLevel": 70,
+            "eloRating": 1815,
+            "rank": 5
         },
         {
             "tag": "#V2VCGGGGY",
@@ -169,5 +169,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-07T19:19:54"
+    "collected_at": "2026-10-07T20:17:28"
 }
