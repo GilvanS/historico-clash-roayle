@@ -56,11 +56,23 @@
             }
         },
         {
+            "tag": "#V2VCGGGGY",
+            "name": "Nando xs",
+            "expLevel": 78,
+            "eloRating": 1899,
+            "rank": 6,
+            "clan": {
+                "tag": "#RL0VJYL9",
+                "name": "Brazil Empire",
+                "badgeId": 16000020
+            }
+        },
+        {
             "tag": "#VJYJLLJV8",
             "name": "THE BOSS ™",
             "expLevel": 30,
             "eloRating": 1896,
-            "rank": 6,
+            "rank": 7,
             "clan": {
                 "tag": "#RYCGYQYP",
                 "name": "Gestão LiFe",
@@ -72,7 +84,7 @@
             "name": "Ruivo❤️Demon",
             "expLevel": 82,
             "eloRating": 1895,
-            "rank": 7,
+            "rank": 8,
             "clan": {
                 "tag": "#GCLPLGLU",
                 "name": "shelovemypigs",
@@ -84,7 +96,7 @@
             "name": "Marcøs",
             "expLevel": 78,
             "eloRating": 1873,
-            "rank": 8,
+            "rank": 9,
             "clan": {
                 "tag": "#GLULRRYQ",
                 "name": "BloodRiver",
@@ -96,23 +108,11 @@
             "name": "Seiya de Pégaso",
             "expLevel": 73,
             "eloRating": 1871,
-            "rank": 9,
+            "rank": 10,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
                 "badgeId": 16000058
-            }
-        },
-        {
-            "tag": "#V2VCGGGGY",
-            "name": "Nando xs",
-            "expLevel": 78,
-            "eloRating": 1870,
-            "rank": 10,
-            "clan": {
-                "tag": "#RL0VJYL9",
-                "name": "Brazil Empire",
-                "badgeId": 16000020
             }
         },
         {
@@ -512,7 +512,7 @@
             "tag": "#JG0PC9J9G",
             "name": "安宁Light✨",
             "expLevel": 73,
-            "eloRating": 1479,
+            "eloRating": 1497,
             "rank": 45,
             "clan": {
                 "tag": "#G0YQJ2YV",
@@ -560,5 +560,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-08T20:31:40"
+    "collected_at": "2026-10-08T20:43:56"
 }
