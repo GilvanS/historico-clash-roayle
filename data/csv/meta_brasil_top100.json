@@ -188,11 +188,30 @@
             }
         },
         {
+            "tag": "#2C9YPYQYJ",
+            "name": "Seishiro Nagi ㄤ",
+            "expLevel": 76,
+            "eloRating": 1739,
+            "rank": 17,
+            "clan": {
+                "tag": "#QL2YV0RY",
+                "name": "os Batutinhas",
+                "badgeId": 16000177
+            }
+        },
+        {
+            "tag": "#U9LLPUUV9",
+            "name": "他在炸用✨野豬",
+            "expLevel": 52,
+            "eloRating": 1738,
+            "rank": 18
+        },
+        {
             "tag": "#Y9QQQPPP",
             "name": "Noah",
             "expLevel": 58,
             "eloRating": 1737,
-            "rank": 17,
+            "rank": 19,
             "clan": {
                 "tag": "#GG902GCL",
                 "name": "Avenida Shingek",
@@ -204,7 +223,7 @@
             "name": "SPIROOX171",
             "expLevel": 66,
             "eloRating": 1736,
-            "rank": 18,
+            "rank": 20,
             "clan": {
                 "tag": "#GCPGCGYY",
                 "name": "BOLSONARO 22",
@@ -216,7 +235,7 @@
             "name": "Dance",
             "expLevel": 83,
             "eloRating": 1728,
-            "rank": 19,
+            "rank": 21,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -228,7 +247,7 @@
             "name": "$xboon$",
             "expLevel": 69,
             "eloRating": 1711,
-            "rank": 20,
+            "rank": 22,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -240,7 +259,7 @@
             "name": "Seiya de Pégaso",
             "expLevel": 73,
             "eloRating": 1710,
-            "rank": 21,
+            "rank": 23,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -248,29 +267,10 @@
             }
         },
         {
-            "tag": "#U9LLPUUV9",
-            "name": "他在炸用✨野豬",
-            "expLevel": 52,
-            "eloRating": 1708,
-            "rank": 22
-        },
-        {
-            "tag": "#2C9YPYQYJ",
-            "name": "Seishiro Nagi ㄤ",
-            "expLevel": 76,
-            "eloRating": 1701,
-            "rank": 23,
-            "clan": {
-                "tag": "#QL2YV0RY",
-                "name": "os Batutinhas",
-                "badgeId": 16000177
-            }
-        },
-        {
             "tag": "#8QJGG2QR9",
             "name": "Marcelo Prime⚡",
             "expLevel": 84,
-            "eloRating": 1699,
+            "eloRating": 1698,
             "rank": 24,
             "clan": {
                 "tag": "#JYVQ8UGV",
@@ -390,7 +390,7 @@
             "tag": "#JPU2Q9UR9",
             "name": "Dznn7™⚡",
             "expLevel": 73,
-            "eloRating": 1552,
+            "eloRating": 1544,
             "rank": 34,
             "clan": {
                 "tag": "#J20R2L2G",
@@ -426,7 +426,7 @@
             "tag": "#GJ2L2QQP9",
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
-            "eloRating": 1332,
+            "eloRating": 1291,
             "rank": 37,
             "clan": {
                 "tag": "#G89QUY2P",
@@ -438,5 +438,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-08T14:47:34"
+    "collected_at": "2026-10-08T14:59:22"
 }
