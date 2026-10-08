@@ -221,23 +221,11 @@
             }
         },
         {
-            "tag": "#2YL2YYGPL",
-            "name": "Klinker",
-            "expLevel": 64,
-            "eloRating": 1664,
-            "rank": 21,
-            "clan": {
-                "tag": "#LGRUCVJV",
-                "name": "Adultos Juniors",
-                "badgeId": 16000023
-            }
-        },
-        {
             "tag": "#UR800PJCU",
             "name": "⚡️GuGa⚡️",
             "expLevel": 60,
             "eloRating": 1664,
-            "rank": 22,
+            "rank": 21,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
@@ -249,7 +237,7 @@
             "name": "✌️✌️Gustavo✌️✌️",
             "expLevel": 71,
             "eloRating": 1656,
-            "rank": 23,
+            "rank": 22,
             "clan": {
                 "tag": "#9YJGVCPQ",
                 "name": "LimiT eSports",
@@ -261,7 +249,7 @@
             "name": "⭐️Markin91_",
             "expLevel": 80,
             "eloRating": 1639,
-            "rank": 24,
+            "rank": 23,
             "clan": {
                 "tag": "#GUQQQVCV",
                 "name": "T.S.A",
@@ -273,11 +261,23 @@
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 1599,
-            "rank": 25,
+            "rank": 24,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
                 "badgeId": 16000097
+            }
+        },
+        {
+            "tag": "#2YL2YYGPL",
+            "name": "Klinker",
+            "expLevel": 64,
+            "eloRating": 1593,
+            "rank": 25,
+            "clan": {
+                "tag": "#LGRUCVJV",
+                "name": "Adultos Juniors",
+                "badgeId": 16000023
             }
         },
         {
@@ -308,5 +308,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-08T05:27:07"
+    "collected_at": "2026-10-08T06:21:12"
 }
