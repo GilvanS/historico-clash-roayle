@@ -20,11 +20,18 @@
             }
         },
         {
+            "tag": "#CVJ89V8Q8",
+            "name": "Cench Cassio",
+            "expLevel": 70,
+            "eloRating": 1840,
+            "rank": 3
+        },
+        {
             "tag": "#CRP9YV2GJ",
             "name": "Marcøs",
             "expLevel": 78,
             "eloRating": 1835,
-            "rank": 3,
+            "rank": 4,
             "clan": {
                 "tag": "#GLULRRYQ",
                 "name": "BloodRiver",
@@ -36,7 +43,7 @@
             "name": "Wallace",
             "expLevel": 90,
             "eloRating": 1828,
-            "rank": 4,
+            "rank": 5,
             "clan": {
                 "tag": "#GCVUVCG9",
                 "name": "RISE✨ARABIA",
@@ -48,7 +55,7 @@
             "name": "Nando xs",
             "expLevel": 78,
             "eloRating": 1795,
-            "rank": 5,
+            "rank": 6,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -60,19 +67,12 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 1784,
-            "rank": 6,
+            "rank": 7,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
                 "badgeId": 16000058
             }
-        },
-        {
-            "tag": "#CVJ89V8Q8",
-            "name": "Cench Cassio",
-            "expLevel": 70,
-            "eloRating": 1782,
-            "rank": 7
         },
         {
             "tag": "#G029R8PPR",
@@ -181,5 +181,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-07T20:32:06"
+    "collected_at": "2026-10-07T21:07:39"
 }
