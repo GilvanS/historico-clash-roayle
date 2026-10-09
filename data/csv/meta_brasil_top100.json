@@ -600,23 +600,11 @@
             "rank": 52
         },
         {
-            "tag": "#8Y28RYQ8L",
-            "name": "Breno™",
-            "expLevel": 78,
-            "eloRating": 1624,
-            "rank": 53,
-            "clan": {
-                "tag": "#QUY202GQ",
-                "name": "Master War",
-                "badgeId": 16000009
-            }
-        },
-        {
             "tag": "#LC22V88CY",
             "name": "Julianaキリト✨❤️3m",
             "expLevel": 79,
             "eloRating": 1616,
-            "rank": 54,
+            "rank": 53,
             "clan": {
                 "tag": "#GYYJ99LY",
                 "name": "Dark Warriors C",
@@ -628,11 +616,23 @@
             "name": "⚡️GuGa⚡️",
             "expLevel": 60,
             "eloRating": 1602,
-            "rank": 55,
+            "rank": 54,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
                 "badgeId": 16000058
+            }
+        },
+        {
+            "tag": "#8Y28RYQ8L",
+            "name": "Breno™",
+            "expLevel": 78,
+            "eloRating": 1597,
+            "rank": 55,
+            "clan": {
+                "tag": "#QUY202GQ",
+                "name": "Master War",
+                "badgeId": 16000009
             }
         },
         {
@@ -696,11 +696,23 @@
             }
         },
         {
+            "tag": "#JG0PC9J9G",
+            "name": "安宁Light✨",
+            "expLevel": 73,
+            "eloRating": 1421,
+            "rank": 61,
+            "clan": {
+                "tag": "#G0YQJ2YV",
+                "name": "Citrine I",
+                "badgeId": 16000020
+            }
+        },
+        {
             "tag": "#2PR09PCQY",
             "name": "elias900",
             "expLevel": 82,
             "eloRating": 1401,
-            "rank": 61,
+            "rank": 62,
             "clan": {
                 "tag": "#JL2QPRJV",
                 "name": "push early",
@@ -712,23 +724,11 @@
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 1349,
-            "rank": 62,
+            "rank": 63,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
                 "badgeId": 16000058
-            }
-        },
-        {
-            "tag": "#JG0PC9J9G",
-            "name": "安宁Light✨",
-            "expLevel": 73,
-            "eloRating": 1324,
-            "rank": 63,
-            "clan": {
-                "tag": "#G0YQJ2YV",
-                "name": "Citrine I",
-                "badgeId": 16000020
             }
         },
         {
@@ -747,5 +747,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-10-09T06:31:32"
+    "collected_at": "2026-10-09T06:58:23"
 }
