@@ -63,11 +63,23 @@
             }
         },
         {
+            "tag": "#U90JGV0Q",
+            "name": "⭐️Markin91_",
+            "expLevel": 80,
+            "eloRating": 2519,
+            "rank": 7,
+            "clan": {
+                "tag": "#GUQQQVCV",
+                "name": "T.S.A",
+                "badgeId": 16000013
+            }
+        },
+        {
             "tag": "#V2LR8GP9C",
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 2510,
-            "rank": 7,
+            "rank": 8,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
@@ -79,30 +91,18 @@
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 2504,
-            "rank": 8
+            "rank": 9
         },
         {
             "tag": "#G029R8PPR",
             "name": "Aegon Targaryen",
             "expLevel": 62,
             "eloRating": 2500,
-            "rank": 9,
+            "rank": 10,
             "clan": {
                 "tag": "#RJ8VYV28",
                 "name": "4:20 BR",
                 "badgeId": 16000091
-            }
-        },
-        {
-            "tag": "#U90JGV0Q",
-            "name": "⭐️Markin91_",
-            "expLevel": 80,
-            "eloRating": 2483,
-            "rank": 10,
-            "clan": {
-                "tag": "#GUQQQVCV",
-                "name": "T.S.A",
-                "badgeId": 16000013
             }
         },
         {
@@ -1093,23 +1093,11 @@
             }
         },
         {
-            "tag": "#JG0PC9J9G",
-            "name": "安宁Light✨",
-            "expLevel": 73,
-            "eloRating": 2092,
-            "rank": 97,
-            "clan": {
-                "tag": "#G0YQJ2YV",
-                "name": "Citrine I",
-                "badgeId": 16000020
-            }
-        },
-        {
             "tag": "#2C9YPYQYJ",
             "name": "Seishiro Nagi ㄤ",
             "expLevel": 76,
             "eloRating": 2089,
-            "rank": 98,
+            "rank": 97,
             "clan": {
                 "tag": "#QL2YV0RY",
                 "name": "os Batutinhas",
@@ -1121,18 +1109,30 @@
             "name": "THEUZINHO",
             "expLevel": 78,
             "eloRating": 2088,
-            "rank": 99
+            "rank": 98
         },
         {
             "tag": "#U0GYPV2YV",
             "name": "ghost m4",
             "expLevel": 85,
             "eloRating": 2086,
-            "rank": 100,
+            "rank": 99,
             "clan": {
                 "tag": "#GCVUVCG9",
                 "name": "RISE✨ARABIA",
                 "badgeId": 16000032
+            }
+        },
+        {
+            "tag": "#LC9VU8U2G",
+            "name": "Du Bigode",
+            "expLevel": 79,
+            "eloRating": 2085,
+            "rank": 100,
+            "clan": {
+                "tag": "#R200V8RC",
+                "name": "Xeque-Mate",
+                "badgeId": 16000113
             }
         }
     ],
@@ -1141,5 +1141,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-19T05:05:39"
+    "collected_at": "2026-10-19T05:26:59"
 }
