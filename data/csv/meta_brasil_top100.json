@@ -17,7 +17,12 @@
             "name": "kamikaze✨小小罗",
             "expLevel": 67,
             "eloRating": 3100,
-            "rank": 2
+            "rank": 2,
+            "clan": {
+                "tag": "#RYPUCRYV",
+                "name": "Double⚡️Prince",
+                "badgeId": 16000177
+            }
         },
         {
             "tag": "#U0GYPV2YV",
@@ -181,7 +186,7 @@
             "tag": "#P98CPPG99",
             "name": "Carllos",
             "expLevel": 74,
-            "eloRating": 2854,
+            "eloRating": 2853,
             "rank": 17,
             "clan": {
                 "tag": "#GY0L2J",
@@ -1146,5 +1151,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-26T14:09:16"
+    "collected_at": "2026-10-26T14:33:28"
 }
