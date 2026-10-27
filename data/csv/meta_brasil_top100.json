@@ -143,9 +143,9 @@
             "eloRating": 2936,
             "rank": 14,
             "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
+                "tag": "#JL2J9JLU",
+                "name": "RCS League",
+                "badgeId": 16000151
             }
         },
         {
@@ -920,6 +920,18 @@
             }
         },
         {
+            "tag": "#JPRYPGJVR",
+            "name": "JV",
+            "expLevel": 72,
+            "eloRating": 2420,
+            "rank": 82,
+            "clan": {
+                "tag": "#GCVPR90U",
+                "name": "FC Oficial",
+                "badgeId": 16000058
+            }
+        },
+        {
             "tag": "#C88PQCJQ",
             "name": "L.A",
             "expLevel": 47,
@@ -1013,6 +1025,18 @@
                 "tag": "#LYCYV999",
                 "name": "lendas do clash",
                 "badgeId": 16000028
+            }
+        },
+        {
+            "tag": "#V02CQR2J2",
+            "name": "João™",
+            "expLevel": 72,
+            "eloRating": 2407,
+            "rank": 91,
+            "clan": {
+                "tag": "#J9G8GRCC",
+                "name": "Sandstorm",
+                "badgeId": 16000097
             }
         },
         {
@@ -1141,5 +1165,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-27T17:18:06"
+    "collected_at": "2026-10-27T17:27:17"
 }
