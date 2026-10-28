@@ -1,26 +1,26 @@
 {
     "items": [
         {
-            "tag": "#228CUL992C",
-            "name": "kamikaze✨小小罗",
-            "expLevel": 67,
-            "eloRating": 3100,
+            "tag": "#V2LR8GP9C",
+            "name": "Storm™️",
+            "expLevel": 60,
+            "eloRating": 3117,
             "rank": 1,
             "clan": {
-                "tag": "#J9G8GRCC",
-                "name": "Sandstorm",
+                "tag": "#J9RGVL2U",
+                "name": "Sandstorm BR",
                 "badgeId": 16000097
             }
         },
         {
-            "tag": "#V2LR8GP9C",
-            "name": "Storm™️",
-            "expLevel": 60,
-            "eloRating": 3096,
+            "tag": "#228CUL992C",
+            "name": "kamikaze✨小小罗",
+            "expLevel": 67,
+            "eloRating": 3100,
             "rank": 2,
             "clan": {
-                "tag": "#J9RGVL2U",
-                "name": "Sandstorm BR",
+                "tag": "#J9G8GRCC",
+                "name": "Sandstorm",
                 "badgeId": 16000097
             }
         },
@@ -153,7 +153,12 @@
             "name": "Maia",
             "expLevel": 85,
             "eloRating": 2869,
-            "rank": 15
+            "rank": 15,
+            "clan": {
+                "tag": "#GRJCL9UU",
+                "name": "RISE✨ARABIA 2",
+                "badgeId": 16000032
+            }
         },
         {
             "tag": "#VG0V0Y2LJ",
@@ -462,11 +467,23 @@
             }
         },
         {
+            "tag": "#VPLGP88YC",
+            "name": "Nerf Hog✨️",
+            "expLevel": 1,
+            "eloRating": 2600,
+            "rank": 44,
+            "clan": {
+                "tag": "#J9RGVL2U",
+                "name": "Sandstorm BR",
+                "badgeId": 16000097
+            }
+        },
+        {
             "tag": "#2QUJJCLUU",
             "name": "TEF 卢卡斯✨Kun✨陈瀚",
             "expLevel": 87,
             "eloRating": 2591,
-            "rank": 44,
+            "rank": 45,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -478,7 +495,7 @@
             "name": "Droga, éoSantos",
             "expLevel": 72,
             "eloRating": 2589,
-            "rank": 45,
+            "rank": 46,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -490,7 +507,7 @@
             "name": "白影 INSANO77",
             "expLevel": 77,
             "eloRating": 2584,
-            "rank": 46,
+            "rank": 47,
             "clan": {
                 "tag": "#GCLG8G09",
                 "name": "push 20 wins",
@@ -502,22 +519,10 @@
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
             "eloRating": 2571,
-            "rank": 47,
+            "rank": 48,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
-                "badgeId": 16000097
-            }
-        },
-        {
-            "tag": "#VPLGP88YC",
-            "name": "Nerf Hog✨️",
-            "expLevel": 1,
-            "eloRating": 2570,
-            "rank": 48,
-            "clan": {
-                "tag": "#J9RGVL2U",
-                "name": "Sandstorm BR",
                 "badgeId": 16000097
             }
         },
@@ -1023,23 +1028,11 @@
             }
         },
         {
-            "tag": "#CCP2J000R",
-            "name": "YT: Rafinha CR",
-            "expLevel": 81,
-            "eloRating": 2403,
-            "rank": 92,
-            "clan": {
-                "tag": "#GU8PRGR0",
-                "name": "GOBLINS CUP",
-                "badgeId": 16000154
-            }
-        },
-        {
             "tag": "#CPPQ22RYR",
             "name": "CAL ANT™",
             "expLevel": 73,
             "eloRating": 2401,
-            "rank": 93,
+            "rank": 92,
             "clan": {
                 "tag": "#J9GP2YCL",
                 "name": "TTK LORDFIRE",
@@ -1051,7 +1044,7 @@
             "name": "Du Bigode",
             "expLevel": 79,
             "eloRating": 2396,
-            "rank": 94,
+            "rank": 93,
             "clan": {
                 "tag": "#R200V8RC",
                 "name": "Xeque-Mate",
@@ -1063,7 +1056,7 @@
             "name": "Clasher",
             "expLevel": 59,
             "eloRating": 2385,
-            "rank": 95,
+            "rank": 94,
             "clan": {
                 "tag": "#GQUJR9GC",
                 "name": "CKY - UK",
@@ -1075,11 +1068,23 @@
             "name": "Hichigo",
             "expLevel": 40,
             "eloRating": 2382,
-            "rank": 96,
+            "rank": 95,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
                 "badgeId": 16000058
+            }
+        },
+        {
+            "tag": "#CCP2J000R",
+            "name": "YT: Rafinha CR",
+            "expLevel": 81,
+            "eloRating": 2373,
+            "rank": 96,
+            "clan": {
+                "tag": "#GU8PRGR0",
+                "name": "GOBLINS CUP",
+                "badgeId": 16000154
             }
         },
         {
@@ -1136,5 +1141,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-27T20:39:41"
+    "collected_at": "2026-10-27T20:57:16"
 }
