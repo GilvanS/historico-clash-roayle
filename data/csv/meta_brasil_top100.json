@@ -140,7 +140,7 @@
             "tag": "#U2QCGCGJV",
             "name": "『PHX』Luiz™",
             "expLevel": 75,
-            "eloRating": 2936,
+            "eloRating": 2904,
             "rank": 14,
             "clan": {
                 "tag": "#GJY2RGR8",
@@ -467,11 +467,23 @@
             }
         },
         {
+            "tag": "#VPLGP88YC",
+            "name": "Nerf Hog✨️",
+            "expLevel": 1,
+            "eloRating": 2601,
+            "rank": 44,
+            "clan": {
+                "tag": "#J9RGVL2U",
+                "name": "Sandstorm BR",
+                "badgeId": 16000097
+            }
+        },
+        {
             "tag": "#2QUJJCLUU",
             "name": "TEF 卢卡斯✨Kun✨陈瀚",
             "expLevel": 87,
             "eloRating": 2591,
-            "rank": 44,
+            "rank": 45,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -483,7 +495,7 @@
             "name": "Droga, éoSantos",
             "expLevel": 72,
             "eloRating": 2589,
-            "rank": 45,
+            "rank": 46,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -495,7 +507,7 @@
             "name": "白影 INSANO77",
             "expLevel": 77,
             "eloRating": 2584,
-            "rank": 46,
+            "rank": 47,
             "clan": {
                 "tag": "#GCLG8G09",
                 "name": "push 20 wins",
@@ -507,7 +519,7 @@
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
             "eloRating": 2571,
-            "rank": 47,
+            "rank": 48,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
@@ -519,23 +531,11 @@
             "name": "Luan",
             "expLevel": 84,
             "eloRating": 2552,
-            "rank": 48,
+            "rank": 49,
             "clan": {
                 "tag": "#GJVPQUU2",
                 "name": "20w da macacada",
                 "badgeId": 16000015
-            }
-        },
-        {
-            "tag": "#VPLGP88YC",
-            "name": "Nerf Hog✨️",
-            "expLevel": 1,
-            "eloRating": 2547,
-            "rank": 49,
-            "clan": {
-                "tag": "#J9RGVL2U",
-                "name": "Sandstorm BR",
-                "badgeId": 16000097
             }
         },
         {
@@ -567,12 +567,7 @@
             "name": "Ruivo❤️Demon",
             "expLevel": 82,
             "eloRating": 2520,
-            "rank": 52,
-            "clan": {
-                "tag": "#R8J2QJC2",
-                "name": "20W OU EXPLANO",
-                "badgeId": 16000110
-            }
+            "rank": 52
         },
         {
             "tag": "#QCL82GUQP",
@@ -883,9 +878,9 @@
             "eloRating": 2433,
             "rank": 79,
             "clan": {
-                "tag": "#GU8PRGR0",
-                "name": "GOBLINS CUP",
-                "badgeId": 16000154
+                "tag": "#J9G8GRCC",
+                "name": "Sandstorm",
+                "badgeId": 16000097
             }
         },
         {
@@ -1146,5 +1141,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-27T21:41:18"
+    "collected_at": "2026-10-27T22:12:56"
 }
