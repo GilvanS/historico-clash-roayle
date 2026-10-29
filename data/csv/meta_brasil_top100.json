@@ -28,7 +28,7 @@
             "tag": "#9G28ULYR",
             "name": "Lucas✨杰克",
             "expLevel": 90,
-            "eloRating": 3143,
+            "eloRating": 3103,
             "rank": 3
         },
         {
@@ -36,7 +36,12 @@
             "name": "Renan Light❤️",
             "expLevel": 62,
             "eloRating": 3046,
-            "rank": 4
+            "rank": 4,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
         },
         {
             "tag": "#8CQVYY9PG",
@@ -337,7 +342,7 @@
             "tag": "#2CJJ2LY9Y",
             "name": "LEO_-KIRA",
             "expLevel": 73,
-            "eloRating": 2748,
+            "eloRating": 2747,
             "rank": 30,
             "clan": {
                 "tag": "#G89QUY2P",
@@ -413,11 +418,23 @@
             }
         },
         {
+            "tag": "#LCQYQQ9UJ",
+            "name": "One1✨Stryker✨",
+            "expLevel": 79,
+            "eloRating": 2678,
+            "rank": 37,
+            "clan": {
+                "tag": "#J9G8GRCC",
+                "name": "Sandstorm",
+                "badgeId": 16000097
+            }
+        },
+        {
             "tag": "#QR909C",
             "name": "Chicha",
             "expLevel": 79,
             "eloRating": 2675,
-            "rank": 37,
+            "rank": 38,
             "clan": {
                 "tag": "#2YRV92VP",
                 "name": "Ninguem segura®",
@@ -429,22 +446,10 @@
             "name": "Jikz✨³ᶠ³",
             "expLevel": 71,
             "eloRating": 2655,
-            "rank": 38,
+            "rank": 39,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
-                "badgeId": 16000097
-            }
-        },
-        {
-            "tag": "#VPLGP88YC",
-            "name": "Nerf Hog✨️",
-            "expLevel": 1,
-            "eloRating": 2648,
-            "rank": 39,
-            "clan": {
-                "tag": "#J9RGVL2U",
-                "name": "Sandstorm BR",
                 "badgeId": 16000097
             }
         },
@@ -473,23 +478,11 @@
             }
         },
         {
-            "tag": "#LCQYQQ9UJ",
-            "name": "One1✨Stryker✨",
-            "expLevel": 79,
-            "eloRating": 2624,
-            "rank": 42,
-            "clan": {
-                "tag": "#J9G8GRCC",
-                "name": "Sandstorm",
-                "badgeId": 16000097
-            }
-        },
-        {
             "tag": "#VYPY9VQL9",
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
             "eloRating": 2620,
-            "rank": 43,
+            "rank": 42,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
@@ -501,7 +494,7 @@
             "name": "TTK:vitin_loon",
             "expLevel": 73,
             "eloRating": 2613,
-            "rank": 44,
+            "rank": 43,
             "clan": {
                 "tag": "#YQJRU8Y9",
                 "name": "FOX",
@@ -513,7 +506,7 @@
             "name": "Ice❤️Sofia",
             "expLevel": 76,
             "eloRating": 2609,
-            "rank": 45,
+            "rank": 44,
             "clan": {
                 "tag": "#RL0VJYL9",
                 "name": "Brazil Empire",
@@ -525,7 +518,7 @@
             "name": "I.LORDFIRE.I",
             "expLevel": 82,
             "eloRating": 2603,
-            "rank": 46,
+            "rank": 45,
             "clan": {
                 "tag": "#J9GP2YCL",
                 "name": "TTK LORDFIRE",
@@ -537,7 +530,19 @@
             "name": "TEF 卢卡斯✨Kun✨陈瀚",
             "expLevel": 87,
             "eloRating": 2591,
-            "rank": 47
+            "rank": 46
+        },
+        {
+            "tag": "#VPLGP88YC",
+            "name": "Nerf Hog✨️",
+            "expLevel": 1,
+            "eloRating": 2589,
+            "rank": 47,
+            "clan": {
+                "tag": "#J9RGVL2U",
+                "name": "Sandstorm BR",
+                "badgeId": 16000097
+            }
         },
         {
             "tag": "#V2YJUY2J0",
@@ -1171,5 +1176,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-29T14:16:31"
+    "collected_at": "2026-10-29T14:36:15"
 }
