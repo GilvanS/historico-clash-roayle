@@ -37,11 +37,23 @@
             }
         },
         {
+            "tag": "#U890Q9UQ",
+            "name": "CAL Sub ™️✨Kun",
+            "expLevel": 90,
+            "eloRating": 3031,
+            "rank": 4,
+            "clan": {
+                "tag": "#RL8GR92U",
+                "name": "Prac",
+                "badgeId": 16000075
+            }
+        },
+        {
             "tag": "#VYGR2GUV9",
             "name": "Rafinha Prime ☠",
             "expLevel": 72,
             "eloRating": 3020,
-            "rank": 4,
+            "rank": 5,
             "clan": {
                 "tag": "#QUY202GQ",
                 "name": "Master War",
@@ -53,7 +65,7 @@
             "name": "YT PedroTm CR",
             "expLevel": 84,
             "eloRating": 3013,
-            "rank": 5,
+            "rank": 6,
             "clan": {
                 "tag": "#RRLGUP0L",
                 "name": "Brasil Busters",
@@ -65,7 +77,7 @@
             "name": "WL✨THE BOSS ™",
             "expLevel": 30,
             "eloRating": 3013,
-            "rank": 6,
+            "rank": 7,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
@@ -77,7 +89,7 @@
             "name": "『PHX』Luiz™",
             "expLevel": 75,
             "eloRating": 3001,
-            "rank": 7,
+            "rank": 8,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -85,39 +97,27 @@
             }
         },
         {
-            "tag": "#U890Q9UQ",
-            "name": "CAL Sub ™️✨Kun",
-            "expLevel": 90,
-            "eloRating": 3001,
-            "rank": 8,
+            "tag": "#8CQVYY9PG",
+            "name": "YT ⚡SamHeяø⚡",
+            "expLevel": 81,
+            "eloRating": 2992,
+            "rank": 9,
             "clan": {
-                "tag": "#RL8GR92U",
-                "name": "Prac",
-                "badgeId": 16000075
+                "tag": "#J28QQURU",
+                "name": "bosta",
+                "badgeId": 16000108
             }
         },
         {
             "tag": "#U0GYPV2YV",
             "name": "M4.DMA",
             "expLevel": 85,
-            "eloRating": 2986,
-            "rank": 9,
+            "eloRating": 2969,
+            "rank": 10,
             "clan": {
                 "tag": "#GCVUVCG9",
                 "name": "RISE✨ARABIA",
                 "badgeId": 16000032
-            }
-        },
-        {
-            "tag": "#8CQVYY9PG",
-            "name": "YT ⚡SamHeяø⚡",
-            "expLevel": 81,
-            "eloRating": 2974,
-            "rank": 10,
-            "clan": {
-                "tag": "#J28QQURU",
-                "name": "bosta",
-                "badgeId": 16000108
             }
         },
         {
@@ -176,27 +176,27 @@
             }
         },
         {
-            "tag": "#UUJ8VJ20L",
-            "name": "Bruno sem gemas",
-            "expLevel": 67,
-            "eloRating": 2908,
-            "rank": 16,
-            "clan": {
-                "tag": "#RL2RPPVG",
-                "name": "RISE✨ARABIA 3",
-                "badgeId": 16000032
-            }
-        },
-        {
             "tag": "#LCQYQQ9UJ",
             "name": "One1✨Stryker✨",
             "expLevel": 79,
             "eloRating": 2867,
-            "rank": 17,
+            "rank": 16,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
                 "badgeId": 16000097
+            }
+        },
+        {
+            "tag": "#UUJ8VJ20L",
+            "name": "Bruno sem gemas",
+            "expLevel": 67,
+            "eloRating": 2860,
+            "rank": 17,
+            "clan": {
+                "tag": "#RL2RPPVG",
+                "name": "RISE✨ARABIA 3",
+                "badgeId": 16000032
             }
         },
         {
@@ -800,7 +800,7 @@
             "tag": "#2YL2YYGPL",
             "name": "Klinker",
             "expLevel": 64,
-            "eloRating": 2488,
+            "eloRating": 2479,
             "rank": 69,
             "clan": {
                 "tag": "#LGRUCVJV",
@@ -1181,5 +1181,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-30T03:26:31"
+    "collected_at": "2026-10-30T03:51:44"
 }
