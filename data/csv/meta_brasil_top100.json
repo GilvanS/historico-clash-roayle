@@ -109,27 +109,27 @@
             }
         },
         {
-            "tag": "#U0GYPV2YV",
-            "name": "M4.DMA",
-            "expLevel": 85,
-            "eloRating": 2976,
-            "rank": 10,
-            "clan": {
-                "tag": "#GCVUVCG9",
-                "name": "RISE✨ARABIA",
-                "badgeId": 16000032
-            }
-        },
-        {
             "tag": "#Y2YYC2RVV",
             "name": "PedroBaguncinha",
             "expLevel": 80,
             "eloRating": 2959,
-            "rank": 11,
+            "rank": 10,
             "clan": {
                 "tag": "#LYCYV999",
                 "name": "lendas do clash",
                 "badgeId": 16000028
+            }
+        },
+        {
+            "tag": "#U0GYPV2YV",
+            "name": "M4.DMA",
+            "expLevel": 85,
+            "eloRating": 2949,
+            "rank": 11,
+            "clan": {
+                "tag": "#GCVUVCG9",
+                "name": "RISE✨ARABIA",
+                "badgeId": 16000032
             }
         },
         {
@@ -1176,5 +1176,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-30T05:54:46"
+    "collected_at": "2026-10-30T06:29:47"
 }
