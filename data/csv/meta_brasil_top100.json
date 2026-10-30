@@ -4,7 +4,7 @@
             "tag": "#V2LR8GP9C",
             "name": "Storm™️",
             "expLevel": 60,
-            "eloRating": 3246,
+            "eloRating": 3272,
             "rank": 1,
             "clan": {
                 "tag": "#J9G8GRCC",
@@ -123,11 +123,18 @@
             }
         },
         {
+            "tag": "#9G28ULYR",
+            "name": "Lucas✨杰克",
+            "expLevel": 90,
+            "eloRating": 2991,
+            "rank": 12
+        },
+        {
             "tag": "#Y2YYC2RVV",
             "name": "PedroBaguncinha",
             "expLevel": 80,
             "eloRating": 2959,
-            "rank": 12,
+            "rank": 13,
             "clan": {
                 "tag": "#LYCYV999",
                 "name": "lendas do clash",
@@ -139,18 +146,6 @@
             "name": "TKK.jackbest2.6",
             "expLevel": 1,
             "eloRating": 2948,
-            "rank": 13,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
-        },
-        {
-            "tag": "#2C88CYV9L",
-            "name": "Seiya de Pégaso",
-            "expLevel": 73,
-            "eloRating": 2933,
             "rank": 14,
             "clan": {
                 "tag": "#G89QUY2P",
@@ -166,22 +161,27 @@
             "rank": 15
         },
         {
-            "tag": "#9G28ULYR",
-            "name": "Lucas✨杰克",
-            "expLevel": 90,
-            "eloRating": 2907,
-            "rank": 16
-        },
-        {
             "tag": "#LCQYQQ9UJ",
             "name": "One1✨Stryker✨",
             "expLevel": 79,
             "eloRating": 2867,
-            "rank": 17,
+            "rank": 16,
             "clan": {
                 "tag": "#RL2RPPVG",
                 "name": "RISE✨ARABIA 3",
                 "badgeId": 16000032
+            }
+        },
+        {
+            "tag": "#2C88CYV9L",
+            "name": "Seiya de Pégaso",
+            "expLevel": 73,
+            "eloRating": 2850,
+            "rank": 17,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
             }
         },
         {
@@ -270,9 +270,9 @@
             "eloRating": 2815,
             "rank": 25,
             "clan": {
-                "tag": "#GJ98YJJ8",
-                "name": "SXR KING LEAGUE",
-                "badgeId": 16000013
+                "tag": "#GJ9PGJPU",
+                "name": "RISE✨ARABIA 4",
+                "badgeId": 16000032
             }
         },
         {
@@ -367,23 +367,11 @@
             }
         },
         {
-            "tag": "#VG0V0Y2LJ",
-            "name": "Vague",
-            "expLevel": 65,
-            "eloRating": 2758,
-            "rank": 34,
-            "clan": {
-                "tag": "#J9G8GRCC",
-                "name": "Sandstorm",
-                "badgeId": 16000097
-            }
-        },
-        {
             "tag": "#QU9QVC80U",
             "name": "LORDFIRE❤️Duda",
             "expLevel": 64,
             "eloRating": 2757,
-            "rank": 35,
+            "rank": 34,
             "clan": {
                 "tag": "#G998RJQC",
                 "name": "LIVE ON TK TOK",
@@ -395,6 +383,18 @@
             "name": "João™",
             "expLevel": 72,
             "eloRating": 2754,
+            "rank": 35,
+            "clan": {
+                "tag": "#J9G8GRCC",
+                "name": "Sandstorm",
+                "badgeId": 16000097
+            }
+        },
+        {
+            "tag": "#VG0V0Y2LJ",
+            "name": "Vague",
+            "expLevel": 65,
+            "eloRating": 2743,
             "rank": 36,
             "clan": {
                 "tag": "#J9G8GRCC",
@@ -959,11 +959,23 @@
             "rank": 84
         },
         {
+            "tag": "#Q9JJ0L00J",
+            "name": "enzo",
+            "expLevel": 80,
+            "eloRating": 2433,
+            "rank": 85,
+            "clan": {
+                "tag": "#GJ0LYGQQ",
+                "name": "Maculados BR",
+                "badgeId": 16000002
+            }
+        },
+        {
             "tag": "#QCP8GPQP0",
             "name": "SolitariusEques",
             "expLevel": 76,
             "eloRating": 2429,
-            "rank": 85,
+            "rank": 86,
             "clan": {
                 "tag": "#GY2LLP9L",
                 "name": "Torres gemeas",
@@ -975,7 +987,7 @@
             "name": "MACEDO",
             "expLevel": 80,
             "eloRating": 2427,
-            "rank": 86,
+            "rank": 87,
             "clan": {
                 "tag": "#2CRP0URJ",
                 "name": "OsDeSorte",
@@ -987,7 +999,7 @@
             "name": "ZZZ",
             "expLevel": 82,
             "eloRating": 2425,
-            "rank": 87,
+            "rank": 88,
             "clan": {
                 "tag": "#GJG8P0UJ",
                 "name": "火鸡味锅巴",
@@ -999,7 +1011,7 @@
             "name": "ANT ™",
             "expLevel": 71,
             "eloRating": 2424,
-            "rank": 88,
+            "rank": 89,
             "clan": {
                 "tag": "#QJU9RQRL",
                 "name": "legião cósmica",
@@ -1011,7 +1023,7 @@
             "name": "聖殿騎士",
             "expLevel": 76,
             "eloRating": 2423,
-            "rank": 89,
+            "rank": 90,
             "clan": {
                 "tag": "#PRY9V280",
                 "name": "A. C.",
@@ -1023,7 +1035,7 @@
             "name": "EROS⚡",
             "expLevel": 42,
             "eloRating": 2421,
-            "rank": 90,
+            "rank": 91,
             "clan": {
                 "tag": "#29J8L",
                 "name": "NORTH 44",
@@ -1035,7 +1047,7 @@
             "name": "L.A",
             "expLevel": 47,
             "eloRating": 2418,
-            "rank": 91,
+            "rank": 92,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
@@ -1047,7 +1059,7 @@
             "name": "Gabrielfvent",
             "expLevel": 69,
             "eloRating": 2417,
-            "rank": 92,
+            "rank": 93,
             "clan": {
                 "tag": "#QVYGQYRU",
                 "name": "Empire of Ducks",
@@ -1059,7 +1071,7 @@
             "name": "Marcelo Prime⚡",
             "expLevel": 84,
             "eloRating": 2417,
-            "rank": 93,
+            "rank": 94,
             "clan": {
                 "tag": "#R8J0QJUP",
                 "name": "TTk MarceloPrim",
@@ -1071,7 +1083,7 @@
             "name": "SPIROOX171",
             "expLevel": 66,
             "eloRating": 2415,
-            "rank": 94,
+            "rank": 95,
             "clan": {
                 "tag": "#GCVRQRGU",
                 "name": "CALL ME 20 WIN",
@@ -1083,7 +1095,7 @@
             "name": "Droga, éoSantos",
             "expLevel": 72,
             "eloRating": 2414,
-            "rank": 95,
+            "rank": 96,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -1095,7 +1107,7 @@
             "name": "Acua",
             "expLevel": 67,
             "eloRating": 2414,
-            "rank": 96,
+            "rank": 97,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -1107,7 +1119,7 @@
             "name": "✨火王BaTman✨",
             "expLevel": 58,
             "eloRating": 2409,
-            "rank": 97,
+            "rank": 98,
             "clan": {
                 "tag": "#JL2CPU28",
                 "name": "NoctynFyre",
@@ -1119,23 +1131,11 @@
             "name": "Urubu dupix",
             "expLevel": 78,
             "eloRating": 2408,
-            "rank": 98,
+            "rank": 99,
             "clan": {
                 "tag": "#LYCYV999",
                 "name": "lendas do clash",
                 "badgeId": 16000028
-            }
-        },
-        {
-            "tag": "#Q9JJ0L00J",
-            "name": "enzo",
-            "expLevel": 80,
-            "eloRating": 2407,
-            "rank": 99,
-            "clan": {
-                "tag": "#GJ0LYGQQ",
-                "name": "Maculados BR",
-                "badgeId": 16000002
             }
         },
         {
@@ -1151,5 +1151,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-30T16:41:28"
+    "collected_at": "2026-10-30T17:05:14"
 }
