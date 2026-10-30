@@ -152,27 +152,27 @@
             }
         },
         {
-            "tag": "#U2QCGCGJV",
-            "name": "『PHX』Luiz™",
-            "expLevel": 75,
-            "eloRating": 2887,
-            "rank": 14,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#8CQVYY9PG",
             "name": "YT ⚡SamHeяø⚡",
             "expLevel": 81,
-            "eloRating": 2862,
-            "rank": 15,
+            "eloRating": 2897,
+            "rank": 14,
             "clan": {
                 "tag": "#J28QQURU",
                 "name": "bosta",
                 "badgeId": 16000108
+            }
+        },
+        {
+            "tag": "#U2QCGCGJV",
+            "name": "『PHX』Luiz™",
+            "expLevel": 75,
+            "eloRating": 2889,
+            "rank": 15,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
             }
         },
         {
@@ -387,23 +387,11 @@
             }
         },
         {
-            "tag": "#YYRPRU82V",
-            "name": "ViniViniツ",
-            "expLevel": 86,
-            "eloRating": 2722,
-            "rank": 34,
-            "clan": {
-                "tag": "#QVG88PUQ",
-                "name": "...",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#Y9VQC9UPG",
             "name": "TG I Guwice™",
             "expLevel": 81,
             "eloRating": 2710,
-            "rank": 35,
+            "rank": 34,
             "clan": {
                 "tag": "#GJ9UPLUU",
                 "name": "20 wins with M",
@@ -415,7 +403,7 @@
             "name": "YT: Rafinha CR",
             "expLevel": 81,
             "eloRating": 2709,
-            "rank": 36,
+            "rank": 35,
             "clan": {
                 "tag": "#J9G8GRCC",
                 "name": "Sandstorm",
@@ -427,7 +415,7 @@
             "name": "GT Light✨安之神",
             "expLevel": 76,
             "eloRating": 2705,
-            "rank": 37,
+            "rank": 36,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -439,7 +427,7 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 2702,
-            "rank": 38,
+            "rank": 37,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -451,10 +439,22 @@
             "name": "LEO_-KIRA",
             "expLevel": 73,
             "eloRating": 2685,
-            "rank": 39,
+            "rank": 38,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
+        },
+        {
+            "tag": "#YYRPRU82V",
+            "name": "ViniViniツ",
+            "expLevel": 86,
+            "eloRating": 2664,
+            "rank": 39,
+            "clan": {
+                "tag": "#QVG88PUQ",
+                "name": "...",
                 "badgeId": 16000058
             }
         },
@@ -1181,5 +1181,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-29T20:54:06"
+    "collected_at": "2026-10-29T21:07:35"
 }
