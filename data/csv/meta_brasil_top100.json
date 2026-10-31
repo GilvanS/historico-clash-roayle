@@ -62,9 +62,9 @@
             "eloRating": 3031,
             "rank": 6,
             "clan": {
-                "tag": "#RQ0QV8JQ",
-                "name": "patos",
-                "badgeId": 16000154
+                "tag": "#RL902QQC",
+                "name": "Prac",
+                "badgeId": 16000075
             }
         },
         {
@@ -147,27 +147,27 @@
             }
         },
         {
-            "tag": "#UUJ8VJ20L",
-            "name": "Bruno sem gemas",
-            "expLevel": 67,
-            "eloRating": 2927,
-            "rank": 14,
-            "clan": {
-                "tag": "#RL2RPPVG",
-                "name": "RISE✨ARABIA 3",
-                "badgeId": 16000032
-            }
-        },
-        {
             "tag": "#20Y0GGGUP2",
             "name": "加急Sinistro™",
             "expLevel": 64,
             "eloRating": 2923,
-            "rank": 15,
+            "rank": 14,
             "clan": {
                 "tag": "#L9VRJ",
                 "name": "Calalas España",
                 "badgeId": 16000161
+            }
+        },
+        {
+            "tag": "#UUJ8VJ20L",
+            "name": "Bruno sem gemas",
+            "expLevel": 67,
+            "eloRating": 2919,
+            "rank": 15,
+            "clan": {
+                "tag": "#RL2RPPVG",
+                "name": "RISE✨ARABIA 3",
+                "badgeId": 16000032
             }
         },
         {
@@ -1161,5 +1161,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-10-31T05:01:48"
+    "collected_at": "2026-10-31T05:45:18"
 }
