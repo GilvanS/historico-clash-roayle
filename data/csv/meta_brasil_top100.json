@@ -1,32 +1,27 @@
 {
     "items": [
         {
-            "tag": "#29PR0CCR0",
-            "name": "単純 Lz ❤️✨",
-            "expLevel": 74,
-            "eloRating": 1740,
-            "rank": 1,
-            "clan": {
-                "tag": "#G8PVGUPV",
-                "name": "0 FOCO ♧",
-                "badgeId": 16000024
-            }
-        },
-        {
             "tag": "#V2LR8GP9C",
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 1688,
-            "rank": 2,
+            "rank": 1,
             "clan": {
                 "tag": "#J9RGVL2U",
                 "name": "Sandstorm BR",
                 "badgeId": 16000097
             }
+        },
+        {
+            "tag": "#29PR0CCR0",
+            "name": "単純 Lz ❤️✨",
+            "expLevel": 74,
+            "eloRating": 1661,
+            "rank": 2
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-03T13:52:02"
+    "collected_at": "2026-11-03T15:23:09"
 }
