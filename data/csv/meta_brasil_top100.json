@@ -1,18 +1,30 @@
 {
     "items": [
         {
+            "tag": "#202CV0G8PR",
+            "name": "ian000",
+            "expLevel": 68,
+            "eloRating": 1760,
+            "rank": 1,
+            "clan": {
+                "tag": "#RPYPPLJP",
+                "name": "Os Outliers",
+                "badgeId": 16000028
+            }
+        },
+        {
             "tag": "#29PR0CCR0",
             "name": "単純 Lz ❤️✨",
             "expLevel": 74,
-            "eloRating": 1757,
-            "rank": 1
+            "eloRating": 1726,
+            "rank": 2
         },
         {
             "tag": "#V2LR8GP9C",
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 1691,
-            "rank": 2,
+            "rank": 3,
             "clan": {
                 "tag": "#RPYRULRV",
                 "name": "Freestyle",
@@ -23,5 +35,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-03T16:50:25"
+    "collected_at": "2026-11-03T17:12:23"
 }
