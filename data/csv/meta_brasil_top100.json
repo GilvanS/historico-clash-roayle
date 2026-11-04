@@ -13,27 +13,27 @@
             }
         },
         {
-            "tag": "#29PR0CCR0",
-            "name": "単純 Lz ❤️✨",
-            "expLevel": 74,
-            "eloRating": 1673,
-            "rank": 2
-        },
-        {
             "tag": "#V2LR8GP9C",
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 1652,
-            "rank": 3,
+            "rank": 2,
             "clan": {
                 "tag": "#RPYRULRV",
                 "name": "Freestyle",
                 "badgeId": 16000058
             }
+        },
+        {
+            "tag": "#29PR0CCR0",
+            "name": "単純 Lz ❤️✨",
+            "expLevel": 74,
+            "eloRating": 1625,
+            "rank": 3
         }
     ],
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-03T22:38:43"
+    "collected_at": "2026-11-03T23:12:46"
 }
