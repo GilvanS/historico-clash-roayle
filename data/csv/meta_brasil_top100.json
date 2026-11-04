@@ -1,17 +1,17 @@
 {
     "items": [
         {
-            "tag": "#29PR0CCR0",
-            "name": "単純 Lz ❤️✨",
-            "expLevel": 74,
-            "eloRating": 1911,
-            "rank": 1
-        },
-        {
             "tag": "#VG0V0Y2LJ",
             "name": "Vague",
             "expLevel": 65,
             "eloRating": 1872,
+            "rank": 1
+        },
+        {
+            "tag": "#29PR0CCR0",
+            "name": "単純 Lz ❤️✨",
+            "expLevel": 74,
+            "eloRating": 1851,
             "rank": 2
         },
         {
@@ -115,13 +115,18 @@
             "name": "Dznn7™⚡",
             "expLevel": 73,
             "eloRating": 1631,
-            "rank": 11
+            "rank": 11,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
         },
         {
             "tag": "#CJYLG0LGY",
             "name": "TK Furão✨",
             "expLevel": 85,
-            "eloRating": 1494,
+            "eloRating": 1562,
             "rank": 12,
             "clan": {
                 "tag": "#PRY9V280",
@@ -133,7 +138,7 @@
             "tag": "#V2LR8GP9C",
             "name": "Storm™️",
             "expLevel": 60,
-            "eloRating": 1463,
+            "eloRating": 1500,
             "rank": 13,
             "clan": {
                 "tag": "#RPYRULRV",
@@ -145,5 +150,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-04T18:34:40"
+    "collected_at": "2026-11-04T18:46:07"
 }
