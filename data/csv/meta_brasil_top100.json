@@ -1,11 +1,23 @@
 {
     "items": [
         {
+            "tag": "#GJ2L2QQP9",
+            "name": "Lamine yamal 友ッ",
+            "expLevel": 81,
+            "eloRating": 1847,
+            "rank": 1,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
+            }
+        },
+        {
             "tag": "#QRCJP8PQR",
             "name": "Renan Light❤️",
             "expLevel": 62,
-            "eloRating": 1856,
-            "rank": 1,
+            "eloRating": 1804,
+            "rank": 2,
             "clan": {
                 "tag": "#J9RUC8LQ",
                 "name": "best hog eq",
@@ -17,7 +29,19 @@
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
             "eloRating": 1744,
-            "rank": 2,
+            "rank": 3,
+            "clan": {
+                "tag": "#J9RGVL2U",
+                "name": "Sandstorm BR",
+                "badgeId": 16000097
+            }
+        },
+        {
+            "tag": "#VPLGP88YC",
+            "name": "Nerf Hog✨️",
+            "expLevel": 1,
+            "eloRating": 1728,
+            "rank": 4,
             "clan": {
                 "tag": "#J9RGVL2U",
                 "name": "Sandstorm BR",
@@ -29,14 +53,14 @@
             "name": "単純 Lz ❤️✨",
             "expLevel": 74,
             "eloRating": 1680,
-            "rank": 3
+            "rank": 5
         },
         {
             "tag": "#202CV0G8PR",
             "name": "ian000",
             "expLevel": 68,
             "eloRating": 1653,
-            "rank": 4,
+            "rank": 6,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
@@ -47,8 +71,8 @@
             "tag": "#V2LR8GP9C",
             "name": "Storm™️",
             "expLevel": 60,
-            "eloRating": 1600,
-            "rank": 5,
+            "eloRating": 1572,
+            "rank": 7,
             "clan": {
                 "tag": "#RPYRULRV",
                 "name": "Freestyle",
@@ -59,5 +83,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-04T07:19:30"
+    "collected_at": "2026-11-04T10:35:02"
 }
