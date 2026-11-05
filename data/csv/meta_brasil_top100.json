@@ -13,30 +13,18 @@
             }
         },
         {
-            "tag": "#GJ2L2QQP9",
-            "name": "Lamine yamal 友ッ",
-            "expLevel": 81,
-            "eloRating": 1858,
-            "rank": 2,
-            "clan": {
-                "tag": "#RLVGCYRR",
-                "name": "Avenida brasil",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#U2QCGCGJV",
             "name": "『PHX』Luiz™",
             "expLevel": 75,
             "eloRating": 1844,
-            "rank": 3
+            "rank": 2
         },
         {
             "tag": "#P8YYYLVY",
             "name": "ADELSONLENDÁRIO",
             "expLevel": 78,
             "eloRating": 1830,
-            "rank": 4,
+            "rank": 3,
             "clan": {
                 "tag": "#GRJC20CP",
                 "name": "NOVA STORMS",
@@ -48,7 +36,7 @@
             "name": "João™",
             "expLevel": 72,
             "eloRating": 1808,
-            "rank": 5,
+            "rank": 4,
             "clan": {
                 "tag": "#GU980JUP",
                 "name": "17 cm",
@@ -60,7 +48,7 @@
             "name": "Code: Bielvinis",
             "expLevel": 77,
             "eloRating": 1808,
-            "rank": 6,
+            "rank": 5,
             "clan": {
                 "tag": "#RRLGUP0L",
                 "name": "Brasil Busters",
@@ -72,7 +60,7 @@
             "name": "Nerf Hog✨️",
             "expLevel": 1,
             "eloRating": 1807,
-            "rank": 7,
+            "rank": 6,
             "clan": {
                 "tag": "#J9RGVL2U",
                 "name": "Sandstorm BR",
@@ -84,7 +72,7 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 1799,
-            "rank": 8,
+            "rank": 7,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -96,7 +84,7 @@
             "name": "Renan Light❤️",
             "expLevel": 62,
             "eloRating": 1795,
-            "rank": 9,
+            "rank": 8,
             "clan": {
                 "tag": "#J9RUC8LQ",
                 "name": "best hog eq",
@@ -108,14 +96,14 @@
             "name": "単純 Lz ❤️✨",
             "expLevel": 74,
             "eloRating": 1739,
-            "rank": 10
+            "rank": 9
         },
         {
             "tag": "#VYPY9VQL9",
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
             "eloRating": 1738,
-            "rank": 11,
+            "rank": 10,
             "clan": {
                 "tag": "#J9RGVL2U",
                 "name": "Sandstorm BR",
@@ -127,7 +115,7 @@
             "name": "WL✨THE BOSS ™",
             "expLevel": 30,
             "eloRating": 1714,
-            "rank": 12,
+            "rank": 11,
             "clan": {
                 "tag": "#RYCGYQYP",
                 "name": "Gestão LiFe",
@@ -139,7 +127,7 @@
             "name": "Beltrão",
             "expLevel": 75,
             "eloRating": 1712,
-            "rank": 13,
+            "rank": 12,
             "clan": {
                 "tag": "#8RU0G892",
                 "name": "Brasil eSports",
@@ -151,7 +139,7 @@
             "name": "meu nome é bond",
             "expLevel": 74,
             "eloRating": 1688,
-            "rank": 14,
+            "rank": 13,
             "clan": {
                 "tag": "#GV2CV8RY",
                 "name": "Lágrimas de Fé",
@@ -163,7 +151,7 @@
             "name": "LORDFIRE❤️Duda",
             "expLevel": 64,
             "eloRating": 1684,
-            "rank": 15,
+            "rank": 14,
             "clan": {
                 "tag": "#G998RJQC",
                 "name": "LIVE ON TK TOK",
@@ -175,18 +163,30 @@
             "name": "Dznn7™⚡",
             "expLevel": 73,
             "eloRating": 1575,
-            "rank": 16
+            "rank": 15
         },
         {
             "tag": "#202CV0G8PR",
             "name": "ian000",
             "expLevel": 68,
             "eloRating": 1575,
-            "rank": 17,
+            "rank": 16,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
                 "badgeId": 16000028
+            }
+        },
+        {
+            "tag": "#GJ2L2QQP9",
+            "name": "Lamine yamal 友ッ",
+            "expLevel": 81,
+            "eloRating": 1550,
+            "rank": 17,
+            "clan": {
+                "tag": "#RLVGCYRR",
+                "name": "Avenida brasil",
+                "badgeId": 16000058
             }
         },
         {
@@ -217,5 +217,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-05T00:43:40"
+    "collected_at": "2026-11-05T04:20:33"
 }
