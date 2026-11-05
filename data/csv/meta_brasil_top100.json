@@ -56,11 +56,18 @@
             }
         },
         {
+            "tag": "#29PR0CCR0",
+            "name": "単純 Lz ❤️✨",
+            "expLevel": 74,
+            "eloRating": 1792,
+            "rank": 6
+        },
+        {
             "tag": "#V02CQR2J2",
             "name": "João™",
             "expLevel": 72,
             "eloRating": 1776,
-            "rank": 6,
+            "rank": 7,
             "clan": {
                 "tag": "#GU980JUP",
                 "name": "17 cm",
@@ -72,19 +79,12 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 1768,
-            "rank": 7,
+            "rank": 8,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
                 "badgeId": 16000058
             }
-        },
-        {
-            "tag": "#29PR0CCR0",
-            "name": "単純 Lz ❤️✨",
-            "expLevel": 74,
-            "eloRating": 1767,
-            "rank": 8
         },
         {
             "tag": "#P8YYYLVY",
@@ -181,5 +181,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-04T20:53:51"
+    "collected_at": "2026-11-04T21:09:24"
 }
