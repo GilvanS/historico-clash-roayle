@@ -135,11 +135,23 @@
             }
         },
         {
+            "tag": "#C8JU8CU0",
+            "name": "Vitoria Grazy",
+            "expLevel": 56,
+            "eloRating": 1696,
+            "rank": 13,
+            "clan": {
+                "tag": "#J28GY082",
+                "name": "Intagram",
+                "badgeId": 16000128
+            }
+        },
+        {
             "tag": "#L99PU999R",
             "name": "meu nome é bond",
             "expLevel": 74,
             "eloRating": 1688,
-            "rank": 13,
+            "rank": 14,
             "clan": {
                 "tag": "#GV2CV8RY",
                 "name": "Lágrimas de Fé",
@@ -151,7 +163,7 @@
             "name": "LORDFIRE❤️Duda",
             "expLevel": 64,
             "eloRating": 1684,
-            "rank": 14,
+            "rank": 15,
             "clan": {
                 "tag": "#G998RJQC",
                 "name": "LIVE ON TK TOK",
@@ -163,14 +175,14 @@
             "name": "Dznn7™⚡",
             "expLevel": 73,
             "eloRating": 1575,
-            "rank": 15
+            "rank": 16
         },
         {
             "tag": "#202CV0G8PR",
             "name": "ian000",
             "expLevel": 68,
             "eloRating": 1575,
-            "rank": 16,
+            "rank": 17,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
@@ -182,7 +194,7 @@
             "name": "Lamine yamal 友ッ",
             "expLevel": 81,
             "eloRating": 1550,
-            "rank": 17,
+            "rank": 18,
             "clan": {
                 "tag": "#RLVGCYRR",
                 "name": "Avenida brasil",
@@ -194,7 +206,7 @@
             "name": "Storm™️",
             "expLevel": 60,
             "eloRating": 1500,
-            "rank": 18,
+            "rank": 19,
             "clan": {
                 "tag": "#RPYRULRV",
                 "name": "Freestyle",
@@ -206,7 +218,7 @@
             "name": "TK Furão✨",
             "expLevel": 85,
             "eloRating": 1437,
-            "rank": 19,
+            "rank": 20,
             "clan": {
                 "tag": "#PRY9V280",
                 "name": "A. C.",
@@ -217,5 +229,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-05T04:20:33"
+    "collected_at": "2026-11-05T04:46:22"
 }
