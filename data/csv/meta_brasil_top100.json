@@ -25,18 +25,11 @@
             }
         },
         {
-            "tag": "#U2QCGCGJV",
-            "name": "『PHX』Luiz™",
-            "expLevel": 75,
-            "eloRating": 1849,
-            "rank": 3
-        },
-        {
             "tag": "#VPLGP88YC",
             "name": "Nerf Hog✨️",
             "expLevel": 1,
             "eloRating": 1807,
-            "rank": 4,
+            "rank": 3,
             "clan": {
                 "tag": "#J9RGVL2U",
                 "name": "Sandstorm BR",
@@ -48,7 +41,7 @@
             "name": "Renan Light❤️",
             "expLevel": 62,
             "eloRating": 1795,
-            "rank": 5,
+            "rank": 4,
             "clan": {
                 "tag": "#J9RUC8LQ",
                 "name": "best hog eq",
@@ -56,18 +49,23 @@
             }
         },
         {
-            "tag": "#29PR0CCR0",
-            "name": "単純 Lz ❤️✨",
-            "expLevel": 74,
+            "tag": "#U2QCGCGJV",
+            "name": "『PHX』Luiz™",
+            "expLevel": 75,
             "eloRating": 1792,
-            "rank": 6
+            "rank": 5,
+            "clan": {
+                "tag": "#RL99C2CU",
+                "name": "GS Sudamérica",
+                "badgeId": 16000083
+            }
         },
         {
             "tag": "#V02CQR2J2",
             "name": "João™",
             "expLevel": 72,
             "eloRating": 1776,
-            "rank": 7,
+            "rank": 6,
             "clan": {
                 "tag": "#GU980JUP",
                 "name": "17 cm",
@@ -79,7 +77,7 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 1768,
-            "rank": 8,
+            "rank": 7,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -91,12 +89,19 @@
             "name": "ADELSONLENDÁRIO",
             "expLevel": 78,
             "eloRating": 1751,
-            "rank": 9,
+            "rank": 8,
             "clan": {
                 "tag": "#GRJC20CP",
                 "name": "NOVA STORMS",
                 "badgeId": 16000010
             }
+        },
+        {
+            "tag": "#29PR0CCR0",
+            "name": "単純 Lz ❤️✨",
+            "expLevel": 74,
+            "eloRating": 1739,
+            "rank": 9
         },
         {
             "tag": "#VJYJLLJV8",
@@ -126,7 +131,7 @@
             "tag": "#VYPY9VQL9",
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
-            "eloRating": 1632,
+            "eloRating": 1607,
             "rank": 12,
             "clan": {
                 "tag": "#J9RGVL2U",
@@ -157,7 +162,7 @@
             "tag": "#CJYLG0LGY",
             "name": "TK Furão✨",
             "expLevel": 85,
-            "eloRating": 1520,
+            "eloRating": 1555,
             "rank": 15,
             "clan": {
                 "tag": "#PRY9V280",
@@ -181,5 +186,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-04T21:09:24"
+    "collected_at": "2026-11-04T21:50:49"
 }
