@@ -25,11 +25,23 @@
             }
         },
         {
+            "tag": "#U2QCGCGJV",
+            "name": "『PHX』Luiz™",
+            "expLevel": 75,
+            "eloRating": 1817,
+            "rank": 3,
+            "clan": {
+                "tag": "#RL99C2CU",
+                "name": "GS Sudamérica",
+                "badgeId": 16000083
+            }
+        },
+        {
             "tag": "#VPLGP88YC",
             "name": "Nerf Hog✨️",
             "expLevel": 1,
             "eloRating": 1807,
-            "rank": 3,
+            "rank": 4,
             "clan": {
                 "tag": "#J9RGVL2U",
                 "name": "Sandstorm BR",
@@ -41,23 +53,11 @@
             "name": "Renan Light❤️",
             "expLevel": 62,
             "eloRating": 1795,
-            "rank": 4,
+            "rank": 5,
             "clan": {
                 "tag": "#J9RUC8LQ",
                 "name": "best hog eq",
                 "badgeId": 16000054
-            }
-        },
-        {
-            "tag": "#U2QCGCGJV",
-            "name": "『PHX』Luiz™",
-            "expLevel": 75,
-            "eloRating": 1792,
-            "rank": 5,
-            "clan": {
-                "tag": "#RL99C2CU",
-                "name": "GS Sudamérica",
-                "badgeId": 16000083
             }
         },
         {
@@ -131,7 +131,7 @@
             "tag": "#VYPY9VQL9",
             "name": "✟ EGO GHOST ᶜʳ⁷",
             "expLevel": 65,
-            "eloRating": 1607,
+            "eloRating": 1664,
             "rank": 12,
             "clan": {
                 "tag": "#J9RGVL2U",
@@ -162,7 +162,7 @@
             "tag": "#CJYLG0LGY",
             "name": "TK Furão✨",
             "expLevel": 85,
-            "eloRating": 1555,
+            "eloRating": 1533,
             "rank": 15,
             "clan": {
                 "tag": "#PRY9V280",
@@ -186,5 +186,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-04T21:50:49"
+    "collected_at": "2026-11-04T22:01:14"
 }
