@@ -238,23 +238,23 @@
             }
         },
         {
-            "tag": "#2P29Q0GQ",
-            "name": "Beltrão",
-            "expLevel": 75,
-            "eloRating": 1753,
-            "rank": 22,
-            "clan": {
-                "tag": "#8RU0G892",
-                "name": "Brasil eSports",
-                "badgeId": 16000024
-            }
-        },
-        {
             "tag": "#29PR0CCR0",
             "name": "単純 Lz ❤️✨",
             "expLevel": 74,
             "eloRating": 1752,
-            "rank": 23
+            "rank": 22
+        },
+        {
+            "tag": "#8P9RPRPVU",
+            "name": "JEAN MCR",
+            "expLevel": 81,
+            "eloRating": 1750,
+            "rank": 23,
+            "clan": {
+                "tag": "#R8J0QJUP",
+                "name": "TTk MarceloPrim",
+                "badgeId": 16000010
+            }
         },
         {
             "tag": "#P8YYYLVY",
@@ -305,41 +305,41 @@
             }
         },
         {
-            "tag": "#V8VU8P920",
-            "name": "JAJATIKTOK",
-            "expLevel": 60,
-            "eloRating": 1738,
-            "rank": 28,
-            "clan": {
-                "tag": "#RRLGUP0L",
-                "name": "Brasil Busters",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#VG0V0Y2LJ",
             "name": "Vague",
             "expLevel": 65,
             "eloRating": 1732,
-            "rank": 29
+            "rank": 28
         },
         {
             "tag": "#P9VUPGCLL",
             "name": "Ruivo❤️Demon",
             "expLevel": 82,
             "eloRating": 1720,
-            "rank": 30
+            "rank": 29
         },
         {
             "tag": "#L99PU999R",
             "name": "meu nome é bond",
             "expLevel": 74,
             "eloRating": 1719,
-            "rank": 31,
+            "rank": 30,
             "clan": {
                 "tag": "#GV2CV8RY",
                 "name": "Lágrimas de Fé",
                 "badgeId": 16000050
+            }
+        },
+        {
+            "tag": "#2P29Q0GQ",
+            "name": "Beltrão",
+            "expLevel": 75,
+            "eloRating": 1717,
+            "rank": 31,
+            "clan": {
+                "tag": "#8RU0G892",
+                "name": "Brasil eSports",
+                "badgeId": 16000024
             }
         },
         {
@@ -355,23 +355,11 @@
             }
         },
         {
-            "tag": "#8P9RPRPVU",
-            "name": "JEAN MCR",
-            "expLevel": 81,
-            "eloRating": 1712,
-            "rank": 33,
-            "clan": {
-                "tag": "#R8J0QJUP",
-                "name": "TTk MarceloPrim",
-                "badgeId": 16000010
-            }
-        },
-        {
             "tag": "#QJGVCYR",
             "name": "shadowking",
             "expLevel": 86,
             "eloRating": 1685,
-            "rank": 34,
+            "rank": 33,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -383,7 +371,7 @@
             "name": "KeviN✨火槍手",
             "expLevel": 83,
             "eloRating": 1672,
-            "rank": 35,
+            "rank": 34,
             "clan": {
                 "tag": "#RQ0CCRQY",
                 "name": "TikTok o.kevin6",
@@ -395,7 +383,7 @@
             "name": "KallebeBr",
             "expLevel": 76,
             "eloRating": 1667,
-            "rank": 36,
+            "rank": 35,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -407,7 +395,7 @@
             "name": "Vitoria Grazy",
             "expLevel": 56,
             "eloRating": 1664,
-            "rank": 37,
+            "rank": 36,
             "clan": {
                 "tag": "#J28GY082",
                 "name": "Intagram",
@@ -419,7 +407,7 @@
             "name": "3MASTERHARD",
             "expLevel": 72,
             "eloRating": 1648,
-            "rank": 38,
+            "rank": 37,
             "clan": {
                 "tag": "#RPYRULRV",
                 "name": "Freestyle",
@@ -431,11 +419,23 @@
             "name": "Luanzz ama Yas",
             "expLevel": 72,
             "eloRating": 1640,
-            "rank": 39,
+            "rank": 38,
             "clan": {
                 "tag": "#GJ0LYGQQ",
                 "name": "Maculados BR",
                 "badgeId": 16000002
+            }
+        },
+        {
+            "tag": "#V8VU8P920",
+            "name": "JAJATIKTOK",
+            "expLevel": 60,
+            "eloRating": 1620,
+            "rank": 39,
+            "clan": {
+                "tag": "#RRLGUP0L",
+                "name": "Brasil Busters",
+                "badgeId": 16000058
             }
         },
         {
@@ -521,5 +521,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-06T04:41:34"
+    "collected_at": "2026-11-06T06:00:07"
 }
