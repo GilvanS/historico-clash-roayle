@@ -109,7 +109,7 @@
             "tag": "#LQ2CGYQ",
             "name": "NOVA l NINJA™",
             "expLevel": 71,
-            "eloRating": 1860,
+            "eloRating": 1855,
             "rank": 11,
             "clan": {
                 "tag": "#G0RJ2GVL",
@@ -415,23 +415,11 @@
             }
         },
         {
-            "tag": "#2YL2YYGPL",
-            "name": "Klinker",
-            "expLevel": 64,
-            "eloRating": 1642,
-            "rank": 38,
-            "clan": {
-                "tag": "#LGRUCVJV",
-                "name": "Adultos Juniors",
-                "badgeId": 16000023
-            }
-        },
-        {
             "tag": "#PQ9CY99RL",
             "name": "Luanzz ama Yas",
             "expLevel": 72,
             "eloRating": 1640,
-            "rank": 39,
+            "rank": 38,
             "clan": {
                 "tag": "#GJ0LYGQQ",
                 "name": "Maculados BR",
@@ -439,23 +427,11 @@
             }
         },
         {
-            "tag": "#V8VU8P920",
-            "name": "JAJATIKTOK",
-            "expLevel": 60,
-            "eloRating": 1620,
-            "rank": 40,
-            "clan": {
-                "tag": "#RRLGUP0L",
-                "name": "Brasil Busters",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#2PUGQUY8P",
             "name": "Nine-Toes",
             "expLevel": 88,
             "eloRating": 1616,
-            "rank": 41,
+            "rank": 39,
             "clan": {
                 "tag": "#GRJC20CP",
                 "name": "NOVA STORMS",
@@ -463,11 +439,23 @@
             }
         },
         {
+            "tag": "#2YL2YYGPL",
+            "name": "Klinker",
+            "expLevel": 64,
+            "eloRating": 1592,
+            "rank": 40,
+            "clan": {
+                "tag": "#LGRUCVJV",
+                "name": "Adultos Juniors",
+                "badgeId": 16000023
+            }
+        },
+        {
             "tag": "#QLVYPQ08U",
             "name": "°ITACHI_69",
             "expLevel": 61,
             "eloRating": 1582,
-            "rank": 42,
+            "rank": 41,
             "clan": {
                 "tag": "#GRRYGJYY",
                 "name": "Faceless Men",
@@ -479,11 +467,23 @@
             "name": "X- HarDtm_cr",
             "expLevel": 1,
             "eloRating": 1534,
-            "rank": 43,
+            "rank": 42,
             "clan": {
                 "tag": "#J9RGVL2U",
                 "name": "Sandstorm BR",
                 "badgeId": 16000097
+            }
+        },
+        {
+            "tag": "#V8VU8P920",
+            "name": "JAJATIKTOK",
+            "expLevel": 60,
+            "eloRating": 1507,
+            "rank": 43,
+            "clan": {
+                "tag": "#RRLGUP0L",
+                "name": "Brasil Busters",
+                "badgeId": 16000058
             }
         },
         {
@@ -499,23 +499,11 @@
             }
         },
         {
-            "tag": "#8P9RPRPVU",
-            "name": "JEAN MCR",
-            "expLevel": 81,
-            "eloRating": 1505,
-            "rank": 45,
-            "clan": {
-                "tag": "#R8J0QJUP",
-                "name": "TTk MarceloPrim",
-                "badgeId": 16000010
-            }
-        },
-        {
             "tag": "#CJYLG0LGY",
             "name": "TK Furão✨",
             "expLevel": 85,
             "eloRating": 1479,
-            "rank": 46,
+            "rank": 45,
             "clan": {
                 "tag": "#PRY9V280",
                 "name": "A. C.",
@@ -523,10 +511,22 @@
             }
         },
         {
+            "tag": "#8P9RPRPVU",
+            "name": "JEAN MCR",
+            "expLevel": 81,
+            "eloRating": 1433,
+            "rank": 46,
+            "clan": {
+                "tag": "#R8J0QJUP",
+                "name": "TTk MarceloPrim",
+                "badgeId": 16000010
+            }
+        },
+        {
             "tag": "#JPU2Q9UR9",
             "name": "Dznn7™⚡",
             "expLevel": 73,
-            "eloRating": 1378,
+            "eloRating": 1407,
             "rank": 47
         },
         {
@@ -545,5 +545,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-06T06:44:37"
+    "collected_at": "2026-11-06T07:20:51"
 }
