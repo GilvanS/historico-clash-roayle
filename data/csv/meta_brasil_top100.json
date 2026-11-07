@@ -592,23 +592,28 @@
             }
         },
         {
+            "tag": "#CR08G9V99",
+            "name": "Mahdi",
+            "expLevel": 63,
+            "eloRating": 1640,
+            "rank": 54,
+            "clan": {
+                "tag": "#PQPUQ",
+                "name": "MercenáriosBr",
+                "badgeId": 16000058
+            }
+        },
+        {
             "tag": "#P8YYYLVY",
             "name": "ADELSONLENDÁRIO",
             "expLevel": 78,
             "eloRating": 1631,
-            "rank": 54,
+            "rank": 55,
             "clan": {
                 "tag": "#GRJC20CP",
                 "name": "NOVA STORMS",
                 "badgeId": 16000010
             }
-        },
-        {
-            "tag": "#20VGVVVYL9",
-            "name": "X- HarDtm_cr",
-            "expLevel": 1,
-            "eloRating": 1628,
-            "rank": 55
         },
         {
             "tag": "#2VRYG0GQJ",
@@ -623,27 +628,22 @@
             }
         },
         {
+            "tag": "#20VGVVVYL9",
+            "name": "X- HarDtm_cr",
+            "expLevel": 1,
+            "eloRating": 1620,
+            "rank": 57
+        },
+        {
             "tag": "#QCP8GPQP0",
             "name": "SolitariusEques",
             "expLevel": 76,
             "eloRating": 1616,
-            "rank": 57,
+            "rank": 58,
             "clan": {
                 "tag": "#GY2LLP9L",
                 "name": "Torres gemeas",
                 "badgeId": 16000050
-            }
-        },
-        {
-            "tag": "#2YL2YYGPL",
-            "name": "Klinker",
-            "expLevel": 64,
-            "eloRating": 1569,
-            "rank": 58,
-            "clan": {
-                "tag": "#LGRUCVJV",
-                "name": "Adultos Juniors",
-                "badgeId": 16000023
             }
         },
         {
@@ -690,11 +690,23 @@
             }
         },
         {
+            "tag": "#2YL2YYGPL",
+            "name": "Klinker",
+            "expLevel": 64,
+            "eloRating": 1472,
+            "rank": 63,
+            "clan": {
+                "tag": "#LGRUCVJV",
+                "name": "Adultos Juniors",
+                "badgeId": 16000023
+            }
+        },
+        {
             "tag": "#V8VU8P920",
             "name": "JAJATIKTOK",
             "expLevel": 60,
             "eloRating": 1442,
-            "rank": 63,
+            "rank": 64,
             "clan": {
                 "tag": "#RRLGUP0L",
                 "name": "Brasil Busters",
@@ -706,7 +718,7 @@
             "name": "KallebeBr",
             "expLevel": 76,
             "eloRating": 1429,
-            "rank": 64,
+            "rank": 65,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -718,14 +730,14 @@
             "name": "TK Furão✨",
             "expLevel": 85,
             "eloRating": 1417,
-            "rank": 65
+            "rank": 66
         },
         {
             "tag": "#820PRY28P",
             "name": "Everson",
             "expLevel": 78,
             "eloRating": 1378,
-            "rank": 66,
+            "rank": 67,
             "clan": {
                 "tag": "#QRGJ8U2Y",
                 "name": "Uncharted",
@@ -737,7 +749,7 @@
             "name": "ian000",
             "expLevel": 68,
             "eloRating": 1360,
-            "rank": 67,
+            "rank": 68,
             "clan": {
                 "tag": "#RPYPPLJP",
                 "name": "Os Outliers",
@@ -749,7 +761,7 @@
             "name": "shadowking",
             "expLevel": 86,
             "eloRating": 1343,
-            "rank": 68,
+            "rank": 69,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -761,7 +773,7 @@
             "name": "Dznn7™⚡",
             "expLevel": 73,
             "eloRating": 1285,
-            "rank": 69,
+            "rank": 70,
             "clan": {
                 "tag": "#QCGJ0VYU",
                 "name": "Cross Guild",
@@ -773,7 +785,7 @@
             "name": "Vitoria Grazy",
             "expLevel": 56,
             "eloRating": 1240,
-            "rank": 70,
+            "rank": 71,
             "clan": {
                 "tag": "#J28GY082",
                 "name": "Intagram",
@@ -785,7 +797,7 @@
             "name": "JEAN MCR",
             "expLevel": 81,
             "eloRating": 1212,
-            "rank": 71,
+            "rank": 72,
             "clan": {
                 "tag": "#R8J0QJUP",
                 "name": "TTk MarceloPrim",
@@ -796,5 +808,5 @@
     "paging": {
         "cursors": {}
     },
-    "collected_at": "2026-11-07T03:35:07"
+    "collected_at": "2026-11-07T03:54:51"
 }
