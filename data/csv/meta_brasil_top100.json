@@ -614,23 +614,11 @@
             }
         },
         {
-            "tag": "#J8RJULR22",
-            "name": "♜ ʟᴜᴄᴀꜱ ʟᴏᴏɴ ☃️",
-            "expLevel": 88,
-            "eloRating": 2151,
-            "rank": 55,
-            "clan": {
-                "tag": "#Y9202P9U",
-                "name": "Galactic Kings",
-                "badgeId": 16000015
-            }
-        },
-        {
             "tag": "#8P0J0JJRU",
             "name": "O GABR1ELG1N",
             "expLevel": 40,
             "eloRating": 2150,
-            "rank": 56,
+            "rank": 55,
             "clan": {
                 "tag": "#G220YJUV",
                 "name": "K.S.E FÊNIX™",
@@ -642,11 +630,23 @@
             "name": "Emma❤️Palestine",
             "expLevel": 75,
             "eloRating": 2148,
-            "rank": 57,
+            "rank": 56,
             "clan": {
                 "tag": "#YLQP2R2Q",
                 "name": "Barco Fantasma",
                 "badgeId": 16000028
+            }
+        },
+        {
+            "tag": "#J8RJULR22",
+            "name": "♜ ʟᴜᴄᴀꜱ ʟᴏᴏɴ ☃️",
+            "expLevel": 88,
+            "eloRating": 2146,
+            "rank": 57,
+            "clan": {
+                "tag": "#Y9202P9U",
+                "name": "Galactic Kings",
+                "badgeId": 16000015
             }
         },
         {
@@ -856,11 +856,23 @@
             }
         },
         {
+            "tag": "#88JG00C9L",
+            "name": "夢 | Vitor™",
+            "expLevel": 76,
+            "eloRating": 2097,
+            "rank": 76,
+            "clan": {
+                "tag": "#J9UQLCVL",
+                "name": "vitchok . com",
+                "badgeId": 16000104
+            }
+        },
+        {
             "tag": "#2JG2Y899G",
             "name": "™♱╰‿╯ＮｋＥｔｏｒｅ亗么♑",
             "expLevel": 87,
             "eloRating": 2097,
-            "rank": 76,
+            "rank": 77,
             "clan": {
                 "tag": "#CUPQC88",
                 "name": "ILLUMINATI",
@@ -872,7 +884,7 @@
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 2094,
-            "rank": 77,
+            "rank": 78,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -884,21 +896,21 @@
             "name": "Dance",
             "expLevel": 83,
             "eloRating": 2090,
-            "rank": 78
+            "rank": 79
         },
         {
             "tag": "#208C8LPYJC",
             "name": "Zeldris 闇夜",
             "expLevel": 83,
             "eloRating": 2087,
-            "rank": 79
+            "rank": 80
         },
         {
             "tag": "#9PCVQRR9Y",
             "name": "Hydra",
             "expLevel": 69,
             "eloRating": 2085,
-            "rank": 80,
+            "rank": 81,
             "clan": {
                 "tag": "#J298UPRY",
                 "name": "Rixor's Sparks",
@@ -910,7 +922,7 @@
             "name": "LMT I Kenedy☔️",
             "expLevel": 71,
             "eloRating": 2084,
-            "rank": 81,
+            "rank": 82,
             "clan": {
                 "tag": "#9YJGVCPQ",
                 "name": "LimiT eSports",
@@ -922,7 +934,7 @@
             "name": "⚡️✨ Vênus✨⚡️",
             "expLevel": 79,
             "eloRating": 2081,
-            "rank": 82,
+            "rank": 83,
             "clan": {
                 "tag": "#GJUJL8CY",
                 "name": "UruTop",
@@ -934,7 +946,7 @@
             "name": "Du Bigode",
             "expLevel": 79,
             "eloRating": 2081,
-            "rank": 83,
+            "rank": 84,
             "clan": {
                 "tag": "#R200V8RC",
                 "name": "Xeque-Mate",
@@ -946,26 +958,14 @@
             "name": "Marcøs",
             "expLevel": 78,
             "eloRating": 2079,
-            "rank": 84
+            "rank": 85
         },
         {
             "tag": "#CCQCJ2QGP",
             "name": "dvzin.vpx7",
             "expLevel": 72,
             "eloRating": 2074,
-            "rank": 85
-        },
-        {
-            "tag": "#2YL2YYGPL",
-            "name": "Klinker",
-            "expLevel": 64,
-            "eloRating": 2073,
-            "rank": 86,
-            "clan": {
-                "tag": "#LGRUCVJV",
-                "name": "Adultos Juniors",
-                "badgeId": 16000023
-            }
+            "rank": 86
         },
         {
             "tag": "#8CJ8QC2YU",
@@ -1131,5 +1131,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-11-16T04:16:39"
+    "collected_at": "2026-11-16T04:40:31"
 }
