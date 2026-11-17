@@ -264,23 +264,11 @@
             }
         },
         {
-            "tag": "#2C2QRRCVU",
-            "name": "CASTANHO ISBACK",
-            "expLevel": 58,
-            "eloRating": 2374,
-            "rank": 25,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#VLRRGQQ89",
             "name": "ルキス丨iury",
             "expLevel": 67,
             "eloRating": 2368,
-            "rank": 26,
+            "rank": 25,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -292,21 +280,26 @@
             "name": "Raid ³ᶠ³",
             "expLevel": 73,
             "eloRating": 2360,
-            "rank": 27
+            "rank": 26,
+            "clan": {
+                "tag": "#GQL98Q8G",
+                "name": "VALHALLA™",
+                "badgeId": 16000038
+            }
         },
         {
             "tag": "#QRCJP8PQR",
             "name": "WL Renan Kun✨無双",
             "expLevel": 62,
             "eloRating": 2343,
-            "rank": 28
+            "rank": 27
         },
         {
             "tag": "#2R09LUYPQ",
             "name": "Lucas.xit✨之安神",
             "expLevel": 80,
             "eloRating": 2337,
-            "rank": 29,
+            "rank": 28,
             "clan": {
                 "tag": "#RLPY0JCV",
                 "name": "xit gai",
@@ -318,7 +311,7 @@
             "name": "Luan",
             "expLevel": 84,
             "eloRating": 2316,
-            "rank": 30,
+            "rank": 29,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -330,11 +323,23 @@
             "name": "Tanjo, o anjo",
             "expLevel": 83,
             "eloRating": 2314,
-            "rank": 31,
+            "rank": 30,
             "clan": {
                 "tag": "#GJPJJPYP",
                 "name": "BIM",
                 "badgeId": 16000132
+            }
+        },
+        {
+            "tag": "#2C2QRRCVU",
+            "name": "CASTANHO ISBACK",
+            "expLevel": 58,
+            "eloRating": 2308,
+            "rank": 31,
+            "clan": {
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
             }
         },
         {
@@ -369,27 +374,27 @@
             }
         },
         {
-            "tag": "#2YL2YYGPL",
-            "name": "Klinker",
-            "expLevel": 64,
-            "eloRating": 2286,
-            "rank": 35,
-            "clan": {
-                "tag": "#LGRUCVJV",
-                "name": "Adultos Juniors",
-                "badgeId": 16000023
-            }
-        },
-        {
             "tag": "#88JG00C9L",
             "name": "夢 | Vitor™",
             "expLevel": 76,
             "eloRating": 2284,
-            "rank": 36,
+            "rank": 35,
             "clan": {
                 "tag": "#J9UQLCVL",
                 "name": "vitchok . com",
                 "badgeId": 16000104
+            }
+        },
+        {
+            "tag": "#2YL2YYGPL",
+            "name": "Klinker",
+            "expLevel": 64,
+            "eloRating": 2283,
+            "rank": 36,
+            "clan": {
+                "tag": "#LGRUCVJV",
+                "name": "Adultos Juniors",
+                "badgeId": 16000023
             }
         },
         {
@@ -750,7 +755,7 @@
             "tag": "#LRRP89PR0",
             "name": "VTX Igor O.o",
             "expLevel": 74,
-            "eloRating": 2175,
+            "eloRating": 2177,
             "rank": 69,
             "clan": {
                 "tag": "#QGVJ2J9J",
@@ -1126,5 +1131,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-11-17T05:27:40"
+    "collected_at": "2026-11-17T05:53:42"
 }
