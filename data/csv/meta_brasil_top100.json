@@ -71,7 +71,7 @@
             "tag": "#2C2QRRCVU",
             "name": "CASTANHO ISBACK",
             "expLevel": 58,
-            "eloRating": 2732,
+            "eloRating": 2733,
             "rank": 7,
             "clan": {
                 "tag": "#G89QUY2P",
@@ -1031,23 +1031,23 @@
             }
         },
         {
-            "tag": "#Q90QP89RJ",
-            "name": "Tico",
-            "expLevel": 80,
-            "eloRating": 2275,
-            "rank": 91
-        },
-        {
             "tag": "#88JG00C9L",
             "name": "夢 | Vitor™",
             "expLevel": 76,
-            "eloRating": 2274,
-            "rank": 92,
+            "eloRating": 2277,
+            "rank": 91,
             "clan": {
                 "tag": "#J9UQLCVL",
                 "name": "vitchok . com",
                 "badgeId": 16000104
             }
+        },
+        {
+            "tag": "#Q90QP89RJ",
+            "name": "Tico",
+            "expLevel": 80,
+            "eloRating": 2275,
+            "rank": 92
         },
         {
             "tag": "#8PP8CYCV",
@@ -1141,5 +1141,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-11-21T04:45:04"
+    "collected_at": "2026-11-21T05:03:54"
 }
