@@ -23,7 +23,7 @@
             "tag": "#U9JP89RGG",
             "name": "Temp V✨",
             "expLevel": 83,
-            "eloRating": 3329,
+            "eloRating": 3252,
             "rank": 3,
             "clan": {
                 "tag": "#J9UYR2LJ",
@@ -35,7 +35,7 @@
             "tag": "#VPVPPQCCY",
             "name": "BDC Rick",
             "expLevel": 85,
-            "eloRating": 3273,
+            "eloRating": 3213,
             "rank": 4
         },
         {
@@ -51,11 +51,18 @@
             }
         },
         {
+            "tag": "#C9QP92RG",
+            "name": "BDC Kaique",
+            "expLevel": 76,
+            "eloRating": 3082,
+            "rank": 6
+        },
+        {
             "tag": "#2CJJ2LY9Y",
             "name": "LEO_-KIRA",
             "expLevel": 73,
             "eloRating": 3081,
-            "rank": 6,
+            "rank": 7,
             "clan": {
                 "tag": "#G89QUY2P",
                 "name": "GUERREIROS PT",
@@ -67,14 +74,14 @@
             "name": "Wallace",
             "expLevel": 90,
             "eloRating": 3072,
-            "rank": 7
+            "rank": 8
         },
         {
             "tag": "#C0CYVCVYC",
             "name": "Maia",
             "expLevel": 85,
             "eloRating": 3069,
-            "rank": 8,
+            "rank": 9,
             "clan": {
                 "tag": "#Q9QPPGGG",
                 "name": "NoA",
@@ -82,30 +89,11 @@
             }
         },
         {
-            "tag": "#U2QCGCGJV",
-            "name": "『PHX』Luiz™",
-            "expLevel": 75,
-            "eloRating": 3054,
-            "rank": 9
-        },
-        {
-            "tag": "#VJYJLLJV8",
-            "name": "WL✨THE BOSS ™",
-            "expLevel": 30,
-            "eloRating": 3052,
-            "rank": 10,
-            "clan": {
-                "tag": "#RYCGYQYP",
-                "name": "Gestão LiFe",
-                "badgeId": 16000020
-            }
-        },
-        {
             "tag": "#VRCPYLVV8",
             "name": "dosek",
             "expLevel": 1,
-            "eloRating": 3043,
-            "rank": 11,
+            "eloRating": 3059,
+            "rank": 10,
             "clan": {
                 "tag": "#JL9CQPY8",
                 "name": "Autism Club",
@@ -113,11 +101,23 @@
             }
         },
         {
-            "tag": "#C9QP92RG",
-            "name": "BDC Kaique",
-            "expLevel": 76,
-            "eloRating": 3037,
-            "rank": 12
+            "tag": "#U2QCGCGJV",
+            "name": "『PHX』Luiz™",
+            "expLevel": 75,
+            "eloRating": 3054,
+            "rank": 11
+        },
+        {
+            "tag": "#VJYJLLJV8",
+            "name": "WL✨THE BOSS ™",
+            "expLevel": 30,
+            "eloRating": 3052,
+            "rank": 12,
+            "clan": {
+                "tag": "#RYCGYQYP",
+                "name": "Gestão LiFe",
+                "badgeId": 16000020
+            }
         },
         {
             "tag": "#U90JGV0Q",
@@ -1141,5 +1141,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-11-26T05:53:51"
+    "collected_at": "2026-11-26T06:15:49"
 }
