@@ -76,7 +76,12 @@
             "name": "WL✨THE BOSS ™",
             "expLevel": 30,
             "eloRating": 3141,
-            "rank": 9
+            "rank": 9,
+            "clan": {
+                "tag": "#RYCGYQYP",
+                "name": "Gestão LiFe",
+                "badgeId": 16000020
+            }
         },
         {
             "tag": "#C0CYVCVYC",
@@ -1121,5 +1126,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-11-27T06:04:35"
+    "collected_at": "2026-11-27T06:30:46"
 }
