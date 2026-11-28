@@ -134,23 +134,11 @@
             }
         },
         {
-            "tag": "#U90JGV0Q",
-            "name": "⭐️Markin91_",
-            "expLevel": 80,
-            "eloRating": 3052,
-            "rank": 15,
-            "clan": {
-                "tag": "#G89QUY2P",
-                "name": "GUERREIROS PT",
-                "badgeId": 16000058
-            }
-        },
-        {
             "tag": "#V2LR8GP9C",
             "name": "Storm✨葉様派",
             "expLevel": 60,
             "eloRating": 3026,
-            "rank": 16,
+            "rank": 15,
             "clan": {
                 "tag": "#J9RGVL2U",
                 "name": "Sandstorm BR",
@@ -162,7 +150,19 @@
             "name": "BDC Rick",
             "expLevel": 85,
             "eloRating": 3024,
-            "rank": 17
+            "rank": 16
+        },
+        {
+            "tag": "#20Y0GGGUP2",
+            "name": "加急Sinistro™",
+            "expLevel": 64,
+            "eloRating": 3023,
+            "rank": 17,
+            "clan": {
+                "tag": "#L9VRJ",
+                "name": "Calalas España",
+                "badgeId": 16000161
+            }
         },
         {
             "tag": "#VYGR2GUV9",
@@ -287,15 +287,15 @@
             "rank": 28
         },
         {
-            "tag": "#20Y0GGGUP2",
-            "name": "加急Sinistro™",
-            "expLevel": 64,
-            "eloRating": 2872,
+            "tag": "#U90JGV0Q",
+            "name": "⭐️Markin91_",
+            "expLevel": 80,
+            "eloRating": 2904,
             "rank": 29,
             "clan": {
-                "tag": "#L9VRJ",
-                "name": "Calalas España",
-                "badgeId": 16000161
+                "tag": "#G89QUY2P",
+                "name": "GUERREIROS PT",
+                "badgeId": 16000058
             }
         },
         {
@@ -556,7 +556,7 @@
             "tag": "#V8GY0LGLC",
             "name": "Nando❤️Valkyrie",
             "expLevel": 39,
-            "eloRating": 2661,
+            "eloRating": 2652,
             "rank": 52,
             "clan": {
                 "tag": "#J9RGVL2U",
@@ -1121,5 +1121,5 @@
             "after": "eyJwb3MiOjEwMH0"
         }
     },
-    "collected_at": "2026-11-28T05:45:09"
+    "collected_at": "2026-11-28T06:48:29"
 }
